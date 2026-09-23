@@ -50,6 +50,13 @@ test('core threshold unlocks, cleanup pays only its bonus, and cannot pay twice'
 test('upgrades are affordable-only and unavailable mid-shot',()=>{
   const {G}=boot();assert.equal(G.buy('arrow'),false);G.state.coins=1000;const price=G.cost('arrow');assert.equal(G.buy('arrow'),true);assert.equal(G.state.coins,1000-price);assert.equal(G.state.up.arrow,1);assert.ok(G.damage()>1);G.shoot(0,100);assert.equal(G.buy('power'),false);
 });
+test('combo multiplier cap unlocks at brick tier 30 and increases by one per purchase',()=>{
+  const {G,read}=boot();const oldSave=read();assert.equal(oldSave.up.comboCap,0);assert.equal(G.comboMultiplierCap(),12);assert.equal(G.mult(10000),12);
+  G.state.coins=Number.MAX_SAFE_INTEGER;assert.equal(G.buy('comboCap'),false);G.state.up.brick=29;assert.equal(G.buy('comboCap'),false);
+  G.state.up.brick=30;const firstCost=G.cost('comboCap');assert.equal(firstCost,Math.ceil(120*1.5**30));assert.equal(G.cost('brick'),Math.ceil(120*1.5**30));
+  assert.equal(G.buy('comboCap'),true);assert.equal(G.comboMultiplierCap(),13);assert.equal(G.mult(10000),13);assert.equal(G.state.up.comboCap,1);
+  assert.equal(G.cost('comboCap'),Math.ceil(120*1.5**31));assert.equal(boot(read()).G.state.up.comboCap,1);
+});
 test('fixed world keeps the sling beneath the lowest brick row with clear separation',()=>{
    const {G}=boot();assert.equal(G.H,1400);assert.equal(G.origin.y,970);
   const lowestRow=Math.max(...G.bricks.map(b=>b.y));

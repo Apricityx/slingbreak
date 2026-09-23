@@ -3,12 +3,13 @@
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
   const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,up:{power:0,arrow:0,brick:0},sound:true,board:null,skills:{},skillChosenLevel:0,draft:null,skillRuntime:null});
+  const defaults = () => ({level:1,coins:0,total:0,best:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillChosenLevel:0,draft:null,skillRuntime:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
-  const valid = saved && ['level','coins','total','best'].every(k=>validNumber(saved[k])) && saved.level>=1 && Number.isInteger(saved.level) && saved.up && ['power','arrow','brick'].every(k=>Number.isInteger(saved.up[k])&&saved.up[k]>=0);
+  const valid = saved && ['level','coins','total','best'].every(k=>validNumber(saved[k])) && saved.level>=1 && Number.isInteger(saved.level) && saved.up && ['power','arrow','brick'].every(k=>Number.isInteger(saved.up[k])&&saved.up[k]>=0) && (saved.up.comboCap===undefined||Number.isInteger(saved.up.comboCap)&&saved.up.comboCap>=0);
   const state = valid ? saved : defaults();
+  state.up.comboCap??=0;
   // One-time migration: sound used to default off; flip existing saves to on.
   if (saved && saved.sound === false && saved.soundMigrated !== true) state.sound = true;
   state.soundMigrated = true;
@@ -29,15 +30,12 @@
   G.specialRate = () => Math.min(.22,.10+.12*(1-Math.exp(-state.up.brick/12)));
   G.valueMultiplier = () => 1+.16*state.up.brick;
   G.baseHp = () => Math.floor(3+.8*Math.log2(state.level)+.2*Math.log2(state.level)**2);
-   // Upgrade prices use a soft polynomial curve so income growth can keep pace
-   // without making early upgrades feel free. Brick value remains the premium.
-   G.cost = key => {
-     const base={power:75,arrow:100,brick:120}[key];
-     const rate={power:.30,arrow:.34,brick:.38}[key];
-     return Math.ceil(base*Math.pow(1+rate*state.up[key],1.5));
-   };
+   G.cost = key => key==='comboCap'
+     ? Math.ceil(120*Math.pow(1.5,30+state.up.comboCap))
+     : Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
-  G.mult = n => Math.min(12,Math.pow(1.14,Math.min(10,Math.max(0,n-1)))*Math.pow(1.035,Math.max(0,n-11)));
+  G.comboMultiplierCap = () => 12+state.up.comboCap;
+  G.mult = n => Math.min(G.comboMultiplierCap(),Math.pow(1.14,Math.min(10,Math.max(0,n-1)))*Math.pow(1.035,Math.max(0,n-11)));
   G.reward = (type,n) => Math.max(1,Math.round(3*Math.pow(state.level,1.1)*G.valueMultiplier()*G.mult(n)*(type==='gold'?3:1)));
   G.save = () => {
      state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:state.level,initial:G.initial,killed:G.killed,bricks:G.bricks.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,hp:b.hp,max:b.max,type:b.type,frozen:b.frozen})),obstacles:G.obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h})),core:!!G.core};
@@ -166,6 +164,7 @@
   };
   G.buy=key=>{
     if(!(key in state.up)||G.phase!=='ready'||G.paused)return false;
+    if(key==='comboCap'&&state.up.brick<30)return false;
     const cost=G.cost(key);if(state.coins<cost)return false;
     state.coins-=cost;state.up[key]++;G.save();G.ui();G.sound('upgrade');G.toast?.('升级成功');return true;
   };
