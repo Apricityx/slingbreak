@@ -1,2 +1,3 @@
 # audio-diagnostics runtime exports (device logs, not source)
 *.txt
+*.log

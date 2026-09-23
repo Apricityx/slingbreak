@@ -29,7 +29,13 @@
   G.specialRate = () => Math.min(.22,.10+.12*(1-Math.exp(-state.up.brick/12)));
   G.valueMultiplier = () => 1+.16*state.up.brick;
   G.baseHp = () => Math.floor(3+.8*Math.log2(state.level)+.2*Math.log2(state.level)**2);
-  G.cost = key => Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
+   // Upgrade prices use a soft polynomial curve so income growth can keep pace
+   // without making early upgrades feel free. Brick value remains the premium.
+   G.cost = key => {
+     const base={power:75,arrow:100,brick:120}[key];
+     const rate={power:.30,arrow:.34,brick:.38}[key];
+     return Math.ceil(base*Math.pow(1+rate*state.up[key],1.5));
+   };
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
   G.mult = n => Math.min(12,Math.pow(1.14,Math.min(10,Math.max(0,n-1)))*Math.pow(1.035,Math.max(0,n-11)));
   G.reward = (type,n) => Math.max(1,Math.round(3*Math.pow(state.level,1.1)*G.valueMultiplier()*G.mult(n)*(type==='gold'?3:1)));
