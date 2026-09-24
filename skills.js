@@ -17,7 +17,7 @@
     entry('shatter','碎冰风暴','元素','sparkles',3,r=>`冻结砖块碎裂后爆发冰震，对邻近砖块造成 1.5 倍伤害，每箭最多 ${r*6} 次。`),
     entry('critical','致命准星','力量','focus',1,()=>`箭矢有 50% 概率暴击，造成 3 倍伤害。`),
     entry('execute','斩灭法则','力量','scissors',1,()=>`箭命中后剩余生命不高于 25% 的砖块立即被处决。`),
-    entry('rage','连击狂热','力量','flame',1,()=>`本箭每击碎 4 块砖，后续箭矢伤害提高 25%，最多提高 150%。`),
+    entry('rage','连击狂热','力量','flame',1,()=>`每支箭每击碎 3 块砖，该箭后续直接命中伤害提高 20%，最多提高 120%；各箭独立累计。`),
     entry('sweep','横扫千军','力量','arrow-left-right',2,r=>`每箭前 ${r} 次命中横扫目标所在整行，造成 2 倍伤害。`),
     entry('lance','天际贯穿','力量','arrow-up-down',2,r=>`每箭前 ${r} 次命中贯穿目标所在整列，造成 2 倍伤害。`),
     entry('pulse','末日脉冲','元素','radio',1,()=>`每射出 3 箭，对场上所有可破坏砖块造成 1.2 倍基础伤害。`),
@@ -28,7 +28,7 @@
     entry('alchemist','点石成金','财富','coins',2,r=>`金矿砖的金币倍率从 3 倍提高到 ${3+r*5} 倍，与其他收益被动相乘。`),
     entry('mint','黄金时代','财富','badge-dollar-sign',Infinity,r=>`所有砖块掉落的金币变为 ${r+1} 倍，核心奖金独立计算。`),
     entry('treasury','核心宝库','财富','gem',Infinity,r=>`核心通关奖金变为 ${1+r*2} 倍，不计入普通连击收益。`),
-    entry('bargain','超频工坊','财富','percent',2,r=>`弹弓、箭矢和砖块升级只需原价的 ${Math.round(100*.6**r)}%。`),
+    entry('bargain','超频工坊','财富','percent',2,r=>`所有装备升级（含连击强化）只需原价的 ${Math.round(100*.6**r)}%。`),
     entry('forge','神匠赐福','财富','hammer',1,()=>`每关第一次购买升级，额外免费提升同一项目 2 级。`),
     entry('resonance','核心共振','核心','diamond',2,r=>`核心解锁门槛从 60% 降至 ${60-r*15}% 的砖块。`),
     entry('corehunter','终焉引力','核心','orbit',1,()=>`核心出现后，箭矢额外获得 4 次穿透，并在靠近核心时自动转向它。`),
@@ -50,7 +50,7 @@
     entry('siphon','饮血长箭','箭术','pipette',1,()=>`箭矢直接击碎砖块时返还 1 次穿透，并提高初始箭伤的 25%；每支箭最多触发 8 次。`),
     entry('opportunist','穷追猛打','力量','target',1,()=>`箭矢命中受伤砖块时造成 3 倍伤害，并额外穿透 2 块砖。`),
     entry('sharpshooter','满弓狙击','箭术','telescope',1,()=>`蓄力达到 95% 时，主箭造成 3 倍伤害并额外穿透 6 块砖。`),
-    entry('bounty','连杀赏金','财富','wallet',1,()=>`每支箭每多击碎一块，金币倍率再增加 50%，第 9 块起为 5 倍；与连击收益相乘。`),
+    entry('bounty','连杀赏金','财富','wallet',1,()=>`每支箭从第 2 块起，每多击碎一块，赏金倍率增加 25%，第 9 块起为 3 倍；与连击、成就相乘，不追补。`),
     entry('bankshot','弹射工厂','箭术','shuffle',1,()=>`每支箭前 3 次反弹，各释放 2 支追踪箭，造成 2 倍伤害、穿透 2 块砖；追踪箭不再分裂。`),
     entry('minefield','脉冲雷区','元素','disc',1,()=>`每支箭首次命中布下雷区，连续爆炸 3 次，每次对 135 范围造成 2 倍基础伤害。`),
     entry('frostfire','冰火连爆','元素','thermometer-snowflake',1,()=>`每次命中冻结周围 100 范围，随后引爆，造成 1.5 倍基础伤害，冰冻再翻倍。`),
@@ -134,7 +134,8 @@
   const base={damage:G.damage,penetration:G.penetration,reward:G.reward,cost:G.cost,bonus:G.bonus,generate:G.generate,shoot:G.shoot,buy:G.buy,tick:G.tick,clear:G.clear};
   G.damage=()=>base.damage()*(1+rank('titan')+.35*rank('rapid')+.8*rank('heavy')+.5*rank('supernova')+.6*rank('reaper')+3*rank('railgun')+Math.min(10,S.skillRuntime.shots)*.2*rank('growing'));
   G.penetration=()=>base.penetration()+4*rank('piercer')+2*rank('heavy')+12*rank('railgun')+2*rank('opportunist');
-  G.reward=(type,n)=>Math.round(base.reward(type,n)*(1+rank('mint'))*(type==='gold'?(3+rank('alchemist')*5)/3:1)*(rank('jackpot')?(Math.random()<.25?10:1.5):1)*(1+rank('bounty')*Math.min(8,Math.max(0,n-1))*.5)*(type!=='normal'&&rank('specialist')?3:1));
+  G.bountyMultiplier=n=>1+rank('bounty')*Math.min(8,Math.max(0,n-1))*.25;
+  G.reward=(type,n)=>Math.round(base.reward(type,n)*(1+rank('mint'))*(type==='gold'?(3+rank('alchemist')*5)/3:1)*(rank('jackpot')?(Math.random()<.25?10:1.5):1)*G.bountyMultiplier(n)*(type!=='normal'&&rank('specialist')?3:1));
   G.cost=key=>Math.max(1,Math.ceil(base.cost(key)*.6**rank('bargain')));
   G.bonus=level=>Math.round(base.bonus(level)*(1+2*rank('treasury')));
   G.specialConfig=type=>type==='lightning'&&rank('storm')?{links:4+3*rank('storm'),damage:2}:type==='frost'&&rank('blizzard')?{radius:160+30*rank('blizzard'),damage:rank('blizzard')}:type==='prism'&&rank('prism')?{shards:4+2*rank('prism'),pierce:2+rank('prism')}:{};
@@ -160,7 +161,7 @@
     const duration=G.reduced?0:.85;
     G.boardEntrance=duration?{start:G.time,end:G.time+duration}:null;
     G.phase=duration?'entering':'ready';
-    applyLevelPassives();G.save();G.ui();G.sound('upgrade');G.toast?.(skill.name+' · 仅本关有效');return true;
+    applyLevelPassives();G.save();G.ui();G.sound('upgrade');return true;
   };
   let jobs=[],uses={},effectBudget=0;
   const resetShot=()=>{uses={};effectBudget=120;};
@@ -235,7 +236,7 @@
     }
     if(rank('poison'))b.skillMarkUntil=G.time+.55;
     if(rank('ice'))nearby(b.x,b.y,55+rank('ice')*40).forEach(t=>{t.frozen=true;t.flash=.18;});
-    let damage=a.damage*(1+Math.min(1.5,Math.floor(G.combo/4)*.25)*rank('rage'));
+    let damage=a.damage*(1+G.rageBonus(G.arrowKills(a))*rank('rage'));
     if(rank('ambush')&&b.hp>=b.max){damage*=3;G.skillFX?.('ambush',b.x,b.y,{r:80});}
     if(rank('opportunist')&&b.hp<b.max){damage*=3;G.skillFX?.('opportunist',b.x,b.y,{r:80});}
     if(rank('specialist')&&b.type!=='normal'){damage*=4;G.skillFX?.('specialist',b.x,b.y,{r:85});}

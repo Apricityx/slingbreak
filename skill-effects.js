@@ -77,11 +77,12 @@
   for(const [id,[color,accent,trail,duration]] of Object.entries(treatments))Object.assign(profiles[id],{color,accent,trail,duration});
   const active=()=>G.skillCatalog.find(s=>G.skillRank(s.id));
   const effects=[],cooldowns=new Map();
-  let lastId=null,lastState='',lastPulse=-10;
+  let lastId=null,lastState='',lastPulse=-10,acquiredTimer;
   const hud=document.createElement('div');hud.className='skill-live';
-  hud.innerHTML='<span class="skill-live-icon"></span><span class="skill-live-copy"><strong></strong><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span></span>';
+  hud.innerHTML='<span class="skill-live-icon"></span><span class="skill-live-copy"><strong></strong><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span><span class="skill-live-acquired" role="status"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg><span></span></span></span>';
   document.getElementById('arena').before(hud);
   const icon=hud.querySelector('.skill-live-icon'),name=hud.querySelector('strong'),description=hud.querySelector('small'),status=hud.querySelector('.skill-live-state > span'),meter=hud.querySelector('.skill-live-meter i');
+  const acquired=hud.querySelector('.skill-live-acquired > span');
   function animate(node,cls){node.classList.remove(cls);void node.offsetWidth;node.classList.add(cls);}
   function emit(kind,x,y,color,r=70,extra={}){
     effects.push({kind,x,y,color,r,born:G.time,duration:.65,...extra});
@@ -103,6 +104,7 @@
     const s=active();
     if(!s){
       if(lastId!=='__none__'){
+        clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
         lastId='__none__';lastState='';
         hud.style.setProperty('--skill-color','#8a9380');
         name.textContent='本关被动';description.textContent='每关选择一个强力被动，通关后失效';
@@ -112,14 +114,15 @@
       return;
     }
     if(lastId!==s.id){
+      clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
       lastId=s.id;lastState='';const p=profiles[s.id];hud.style.setProperty('--skill-color',p.color);
       name.textContent=s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
     }
     const shots=G.state.skillRuntime.shots,period={legion:3,pulse:3,reaper:3,supernova:4}[s.id];
-    let text='本关生效',progress=1;
+    let text='本关生效',progress=1;status.title='';
     if(period){progress=shots%period/period;text=`${shots%period} / ${period} · ${shots&&shots%period===0?'已释放':'蓄能'}`;}
     if(s.id==='growing'){progress=Math.min(10,shots)/10;text=`伤害 ×${(1+progress*2).toFixed(1)}`;}
-    if(s.id==='rage')text=`伤害 +${Math.round(Math.min(1.5,Math.floor(G.combo/4)*.25)*100)}%`;
+    if(s.id==='rage'){const score=G.latestAchievement;progress=G.rageBonus(score?.kills||0)/1.2;text=`+${Math.round(progress*120)}%`;status.title=score?`第 ${score.id} 箭的连击伤害加成`:'每支箭独立累计';}
     if(s.id==='forge')text=G.state.skillRuntime.forge?'免费强化已触发':'首次升级 +2 级';
     if(s.id==='resonance')text=`核心 ${G.killed} / ${G.threshold}`;
     if(s.id==='corehunter')text=G.core?'核心锁定中':'等待核心';
@@ -132,8 +135,9 @@
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{
     const result=choose(id);if(!result)return result;
-    refresh();animate(hud,'is-acquired');const s=active(),p=profiles[id];
-    emit('pickup',G.origin.x,G.origin.y,p.color,150,{id,accent:p.accent,duration:1.4,hero:true});
+    refresh();animate(hud,'is-acquired');
+    acquired.textContent='已装备';
+    clearTimeout(acquiredTimer);acquiredTimer=setTimeout(()=>{hud.classList.remove('is-acquired');acquired.textContent='';},1800);
     if(id==='decay')G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});
     return result;
   };

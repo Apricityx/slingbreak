@@ -3,18 +3,20 @@
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
   const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillChosenLevel:0,draft:null,skillRuntime:null});
+  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillChosenLevel:0,draft:null,skillRuntime:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
   const valid = saved && ['level','coins','total','best'].every(k=>validNumber(saved[k])) && saved.level>=1 && Number.isInteger(saved.level) && saved.up && ['power','arrow','brick'].every(k=>Number.isInteger(saved.up[k])&&saved.up[k]>=0) && (saved.up.comboCap===undefined||Number.isInteger(saved.up.comboCap)&&saved.up.comboCap>=0);
   const state = valid ? saved : defaults();
   state.up.comboCap??=0;
+  // Old records combined concurrent arrows; retain them separately from single-arrow records.
+  if(state.comboRulesVersion!==2){state.legacyBest=state.best;state.best=0;state.comboRulesVersion=2;}
   // One-time migration: sound used to default off; flip existing saves to on.
   if (saved && saved.sound === false && saved.soundMigrated !== true) state.sound = true;
   state.soundMigrated = true;
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
-    const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},combo:0,shotMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
+     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
   G.colors={normal:'#d5e8b3',bomb:'#f58d75',lightning:'#ecd77e',frost:'#a6d5e3',prism:'#c4b2e2',gold:'#d4df85'};
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
   G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
@@ -31,11 +33,16 @@
   G.valueMultiplier = () => 1+.16*state.up.brick;
   G.baseHp = () => Math.floor(3+.8*Math.log2(state.level)+.2*Math.log2(state.level)**2);
    G.cost = key => key==='comboCap'
-     ? Math.ceil(120*Math.pow(1.5,30+state.up.comboCap))
+      ? Math.ceil(1500*Math.pow(1.65,state.up.comboCap))
      : Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
-  G.comboMultiplierCap = () => 12+state.up.comboCap;
-  G.mult = n => Math.min(G.comboMultiplierCap(),Math.pow(1.14,Math.min(10,Math.max(0,n-1)))*Math.pow(1.035,Math.max(0,n-11)));
+  G.comboUpgradeUnlocked = () => state.up.brick>=5||state.up.comboCap>0;
+  G.comboStep = () => .25+.025*state.up.comboCap;
+  G.comboMultiplierCap = () => 3+.5*state.up.comboCap;
+  G.comboCapKills = () => 1+Math.ceil((G.comboMultiplierCap()-1)/G.comboStep()-1e-9);
+  G.mult = n => Math.min(G.comboMultiplierCap(),1+Math.max(0,n-1)*G.comboStep());
+  G.arrowKills = a => a?.kills||0;
+  G.rageBonus = kills => Math.min(1.2,Math.floor(kills/3)*.2);
   G.reward = (type,n) => Math.max(1,Math.round(3*Math.pow(state.level,1.1)*G.valueMultiplier()*G.mult(n)*(type==='gold'?3:1)));
   G.save = () => {
      state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:state.level,initial:G.initial,killed:G.killed,bricks:G.bricks.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,hp:b.hp,max:b.max,type:b.type,frozen:b.frozen})),obstacles:G.obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h})),core:!!G.core};
@@ -58,7 +65,7 @@
    G.generate = (restore=false) => {
      G.boardEntrance = null;
      G.nextShotAt=0;
-     G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.combo=0;G.shotMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
+      G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
     const board=state.board;
     const validObstacles=board && (board.obstacles===undefined || (Array.isArray(board.obstacles)&&board.obstacles.length<=12&&board.obstacles.every(o=>['x','y','w','h'].every(k=>validNumber(o[k]))&&o.w>0&&o.h>0)));
      if(restore && board && !(board.layoutVersion!==G.layoutVersion&&board.killed===0) && !(board.balanceVersion!==G.balanceVersion&&board.killed===0) && board.level===state.level && Array.isArray(board.bricks) && board.bricks.length<=240 && board.bricks.every(b=>['x','y','w','h','hp','max'].every(k=>validNumber(b[k])) && b.hp>0 && b.w>0 && b.h>0 && b.type in G.colors) && validNumber(board.initial) && validNumber(board.killed) && board.initial>0 && validObstacles){
@@ -132,10 +139,12 @@
     if(!G.bricks.includes(b)||G.phase==='clearing')return;
     b.hp-=damage*(b.frozen?2:1);b.flash=.16;
     if(b.hp>0){G.burst(b.x,b.y,G.colors[b.type],4,.5);G.sound('tap',1,b.x);return;}
-    G.bricks.splice(G.bricks.indexOf(b),1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.combo++;state.best=Math.max(state.best,G.combo);
-    const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.combo);state.coins+=money;G.shotMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
+    G.bricks.splice(G.bricks.indexOf(b),1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
+    const arrow=G.activeArrow;
+    if(arrow){arrow.kills=G.arrowKills(arrow)+1;state.best=Math.max(state.best,arrow.kills);}
+    const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
     if(b.type!=='normal')G.specialSound(b.type,b.x);
-    G.sound('break',G.combo,b.x);
+    G.sound('break',G.arrowKills(arrow),b.x);
     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
     const near=(range)=>G.bricks.filter(t=>Math.hypot(t.x-b.x,t.y-b.y)<range);
     const effect=G.specialConfig?.(b.type)||{};
@@ -151,20 +160,20 @@
   G.addArrow=(x,y,vx,vy,pierce=G.penetration())=>{
     if(G.arrows.length>=64)return;
     const body=Bodies.circle(x,y,3,{frictionAir:.0005,isSensor:true,collisionFilter:{mask:0},label:'arrow'});Body.setVelocity(body,{x:vx,y:vy});Composite.add(engine.world,body);
-    const arrow={body,life:0,pierce,hit:new Set(),overlap:new Set(),trail:[],damage:G.damage()};G.arrows.push(arrow);G.initAchievementArrow?.(arrow);return arrow;
+    const arrow={body,life:0,kills:0,pierce,hit:new Set(),overlap:new Set(),trail:[],damage:G.damage()};G.arrows.push(arrow);G.initAchievementArrow?.(arrow);return arrow;
   };
   G.shoot=(dx,dy)=>{
      if(G.paused||!['ready','flying'].includes(G.phase)||G.arrows.length>=64||G.time<G.nextShotAt)return false;
     const len=Math.hypot(dx,dy);if(len<10||dy<5)return false;
     const strength=Math.min(1,len/100),speed=G.speed()*(.56+.44*strength);
-     if(G.phase==='ready'){G.combo=0;G.shotMoney=0;}
+     if(G.phase==='ready'){G.roundKills=0;G.shotMoney=0;}
      G.shots++;G.shotTime=G.time;G.phase='flying';
      G.nextShotAt=G.time+1;
     G.addArrow(G.origin.x,G.origin.y,-dx/len*speed,-dy/len*speed);G.sound('shoot');G.ui();return true;
   };
   G.buy=key=>{
     if(!(key in state.up)||G.phase!=='ready'||G.paused)return false;
-    if(key==='comboCap'&&state.up.brick<30)return false;
+    if(key==='comboCap'&&!G.comboUpgradeUnlocked())return false;
     const cost=G.cost(key);if(state.coins<cost)return false;
     state.coins-=cost;state.up[key]++;G.save();G.ui();G.sound('upgrade');G.toast?.('升级成功');return true;
   };

@@ -108,6 +108,15 @@
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
+#shop .combo-upgrade-preview{display:grid;gap:4px;margin-top:8px}
+#shop .upgrade-metric{display:grid;grid-template-columns:26px minmax(0,1fr) 12px minmax(0,1fr);align-items:center;gap:4px;font-variant-numeric:tabular-nums;line-height:1.3}
+#shop .upgrade-metric small{font-size:9px;color:#8a957e}
+#shop .upgrade-metric b{font-size:12px;font-weight:500;color:#7e8973}
+#shop .upgrade-metric svg{width:11px;height:11px;color:#a3b294}
+#shop .upgrade-metric em{font-size:12px;font-style:normal;font-weight:700;color:#588329}
+#shop .combo-upgrade-lock{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#8a957e}
+#shop .combo-upgrade-lock svg{width:11px;height:11px}
+#shop .combo-upgrade-lock[hidden],#shop .combo-upgrade-preview[hidden]{display:none}
 #shop .buy-button {
   display: flex;
   align-items: center;
