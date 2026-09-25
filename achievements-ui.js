@@ -23,6 +23,11 @@
   const pops=document.createElement('div');pops.className='achievement-pops';pops.setAttribute('aria-live','polite');panel.querySelector('.earnings-main').append(pops);
   const achievementQueue=[],stackedAchievements=[],handoffAt=840,exitDuration=480,sceneEnterDuration=220,maxStacked=2;
   let popFrame=0,popLast=0,playbackSpeed=1,currentAchievement=null,exitElapsed=null,sceneProgress=0;
+  const hasAchievementWork=()=>achievementQueue.length||currentAchievement||stackedAchievements.length||sceneProgress>0;
+  const isAchievementBlocked=()=>G.paused||document.hidden||!!document.querySelector('dialog[open]');
+  const scheduleAchievementFrame=()=>{
+    if(!popFrame&&hasAchievementWork()&&!isAchievementBlocked())popFrame=requestAnimationFrame(playAchievements);
+  };
   function createPop(item){
     const el=document.createElement('div');el.className='achievement-pop';
     const hero=document.createElement('div');hero.className='achievement-hero';hero.setAttribute('aria-hidden','true');
@@ -67,37 +72,36 @@
   function playAchievements(time){
     popFrame=0;
     const dt=Math.min(50,popLast?time-popLast:0);popLast=time;
-    const paused=G.paused||document.hidden||!!document.querySelector('dialog[open]');
-    if(!paused){
-      // A new burst reverses an unfinished return without flashing the money view.
-      if(exitElapsed!==null&&achievementQueue.length){exitElapsed=null;if(currentAchievement)stackCurrent();}
-      // Finish the real-time scene entrance before accelerating queued cards.
-      const step=dt*(sceneProgress<1?1:playbackSpeed);
-      if(exitElapsed!==null){
-        exitElapsed+=dt;
-        if(exitElapsed>=exitDuration){
-          currentAchievement?.el.remove();currentAchievement=null;
-          stackedAchievements.forEach(p=>p.el.remove());stackedAchievements.length=0;exitElapsed=null;
-        }
-      }else{
-        if(currentAchievement)currentAchievement.elapsed+=step;
-        if(currentAchievement&&currentAchievement.elapsed>=handoffAt){
-          if(achievementQueue.length)stackCurrent();else exitElapsed=0;
-        }
+    const paused=isAchievementBlocked();
+    if(paused){popLast=0;return;}
+    // A new burst reverses an unfinished return without flashing the money view.
+    if(exitElapsed!==null&&achievementQueue.length){exitElapsed=null;if(currentAchievement)stackCurrent();}
+    // Finish the real-time scene entrance before accelerating queued cards.
+    const step=dt*(sceneProgress<1?1:playbackSpeed);
+    if(exitElapsed!==null){
+      exitElapsed+=dt;
+      if(exitElapsed>=exitDuration){
+        currentAchievement?.el.remove();currentAchievement=null;
+        stackedAchievements.forEach(p=>p.el.remove());stackedAchievements.length=0;exitElapsed=null;
       }
-      if(!currentAchievement&&achievementQueue.length&&exitElapsed===null)createPop(achievementQueue.shift());
-      stackedAchievements.forEach((p,i)=>{p.elapsed+=step;drawPop(p,i+1,step,dt);});
-      if(currentAchievement)drawPop(currentAchievement,0,step,dt);
-      // One reversible blend drives both layers, independent of card opacity or queue speed.
-      const showAchievements=!!currentAchievement&&exitElapsed===null;
-      sceneProgress=showAchievements?Math.min(1,sceneProgress+dt/sceneEnterDuration):Math.max(0,sceneProgress-dt/exitDuration);
-      const blend=sceneProgress*sceneProgress*(3-2*sceneProgress);
-      panel.style.setProperty('--achievement-scene',blend);
-      if(!currentAchievement&&!stackedAchievements.length&&sceneProgress===0&&panel.classList.contains('is-achievement')){
-        panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
+    }else{
+      if(currentAchievement)currentAchievement.elapsed+=step;
+      if(currentAchievement&&currentAchievement.elapsed>=handoffAt){
+        if(achievementQueue.length)stackCurrent();else exitElapsed=0;
       }
     }
-    if(achievementQueue.length||currentAchievement||stackedAchievements.length||sceneProgress>0)popFrame=requestAnimationFrame(playAchievements);
+    if(!currentAchievement&&achievementQueue.length&&exitElapsed===null)createPop(achievementQueue.shift());
+    stackedAchievements.forEach((p,i)=>{p.elapsed+=step;drawPop(p,i+1,step,dt);});
+    if(currentAchievement)drawPop(currentAchievement,0,step,dt);
+    // One reversible blend drives both layers, independent of card opacity or queue speed.
+    const showAchievements=!!currentAchievement&&exitElapsed===null;
+    sceneProgress=showAchievements?Math.min(1,sceneProgress+dt/sceneEnterDuration):Math.max(0,sceneProgress-dt/exitDuration);
+    const blend=sceneProgress*sceneProgress*(3-2*sceneProgress);
+    panel.style.setProperty('--achievement-scene',blend);
+    if(!currentAchievement&&!stackedAchievements.length&&sceneProgress===0&&panel.classList.contains('is-achievement')){
+      panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
+    }
+    if(hasAchievementWork())popFrame=requestAnimationFrame(playAchievements);
     else{popLast=0;playbackSpeed=1;}
   }
   G.showAchievement=(item,score)=>{
@@ -105,7 +109,7 @@
     const backlog=achievementQueue.length+(currentAchievement?1:0);
     // Keep handoffs fast until the queue drains; the final exit has its own clock.
     playbackSpeed=Math.max(playbackSpeed,Math.min(8,1+Math.max(0,backlog-1)*.45));
-    if(!popFrame)popFrame=requestAnimationFrame(playAchievements);
+    scheduleAchievementFrame();
   };
   const resetGame=G.reset;
   G.reset=()=>{
@@ -155,10 +159,13 @@
     else if(!e){event=0;$('achievement-ticker').textContent='';$('achievement-ticker').classList.remove('hot');}
     const stamp=JSON.stringify(G.state.achievements||{});
     if(stamp!==library){
-      library=stamp;const h=G.state.achievements||{};
-      $('achievement-count').textContent=G.achievementCatalog.filter(a=>h[a.id]>0).length+' / '+G.achievementCatalog.length;
-      $('achievement-list').innerHTML=G.achievementCatalog.map(a=>`<div class="achievement-item ${h[a.id]?'earned':''}" style="--achievement-accent:${emblems[a.id].color}"><span class="achievement-item-icon" aria-hidden="true">${emblemSVG(a.id)}</span><b>${a.name}</b><span class="achievement-item-bonus" aria-label="成就倍率增加 ${a.bonus}">${bonusText(a.bonus)}</span><small>${a.description} · ${h[a.id]?'已达成 '+h[a.id]+' 次':'尚未达成'}</small></div>`).join('');
-    }
+       library=stamp;const h=G.state.achievements||{};
+       $('achievement-count').textContent=G.achievementCatalog.filter(a=>h[a.id]>0).length+' / '+G.achievementCatalog.length;
+       $('achievement-list').innerHTML=G.achievementCatalog.map(a=>`<div class="achievement-item ${h[a.id]?'earned':''}" style="--achievement-accent:${emblems[a.id].color}"><span class="achievement-item-icon" aria-hidden="true">${emblemSVG(a.id)}</span><b>${a.name}</b><span class="achievement-item-bonus" aria-label="成就倍率增加 ${a.bonus}">${bonusText(a.bonus)}</span><small>${a.description} · ${h[a.id]?'已达成 '+h[a.id]+' 次':'尚未达成'}</small></div>`).join('');
+     }
+    scheduleAchievementFrame();
   };
+  document.addEventListener('visibilitychange',scheduleAchievementFrame);
+  document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('close',scheduleAchievementFrame));
   G.ui();
 })();

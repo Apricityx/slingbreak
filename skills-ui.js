@@ -2,27 +2,39 @@
   const G=Game,$=id=>document.getElementById(id),draft=$('skill-draft'),library=$('skill-library');
   const baseUi=G.ui;let draftKey='',ownedKey='',libraryPaused=false,selecting=false,lastOptions=[];
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  function waitForAnimations(animations,timeout=700){
+    return new Promise(resolve=>{
+      let settled=false;
+      const finish=()=>{if(settled)return;settled=true;clearTimeout(timer);resolve();};
+      const timer=setTimeout(finish,timeout);
+      Promise.all(animations.map(animation=>animation.finished.catch(()=>{}))).then(finish,finish);
+    });
+  }
   async function selectSkill(id,button){
     if(selecting||G.phase!=='draft'||G.paused)return;
     selecting=true;
     G.audio.unlock();
     const cards=[...$('draft-options').children];
+    let animations=[],exit;
     cards.forEach(card=>card.disabled=true);
     button.classList.add('is-selected');draft.classList.add('is-selecting');
-    if(!reducedMotion.matches){
-      const animations=cards.map(card=>card.animate(card===button?[
-        {transform:'scale(1)',opacity:1},{transform:'translateY(-7px) scale(1.035)',opacity:1,offset:.4},{transform:'translateY(-3px) scale(1.015)',opacity:1}
-      ]:[{transform:'scale(1)',opacity:1},{transform:'translateY(10px) scale(.96)',opacity:.25}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'}));
-      await Promise.all(animations.map(animation=>animation.finished.catch(()=>{})));
-      const exit=draft.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-12px) scale(.97)'}],{duration:180,easing:'ease-in',fill:'forwards'});
-      draft.classList.add('is-leaving');
-      await exit.finished.catch(()=>{});
-      animations.forEach(animation=>animation.cancel());exit.cancel();
+    try{
+      if(!reducedMotion.matches){
+        animations=cards.map(card=>card.animate(card===button?[
+          {transform:'scale(1)',opacity:1},{transform:'translateY(-7px) scale(1.035)',opacity:1,offset:.4},{transform:'translateY(-3px) scale(1.015)',opacity:1}
+        ]:[{transform:'scale(1)',opacity:1},{transform:'translateY(10px) scale(.96)',opacity:.25}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'}));
+        await waitForAnimations(animations);
+        exit=draft.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-12px) scale(.97)'}],{duration:180,easing:'ease-in',fill:'forwards'});
+        draft.classList.add('is-leaving');
+        await waitForAnimations([exit]);
+      }
+      const chosen=G.chooseSkill(id);
+      if(chosen){draft.close();$('game').focus({preventScroll:true});}
+    }finally{
+      animations.forEach(animation=>animation.cancel());exit?.cancel();
+      draft.classList.remove('is-selecting','is-leaving');button.classList.remove('is-selected');
+      cards.forEach(card=>card.disabled=false);selecting=false;
     }
-    const chosen=G.chooseSkill(id);
-    if(chosen){draft.close();$('game').focus({preventScroll:true});}
-    draft.classList.remove('is-selecting','is-leaving');button.classList.remove('is-selected');
-    cards.forEach(card=>card.disabled=false);selecting=false;
   }
   const icons=()=>lucide.createIcons();
   const rarity=skill=>`<span class="skill-rarity" data-tier="${skill.tier}"><span class="rarity-dot"></span>${G.skillTiers[skill.tier].name}</span>`;
@@ -50,7 +62,7 @@
         }
         icons();
       }
-      if(!draft.open&&!window.SlingBreakIntro?.active)draft.showModal();
+      if(!draft.open&&!window.SlingBreakIntro?.active&&!document.querySelector('dialog[open]'))draft.showModal();
     }else{
       if(draft.open)draft.close();
     }
