@@ -21,91 +21,97 @@
   // Match reading order to the visual bottom placement.
   $('arena').after(panel);
   const pops=document.createElement('div');pops.className='achievement-pops';pops.setAttribute('aria-live','polite');panel.querySelector('.earnings-main').append(pops);
-  const popDuration=1400,maxBurstDuration=1800;
-  let popFrame=0,popLast=0,popClock=0,pendingAchievement=null,currentAchievement=null;
-  function updatePop(p){
-    const item=p.item,source=item.arrow===null?'多箭合计':`第 ${item.arrow} 支箭`;
-    const entries=[...item.entries.values()];
-    for(const entry of entries){
-      let tile=p.tiles.get(entry.id);
-      if(!tile){
-        const el=document.createElement('div');el.className='achievement-mini';el.style.setProperty('--achievement-accent',emblems[entry.id].color);
-        el.innerHTML=`<span class="achievement-mini-icon" aria-hidden="true">${emblemSVG(entry.id)}</span><span class="achievement-mini-name">${entry.name}</span><span class="achievement-mini-bonus"></span>`;
-        el.classList.toggle('is-major',entry.unitBonus>=1);
-        tile={el,icon:el.querySelector('.achievement-mini-icon'),value:el.querySelector('.achievement-mini-bonus'),born:popClock,updatedAt:popClock,bonus:0};
-        p.tiles.set(entry.id,tile);p.grid.append(el);
-      }
-      if(tile.bonus!==entry.bonus){tile.bonus=entry.bonus;tile.updatedAt=popClock;tile.value.textContent=bonusText(entry.bonus);}
-      tile.el.setAttribute('aria-label',`${entry.name}，获得 ${entry.count} 次，加成合计 ${bonusText(entry.bonus)}`);
-    }
-    p.el.setAttribute('aria-label',`${source}，${entries.map(entry=>`${entry.name} ${bonusText(entry.bonus)}`).join('，')}`);
-  }
+  const achievementQueue=[],stackedAchievements=[],handoffAt=840,exitDuration=480,sceneEnterDuration=220,maxStacked=2;
+  let popFrame=0,popLast=0,playbackSpeed=1,currentAchievement=null,exitElapsed=null,sceneProgress=0;
   function createPop(item){
     const el=document.createElement('div');el.className='achievement-pop';
-    const grid=document.createElement('div');grid.className='achievement-grid';
-    el.append(grid);pops.append(el);
+    const hero=document.createElement('div');hero.className='achievement-hero';hero.setAttribute('aria-hidden','true');
+    hero.innerHTML='<span class="achievement-hero-mark"></span><strong class="achievement-hero-name"></strong><span class="achievement-hero-bonus"></span><span class="achievement-hero-rays">'+[-150,-100,-50,0,50,100,150].map(angle=>`<i style="--ray-angle:${angle}deg"></i>`).join('')+'</span>';
+    hero.style.setProperty('--hero-accent',emblems[item.id].color);hero.classList.toggle('is-major',item.bonus>=1);
+    const mark=hero.querySelector('.achievement-hero-mark'),bonus=hero.querySelector('.achievement-hero-bonus');
+    mark.innerHTML=emblemSVG(item.id);hero.querySelector('.achievement-hero-name').textContent=item.name;bonus.textContent=bonusText(item.bonus);
+    el.setAttribute('aria-label',`第 ${item.arrow} 支箭，${item.name}，加成 ${bonusText(item.bonus)}`);
+    el.append(hero);pops.append(el);
+    el.style.zIndex=String(maxStacked+1);
     panel.classList.add('is-achievement');
-    currentAchievement={el,grid,tiles:new Map(),item,born:popClock,ends:popClock+popDuration,opacity:0};
-    updatePop(currentAchievement);
+    currentAchievement={el,hero,mark,bonus,elapsed:0,opacity:0,depth:0,dismiss:0};
+  }
+  function stackCurrent(){
+    currentAchievement.el.setAttribute('aria-hidden','true');
+    stackedAchievements.unshift(currentAchievement);currentAchievement=null;
+    if(stackedAchievements.length>maxStacked)stackedAchievements.pop().el.remove();
+    stackedAchievements.forEach((p,i)=>{p.el.style.zIndex=String(maxStacked-i);});
+  }
+  function drawPop(p,slot,step,dt){
+    const age=p.elapsed,enter=Math.min(1,age/160);
+    const ease=t=>t*t*(3-2*t),launch=Math.min(1,age/260);
+    const exitTarget=exitElapsed===null?0:ease(Math.max(0,Math.min(1,(exitElapsed-slot*40)/(exitDuration-stackedAchievements.length*40))));
+    p.dismiss=G.reduced?exitTarget:p.dismiss+(exitTarget-p.dismiss)*(1-Math.exp(-dt/65));
+    const exit=p.dismiss;
+    const spring=1+2.7*Math.pow(launch-1,3)+1.7*Math.pow(launch-1,2);
+    p.depth=G.reduced?slot:p.depth+(slot-p.depth)*(1-Math.exp(-step/150));
+    p.opacity=(G.reduced?1:ease(enter))*(1-p.depth*.1);p.el.style.opacity=p.opacity;
+    // Back cards step upward and shrink within the same clipped stage.
+    const impact=G.reduced?1:Math.min(1.025,.9+.1*spring+.015*Math.sin(Math.PI*launch));
+    const scale=impact*(1-p.depth*.06)*(1-(G.reduced?0:.06*exit));
+    const y=4-p.depth*7+(G.reduced?0:4*exit);
+    p.hero.style.transform=`translateY(${y}px) scale(${scale})`;
+    p.hero.style.setProperty('--stack-depth',p.depth);
+    p.mark.style.transform=G.reduced?'none':`scale(${.65+.35*spring}) rotate(${-10*(1-spring)}deg)`;
+    p.bonus.style.transform=G.reduced?'none':`scale(${.75+.25*spring})`;
+    p.hero.style.setProperty('--hero-flash',G.reduced?'0':Math.max(0,1-age/320));
+    p.hero.style.setProperty('--hero-sweep',G.reduced?'-60%':`${-60+Math.min(1,age/460)*190}%`);
+    p.hero.style.setProperty('--burst-radius',`${22+Math.min(1,age/430)*62}px`);
+    p.hero.style.setProperty('--burst-fade',G.reduced?'0':Math.max(0,1-age/440));
   }
   function playAchievements(time){
     popFrame=0;
     const dt=Math.min(50,popLast?time-popLast:0);popLast=time;
     const paused=G.paused||document.hidden||!!document.querySelector('dialog[open]');
-    if(!paused)popClock+=dt;
     if(!paused){
-      if(currentAchievement&&popClock>=currentAchievement.ends){
-        currentAchievement.el.remove();currentAchievement=null;
-      }
-      if(pendingAchievement&&!currentAchievement){createPop(pendingAchievement);pendingAchievement=null;}
-      if(currentAchievement){
-        const p=currentAchievement,age=popClock-p.born;
-        const enter=1-Math.pow(1-Math.min(1,age/180),3),exit=Math.max(0,1-(p.ends-popClock)/240);
-        const target=enter*(1-exit*exit);
-        p.opacity=G.reduced?1:p.opacity+(target-p.opacity)*(1-Math.exp(-dt/35));
-        panel.style.setProperty('--achievement-opacity',p.opacity);
-        p.el.style.opacity=p.opacity;
-        for(const tile of p.tiles.values()){
-          const arrival=Math.min(1,(popClock-tile.born)/260),settle=1-Math.pow(1-arrival,3);
-          const bump=Math.sin(Math.PI*Math.min(1,(popClock-tile.updatedAt)/240));
-          tile.el.style.opacity=G.reduced?'1':String(settle);
-          tile.el.style.transform=G.reduced?'none':`translateY(${6*(1-settle)}px)`;
-          tile.icon.style.transform=G.reduced?'none':`scale(${.9+.1*settle+.12*Math.sin(Math.PI*arrival)})`;
-          tile.value.style.transform=G.reduced?'none':`scale(${1+.1*bump})`;
-          tile.el.style.setProperty('--tile-glow',G.reduced?'0':String(Math.max(0,1-(popClock-tile.updatedAt)/450)));
+      // A new burst reverses an unfinished return without flashing the money view.
+      if(exitElapsed!==null&&achievementQueue.length){exitElapsed=null;if(currentAchievement)stackCurrent();}
+      // Finish the real-time scene entrance before accelerating queued cards.
+      const step=dt*(sceneProgress<1?1:playbackSpeed);
+      if(exitElapsed!==null){
+        exitElapsed+=dt;
+        if(exitElapsed>=exitDuration){
+          currentAchievement?.el.remove();currentAchievement=null;
+          stackedAchievements.forEach(p=>p.el.remove());stackedAchievements.length=0;exitElapsed=null;
+        }
+      }else{
+        if(currentAchievement)currentAchievement.elapsed+=step;
+        if(currentAchievement&&currentAchievement.elapsed>=handoffAt){
+          if(achievementQueue.length)stackCurrent();else exitElapsed=0;
         }
       }
-      if(!currentAchievement&&panel.classList.contains('is-achievement')){
-        panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-opacity');
+      if(!currentAchievement&&achievementQueue.length&&exitElapsed===null)createPop(achievementQueue.shift());
+      stackedAchievements.forEach((p,i)=>{p.elapsed+=step;drawPop(p,i+1,step,dt);});
+      if(currentAchievement)drawPop(currentAchievement,0,step,dt);
+      // One reversible blend drives both layers, independent of card opacity or queue speed.
+      const showAchievements=!!currentAchievement&&exitElapsed===null;
+      sceneProgress=showAchievements?Math.min(1,sceneProgress+dt/sceneEnterDuration):Math.max(0,sceneProgress-dt/exitDuration);
+      const blend=sceneProgress*sceneProgress*(3-2*sceneProgress);
+      panel.style.setProperty('--achievement-scene',blend);
+      if(!currentAchievement&&!stackedAchievements.length&&sceneProgress===0&&panel.classList.contains('is-achievement')){
+        panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
       }
     }
-    if(pendingAchievement||currentAchievement)popFrame=requestAnimationFrame(playAchievements);
-    else popLast=0;
+    if(achievementQueue.length||currentAchievement||stackedAchievements.length||sceneProgress>0)popFrame=requestAnimationFrame(playAchievements);
+    else{popLast=0;playbackSpeed=1;}
   }
   G.showAchievement=(item,score)=>{
-    // Fold arrivals into the live card instead of accumulating a playback queue.
-    const burst=currentAchievement?.item||pendingAchievement;
-    if(burst){
-      burst.count++;burst.bonus+=item.bonus;
-      const entry=burst.entries.get(item.id);
-      if(entry){entry.count++;entry.bonus+=item.bonus;}
-      else burst.entries.set(item.id,{id:item.id,name:item.name,unitBonus:item.bonus,bonus:item.bonus,count:1});
-      if(burst.arrow!==score.id)burst.arrow=null;
-      if(item.bonus>=burst.bestBonus){burst.id=item.id;burst.name=item.name;burst.bestBonus=item.bonus;}
-      if(currentAchievement){
-        const p=currentAchievement;
-        // Give late arrivals a brief hold, with an absolute limit for the whole burst.
-        p.ends=Math.min(p.born+maxBurstDuration,Math.max(p.ends,popClock+450));
-        updatePop(p);
-      }
-    }else pendingAchievement={id:item.id,name:item.name,bonus:item.bonus,bestBonus:item.bonus,arrow:score.id,count:1,entries:new Map([[item.id,{id:item.id,name:item.name,unitBonus:item.bonus,bonus:item.bonus,count:1}]])};
+    achievementQueue.push({id:item.id,name:item.name,bonus:item.bonus,arrow:score.id});
+    const backlog=achievementQueue.length+(currentAchievement?1:0);
+    // Keep handoffs fast until the queue drains; the final exit has its own clock.
+    playbackSpeed=Math.max(playbackSpeed,Math.min(8,1+Math.max(0,backlog-1)*.45));
     if(!popFrame)popFrame=requestAnimationFrame(playAchievements);
   };
   const resetGame=G.reset;
   G.reset=()=>{
-    pendingAchievement=null;currentAchievement=null;pops.replaceChildren();
-    panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-opacity');
-    cancelAnimationFrame(popFrame);popFrame=0;popLast=0;popClock=0;
+    achievementQueue.length=0;stackedAchievements.length=0;currentAchievement=null;exitElapsed=null;pops.replaceChildren();
+    panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
+    cancelAnimationFrame(popFrame);popFrame=0;popLast=0;playbackSpeed=1;sceneProgress=0;
     return resetGame();
   };
   const exact=n=>Math.floor(n).toLocaleString('en-US');
@@ -123,7 +129,7 @@
   panel.addEventListener('animationend',e=>{if(e.animationName==='cash-rise')panel.classList.remove('paying');});
   G.updateAchievementUI=()=>{
     const delta=G.state.coins-targetWallet;
-    if(delta>0){$('money-burst').textContent='+'+G.fmt(delta);pulse('paying');}
+    if(delta>0){$('money-burst').textContent='+'+G.fmt(delta);if(!panel.classList.contains('is-achievement'))pulse('paying');}
     if(G.shotMoney<targetMoney||G.reduced)shownMoney=G.shotMoney;
     if(G.state.coins<targetWallet||G.reduced)shownWallet=G.state.coins;
     targetMoney=G.shotMoney;targetWallet=G.state.coins;
