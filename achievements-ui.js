@@ -25,37 +25,27 @@
   let popFrame=0,popLast=0,popClock=0,pendingAchievement=null,currentAchievement=null;
   function updatePop(p){
     const item=p.item,source=item.arrow===null?'多箭合计':`第 ${item.arrow} 支箭`;
-    const entries=[...item.entries.values()],batch=entries.length>1;
-    p.el.classList.toggle('is-burst',batch);
-    p.el.classList.toggle('is-wide',entries.length<=3);p.el.classList.toggle('is-dense',entries.length>8);
-    p.grid.style.setProperty('--achievement-columns',Math.min(4,entries.length));
-    p.grid.style.setProperty('--achievement-rows',Math.ceil(entries.length/4));
+    const entries=[...item.entries.values()];
     for(const entry of entries){
       let tile=p.tiles.get(entry.id);
       if(!tile){
-        tile=document.createElement('div');tile.className='achievement-mini';tile.style.setProperty('--achievement-accent',emblems[entry.id].color);
-        tile.innerHTML=`<span class="achievement-mini-icon" aria-hidden="true">${emblemSVG(entry.id)}</span><span class="achievement-mini-name">${entry.name}</span><span class="achievement-mini-bonus"></span>`;
-        p.tiles.set(entry.id,tile);p.grid.append(tile);
+        const el=document.createElement('div');el.className='achievement-mini';el.style.setProperty('--achievement-accent',emblems[entry.id].color);
+        el.innerHTML=`<span class="achievement-mini-icon" aria-hidden="true">${emblemSVG(entry.id)}</span><span class="achievement-mini-name">${entry.name}</span><span class="achievement-mini-bonus"></span>`;
+        el.classList.toggle('is-major',entry.unitBonus>=1);
+        tile={el,icon:el.querySelector('.achievement-mini-icon'),value:el.querySelector('.achievement-mini-bonus'),born:popClock,updatedAt:popClock,bonus:0};
+        p.tiles.set(entry.id,tile);p.grid.append(el);
       }
-      tile.querySelector('.achievement-mini-bonus').textContent=bonusText(entry.bonus);
-      tile.setAttribute('aria-label',`${entry.name}，获得 ${entry.count} 次，加成合计 ${bonusText(entry.bonus)}`);
+      if(tile.bonus!==entry.bonus){tile.bonus=entry.bonus;tile.updatedAt=popClock;tile.value.textContent=bonusText(entry.bonus);}
+      tile.el.setAttribute('aria-label',`${entry.name}，获得 ${entry.count} 次，加成合计 ${bonusText(entry.bonus)}`);
     }
-    p.el.classList.toggle('is-major',item.bonus>=1||item.count>1);
-    p.el.style.setProperty('--achievement-accent',emblems[item.id].color);
-    if(p.icon!==item.id){p.mark.innerHTML=emblemSVG(item.id);p.icon=item.id;}
-    p.title.textContent=item.name;
-    p.detail.textContent=bonusText(item.bonus);
     p.el.setAttribute('aria-label',`${source}，${entries.map(entry=>`${entry.name} ${bonusText(entry.bonus)}`).join('，')}`);
   }
   function createPop(item){
     const el=document.createElement('div');el.className='achievement-pop';
-    const mark=document.createElement('span');mark.className='achievement-pop-mark';mark.setAttribute('aria-hidden','true');
-    const title=document.createElement('strong');
-    const detail=document.createElement('span');detail.className='achievement-pop-bonus';
     const grid=document.createElement('div');grid.className='achievement-grid';
-    el.append(mark,title,detail,grid);pops.append(el);
-    panel.classList.remove('achievement-settled');panel.classList.add('is-achievement');
-    currentAchievement={el,mark,title,detail,grid,tiles:new Map(),item,born:popClock,ends:popClock+popDuration,bumpAt:-Infinity};
+    el.append(grid);pops.append(el);
+    panel.classList.add('is-achievement');
+    currentAchievement={el,grid,tiles:new Map(),item,born:popClock,ends:popClock+popDuration,opacity:0};
     updatePop(currentAchievement);
   }
   function playAchievements(time){
@@ -69,20 +59,24 @@
       }
       if(pendingAchievement&&!currentAchievement){createPop(pendingAchievement);pendingAchievement=null;}
       if(currentAchievement){
-        const p=currentAchievement,age=popClock-p.born,enter=Math.min(1,age/100),exit=Math.max(0,1-(p.ends-popClock)/220);
-        const spring=t=>1+2.7*Math.pow(t-1,3)+1.7*Math.pow(t-1,2);
-        const stamp=spring(Math.min(1,age/340)),punch=spring(Math.max(0,Math.min(1,(age-45)/360)));
-        const bump=.08*Math.sin(Math.PI*Math.min(1,(popClock-p.bumpAt)/180));
-        p.el.style.opacity=G.reduced?'1':String(enter*(1-exit));
-        p.el.style.transform=G.reduced?'none':`translateX(${-18*Math.pow(1-enter,2)+16*exit}px)`;
-        p.mark.style.transform=G.reduced?'none':`scale(${.45+.55*stamp}) rotate(${-16*(1-stamp)}deg)`;
-        p.detail.style.transform=G.reduced?'none':`scale(${.6+.4*punch+bump})`;
-        p.el.style.setProperty('--sweep',`${-50+Math.min(1,age/650)*180}%`);
-        p.el.style.setProperty('--flash',G.reduced?'0':String(Math.max(0,1-age/440)));
-        p.el.style.setProperty('--ring-scale',String(.8+Math.min(1,age/500)*.8));
+        const p=currentAchievement,age=popClock-p.born;
+        const enter=1-Math.pow(1-Math.min(1,age/180),3),exit=Math.max(0,1-(p.ends-popClock)/240);
+        const target=enter*(1-exit*exit);
+        p.opacity=G.reduced?1:p.opacity+(target-p.opacity)*(1-Math.exp(-dt/35));
+        panel.style.setProperty('--achievement-opacity',p.opacity);
+        p.el.style.opacity=p.opacity;
+        for(const tile of p.tiles.values()){
+          const arrival=Math.min(1,(popClock-tile.born)/260),settle=1-Math.pow(1-arrival,3);
+          const bump=Math.sin(Math.PI*Math.min(1,(popClock-tile.updatedAt)/240));
+          tile.el.style.opacity=G.reduced?'1':String(settle);
+          tile.el.style.transform=G.reduced?'none':`translateY(${6*(1-settle)}px)`;
+          tile.icon.style.transform=G.reduced?'none':`scale(${.9+.1*settle+.12*Math.sin(Math.PI*arrival)})`;
+          tile.value.style.transform=G.reduced?'none':`scale(${1+.1*bump})`;
+          tile.el.style.setProperty('--tile-glow',G.reduced?'0':String(Math.max(0,1-(popClock-tile.updatedAt)/450)));
+        }
       }
       if(!currentAchievement&&panel.classList.contains('is-achievement')){
-        panel.classList.remove('is-achievement');panel.classList.add('achievement-settled');
+        panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-opacity');
       }
     }
     if(pendingAchievement||currentAchievement)popFrame=requestAnimationFrame(playAchievements);
@@ -99,7 +93,7 @@
       if(burst.arrow!==score.id)burst.arrow=null;
       if(item.bonus>=burst.bestBonus){burst.id=item.id;burst.name=item.name;burst.bestBonus=item.bonus;}
       if(currentAchievement){
-        const p=currentAchievement;p.bumpAt=popClock;
+        const p=currentAchievement;
         // Give late arrivals a brief hold, with an absolute limit for the whole burst.
         p.ends=Math.min(p.born+maxBurstDuration,Math.max(p.ends,popClock+450));
         updatePop(p);
@@ -110,7 +104,7 @@
   const resetGame=G.reset;
   G.reset=()=>{
     pendingAchievement=null;currentAchievement=null;pops.replaceChildren();
-    panel.classList.remove('is-achievement','achievement-settled');
+    panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-opacity');
     cancelAnimationFrame(popFrame);popFrame=0;popLast=0;popClock=0;
     return resetGame();
   };
@@ -126,7 +120,7 @@
     if(shownMoney!==targetMoney||shownWallet!==targetWallet)frame=requestAnimationFrame(animate);else{frame=0;last=0;}
   }
   function pulse(name){panel.classList.remove(name);void panel.offsetWidth;panel.classList.add(name);}
-  panel.addEventListener('animationend',e=>{if(e.animationName==='cash-rise')panel.classList.remove('paying');if(e.animationName==='cash-flash')panel.classList.remove('celebrating');if(e.animationName==='cash-settle')panel.classList.remove('achievement-settled');});
+  panel.addEventListener('animationend',e=>{if(e.animationName==='cash-rise')panel.classList.remove('paying');});
   G.updateAchievementUI=()=>{
     const delta=G.state.coins-targetWallet;
     if(delta>0){$('money-burst').textContent='+'+G.fmt(delta);pulse('paying');}
@@ -151,7 +145,7 @@
     $('arrow-receipt').setAttribute('aria-label',s?`第 ${s.id} 箭砖块收入 ${Math.round(s.paid)} 金币`:'等待得分');
     $('combo-rules').textContent=`当前装备：第 1 块连击倍率 ×1，此后每块增加 ${G.comboStep().toFixed(3)}，第 ${G.comboCapKills()} 块达到 ×${G.comboMultiplierCap().toFixed(1)} 上限。砖块 LV.6 解锁连击强化，每级让每连增幅 +0.025、倍率上限 +0.5；第 2 块起即可提高倍率。`;
      const e=G.achievementEvent;
-    if(e&&e.serial!==event){event=e.serial;$('achievement-ticker').textContent=`第 ${e.arrow} 支箭 · ${e.name} · ${bonusText(e.bonus)}`;$('achievement-ticker').classList.add('hot');pulse('celebrating');}
+    if(e&&e.serial!==event){event=e.serial;$('achievement-ticker').textContent=`第 ${e.arrow} 支箭 · ${e.name} · ${bonusText(e.bonus)}`;$('achievement-ticker').classList.add('hot');}
     else if(!e){event=0;$('achievement-ticker').textContent='';$('achievement-ticker').classList.remove('hot');}
     const stamp=JSON.stringify(G.state.achievements||{});
     if(stamp!==library){
