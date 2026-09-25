@@ -27,7 +27,28 @@
   };
   new ResizeObserver(resize).observe(canvas);resize();
   const line=(x,y,tx,ty,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
-  const rounded=(x,y,w,h,r,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();};
+  const forceCompat=new URLSearchParams(location.search).get('forceCompat')==='1';
+  const useRoundedRectFallback=forceCompat||typeof ctx.roundRect!=='function';
+  const rounded=(x,y,w,h,r,color)=>{
+    ctx.fillStyle=color;ctx.beginPath();
+    const radius=Math.max(0,Math.min(r,Math.abs(w)/2,Math.abs(h)/2));
+    if(!useRoundedRectFallback){
+      ctx.roundRect(x,y,w,h,radius);
+    }else if(radius===0){
+      ctx.rect(x,y,w,h);
+    }else{
+      ctx.moveTo(x+radius,y);ctx.lineTo(x+w-radius,y);
+      ctx.arcTo(x+w,y,x+w,y+radius,radius);
+      ctx.lineTo(x+w,y+h-radius);ctx.arcTo(x+w,y+h,x+w-radius,y+h,radius);
+      ctx.lineTo(x+radius,y+h);ctx.arcTo(x,y+h,x,y+h-radius,radius);
+      ctx.lineTo(x,y+radius);ctx.arcTo(x,y,x+radius,y,radius);
+      ctx.closePath();
+    }
+    ctx.fill();
+  };
+  if(useRoundedRectFallback){
+    console.info('[SlingBreak] rounded rectangle compatibility mode enabled');
+  }
   const circle=(x,y,r,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();};
   const label=(text,x,y,size=12,color='#91a17d',font='DM Sans',weight=500)=>{ctx.font=`${weight} ${size}px "${font}", "Noto Sans SC", sans-serif`;ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(text,x,y);};
   function glyph(type,x,y,color){
