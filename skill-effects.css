@@ -1,24 +1,25 @@
-.skill-live{--skill-color:#438b81;display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px solid #dce2d6;border-radius:7px;margin:10px 12px;color:#293525;min-width:0}
-.skill-live-main{display:flex;align-items:center;gap:12px;min-height:52px;min-width:0}
+.skill-live{display:flex;flex-direction:column;padding:12px 14px;border:1px solid #dce2d6;border-radius:7px;margin:10px 12px;color:#293525;min-width:0}
 .skill-live .skill-queue-slot{padding:7px 8px;gap:3px}
 .skill-live button.skill-queue-slot{width:100%;font:inherit;cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s,transform .18s}
 @media(hover:hover){.skill-live button.skill-queue-slot:hover{background:#e2eadd;border-color:#b9cfa0}}
 .skill-live button.skill-queue-slot:active{transform:translateY(1px)}
-.skill-live .skill-queue-slot.is-viewing{border-color:color-mix(in srgb,var(--skill-color) 55%,#d6dfcc);background:color-mix(in srgb,var(--skill-color) 11%,#edf2e7);color:#38452c;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--skill-color) 40%,transparent)}
-.skill-live-heading{display:flex;align-items:center;flex-wrap:wrap;gap:3px 8px}
-.skill-live-details{padding:2px 0;border:0;background:none;color:#6b7862;font-size:10px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
-.skill-live-details:hover{color:var(--skill-color)}.skill-live-details:focus-visible{outline:2px solid var(--skill-color);outline-offset:3px}
 .skill-live[hidden]{display:none}
-.skill-live-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;color:var(--skill-color);background:color-mix(in srgb,var(--skill-color) 12%,white);border:1px solid color-mix(in srgb,var(--skill-color) 45%,white);border-radius:6px}
-.skill-live-icon svg{width:23px;height:23px}
-.skill-live-copy{flex:1;min-width:0}.skill-live-copy strong{font-size:14px}.skill-live-copy small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:11px;line-height:1.6;color:#6b7862;overflow-wrap:anywhere}
-.skill-live-state{position:relative;min-width:64px;font-size:12px;font-weight:600;color:var(--skill-color);text-align:right;max-width:42%;overflow-wrap:anywhere}
-.skill-live-meter{display:block;height:3px;width:100%;background:#e3e8dd;margin-top:5px;overflow:hidden}.skill-live-meter i{display:block;height:100%;background:var(--skill-color);transform-origin:left;transition:transform .18s;width:100%}
-.skill-live.is-triggered .skill-live-icon{animation:skill-trigger .5s ease-out}
-.skill-live.is-switching .skill-live-copy,.skill-live.is-switching .skill-live-state{animation:skill-switch-in .3s cubic-bezier(.22,1,.36,1)}
-@keyframes skill-switch-in{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
 .skill-economy-flash{animation:skill-economy .7s ease-out}
-@keyframes skill-trigger{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--skill-color) 60%,transparent);transform:scale(1.12)}100%{box-shadow:0 0 0 13px transparent;transform:scale(1)}}
 @keyframes skill-economy{0%,35%{background:#5f6f2c;color:#f2f6ea}100%{background:#252e20;color:#f2f6ea}}
-@media(max-width:600px){.skill-live{gap:8px;padding:9px 10px;margin:8px 10px}.skill-live-main{gap:9px;min-height:42px}.skill-live .skill-queue-slot{padding:6px 5px}.skill-live-copy strong{font-size:13px}.skill-live-copy small{-webkit-line-clamp:1}.skill-live-state{font-size:11px}.skill-live-icon{flex-basis:36px;height:36px}}
+@media(max-width:600px){.skill-live{padding:9px 10px;margin:8px 10px}.skill-live .skill-queue-slot{padding:6px 5px}}
 @media(prefers-reduced-motion:reduce){.skill-live *,.skill-live,.skill-economy-flash{animation:none!important;transition:none!important}}
+
+/* Full skill text opens in a modal so the live bar only carries state. */
+#skill-detail{--skill-detail-color:#6c8c4e;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 40px);margin:auto;padding:0;overflow:auto;border:1px solid #cddabd;border-radius:9px;background:#fafbf7;color:var(--ink);box-shadow:0 25px 80px #26342133}
+#skill-detail::backdrop{background:#26302380;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#skill-detail[open]{animation:skill-detail-in .28s cubic-bezier(.18,1.12,.36,1) both}
+@keyframes skill-detail-in{0%{opacity:0;transform:translateY(14px) scale(.96)}100%{opacity:1;transform:none}}
+.skill-detail-card{display:flex;flex-direction:column;gap:13px;padding:22px}
+.skill-detail-head{display:flex;align-items:center;gap:13px}
+.skill-detail-head .skill-emblem{flex:none;color:var(--skill-detail-color);background:color-mix(in srgb,var(--skill-detail-color) 12%,white);border-color:color-mix(in srgb,var(--skill-detail-color) 45%,white)}
+.skill-detail-title{flex:1;min-width:0}
+.skill-detail-title h2{margin:0 0 4px;font-size:21px;letter-spacing:0}
+.skill-detail-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.skill-detail-text{margin:0;font-size:13px;line-height:1.9;color:#5e6d52;overflow-wrap:anywhere}
+@media(max-width:600px){.skill-detail-card{padding:18px;gap:11px}.skill-detail-title h2{font-size:19px}.skill-detail-text{font-size:12px}}
+@media(prefers-reduced-motion:reduce){#skill-detail[open]{animation:none!important}}

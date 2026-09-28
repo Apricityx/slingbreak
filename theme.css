@@ -190,14 +190,6 @@ button:active:not(:disabled) {
   to { opacity: 0; transform: scale(1.03); }
 }
 
-/* ── Skill live trigger pulse — bigger ring ──────────────── */
-@keyframes skill-trigger {
-  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--skill-color) 70%, transparent);
-         transform: scale(1.14); }
-  60%  { transform: scale(.97); }
-  100% { box-shadow: 0 0 0 16px transparent; transform: scale(1); }
-}
-
 /* ── Icon button hover lift ──────────────────────────────── */
 .icon-button {
   transition: background .15s, color .15s, transform .12s cubic-bezier(.2, .8, .2, 1.4) !important;
@@ -230,4 +222,19 @@ button:active:not(:disabled) {
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* The draft screen stays visually stable while the pointer moves across it. */
+#skill-draft .skill-card:hover {
+  transform: none !important;
+  background: #f3f6ee !important;
+  border-color: #d6dfcc !important;
+  box-shadow: none !important;
+}
+#skill-draft .skill-card:hover .skill-emblem,
+#skill-draft .skill-card:hover .skill-pick svg {
+  transform: none !important;
+}
+#skill-draft .skill-card:focus-visible {
+  outline: none !important;
 }

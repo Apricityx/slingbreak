@@ -78,13 +78,36 @@
   // The newest skill leads the arrow styling; all four remain visible and active.
   const active=()=>G.activeSkills().at(-1);
   const effects=[],cooldowns=new Map();
-  let lastId=null,lastState='',lastQueueKey='',lastPulse=-10,viewId=null;
+  let lastQueueKey='',lastPulse=-10;
   const hud=document.createElement('div');hud.className='skill-live';
-  hud.innerHTML='<div class="skill-live-main"><span class="skill-live-icon"></span><span class="skill-live-copy"><span class="skill-live-heading"><strong></strong><button type="button" class="skill-live-details" aria-label="查看全部已装备技能">全部技能</button></span><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span></span></div><div class="skill-queue" aria-label="已装备技能，按获得顺序排列"></div>';
+  hud.innerHTML='<div class="skill-queue" aria-label="已装备技能，按获得顺序排列"></div>';
   document.getElementById('arena').before(hud);
-  const icon=hud.querySelector('.skill-live-icon'),name=hud.querySelector('strong'),description=hud.querySelector('small'),status=hud.querySelector('.skill-live-state > span'),meter=hud.querySelector('.skill-live-meter i');
   const queue=hud.querySelector('.skill-queue');
-  hud.querySelector('.skill-live-details').onclick=()=>document.getElementById('open-skills').click();
+  // A skill's full text lives in a modal so the in-game bar stays compact.
+  const detail=document.getElementById('skill-detail'),detailEmblem=document.getElementById('skill-detail-emblem'),detailName=document.getElementById('skill-detail-name'),detailFamily=document.getElementById('skill-detail-family'),detailMeta=document.getElementById('skill-detail-meta'),detailText=document.getElementById('skill-detail-text');
+  let detailPaused=null;
+  function restoreDetail(){
+    if(detailPaused===null)return;
+    G.paused=detailPaused;detailPaused=null;G.audio.sync();G.ui();
+  }
+  function openDetail(id){
+    const skill=G.skillCatalog.find(s=>s.id===id);
+    if(!skill||!detail)return;
+    detail.style.setProperty('--skill-detail-color',profiles[skill.id]?.color||'#6c8c4e');
+    detailEmblem.innerHTML=`<i data-lucide="${skill.icon}"></i>`;
+    detailName.textContent=skill.name;
+    detailFamily.textContent=`${skill.family} · 跨关生效`;
+    detailMeta.innerHTML=`<span class="skill-rarity" data-tier="${skill.tier}"><span class="rarity-dot"></span>${G.skillTiers[skill.tier].name}</span>`;
+    detailText.textContent=skill.describe(1);
+    lucide.createIcons({root:detail});
+    detailPaused=G.paused;G.paused=true;G.drag=null;G.audio.sync();
+    if(!detail.open)detail.showModal();
+  }
+  // Restore on every close path; the null guard keeps it to a single restore.
+  function closeDetail(){if(detail.open)detail.close();restoreDetail();}
+  document.getElementById('close-skill-detail').onclick=closeDetail;
+  detail.addEventListener('click',e=>{if(e.target===detail)closeDetail();});
+  detail.addEventListener('close',restoreDetail);
   function animate(node,cls){node.classList.remove(cls);void node.offsetWidth;node.classList.add(cls);}
   function emit(kind,x,y,color,r=70,extra={}){
     effects.push({kind,x,y,color,r,born:G.time,duration:.65,...extra});
@@ -100,79 +123,34 @@
     const source=G.activeArrow,v=source?.body.velocity;
     emit(options.kind||p.kind,x,y,p.color,options.r||75,{id,accent:p.accent,duration:p.duration,hero:!!options.force,angle:v?Math.atan2(v.y,v.x)+Math.PI/2:0,axis:id==='sweep'||id==='stormfront'?'row':id==='lance'?'column':'both',...extra});
     if(!G.reduced&&effects.length<35)G.burst(x,y,p.accent,options.kind==='mark'?2:4,.55);
-    if(G.time-lastPulse>.35){lastPulse=G.time;animate(hud,'is-triggered');}
   };
-  // Clicking a queued skill pins its description in the live panel; clicking
-  // the pinned skill again falls back to the newest one.
-  function selectView(id){
-    const previous=lastId;
-    viewId=viewId===id?null:id;
-    refresh();
-    if(lastId!==previous)animate(hud,'is-switching');
-  }
   function refresh(){
     const owned=G.activeSkills();
-    if(viewId&&!owned.some(skill=>skill.id===viewId))viewId=null;
-    const s=(viewId&&owned.find(skill=>skill.id===viewId))||active();
     const queueKey=JSON.stringify(G.state.skills);
-    if(queueKey!==lastQueueKey){
-      lastQueueKey=queueKey;const outgoing=G.outgoingSkill();
-      queue.replaceChildren();
-      for(let i=0;i<G.skillSlots;i++){
-        const skill=owned[i];
-        if(!skill){
-          const slot=document.createElement('span');
-          slot.className='skill-queue-slot is-empty';slot.innerHTML='<b>等待加入</b>';queue.append(slot);continue;
-        }
-        const slot=document.createElement('button');
-        slot.type='button';slot.dataset.skill=skill.id;
-        slot.className='skill-queue-slot'+(skill===outgoing?' is-outgoing':'');
-        slot.style.setProperty('--skill-color',profiles[skill.id]?.color||'#8a9380');
-        slot.title=`${skill.name}：${skill.describe(1)}`;
-        slot.setAttribute('aria-label',`查看${skill.name}的技能说明`);
-        slot.innerHTML=`<b><i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}</b>`;
-        slot.onclick=()=>selectView(skill.id);
-        queue.append(slot);lucide.createIcons({root:slot});
+    if(queueKey===lastQueueKey)return;
+    lastQueueKey=queueKey;const outgoing=G.outgoingSkill();
+    queue.replaceChildren();
+    for(let i=0;i<G.skillSlots;i++){
+      const skill=owned[i];
+      if(!skill){
+        const slot=document.createElement('span');
+        slot.className='skill-queue-slot is-empty';slot.innerHTML='<b>等待加入</b>';queue.append(slot);continue;
       }
+      const slot=document.createElement('button');
+      slot.type='button';slot.dataset.skill=skill.id;
+      slot.className='skill-queue-slot'+(skill===outgoing?' is-outgoing':'');
+      slot.style.setProperty('--skill-color',profiles[skill.id]?.color||'#8a9380');
+      slot.title=`${skill.name} · 点击查看说明`;
+      slot.setAttribute('aria-label',`查看${skill.name}的技能说明`);
+      slot.innerHTML=`<b><i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}</b>`;
+      slot.onclick=()=>openDetail(skill.id);
+      queue.append(slot);lucide.createIcons({root:slot});
     }
-    const shownId=s?s.id:null;
-    queue.querySelectorAll('.skill-queue-slot[data-skill]').forEach(slot=>{
-      const on=slot.dataset.skill===shownId;
-      slot.classList.toggle('is-viewing',on);
-      slot.setAttribute('aria-pressed',String(on));
-    });
-    if(!s){
-      if(lastId!=='__none__'){
-        lastId='__none__';lastState='';
-        hud.style.setProperty('--skill-color','#8a9380');
-        name.textContent=`${G.skillSlots} 槽构筑`;description.textContent='技能跨关保留，满槽后自动替换最早获得的技能';
-        icon.innerHTML='<i data-lucide="sparkles"></i>';lucide.createIcons({root:icon});
-        status.textContent='待选择';meter.style.transform='scaleX(0)';
-      }
-      return;
-    }
-    if(lastId!==s.id){
-      lastId=s.id;lastState='';const p=profiles[s.id];hud.style.setProperty('--skill-color',p.color);
-      name.textContent=s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
-    }
-    const shots=G.state.skillRuntime.shots,period={legion:3,pulse:3,reaper:3,supernova:4}[s.id];
-    let text=`${G.activeSkills().length} / ${G.skillSlots} 生效`,progress=1;status.title='';
-    if(period){progress=shots%period/period;text=`${shots%period} / ${period} · ${shots&&shots%period===0?'已释放':'蓄能'}`;}
-    if(s.id==='growing'){progress=Math.min(10,shots)/10;text=`伤害 ×${(1+progress*2).toFixed(1)}`;}
-    if(s.id==='rage'){const score=G.latestAchievement;progress=G.rageBonus(score?.kills||0)/1.2;text=`+${Math.round(progress*120)}%`;status.title=score?`第 ${score.id} 箭的连击伤害加成`:'每支箭独立累计';}
-    if(s.id==='forge')text=G.state.skillRuntime.forge?'免费强化已触发':'首次升级 +2 级';
-    if(s.id==='resonance')text=`核心 ${G.killed} / ${G.threshold}`;
-    if(s.id==='corehunter')text=G.core?'核心锁定中':'等待核心';
-    if(s.id==='treasury')text=`核心奖金 +${G.fmt(G.bonus())}`;
-    if(s.id==='bargain')text='升级价格 60%';
-    if(s.id==='sharpshooter'){progress=Math.min(1,Math.hypot(G.drag?.dx||0,G.drag?.dy||0)/95);text=progress>=1?'狙击就绪 · ×3':'满弓蓄力';}
-    const expanded=G.expandedSkillStatus?.(s.id);if(expanded){text=expanded.text;progress=expanded.progress;}
-    if(text!==lastState){lastState=text;status.textContent=text;}meter.style.transform=`scaleX(${progress})`;
   }
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{
     const result=choose(id);if(!result)return result;
-    viewId=null;refresh();
+    refresh();
     if(id==='decay'){const p=profiles[id];G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});}
     return result;
   };
@@ -209,7 +187,7 @@
   const clear=G.clear;
   G.clear=()=>{if(G.skillRank('treasury')&&G.phase!=='clearing'){emit('coin',390,110,profiles.treasury.color,220,{id:'treasury',accent:profiles.treasury.accent,duration:1.5,hero:true});animate(document.getElementById('earnings'),'skill-economy-flash');}return clear();};
   const generate=G.generate;
-  G.generate=(...args)=>{effects.length=0;cooldowns.clear();lastId=null;return generate(...args);};
+  G.generate=(...args)=>{effects.length=0;cooldowns.clear();return generate(...args);};
   const stroke=(ctx,x,y,tx,ty)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const ring=(ctx,x,y,r)=>{ctx.beginPath();ctx.arc(x,y,Math.max(0,r),0,TAU);ctx.stroke();};
   function drawEffect(ctx,e){

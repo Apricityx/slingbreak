@@ -118,6 +118,8 @@
 #shop .combo-upgrade-lock svg{width:11px;height:11px}
 #shop .combo-upgrade-lock[hidden],#shop .combo-upgrade-preview[hidden],#shop .slots-upgrade-done[hidden]{display:none}
 #shop .slots-upgrade-done{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#6f8a4e}
+#shop .slots-forge-note{display:block;margin-top:6px;font-size:10px;color:#a1843f}
+#shop .slots-forge-note[hidden]{display:none}
 #shop .buy-button {
   display: flex;
   align-items: center;

@@ -10,20 +10,16 @@
       Promise.all(animations.map(animation=>animation.finished.catch(()=>{}))).then(finish,finish);
     });
   }
-  async function selectSkill(id,button){
+  async function selectSkill(id){
     if(selecting||G.phase!=='draft'||G.paused)return;
     selecting=true;
     G.audio.unlock();
     const cards=[...$('draft-options').children];
-    let animations=[],exit;
+    let exit;
     cards.forEach(card=>card.disabled=true);
-    button.classList.add('is-selected');draft.classList.add('is-selecting');
+    draft.classList.add('is-selecting');
     try{
       if(!reducedMotion.matches){
-        animations=cards.map(card=>card.animate(card===button?[
-          {transform:'scale(1)',opacity:1},{transform:'translateY(-7px) scale(1.035)',opacity:1,offset:.4},{transform:'translateY(-3px) scale(1.015)',opacity:1}
-        ]:[{transform:'scale(1)',opacity:1},{transform:'translateY(10px) scale(.96)',opacity:.25}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'}));
-        await waitForAnimations(animations);
         exit=draft.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-12px) scale(.97)'}],{duration:180,easing:'ease-in',fill:'forwards'});
         draft.classList.add('is-leaving');
         await waitForAnimations([exit]);
@@ -31,8 +27,8 @@
       const chosen=G.chooseSkill(id);
       if(chosen){draft.close();$('game').focus({preventScroll:true});}
     }finally{
-      animations.forEach(animation=>animation.cancel());exit?.cancel();
-      draft.classList.remove('is-selecting','is-leaving');button.classList.remove('is-selected');
+      exit?.cancel();
+      draft.classList.remove('is-selecting','is-leaving');
       cards.forEach(card=>card.disabled=false);selecting=false;
     }
   }
@@ -65,8 +61,8 @@
          for(const id of G.state.draft.options){
            const skill=G.skillCatalog.find(s=>s.id===id),button=document.createElement('button');
            button.className='skill-card';button.dataset.skill=id;button.setAttribute('aria-label',`加入${skill.name}${outgoing?`，自动替换${outgoing.name}`:''}`);
-           button.innerHTML=`<span class="skill-card-top"><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span>${rarity(skill)}</span><h3>${skill.name}</h3><span class="skill-family">${skill.family} / 跨关生效</span><p>${skill.describe(1)}</p>${chance(skill)}<span class="skill-pick">${outgoing?'加入并滚动替换':'加入技能槽'}<i data-lucide="arrow-up-right"></i></span>`;
-          button.onclick=()=>selectSkill(id,button);$('draft-options').append(button);
+            button.innerHTML=`<span class="skill-card-top"><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span>${rarity(skill)}</span><h3>${skill.name}</h3><span class="skill-family">${skill.family} / 跨关生效</span><p>${skill.describe(1)}</p>${chance(skill)}<span class="skill-pick">加入技能槽<i data-lucide="arrow-up-right"></i></span>`;
+           button.onclick=()=>selectSkill(id);$('draft-options').append(button);
         }
         icons();
       }
@@ -79,7 +75,14 @@
    G.ui=()=>{
      if(uiQueued)return;
      uiQueued=true;
-      requestAnimationFrame(()=>{uiQueued=false;baseUi();update();G.updateAchievementUI?.();});
+      requestAnimationFrame(()=>{
+         uiQueued=false;baseUi();update();G.updateAchievementUI?.();
+         // Report migrated-away skills once the entry screen no longer covers the HUD.
+         if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
+           G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
+           G.revokedSkills=null;
+         }
+       });
    };
   draft.addEventListener('cancel',e=>e.preventDefault());
   draft.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation();});

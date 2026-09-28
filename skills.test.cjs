@@ -8,7 +8,9 @@ function boot(saved){
   const G=context.window.Game;G.burst=G.float=G.ring=()=>{};return{G,read:()=>JSON.parse(storage)};
 }
 // Tests that predate the level-gated slot upgrade play with all four slots unlocked.
-const fresh=()=>({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:3},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
+// skillGateVersion pre-marks the gate migration as already applied so these mechanical
+// tests can equip late-game skills (e.g. boomerang) at level 1.
+const fresh=()=>({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:3},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null,skillGateVersion:1});
 function ready(ids){const result=boot(fresh()),G=result.G;G.state.skills=Object.fromEntries((Array.isArray(ids)?ids:ids?[ids]:[]).map(id=>[id,1]));G.state.skillChosenLevel=G.state.level;G.state.draft=null;G.phase='ready';return result;}
 function choose(G,id){G.state.draft={level:G.state.level,options:[id,...G.skillCatalog.filter(s=>s.id!==id&&!G.skillRank(s.id)).slice(0,2).map(s=>s.id)]};G.prepareDraft();assert.equal(G.chooseSkill(id),true);}
 function finish(G){for(let i=0;i<1800&&G.phase==='flying';i++)G.tick(1/120);assert.notEqual(G.phase,'flying');if(G.time<G.nextShotAt)G.tick(G.nextShotAt-G.time);}
@@ -86,6 +88,20 @@ test('entry effects of an outgoing skill never leak into the replacement board',
     const restored=boot(read()).G;choose(restored,'piercer');assert.equal(restored.skillRank(id),0);assert.ok(restored.bricks.every(b=>b.hp===b.max));assert.equal(restored.threshold,Math.ceil(restored.initial*.6));
   }
 });
+test('the slot upgrade never consumes 神匠赐福, which still applies to real upgrades',()=>{
+  const {G}=ready('forge');
+  G.state.up.slots=0;G.state.coins=1e5;
+  assert.equal(G.state.skillRuntime.forge,false);
+  assert.equal(G.buy('slots'),true);
+  assert.equal(G.skillSlotBought(),1);                 // exactly +1 slot, not +2
+  assert.equal(G.state.up.slots,1);
+  assert.equal(G.state.coins,0);
+  assert.equal(G.state.skillRuntime.forge,false);      // charge kept for later
+  // The next real upgrade still triggers 神匠赐福, adding its usual +2.
+  G.state.coins=1e6;assert.equal(G.buy('arrow'),true);
+  assert.equal(G.state.up.arrow,3);
+  assert.equal(G.state.skillRuntime.forge,true);
+});
 test('retained economy passives stack and forge refreshes once on each new level',()=>{
   const {G,read}=ready('forge');G.state.coins=10000;G.buy('arrow');assert.equal(G.state.up.arrow,3);const loaded=boot(read()).G;loaded.buy('arrow');assert.equal(loaded.state.up.arrow,4);loaded.clear();loaded.tick(2.1);choose(loaded,'mint');loaded.buy('arrow');assert.equal(loaded.state.up.arrow,7);
   assert.equal(ready('mint').G.reward('normal',1),6);assert.equal(ready('alchemist').G.reward('gold',1),24);assert.equal(ready('bargain').G.cost('arrow'),60);
@@ -149,6 +165,30 @@ test('boomerang stays out of the draw until the run reaches level 50',()=>{
   assert.ok(!G.state.draft.options.includes('boomerang'));
   assert.equal(G.chooseSkill('boomerang'),false);
   assert.equal(G.skillRank('boomerang'),0);
+});
+test('migration revokes gated skills from older saves below their unlock level',()=>{
+  // An old save that predates the gate, still holding a level-30 boomerang.
+  const old=fresh();old.level=30;old.skillChosenLevel=30;old.skills={titan:1,boomerang:1};delete old.skillGateVersion;
+  const {G,read}=boot(old);
+  assert.deepEqual(Object.keys(G.state.skills),['titan']);
+  assert.equal(G.skillRank('boomerang'),0);assert.equal(G.skillRank('titan'),1);
+  assert.equal(G.state.skillGateVersion,1);
+  assert.deepEqual(Array.from(G.revokedSkills,s=>s.id),['boomerang']);
+  G.save();assert.deepEqual(Object.keys(read().skills),['titan']);
+
+  // A save that already reached the gate keeps the skill untouched.
+  const high=fresh();high.level=60;high.skillChosenLevel=60;high.skills={boomerang:1};delete high.skillGateVersion;
+  const kept=boot(high).G;
+  assert.equal(kept.skillRank('boomerang'),1);assert.equal(kept.state.skillGateVersion,1);assert.equal(kept.revokedSkills,undefined);
+
+  // Revoking the only skill reopens the draft for that level.
+  const only=fresh();only.level=30;only.skillChosenLevel=30;only.skills={boomerang:1};delete only.skillGateVersion;
+  const bare=boot(only).G;
+  assert.equal(Object.keys(bare.state.skills).length,0);assert.equal(bare.state.skillChosenLevel,0);assert.equal(bare.phase,'draft');
+
+  // The migration is one-time: re-saving keeps it applied without re-reporting.
+  const rerun=boot(read()).G;
+  assert.deepEqual(Object.keys(rerun.state.skills),['titan']);assert.equal(rerun.revokedSkills,undefined);
 });
 test('skill slot count follows the purchased shop tiers up to four',()=>{
   const {G}=boot();assert.equal(G.skillSlots,1);
