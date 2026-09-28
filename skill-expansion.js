@@ -17,7 +17,7 @@
     G.withArrow(source,()=>{for(const b of [...G.bricks])if(Math.hypot(b.x-position.x,b.y-position.y)<radius)G.hit(b,damage,1);});
   }
   function ensureContract(){
-    if(!rank('contract'))return;
+    if(!rank('contract')||G.state.skillChosenLevel!==G.state.level)return;
     const c=runtime().contract??={rounds:0,targets:[],size:0};
     if(c.rounds>=3||c.targets.length||!G.bricks.length)return;
     c.targets=[...G.bricks].sort((a,b)=>b.y-a.y||a.hp-b.hp).slice(0,3).map(b=>({x:b.x,y:b.y}));
@@ -29,15 +29,15 @@
   const add=G.addArrow;
   G.addArrow=(...args)=>{
     const a=add(...args);if(!a)return a;
-    if(rank('boomerang')||rank('spectral'))a.pierce+=6;
-    if(rank('siegebreaker')||rank('spectral')||rank('timeslip'))a.damage*=2;
-    a.expansionBase=a.damage;return a;
+    a.pierce+=6*(rank('boomerang')+rank('spectral'));
+    a.skillDamageScale=2**(rank('siegebreaker')+rank('spectral')+rank('timeslip'));
+    G.setArrowDamage(a,a.damage);return a;
   };
   const shoot=G.shoot;
   G.shoot=(...args)=>{
     const existing=new Set(G.arrows),result=shoot(...args);if(!result)return result;
     const source=G.arrows.find(a=>!existing.has(a));
-    if(rank('timeslip'))G.nextShotAt=G.time+.25;
+    if(rank('timeslip'))G.nextShotAt=Math.min(G.nextShotAt,G.time+.25);
     if(rank('transmute')){
       const candidates=G.bricks.filter(b=>b.type==='normal');
       for(let i=candidates.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
@@ -72,7 +72,7 @@
     const position={x:b.x,y:b.y},contract=contracted(b),damage=a.damage;
     if(contract)a.damage*=2;
     if(rank('infection')&&!a.infectionChain){a.infectionChain={visited:new Set(),damage:G.damage()*3};infect(b,a,a.infectionChain);}
-    try{projectileHit(b,a);}finally{if(contract)a.damage=damage;}
+    try{projectileHit(b,a);}finally{if(contract)a.damage-=damage;}
     if(G.phase!=='flying')return;
     if(rank('wormhole')&&(a.warps||0)<3&&!a.warpPending){
       a.warpPending=true;a.warps=(a.warps||0)+1;a.pierce+=2;
@@ -80,7 +80,7 @@
         a.warpPending=false;if(!G.arrows.includes(a))return;
         const target=G.bricks.filter(t=>!a.hit.has(t.body.id)&&Math.hypot(t.x-position.x,t.y-position.y)>80).sort((x,y)=>Math.hypot(y.x-position.x,y.y-position.y)-Math.hypot(x.x-position.x,x.y-position.y))[0];
         if(!target)return;
-        a.damage=a.expansionBase*(1+.5*a.warps);
+        a.damage+=a.expansionBase*.5;
         const exit={x:target.x,y:target.y+target.h/2+9},entry={...a.body.position};
         Body.setPosition(a.body,exit);Body.setVelocity(a.body,{x:0,y:-Math.max(22,Math.hypot(a.body.velocity.x,a.body.velocity.y))});a.overlap.clear();a.trail=[];
         signal('wormhole','portal',entry,exit,.8);fx('wormhole',entry.x,entry.y,{r:65,force:true});fx('wormhole',exit.x,exit.y,{r:65,force:true});G.sound('prism');

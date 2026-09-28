@@ -37,25 +37,25 @@ test('random levels retain all five specials, correct threshold, and no practica
   const {G}=boot();
    for(const level of [1,2,10,100,10000]){G.state.level=level;G.generate();assert.ok(G.bricks.length>=55);assert.ok(G.bricks.length<=68);assert.ok(G.bricks.every(b=>b.w===84&&b.h===44));assert.equal(G.threshold,Math.ceil(G.initial*.6));for(const kind of ['bomb','lightning','frost','prism','gold'])assert.ok(G.bricks.some(b=>b.type===kind));assert.ok(Number.isFinite(G.bonus()));}
 });
-test('coins scale with both level and bounded exponential chain',()=>{
-  const {G}=boot();const base=G.reward('normal',1);assert.ok(G.reward('normal',5)>base);assert.ok(G.reward('normal',15)>G.reward('normal',5));assert.equal(G.mult(10000),12);G.state.level=10;assert.ok(G.reward('normal',1)>base);assert.equal(G.reward('gold',1),Math.round(3*Math.pow(10,1.1)*3));
+test('coins scale with level and a linear per-arrow combo capped at threefold',()=>{
+  const {G}=boot();const base=G.reward('normal',1);assert.equal(G.mult(1),1);assert.equal(G.mult(2),1.25);assert.equal(G.mult(5),2);assert.equal(G.mult(9),3);assert.equal(G.mult(10000),3);assert.ok(G.reward('normal',5)>base);assert.ok(G.reward('normal',15)>G.reward('normal',5));G.state.level=10;assert.ok(G.reward('normal',1)>base);assert.equal(G.reward('gold',1),Math.round(3*Math.pow(10,1.1)*3));
 });
 test('core threshold unlocks, cleanup pays only its bonus, and cannot pay twice',()=>{
   const {G}=boot();G.bricks.forEach(b=>b.type='normal');
   for(let i=0;i<G.threshold;i++)G.hit(G.bricks[0],999);
-  assert.ok(G.core);const before=G.state.coins,total=G.state.total,combo=G.combo,bonus=G.bonus(),level=G.state.level;
-  G.clear();assert.equal(G.state.coins,before+bonus);assert.equal(G.state.total,total);assert.equal(G.combo,combo);assert.equal(G.bricks.length,0);assert.equal(G.state.level,level+1);G.clear();assert.equal(G.state.coins,before+bonus);
+  assert.ok(G.core);const before=G.state.coins,total=G.state.total,roundKills=G.roundKills,best=G.state.best,bonus=G.bonus(),level=G.state.level;
+  G.clear();assert.equal(G.state.coins,before+bonus);assert.equal(G.state.total,total);assert.equal(G.roundKills,roundKills);assert.equal(G.state.best,best);assert.equal(G.bricks.length,0);assert.equal(G.state.level,level+1);G.clear();assert.equal(G.state.coins,before+bonus);
   assert.equal(G.obstacles.length,0);
 });
 test('upgrades are affordable-only and unavailable mid-shot',()=>{
   const {G}=boot();assert.equal(G.buy('arrow'),false);G.state.coins=1000;const price=G.cost('arrow');assert.equal(G.buy('arrow'),true);assert.equal(G.state.coins,1000-price);assert.equal(G.state.up.arrow,1);assert.ok(G.damage()>1);G.shoot(0,100);assert.equal(G.buy('power'),false);
 });
-test('combo multiplier cap unlocks at brick tier 30 and increases by one per purchase',()=>{
-  const {G,read}=boot();const oldSave=read();assert.equal(oldSave.up.comboCap,0);assert.equal(G.comboMultiplierCap(),12);assert.equal(G.mult(10000),12);
-  G.state.coins=Number.MAX_SAFE_INTEGER;assert.equal(G.buy('comboCap'),false);G.state.up.brick=29;assert.equal(G.buy('comboCap'),false);
-  G.state.up.brick=30;const firstCost=G.cost('comboCap');assert.equal(firstCost,Math.ceil(120*1.5**30));assert.equal(G.cost('brick'),Math.ceil(120*1.5**30));
-  assert.equal(G.buy('comboCap'),true);assert.equal(G.comboMultiplierCap(),13);assert.equal(G.mult(10000),13);assert.equal(G.state.up.comboCap,1);
-  assert.equal(G.cost('comboCap'),Math.ceil(120*1.5**31));assert.equal(boot(read()).G.state.up.comboCap,1);
+test('combo upgrades unlock at brick tier five and raise both the step and cap',()=>{
+  const {G,read}=boot();const oldSave=read();assert.equal(oldSave.up.comboCap,0);assert.equal(G.comboMultiplierCap(),3);assert.equal(G.comboStep(),.25);assert.equal(G.comboCapKills(),9);
+  G.state.coins=Number.MAX_SAFE_INTEGER;assert.equal(G.buy('comboCap'),false);G.state.up.brick=4;assert.equal(G.buy('comboCap'),false);
+  G.state.up.brick=5;assert.equal(G.cost('comboCap'),1500);assert.equal(G.cost('brick'),Math.ceil(120*1.5**5));
+  assert.equal(G.buy('comboCap'),true);assert.equal(G.comboMultiplierCap(),3.5);assert.equal(G.comboStep(),.275);assert.equal(G.comboCapKills(),11);assert.equal(G.mult(10000),3.5);assert.equal(G.state.up.comboCap,1);
+  assert.equal(G.cost('comboCap'),2475);const loaded=boot(read()).G;assert.equal(loaded.state.up.comboCap,1);assert.equal(loaded.comboMultiplierCap(),3.5);assert.equal(loaded.comboStep(),.275);
 });
 test('fixed world keeps the sling beneath the lowest brick row with clear separation',()=>{
    const {G}=boot();assert.equal(G.H,1400);assert.equal(G.origin.y,970);
@@ -91,7 +91,7 @@ test('barriers reflect both faces, do not consume penetration or award coins, an
       const arrow=G.arrows.at(-1);for(let i=0;i<4;i++)G.tick(1/120);
       assert.ok(horizontal?arrow.body.velocity.x<0:arrow.body.velocity.y>0,JSON.stringify({horizontal,repeat,obstacle:{x:o.x,y:o.y},position:arrow.body.position,velocity:arrow.body.velocity}));
       assert.equal(arrow.pierce,G.penetration());assert.equal(G.obstacles.length,count);
-      assert.equal(G.state.coins,0);assert.equal(G.killed,0);assert.equal(G.combo,0);
+      assert.equal(G.state.coins,0);assert.equal(G.killed,0);assert.equal(G.arrowKills(arrow),0);
       G.arrows.forEach(a=>Matter.Composite.remove(G.engine.world,a.body));G.arrows=[];
     }
   }
@@ -150,9 +150,9 @@ test('a two-pierce arrow destroys a frost brick plus two aligned normal bricks',
   const {G}=boot();
   G.bricks.slice(3).forEach(b=>Matter.Composite.remove(G.engine.world,b.body));G.bricks=G.bricks.slice(0,3);
   G.bricks.forEach((b,i)=>{Matter.Body.setPosition(b.body,{x:390,y:500-i*46});b.x=390;b.y=500-i*46;b.hp=b.max=1;b.type=i===0?'frost':'normal';});
-  G.initial=G.bricks.length;G.threshold=99;G.shoot(0,100);
+  G.initial=G.bricks.length;G.threshold=99;G.shoot(0,100);const arrow=G.arrows[0];
   for(let i=0;i<700&&G.phase==='flying';i++)G.tick(1/120);
-  assert.equal(G.killed,3);assert.equal(G.combo,3);assert.equal(G.arrows.length,0);
+  assert.equal(G.killed,3);assert.equal(G.arrowKills(arrow),3);assert.equal(G.state.best,3);assert.equal(G.arrows.length,0);
 });
 test('an arrow can hit the same brick again after leaving it',()=>{
   const {G}=boot();const {Bodies,Composite}=Matter;
@@ -166,9 +166,9 @@ test('an arrow can hit the same brick again after leaving it',()=>{
   assert.equal((100-b.hp)/2,3);
 });
 test('plain arrows stop after exactly two brick contacts at the initial tier',()=>{
-  const {G}=boot();G.bricks.forEach(b=>{b.type='normal';b.hp=1;});G.shoot(0,100);
+  const {G}=boot();G.bricks.forEach(b=>{b.type='normal';b.hp=1;});G.shoot(0,100);const arrow=G.arrows[0];
   for(let i=0;i<600&&G.phase==='flying';i++)G.tick(1/120);
-  assert.equal(G.killed,2);assert.equal(G.combo,2);assert.equal(G.arrows.length,0);
+  assert.equal(G.killed,2);assert.equal(G.arrowKills(arrow),2);assert.equal(G.state.best,2);assert.equal(G.arrows.length,0);
 });
 test('portrait boards reload without rerolling',()=>{
   const {G,read}=boot();G.state.level=20;G.generate();const original=JSON.stringify(read().board);

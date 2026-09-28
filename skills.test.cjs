@@ -7,45 +7,98 @@ function boot(saved){
   vm.createContext(context);for(const file of ['game.js','skills.js','skill-expansion.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);
   const G=context.window.Game;G.burst=G.float=G.ring=()=>{};return{G,read:()=>JSON.parse(storage)};
 }
-function ready(id){const result=boot(),G=result.G;G.state.skills=id?{[id]:1}:{};G.state.skillChosenLevel=G.state.level;G.state.draft=null;G.phase='ready';return result;}
+function ready(ids){const result=boot(),G=result.G;G.state.skills=Object.fromEntries((Array.isArray(ids)?ids:ids?[ids]:[]).map(id=>[id,1]));G.state.skillChosenLevel=G.state.level;G.state.draft=null;G.phase='ready';return result;}
+function choose(G,id){G.state.draft={level:G.state.level,options:[id,...G.skillCatalog.filter(s=>s.id!==id&&!G.skillRank(s.id)).slice(0,2).map(s=>s.id)]};G.prepareDraft();assert.equal(G.chooseSkill(id),true);}
 function finish(G){for(let i=0;i<1800&&G.phase==='flying';i++)G.tick(1/120);assert.notEqual(G.phase,'flying');if(G.time<G.nextShotAt)G.tick(G.nextShotAt-G.time);}
 function park(G){for(const a of G.arrows){Matter.Body.setPosition(a.body,{x:390,y:1350});Matter.Body.setVelocity(a.body,{x:0,y:0});}}
 function armor(G){G.bricks.forEach(b=>{b.type='normal';b.hp=b.max=100;b.frozen=false;});}
-test('81 single-level choices, stable drafts and one selection per level',()=>{
+test('81 choices, stable drafts and one selection per level',()=>{
   const {G,read}=boot();assert.equal(G.skillCatalog.length,81);assert.ok(G.skillCatalog.every(s=>s.max===1));assert.equal(G.phase,'draft');assert.equal(G.shoot(0,100),false);assert.equal(G.buy('arrow'),false);
   assert.equal(JSON.stringify(boot(read()).G.state.draft),JSON.stringify(G.state.draft));
   const id=G.state.draft.options[0];assert.equal(G.chooseSkill('invalid'),false);assert.equal(G.chooseSkill(id),true);assert.equal(G.chooseSkill(id),false);assert.equal(Object.keys(G.state.skills).length,1);assert.equal(boot(read()).G.skillRank(id),1);
 });
-test('clear awards current skill bonus once, expires it immediately and survives transition reload',()=>{
-  const {G,read}=ready('treasury');G.save();assert.equal(G.bonus(),720);G.clear();assert.equal(G.state.coins,720);assert.equal(G.skillRank('treasury'),0);assert.equal(Object.keys(G.state.skills).length,0);assert.equal(G.settledBonus,720);G.clear();assert.equal(G.state.coins,720);
-  const loaded=boot(read()).G;assert.equal(loaded.state.level,2);assert.equal(loaded.phase,'draft');assert.equal(loaded.state.coins,720);assert.equal(Object.keys(loaded.state.skills).length,0);
+test('rebalanced rarities also move draw weights while treasury keeps its ordinary tier and bonus',()=>{
+  const {G}=boot(),byId=new Map(G.skillCatalog.map(s=>[s.id,s]));
+  const changes=[
+    ['forge','blue',112],['sharpshooter','blue',96],['rhythm','blue',101],
+    ['teslanet','gold',55],['undertow','gold',53],['frostfire','gold',49],['thunderlottery','gold',48],
+    ['timeslip','gold',53.5],['rapid','gold',56],['jackpot','gold',53],
+    ['lightning','blue',15],['doubletap','blue',14],['siegebreaker','blue',10.5]
+  ];
+  for(const [id,tier,oldWeight] of changes){
+    const skill=byId.get(id);assert.equal(skill.tier,tier,id);
+    assert.ok(oldWeight>18?skill.weight<oldWeight:skill.weight>oldWeight,id+' draw weight');
+  }
+  assert.equal(byId.get('treasury').tier,'white');assert.equal(byId.get('treasury').weight,116);
+  const treasury=ready('treasury').G;for(const level of [1,25,1000])assert.equal(treasury.bonus(level),Math.round(240*level**1.15)*3);
+  for(const tier of ['white','blue','gold'])assert.equal(G.skillCatalog.filter(s=>s.tier===tier).length,27);
 });
-test('same skill can be selected in another level without stacking',()=>{
+test('clear awards current skill bonus once and keeps skills through transition reload',()=>{
+  const {G,read}=ready('treasury');G.save();assert.equal(G.bonus(),720);G.clear();assert.equal(G.state.coins,720);assert.equal(G.skillRank('treasury'),1);assert.equal(Object.keys(G.state.skills).length,1);assert.equal(G.settledBonus,720);G.clear();assert.equal(G.state.coins,720);
+  const loaded=boot(read()).G;assert.equal(loaded.state.level,2);assert.equal(loaded.phase,'draft');assert.equal(loaded.state.coins,720);assert.equal(loaded.skillRank('treasury'),1);assert.ok(!loaded.state.draft.options.includes('treasury'));
+});
+test('equipped skills remain active but cannot be drawn or selected twice',()=>{
   const {G}=ready('titan');assert.equal(G.damage(),4);G.clear();G.tick(2.1);
-  G.state.draft={level:2,options:['titan','mint','prism']};G.prepareDraft();assert.equal(G.chooseSkill('titan'),true);assert.equal(G.skillRank('titan'),1);assert.equal(G.damage(),4);
+  G.state.draft={level:2,options:['titan','mint','prism']};G.prepareDraft();assert.ok(!G.state.draft.options.includes('titan'));assert.equal(G.chooseSkill('titan'),false);assert.equal(G.skillRank('titan'),1);assert.equal(G.damage(),4);
+  choose(G,'heavy');assert.equal(G.damage(),5.6);assert.deepEqual(Object.keys(G.state.skills),['titan','heavy']);
+});
+test('four slots rotate oldest-first across levels and reloads, with no replacement argument',()=>{
+  let {G,read}=boot();const history=[];
+  for(const id of ['titan','mint','ice','heavy','piercer','titan']){
+    if(history.length){G.clear();G.tick(2.1);}
+    choose(G,id);history.push(id);
+    assert.deepEqual(Object.keys(G.state.skills),history.slice(-4));
+    assert.deepEqual(Array.from(G.activeSkills(),s=>s.id),history.slice(-4));
+    assert.equal(G.outgoingSkill()?.id,history.length>=4?history.at(-4):undefined);
+    const loaded=boot(read());G=loaded.G;read=loaded.read;
+    assert.deepEqual(Object.keys(G.state.skills),history.slice(-4));assert.equal(G.phase,'ready');
+  }
+  assert.equal(G.skillRank('mint'),0);assert.equal(G.skillRank('ice'),1);
+});
+test('single-level v2 saves preserve current skill, progress and runtime on migration',()=>{
+  const {G,read}=ready('decay');G.prepareDraft();G.state.coins=432;G.state.up.arrow=5;G.killed=3;G.state.skillRuntime.shots=7;G.save();
+  const saved=read();saved.skillScopeVersion=2;const loaded=boot(saved).G;
+  assert.equal(loaded.state.skillScopeVersion,3);assert.equal(loaded.skillRank('decay'),1);assert.equal(loaded.phase,'ready');assert.equal(loaded.state.coins,432);assert.equal(loaded.state.up.arrow,5);assert.equal(loaded.killed,3);assert.equal(loaded.state.skillRuntime.shots,7);assert.equal(loaded.bricks[0].hp,G.bricks[0].hp);
+  saved.level++;saved.board=null;const expired=boot(saved).G;assert.equal(expired.skillRank('decay'),0);assert.equal(expired.phase,'draft');
+});
+test('malformed skill saves retain only the latest four valid unique entries',()=>{
+  const {G,read}=ready('titan');G.save();const saved=read();saved.skills={titan:1,mint:1,invalid:1,ice:1,heavy:1,piercer:1,forge:99};
+  const loaded=boot(saved).G;assert.deepEqual(Object.keys(loaded.state.skills),['mint','ice','heavy','piercer']);
+  saved.skills=['titan'];const empty=boot(saved).G;assert.equal(Object.keys(empty.state.skills).length,0);assert.equal(empty.phase,'draft');
 });
 test('legacy accumulated skills are removed without losing wallet, gear or board progress',()=>{
   const {G,read}=ready('mint');G.state.coins=678;G.state.up.arrow=10;G.killed=4;G.save();const old=read();delete old.skillScopeVersion;old.skills={titan:50,mint:10,ice:2};
   const loaded=boot(old).G;assert.equal(loaded.state.coins,678);assert.equal(loaded.state.up.arrow,10);assert.equal(loaded.killed,4);assert.equal(loaded.phase,'draft');assert.equal(Object.keys(loaded.state.skills).length,0);assert.ok(loaded.damage()<5);
 });
-test('decay is applied once within its level, expires before the next board',()=>{
+test('retained decay applies once per board after drafting, never again on reload',()=>{
   const {G,read}=ready('decay');const before=G.bricks[0].hp;G.prepareDraft();assert.equal(G.bricks[0].hp,before*.65);assert.equal(boot(read()).G.bricks[0].hp,G.bricks[0].hp);
   G.clear();G.tick(2.1);assert.ok(G.bricks.every(b=>b.hp===b.max));assert.equal(G.state.skillRuntime.decay,false);
+  choose(G,'mint');assert.ok(G.bricks.every(b=>b.hp===b.max*.65));assert.equal(boot(read()).G.bricks[0].hp,G.bricks[0].hp);
 });
-test('resonance threshold returns to normal on the next level',()=>{
-  const {G}=ready('resonance');G.prepareDraft();assert.equal(G.threshold,Math.ceil(G.initial*.45));G.clear();G.tick(2.1);assert.equal(G.threshold,Math.ceil(G.initial*.6));
+test('retained resonance reapplies on the next level after drafting',()=>{
+  const {G}=ready('resonance');G.prepareDraft();assert.equal(G.threshold,Math.ceil(G.initial*.45));G.clear();G.tick(2.1);choose(G,'mint');assert.equal(G.threshold,Math.ceil(G.initial*.45));
 });
-test('economy passives apply only this level but earned gear and coins persist',()=>{
-  const {G,read}=ready('forge');G.state.coins=10000;G.buy('arrow');assert.equal(G.state.up.arrow,3);const loaded=boot(read()).G;loaded.buy('arrow');assert.equal(loaded.state.up.arrow,4);loaded.clear();loaded.tick(2.1);loaded.chooseSkill(loaded.state.draft.options.find(id=>id!=='forge'));loaded.buy('arrow');assert.equal(loaded.state.up.arrow,5);
+test('entry effects of an outgoing skill never leak into the replacement board',()=>{
+  for(const id of ['decay','resonance']){
+    const {G,read}=ready([id,'mint','titan','heavy']);G.prepareDraft();G.clear();G.tick(2.1);
+    const restored=boot(read()).G;choose(restored,'piercer');assert.equal(restored.skillRank(id),0);assert.ok(restored.bricks.every(b=>b.hp===b.max));assert.equal(restored.threshold,Math.ceil(restored.initial*.6));
+  }
+});
+test('retained economy passives stack and forge refreshes once on each new level',()=>{
+  const {G,read}=ready('forge');G.state.coins=10000;G.buy('arrow');assert.equal(G.state.up.arrow,3);const loaded=boot(read()).G;loaded.buy('arrow');assert.equal(loaded.state.up.arrow,4);loaded.clear();loaded.tick(2.1);choose(loaded,'mint');loaded.buy('arrow');assert.equal(loaded.state.up.arrow,7);
   assert.equal(ready('mint').G.reward('normal',1),6);assert.equal(ready('alchemist').G.reward('gold',1),24);assert.equal(ready('bargain').G.cost('arrow'),60);
+  const build=ready(['mint','alchemist','bargain','treasury']).G;assert.equal(build.reward('gold',1),48);assert.equal(build.cost('arrow'),60);assert.equal(build.bonus(),720);
 });
 test('every single passive runs a shot without deadlocking or exceeding projectile budget',()=>{
   for(const skill of boot().G.skillCatalog){const {G}=ready(skill.id);G.prepareDraft();G.shoot(0,100);let peak=0;for(let i=0;i<1800&&G.phase==='flying';i++){G.tick(1/120);peak=Math.max(peak,G.arrows.length);}assert.notEqual(G.phase,'flying',skill.id);assert.ok(peak<=64);assert.ok(Number.isFinite(G.state.coins));}
 });
 test('ice applies exactly double damage, rage caps, and ricochet grows additively',()=>{
   const ice=ready('ice').G;armor(ice);ice.projectileHit(ice.bricks[0],{damage:1});assert.equal(ice.bricks[0].hp,98);
-  const rage=ready('rage').G;armor(rage);rage.combo=500;rage.projectileHit(rage.bricks[0],{damage:2});assert.equal(rage.bricks[0].hp,95);
-  const kinetic=ready('ricochet').G,a=kinetic.addArrow(390,600,0,-24);for(let i=0;i<20;i++)kinetic.onRicochet(a);assert.equal(a.rebounds,4);assert.equal(a.pierce,10);assert.equal(a.damage,3.2);
+  const rage=ready('rage').G;armor(rage);
+  for(const [kills,multiplier] of [[0,1],[2,1],[3,1.2],[18,2.2],[500,2.2]]){
+    const target=rage.bricks[0];target.hp=100;rage.projectileHit(target,{damage:2,kills});assert.ok(Math.abs(target.hp-(100-2*multiplier))<1e-8);
+  }
+  const kinetic=ready('ricochet').G,a=kinetic.addArrow(390,600,0,-24);for(let i=0;i<20;i++)kinetic.onRicochet(a);assert.equal(a.rebounds,4);assert.equal(a.pierce,10);assert.ok(Math.abs(a.damage-3.2)<1e-9);
 });
 test('execution threshold is 25 percent and crits deal triple rather than fourfold damage',()=>{
   const G=ready('execute').G;armor(G);const b=G.bricks[0];G.projectileHit(b,{damage:50});assert.equal(b.hp,50);G.projectileHit(b,{damage:25});assert.ok(!G.bricks.includes(b));
@@ -60,17 +113,25 @@ test('pulse and legion trigger every third shot and counters persist',()=>{
 test('slow damage upgrades leave typical mid and late game bricks needing multiple hits',()=>{
   const G=ready().G;for(const [level,tier] of [[1,0],[5,10],[10,15],[25,22],[100,35],[1000,50]]){G.state.level=level;G.state.up.arrow=tier;assert.ok(G.damage()<G.baseHp(),`${level}/${tier}`);assert.ok(Math.ceil(G.baseHp()/G.damage())<=6);}
 });
-test('reset clears the level skill and reopens the first draft',()=>{const G=ready('titan').G;G.reset();assert.equal(G.state.level,1);assert.equal(Object.keys(G.state.skills).length,0);assert.equal(G.phase,'draft');});
+test('reset clears the entire rolling build and reopens the first draft',()=>{const G=ready(['titan','mint','heavy','ice']).G;G.reset();assert.equal(G.state.level,1);assert.equal(Object.keys(G.state.skills).length,0);assert.equal(G.state.skillScopeVersion,3);assert.equal(G.phase,'draft');});
 test('ordinary homing prioritizes an exposed nearby core instead of steering away from it',()=>{
   const G=ready('seeking').G;G.spawnCore();const arrow=G.addArrow(340,G.core.y,20,0);G.beforePhysics(.1);assert.ok(Math.abs(arrow.body.velocity.y)<1e-8);assert.ok(arrow.body.velocity.x>0);
 });
 test('weighted draws are unique and observed inclusion matches displayed probabilities',()=>{
   const {G}=boot(),counts=Object.fromEntries(G.skillCatalog.map(s=>[s.id,0])),n=60000;
-  assert.equal(new Set(G.skillCatalog.map(s=>s.weight)).size,75);
+  assert.equal(new Set(G.skillCatalog.map(s=>s.id)).size,81);
+  assert.ok(G.skillCatalog.every(s=>Number.isFinite(s.weight)&&s.weight>0));
   assert.ok(Math.abs(G.skillCatalog.reduce((sum,s)=>sum+s.chance,0)-3)<1e-10);
   for(let i=0;i<n;i++){const options=G.rollSkills();assert.equal(new Set(options).size,3);for(const id of options)counts[id]++;}
   for(const s of G.skillCatalog){assert.ok(s.tier in G.skillTiers);assert.ok(Math.abs(counts[s.id]/n-s.chance)<.006,s.id);}
   for(const [common,rare] of [['white','blue'],['blue','gold']])assert.ok(Math.min(...G.skillCatalog.filter(s=>s.tier===common).map(s=>s.chance))>Math.max(...G.skillCatalog.filter(s=>s.tier===rare).map(s=>s.chance)));
+});
+test('weighted draws exclude all equipped slots and probabilities reflect the smaller pool',()=>{
+  const G=ready(['echo','titan','ice','railgun']).G;G.clear();G.tick(2.1);
+  const counts=Object.fromEntries(G.skillCatalog.map(s=>[s.id,0])),n=40000;
+  assert.ok(Math.abs(G.skillCatalog.reduce((sum,s)=>sum+s.chance,0)-3)<1e-10);
+  for(let i=0;i<n;i++)for(const id of G.rollSkills()){assert.equal(G.skillRank(id),0);counts[id]++;}
+  for(const s of G.skillCatalog){assert.ok(Math.abs(counts[s.id]/n-s.chance)<.007,s.id);if(G.skillRank(s.id))assert.equal(s.chance,0);}
 });
 test('new arrow builds deliver their advertised damage, cadence and projectile counts',()=>{
   const rapid=ready('rapid').G;rapid.shoot(0,100);assert.equal(rapid.nextShotAt,.18);assert.equal(rapid.arrows[0].damage,2.7);
@@ -130,10 +191,10 @@ test('roulette reaches all three modes and applies each mode correctly',()=>{
   }
   assert.equal(seen.size,3);
 });
-test('thunder lottery sometimes adds six triple-damage arcs and bounty caps at fivefold',()=>{
+test('thunder lottery sometimes adds six triple-damage arcs and bounty caps at threefold',()=>{
   const G=ready('thunderlottery').G;armor(G);let wins=0;
   for(let i=0;i<25;i++){G.bricks.forEach(b=>b.hp=100);G.shoot(0,100);park(G);G.projectileHit(G.bricks[0],G.arrows[0]);finish(G);const hit=G.bricks.filter(b=>b.hp<=94);if(hit.length){wins++;assert.equal(hit.length,6);}}
   assert.ok(wins>0&&wins<25);
-  const bounty=ready('bounty').G,plain=ready().G;for(const n of [1,2,9,20])assert.equal(bounty.reward('normal',n),Math.round(plain.reward('normal',n)*(1+Math.min(8,n-1)*.5)));
+  const bounty=ready('bounty').G,plain=ready().G;for(const [n,multiplier] of [[1,1],[2,1.25],[9,3],[20,3]])assert.equal(bounty.reward('normal',n),Math.round(plain.reward('normal',n)*multiplier));
   const special=ready('specialist').G;armor(special);const b=special.bricks[0];b.type='gold';special.projectileHit(b,{damage:2});assert.equal(b.hp,92);assert.equal(special.reward('gold',1),plain.reward('gold',1)*3);assert.equal(special.reward('normal',1),plain.reward('normal',1));
 });

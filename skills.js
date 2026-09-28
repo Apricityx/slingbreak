@@ -5,7 +5,7 @@
   const catalog=G.skillCatalog=[
     entry('trident','三叉齐射','箭术','git-fork',3,r=>`每次射击额外发射 5 支扇形箭，继承全部伤害与穿透。`),
     entry('echo','回响齐射','箭术','copy',2,r=>`松弦后自动重放 ${r} 次齐射，完整复制主箭与扇形箭。`),
-    entry('titan','泰坦之力','力量','biceps-flexed',1,()=>`本关所有箭矢与伤害型被动的基础伤害提高 100%。`),
+    entry('titan','泰坦之力','力量','biceps-flexed',1,()=>`所有箭矢与伤害型被动的基础伤害提高 100%。`),
     entry('piercer','贯星长矛','箭术','move-up-right',4,r=>`主箭与齐射箭额外穿透 ${r*4} 块砖，突破普通升级的穿透上限。`),
     entry('meteor','流星雨','元素','cloud-lightning',3,r=>`每次射击召唤 6 支自上而下的流星箭，造成 2 倍伤害。`),
     entry('hunters','追猎蜂群','箭术','crosshair',3,r=>`每次射击额外释放 4 支追踪箭，自动转向附近砖块。`),
@@ -86,51 +86,88 @@
     entry('starforge','吞星熔炉','元素','eclipse',1,()=>`每次射击在砖阵中点燃熔炉，1.2 秒内每块被击碎的砖都为它充能；随后爆发 4 倍基础伤害，每层再加 40% 伤害和 12 范围，最多 16 层，基础范围 170。`)
   ];
   G.skillTiers={white:{name:'普通',level:1},blue:{name:'稀有',level:2},gold:{name:'传说',level:3}};
+  // Keep tier and draw weight together. Explicit weights avoid changing other
+  // skills' weights (especially treasury) whenever one skill moves tiers.
   const tiers={
-    white:['echo','piercer','seeking','ricochet','shatter','execute','rage','aftershock','storm','blizzard','prism','alchemist','treasury','bargain','forge','resonance','corehunter','legion','poison','ambush','siphon','opportunist','sharpshooter','bounty'],
-    blue:['titan','blast','ice','critical','sweep','lance','pulse','mint','decay','rapid','heavy','growing','jackpot','snowburst','bankshot','minefield','frostfire','thunderlottery','mirror','specialist'],
-    gold:['trident','meteor','hunters','lightning','doubletap','nova','crossfire','supernova','swarmqueen','railgun','reaper','cascade','orbital','roulette','stormfront']
+    white:[
+      ['echo',140],['piercer',138],['seeking',136],['ricochet',134],['shatter',132],['execute',130],
+      ['rage',128],['aftershock',126],['storm',124],['blizzard',122],['prism',120],['alchemist',118],
+      ['treasury',116],['bargain',114],['resonance',110],['corehunter',108],['legion',106],['nailburst',105],
+      ['poison',104],['fusepath',103],['ambush',102],['siphon',100],['reboundaim',99],['opportunist',98],
+      ['overkill',97],['pendulum',95],['bounty',94]
+    ],
+    blue:[
+      ['titan',65],['blast',64],['ice',63],['boomerang',62.5],['critical',62],['sweep',61],
+      ['lightning',60.5],['lance',60],['transmute',59.5],['pulse',59],['forge',58.5],['mint',58],
+      ['siegebreaker',57.5],['decay',57],['contract',56.5],['heavy',55],['sharpshooter',54.5],['growing',54],
+      ['doubletap',52.5],['snowburst',52],['bankshot',51],['chronicle',51],['rhythm',50.5],['minefield',50],
+      ['firewheel',49],['mirror',47],['specialist',46]
+    ],
+    gold:[
+      ['trident',18],['meteor',17],['hunters',16],['thunderlottery',14.5],['frostfire',13.5],['nova',13],
+      ['wormhole',12.5],['jackpot',12.25],['crossfire',12],['buzzsaw',11.5],['rapid',11.25],['supernova',11],
+      ['undertow',10.25],['swarmqueen',10],['worldfold',10],['spectral',9.5],['timeslip',9.25],['railgun',9],
+      ['starforge',9],['threadweaver',8.5],['teslanet',8.25],['reaper',8],['infection',7.5],['cascade',7],
+      ['orbital',6],['roulette',5],['stormfront',4]
+    ]
   };
-  for(const [tier,ids] of Object.entries(tiers))ids.forEach((id,i)=>Object.assign(catalog.find(s=>s.id===id),{tier,weight:({white:140,blue:65,gold:18}[tier])-i*({white:2,blue:1,gold:1}[tier])}));
-  for(const [id,tier,weight] of [
-    ['boomerang','blue',62.5],['transmute','blue',59.5],['contract','blue',56.5],['timeslip','blue',53.5],
-    ['wormhole','gold',12.5],['buzzsaw','gold',11.5],['siegebreaker','gold',10.5],['spectral','gold',9.5],['threadweaver','gold',8.5],['infection','gold',7.5],
-    ['nailburst','white',105],['fusepath','white',103],['rhythm','white',101],['reboundaim','white',99],['overkill','white',97],['pendulum','white',95],
-    ['teslanet','blue',55],['undertow','blue',53],['chronicle','blue',51],['firewheel','blue',49],
-    ['worldfold','gold',10],['starforge','gold',9]
-  ])Object.assign(catalog.find(s=>s.id===id),{tier,weight});
-  const totalWeight=catalog.reduce((sum,s)=>sum+s.weight,0);
-  // Sum all three ordered draw positions to get the actual inclusion probability.
-  for(const s of catalog){
-    let chance=s.weight/totalWeight;
-    for(const a of catalog)if(a!==s){
-      chance+=a.weight/totalWeight*s.weight/(totalWeight-a.weight);
-      for(const b of catalog)if(b!==s&&b!==a)chance+=a.weight/totalWeight*b.weight/(totalWeight-a.weight)*s.weight/(totalWeight-a.weight-b.weight);
+  for(const [tier,entries] of Object.entries(tiers))for(const [id,weight] of entries)Object.assign(catalog.find(s=>s.id===id),{tier,weight});
+  const byId=new Map(catalog.map(s=>[s.id,s]));
+  G.skillSlots=4;
+  const rank=G.skillRank=id=>S.skillScopeVersion===3&&byId.has(id)&&S.skills?.[id]===1?1:0;
+  // Skill IDs are non-numeric keys: insertion order survives JSON save/reload
+  // and is the FIFO queue, oldest first. Never sort this map by the catalog.
+  G.activeSkills=()=>Object.keys(S.skills).filter(id=>rank(id)).map(id=>byId.get(id));
+  G.outgoingSkill=()=>G.activeSkills().length===G.skillSlots?G.activeSkills()[0]:null;
+  // Explicit child-arrow damage must retain global projectile multipliers.
+  G.setArrowDamage=(a,damage)=>{a.damage=damage*(a.skillDamageScale||1);a.expansionBase=a.overdriveBase=a.damage;};
+  function normalize(){
+    if(S.skillScopeVersion!==3){
+      if(S.skillScopeVersion===2){
+        // Preserve the currently equipped single-level skill in older saves.
+        if(S.skillChosenLevel!==S.level)S.skills={};
+      }else{
+        if(S.skillRuntime?.decay)G.bricks.forEach(b=>{b.hp=Math.min(b.max,b.hp/.65);});
+        S.skills={};S.skillChosenLevel=0;S.skillRuntime=null;
+      }
+      S.skillScopeVersion=3;
     }
-    s.chance=chance;
+    const entries=S.skills&&typeof S.skills==='object'&&!Array.isArray(S.skills)?Object.entries(S.skills):[];
+    S.skills=Object.fromEntries(entries.filter(([id,value])=>byId.has(id)&&value===1).slice(-G.skillSlots));
+    if(!Number.isInteger(S.skillChosenLevel)||S.skillChosenLevel<0||S.skillChosenLevel>S.level||!Object.keys(S.skills).length)S.skillChosenLevel=0;
+    if(!S.skillRuntime||S.skillRuntime.level!==S.level)S.skillRuntime={level:S.level,shots:0,forge:false,decay:false};
+  }
+  normalize();
+  let chanceKey=null;
+  function draftPool(){
+    const pool=catalog.filter(s=>!rank(s.id)),key=Object.keys(S.skills).join(',');
+    if(key!==chanceKey){
+      chanceKey=key;catalog.forEach(s=>s.chance=0);
+      const total=pool.reduce((sum,s)=>sum+s.weight,0);
+      // Add the probability of selection in each of the three draw positions.
+      // Accumulating the remaining-weight factor keeps this quadratic.
+      for(const s of pool)s.chance=s.weight/total;
+      for(const a of pool){
+        const first=a.weight/total,remaining=total-a.weight;
+        let thirdFactor=0;
+        for(const b of pool)if(b!==a)thirdFactor+=b.weight/remaining/(remaining-b.weight);
+        for(const s of pool)if(s!==a){
+          s.chance+=first*s.weight/remaining;
+          s.chance+=first*s.weight*(thirdFactor-s.weight/remaining/(remaining-s.weight));
+        }
+      }
+    }
+    return pool;
   }
   G.rollSkills=()=>{
-    const pool=[...catalog],selected=[];
-    while(selected.length<3){
+    const pool=draftPool(),selected=[];
+    while(selected.length<3&&pool.length){
       let roll=Math.random()*pool.reduce((sum,s)=>sum+s.weight,0),index=pool.length-1;
       for(let i=0;i<pool.length;i++){roll-=pool[i].weight;if(roll<0){index=i;break;}}
       selected.push(pool.splice(index,1)[0].id);
     }
     return selected;
   };
-  const byId=new Map(catalog.map(s=>[s.id,s]));
-  const rank=G.skillRank=id=>S.skillScopeVersion===2&&S.skillChosenLevel===S.level&&S.skills?.[id]===1?1:0;
-  function normalize(){
-    if(S.skillScopeVersion!==2){
-      if(S.skillRuntime?.decay)G.bricks.forEach(b=>{b.hp=Math.min(b.max,b.hp/.65);});
-      S.skills={};S.skillChosenLevel=0;S.skillRuntime=null;S.skillScopeVersion=2;
-    }
-    if(S.skillChosenLevel!==S.level)S.skills={};
-    const active=catalog.find(s=>rank(s.id));S.skills=active?{[active.id]:1}:{};
-    if(!Number.isInteger(S.skillChosenLevel)||S.skillChosenLevel<0)S.skillChosenLevel=0;
-    if(!S.skillRuntime||S.skillRuntime.level!==S.level)S.skillRuntime={level:S.level,shots:0,forge:false,decay:false};
-  }
-  normalize();
   const base={damage:G.damage,penetration:G.penetration,reward:G.reward,cost:G.cost,bonus:G.bonus,generate:G.generate,shoot:G.shoot,buy:G.buy,tick:G.tick,clear:G.clear};
   G.damage=()=>base.damage()*(1+rank('titan')+.35*rank('rapid')+.8*rank('heavy')+.5*rank('supernova')+.6*rank('reaper')+3*rank('railgun')+Math.min(10,S.skillRuntime.shots)*.2*rank('growing'));
   G.penetration=()=>base.penetration()+4*rank('piercer')+2*rank('heavy')+12*rank('railgun')+2*rank('opportunist');
@@ -146,9 +183,11 @@
     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
   }
   G.prepareDraft=()=>{
-    normalize();applyLevelPassives();
-    if(S.skillChosenLevel===S.level){S.draft=null;G.save();return;}
-    const eligible=catalog,old=S.draft;
+    normalize();
+    // Apply entry effects only after the new queue is settled: an outgoing
+    // decay/resonance must not benefit the board on which it is replaced.
+    if(S.skillChosenLevel===S.level){applyLevelPassives();S.draft=null;G.save();return;}
+    const eligible=draftPool(),old=S.draft;
     if(!(old?.level===S.level&&Array.isArray(old.options)&&old.options.length===3&&new Set(old.options).size===3&&old.options.every(id=>eligible.some(s=>s.id===id)))){
       S.draft={level:S.level,options:G.rollSkills()};
     }
@@ -157,7 +196,9 @@
   G.chooseSkill=id=>{
     const skill=byId.get(id);
     if(G.phase!=='draft'||G.paused||!skill||S.draft?.level!==S.level||!S.draft.options.includes(id)||S.skillChosenLevel===S.level||rank(id)>=skill.max)return false;
-    S.skills={[id]:1};S.skillChosenLevel=S.level;S.draft=null;
+    const queue=G.activeSkills().map(s=>s.id);
+    if(queue.length===G.skillSlots)queue.shift();
+    queue.push(id);S.skills=Object.fromEntries(queue.map(skillId=>[skillId,1]));S.skillChosenLevel=S.level;S.draft=null;
     const duration=G.reduced?0:.85;
     G.boardEntrance=duration?{start:G.time,end:G.time+duration}:null;
     G.phase=duration?'entering':'ready';
@@ -165,21 +206,24 @@
   };
   let jobs=[],uses={},effectBudget=0;
   const resetShot=()=>{uses={};effectBudget=120;};
-  const take=(id,limit)=>{if((uses[id]||0)>=limit)return false;uses[id]=(uses[id]||0)+1;return true;};
+  const take=(id,limit,counts=uses)=>{if((counts[id]||0)>=limit)return false;counts[id]=(counts[id]||0)+1;return true;};
+  // Per-arrow quotas follow the source through delayed effects, even after it
+  // leaves the board. Round-wide quotas still apply to nova and cascade.
+  const takeArrow=(a,id,limit)=>!!a&&take(id,limit,a.skillUses??={});
   function enqueue(delay,fn){if(effectBudget--<=0)return;jobs.push({at:G.time+delay,level:S.level,arrow:G.activeArrow,fn});}
   const nearby=(x,y,r)=>G.bricks.filter(b=>Math.hypot(b.x-x,b.y-y)<r);
-  function area(x,y,r,damage,color='#e8a475'){
+  function area(x,y,r,damage,color='#e8a475',skillId){
     if(G.phase!=='flying')return;G.ring(x,y,color,r);G.sound('boom',1,x);
-    const skill=catalog.find(s=>rank(s.id));if(skill)G.skillFX?.(skill.id,x,y,{r,force:true});
+    if(skillId)G.skillFX?.(skillId,x,y,{r,force:true});
     nearby(x,y,r).forEach(b=>G.hit(b,damage,1));
   }
-  function arc(x,y,count,damage){
+  function arc(x,y,count,damage,skillId){
     const targets=[...G.bricks].sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,count);
     let from={x,y};targets.forEach(b=>{G.bolts.push({x:from.x,y:from.y,tx:b.x,ty:b.y,life:.35});from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
-    const skill=catalog.find(s=>rank(s.id));if(skill)G.skillFX?.(skill.id,x,y,{kind:'electric',r:115});
+    if(skillId)G.skillFX?.(skillId,x,y,{kind:'electric',r:115});
   }
   function launch(x,y,angle,speed,damage=G.damage(),pierce=G.penetration(),homing=false){
-    const a=G.addArrow(x,y,Math.sin(angle)*speed,-Math.cos(angle)*speed,pierce);if(a){a.damage=damage;a.homing=homing;}return a;
+    const a=G.addArrow(x,y,Math.sin(angle)*speed,-Math.cos(angle)*speed,pierce);if(a){G.setArrowDamage(a,damage);a.homing=homing;}return a;
   }
   function fan(angle,speed,extras){
     for(let i=0;i<extras;i++){const side=i%2?-1:1,offset=(Math.floor(i/2)+1)*.1*side;launch(G.origin.x,G.origin.y,angle+offset,speed);}
@@ -206,7 +250,7 @@
       const target=G.bricks.reduce((best,b)=>{const count=nearby(b.x,b.y,160).length;return count>best.count?{x:b.x,y:b.y,count}:best;},{count:-1});
       G.ring(target.x,target.y,'#d4af47',160);
       G.skillFX?.('orbital',target.x,target.y,{kind:'mark',r:160,duration:.8});
-      for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(target.x,target.y,160,G.damage()*3,'#d4af47'));
+      for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(target.x,target.y,160,G.damage()*3,'#d4af47','orbital'));
     }
     if(rank('roulette')){
       const mode=Math.floor(Math.random()*3);main.rouletteMode=mode;
@@ -221,7 +265,7 @@
     }));
     for(let i=0;i<rank('echo');i++)enqueue(.24*(i+1),()=>{launch(G.origin.x,G.origin.y,angle,speed);fan(angle,speed,rank('trident')*5);G.sound('shoot');G.skillFX?.('echo',G.origin.x,G.origin.y,{r:110});});
     const meteorTargets=shuffled(G.bricks).slice(0,rank('meteor')*6);
-    meteorTargets.forEach((b,i)=>enqueue(.04*i,()=>{const a=G.addArrow(b.x,142,(Math.random()*2-1)*9,18,2);if(a){a.damage=G.damage()*2;a.color='#d38b63';}}));
+    meteorTargets.forEach((b,i)=>enqueue(.04*i,()=>{const a=G.addArrow(b.x,142,(Math.random()*2-1)*9,18,2);if(a){G.setArrowDamage(a,G.damage()*2);a.color='#d38b63';}}));
     for(let i=0;i<rank('hunters')*4;i++)launch(G.origin.x+(i%2?36:-36),G.origin.y,angle+(i%2?.25:-.25),speed,G.damage(),G.penetration(),true);
     if(rank('legion')&&S.skillRuntime.shots%3===0){fan(angle,speed,6);G.skillFX?.('legion',G.origin.x,G.origin.y,{kind:'split',r:190});}
     if(rank('pulse')&&S.skillRuntime.shots%3===0)enqueue(.18,()=>{G.ring(390,320,'#adc76e',500);G.skillFX?.('pulse',390,320,{kind:'nova',r:550,duration:.9,force:true});G.sound('core');[...G.bricks].forEach(b=>G.hit(b,G.damage()*1.2,1));});
@@ -230,9 +274,8 @@
   };
   G.projectileHit=(b,a)=>{
     if(!G.bricks.includes(b))return;
-    const visual=catalog.find(s=>rank(s.id));
-    if(visual&&!['critical','execute','ambush','opportunist','specialist','siphon','sharpshooter','bargain','forge','treasury','alchemist','mint','jackpot','bounty','reaper','orbital','stormfront','storm','blizzard','prism','aftershock','pulse','supernova','legion','resonance','sweep','lance','crossfire'].includes(visual.id)){
-      G.skillFX?.(visual.id,b.x,b.y,{kind:['doubletap','minefield'].includes(visual.id)?'mark':undefined,r:rank('ice')?95:70});
+    for(const visual of G.activeSkills())if(!['critical','execute','ambush','opportunist','specialist','siphon','sharpshooter','bargain','forge','treasury','alchemist','mint','jackpot','bounty','reaper','orbital','stormfront','storm','blizzard','prism','aftershock','pulse','supernova','legion','resonance','sweep','lance','crossfire'].includes(visual.id)){
+      G.skillFX?.(visual.id,b.x,b.y,{kind:['doubletap','minefield'].includes(visual.id)?'mark':undefined,r:visual.id==='ice'?95:70});
     }
     if(rank('poison'))b.skillMarkUntil=G.time+.55;
     if(rank('ice'))nearby(b.x,b.y,55+rank('ice')*40).forEach(t=>{t.frozen=true;t.flash=.18;});
@@ -243,27 +286,27 @@
     if(rank('critical')&&Math.random()<.5){damage*=3;G.float(b.x,b.y-13,'暴击','#ce805c',13);G.skillFX?.('critical',b.x,b.y,{r:100});}
     if(rank('execute')&&b.hp-damage*(b.frozen?2:1)<=b.max*.25){damage=Math.max(damage,b.hp);G.skillFX?.('execute',b.x,b.y,{r:95});}
     const position={x:b.x,y:b.y};G.hit(b,damage);
-    if(rank('siphon')&&!G.bricks.includes(b)&&(a.siphonKills||0)<8){a.siphonBase??=a.damage;a.siphonKills=(a.siphonKills||0)+1;a.pierce++;a.damage=a.siphonBase*(1+a.siphonKills*.25);G.skillFX?.('siphon',b.x,b.y,{r:75});}
-    if(rank('minefield')&&!a.minefield){a.minefield=true;for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(position.x,position.y,135,G.damage()*2,'#d3b468'));}
-    if(rank('frostfire')){nearby(position.x,position.y,100).forEach(t=>{t.frozen=true;t.flash=.2;});enqueue(.09,()=>area(position.x,position.y,100,G.damage()*1.5,'#e89a79'));}
-    if(rank('thunderlottery')&&Math.random()<.35){G.float(position.x,position.y-22,'雷霆大奖','#b59a39',15);enqueue(.07,()=>arc(position.x,position.y,6,G.damage()*3));}
+    if(rank('siphon')&&!G.bricks.includes(b)&&(a.siphonKills||0)<8){a.siphonBase??=a.damage;a.siphonKills=(a.siphonKills||0)+1;a.pierce++;a.damage+=a.siphonBase*.25;G.skillFX?.('siphon',b.x,b.y,{r:75});}
+    if(rank('minefield')&&!a.minefield){a.minefield=true;for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(position.x,position.y,135,G.damage()*2,'#d3b468','minefield'));}
+    if(rank('frostfire')){nearby(position.x,position.y,100).forEach(t=>{t.frozen=true;t.flash=.2;});enqueue(.09,()=>area(position.x,position.y,100,G.damage()*1.5,'#e89a79','frostfire'));}
+    if(rank('thunderlottery')&&Math.random()<.35){G.float(position.x,position.y-22,'雷霆大奖','#b59a39',15);enqueue(.07,()=>arc(position.x,position.y,6,G.damage()*3,'thunderlottery'));}
     if(rank('poison'))for(let i=1;i<=3;i++)enqueue(.15*i,()=>{if(G.bricks.includes(b)){G.ring(b.x,b.y,'#91b646',25);G.hit(b,G.damage()*.8,1);}});
-    if(rank('doubletap'))enqueue(.2,()=>area(position.x,position.y,115,G.damage()*2));
+    if(rank('doubletap'))enqueue(.2,()=>area(position.x,position.y,115,G.damage()*2,'#e8a475','doubletap'));
     if(rank('crossfire')&&!a.crossfire){a.crossfire=true;enqueue(.08,()=>{
       G.skillFX?.('crossfire',position.x,position.y,{kind:'beam',force:true});
       G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4},{x:position.x,y:145,tx:position.x,ty:820,life:.4});
       G.bricks.filter(t=>Math.abs(t.y-position.y)<12||Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*3,1));G.sound('lightning');
     });}
-    if(!G.bricks.includes(b)&&rank('blast'))enqueue(.055,()=>area(position.x,position.y,125,G.damage()*1.5));
-    if(rank('lightning'))enqueue(.065,()=>arc(position.x,position.y,3,G.damage()*1.2));
-    if(rank('sweep')&&take('sweep',rank('sweep')))enqueue(.08,()=>{G.skillFX?.('sweep',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4});G.bricks.filter(t=>Math.abs(t.y-position.y)<12).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
-    if(rank('lance')&&take('lance',rank('lance')))enqueue(.08,()=>{G.skillFX?.('lance',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:position.x,y:145,tx:position.x,ty:505,life:.4});G.bricks.filter(t=>Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+    if(!G.bricks.includes(b)&&rank('blast'))enqueue(.055,()=>area(position.x,position.y,125,G.damage()*1.5,'#e8a475','blast'));
+    if(rank('lightning'))enqueue(.065,()=>arc(position.x,position.y,3,G.damage()*1.2,'lightning'));
+    if(rank('sweep')&&takeArrow(a,'sweep',rank('sweep')))enqueue(.08,()=>{G.skillFX?.('sweep',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4});G.bricks.filter(t=>Math.abs(t.y-position.y)<12).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+    if(rank('lance')&&takeArrow(a,'lance',rank('lance')))enqueue(.08,()=>{G.skillFX?.('lance',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:position.x,y:145,tx:position.x,ty:G.origin.y-120,life:.4});G.bricks.filter(t=>Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
   };
   G.onBrickDestroyed=b=>{
-    if(rank('cascade')&&take('cascade',16))enqueue(.09,()=>area(b.x,b.y,145,G.damage()*2.5,'#e89a79'));
+    if(rank('cascade')&&take('cascade',16))enqueue(.09,()=>area(b.x,b.y,145,G.damage()*2.5,'#e89a79','cascade'));
     if(rank('nova')&&take('nova',8))enqueue(.08,()=>{for(let i=0;i<3;i++)launch(b.x,b.y,(i-1)*.8,22,G.damage()*1.5,3,true);});
-    if(b.frozen&&rank('shatter')&&take('shatter',rank('shatter')*6))enqueue(.09,()=>area(b.x,b.y,65,G.damage()*1.5,'#9fc9d9'));
-    if(b.type==='bomb'&&rank('aftershock'))for(let i=0;i<rank('aftershock');i++)enqueue(.16+i*.12,()=>area(b.x,b.y,112,G.damage()*2));
+    if(b.frozen&&rank('shatter')&&takeArrow(G.activeArrow,'shatter',rank('shatter')*6))enqueue(.09,()=>area(b.x,b.y,65,G.damage()*1.5,'#9fc9d9','shatter'));
+    if(b.type==='bomb'&&rank('aftershock'))for(let i=0;i<rank('aftershock');i++)enqueue(.16+i*.12,()=>area(b.x,b.y,112,G.damage()*2,'#e8a475','aftershock'));
   };
   G.onRicochet=a=>{
     if(rank('bankshot')&&!a.bankEcho&&(a.bankshots||0)<3){
@@ -271,7 +314,7 @@
       G.withArrow(a,()=>{const p=a.body.position;for(const offset of [-.5,.5]){const child=launch(p.x,p.y,offset,24,G.damage()*2,2,true);if(child)child.bankEcho=true;}});
     }
     if(!rank('ricochet')||(a.rebounds||0)>=4)return;
-    a.reboundBase??=a.damage;a.rebounds=(a.rebounds||0)+1;a.pierce+=2;a.damage=a.reboundBase*(1+.15*a.rebounds);
+    a.reboundBase??=a.damage;a.rebounds=(a.rebounds||0)+1;a.pierce+=2;a.damage+=a.reboundBase*.15;
   };
   G.guideArrows=(dt,arrows)=>{
     for(const a of arrows){
@@ -309,6 +352,6 @@
     return result;
   };
   G.generate=restore=>{jobs=[];resetShot();normalize();base.generate(restore);G.prepareDraft();G.save();G.ui();};
-  G.clear=()=>{if(G.phase==='clearing')return;jobs=[];G.settledBonus=G.bonus();base.clear();S.skills={};try{localStorage.setItem('slingbreak-save-v1',JSON.stringify(S));}catch{}G.ui();};
+  G.clear=()=>{if(G.phase==='clearing')return;jobs=[];G.settledBonus=G.bonus();base.clear();G.ui();};
   G.prepareDraft();
 })();

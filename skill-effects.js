@@ -75,14 +75,17 @@
     worldfold:['#459c95','#dbbd75','rail',1],starforge:['#bd9141','#71aaa2','comet',1.2]
   };
   for(const [id,[color,accent,trail,duration]] of Object.entries(treatments))Object.assign(profiles[id],{color,accent,trail,duration});
-  const active=()=>G.skillCatalog.find(s=>G.skillRank(s.id));
+  // The newest skill leads the arrow styling; all four remain visible and active.
+  const active=()=>G.activeSkills().at(-1);
   const effects=[],cooldowns=new Map();
-  let lastId=null,lastState='',lastPulse=-10,acquiredTimer;
+  let lastId=null,lastState='',lastQueueKey='',lastPulse=-10,acquiredTimer;
   const hud=document.createElement('div');hud.className='skill-live';
-  hud.innerHTML='<span class="skill-live-icon"></span><span class="skill-live-copy"><strong></strong><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span><span class="skill-live-acquired" role="status"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg><span></span></span></span>';
+  hud.innerHTML='<div class="skill-live-main"><span class="skill-live-icon"></span><span class="skill-live-copy"><span class="skill-live-heading"><strong></strong><button type="button" class="skill-live-details" aria-label="查看全部已装备技能">全部技能</button></span><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span><span class="skill-live-acquired" role="status"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg><span></span></span></span></div><div class="skill-queue" aria-label="生效技能，从最早到最新"></div>';
   document.getElementById('arena').before(hud);
   const icon=hud.querySelector('.skill-live-icon'),name=hud.querySelector('strong'),description=hud.querySelector('small'),status=hud.querySelector('.skill-live-state > span'),meter=hud.querySelector('.skill-live-meter i');
   const acquired=hud.querySelector('.skill-live-acquired > span');
+  const queue=hud.querySelector('.skill-queue');
+  hud.querySelector('.skill-live-details').onclick=()=>document.getElementById('open-skills').click();
   function animate(node,cls){node.classList.remove(cls);void node.offsetWidth;node.classList.add(cls);}
   function emit(kind,x,y,color,r=70,extra={}){
     effects.push({kind,x,y,color,r,born:G.time,duration:.65,...extra});
@@ -102,12 +105,23 @@
   };
   function refresh(){
     const s=active();
+    const queueKey=JSON.stringify(G.state.skills);
+    if(queueKey!==lastQueueKey){
+      lastQueueKey=queueKey;const owned=G.activeSkills(),outgoing=G.outgoingSkill();
+      queue.replaceChildren();
+      for(let i=0;i<G.skillSlots;i++){
+        const skill=owned[i],slot=document.createElement('span');
+        slot.className='skill-queue-slot'+(!skill?' is-empty':skill===outgoing?' is-outgoing':'');
+        slot.innerHTML=`<small>${i+1} · ${skill===outgoing?'下次替换':skill?'生效中':'空槽'}</small><b>${skill?.name||'等待加入'}</b>`;
+        if(skill)slot.title=skill.describe(1);queue.append(slot);
+      }
+    }
     if(!s){
       if(lastId!=='__none__'){
         clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
         lastId='__none__';lastState='';
         hud.style.setProperty('--skill-color','#8a9380');
-        name.textContent='本关被动';description.textContent='每关选择一个强力被动，通关后失效';
+        name.textContent='四槽构筑';description.textContent='技能跨关保留，满槽后自动替换最早获得的技能';
         icon.innerHTML='<i data-lucide="sparkles"></i>';lucide.createIcons({root:icon});
         status.textContent='待选择';meter.style.transform='scaleX(0)';
       }
@@ -116,10 +130,10 @@
     if(lastId!==s.id){
       clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
       lastId=s.id;lastState='';const p=profiles[s.id];hud.style.setProperty('--skill-color',p.color);
-      name.textContent=s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
+      name.textContent='最新 · '+s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
     }
     const shots=G.state.skillRuntime.shots,period={legion:3,pulse:3,reaper:3,supernova:4}[s.id];
-    let text='本关生效',progress=1;status.title='';
+    let text=`${G.activeSkills().length} / ${G.skillSlots} 生效`,progress=1;status.title='';
     if(period){progress=shots%period/period;text=`${shots%period} / ${period} · ${shots&&shots%period===0?'已释放':'蓄能'}`;}
     if(s.id==='growing'){progress=Math.min(10,shots)/10;text=`伤害 ×${(1+progress*2).toFixed(1)}`;}
     if(s.id==='rage'){const score=G.latestAchievement;progress=G.rageBonus(score?.kills||0)/1.2;text=`+${Math.round(progress*120)}%`;status.title=score?`第 ${score.id} 箭的连击伤害加成`:'每支箭独立累计';}
@@ -134,11 +148,12 @@
   }
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{
+    const outgoing=G.outgoingSkill();
     const result=choose(id);if(!result)return result;
     refresh();animate(hud,'is-acquired');
-    acquired.textContent='已装备';
+    acquired.textContent=outgoing?'已轮换':'已加入';
     clearTimeout(acquiredTimer);acquiredTimer=setTimeout(()=>{hud.classList.remove('is-acquired');acquired.textContent='';},1800);
-    if(id==='decay')G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});
+    if(id==='decay'){const p=profiles[id];G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});}
     return result;
   };
   const add=G.addArrow;
@@ -153,7 +168,7 @@
   };
   const destroyed=G.onBrickDestroyed;
   G.onBrickDestroyed=(b,...args)=>{
-    const s=active();if(s){
+    for(const s of G.activeSkills()){
       if(profiles[s.id].kind==='coin'&&!['bargain','forge','treasury','contract'].includes(s.id)){
         if(s.id!=='alchemist'||b.type==='gold')G.skillFX(s.id,b.x,b.y,{kind:'coin',r:60});
       }
@@ -164,15 +179,15 @@
     return destroyed?.(b,...args);
   };
   const bounce=G.onRicochet;
-  G.onRicochet=a=>{const result=bounce?.(a),s=active();if(s&&['ricochet','bankshot'].includes(s.id))G.skillFX(s.id,a.body.position.x,a.body.position.y,{kind:'bounce',r:65});return result;};
+  G.onRicochet=a=>{const result=bounce?.(a);for(const s of G.activeSkills())if(['ricochet','bankshot'].includes(s.id))G.skillFX(s.id,a.body.position.x,a.body.position.y,{kind:'bounce',r:65});return result;};
   const buy=G.buy;
-   G.buy=key=>{const result=buy(key),s=active();if(result&&s&&['forge','bargain'].includes(s.id)){G.skillFX(s.id,G.origin.x,G.origin.y,{kind:'coin',r:110,force:true});refresh();}return result;};
+   G.buy=key=>{const result=buy(key);if(result){for(const s of G.activeSkills())if(['forge','bargain'].includes(s.id))G.skillFX(s.id,G.origin.x,G.origin.y,{kind:'coin',r:110,force:true});refresh();}return result;};
   const award=G.awardBrick;
-  G.awardBrick=(...args)=>{const value=award(...args),s=active();if(s&&profiles[s.id].kind==='coin'&&G.time-lastPulse>.35)animate(document.getElementById('earnings'),'skill-economy-flash');return value;};
+  G.awardBrick=(...args)=>{const value=award(...args);if(G.activeSkills().some(s=>profiles[s.id].kind==='coin')&&G.time-lastPulse>.35)animate(document.getElementById('earnings'),'skill-economy-flash');return value;};
   const spawn=G.spawnCore;
-  G.spawnCore=(...args)=>{const absent=!G.core,result=spawn(...args),s=active();if(absent&&G.core&&s&&['resonance','corehunter','treasury'].includes(s.id))G.skillFX(s.id,G.core.x,G.core.y,{r:150,force:true});return result;};
+  G.spawnCore=(...args)=>{const absent=!G.core,result=spawn(...args);if(absent&&G.core)for(const s of G.activeSkills())if(['resonance','corehunter','treasury'].includes(s.id))G.skillFX(s.id,G.core.x,G.core.y,{r:150,force:true});return result;};
   const clear=G.clear;
-  G.clear=()=>{const s=active();if(s?.id==='treasury'&&G.phase!=='clearing'){emit('coin',390,110,profiles.treasury.color,220,{id:s.id,accent:profiles.treasury.accent,duration:1.5,hero:true});animate(document.getElementById('earnings'),'skill-economy-flash');}return clear();};
+  G.clear=()=>{if(G.skillRank('treasury')&&G.phase!=='clearing'){emit('coin',390,110,profiles.treasury.color,220,{id:'treasury',accent:profiles.treasury.accent,duration:1.5,hero:true});animate(document.getElementById('earnings'),'skill-economy-flash');}return clear();};
   const generate=G.generate;
   G.generate=(...args)=>{effects.length=0;cooldowns.clear();lastId=null;return generate(...args);};
   const stroke=(ctx,x,y,tx,ty)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};

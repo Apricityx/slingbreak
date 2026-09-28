@@ -3,7 +3,7 @@
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
   const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillChosenLevel:0,draft:null,skillRuntime:null});
+  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
@@ -15,8 +15,9 @@
   // One-time migration: sound used to default off; flip existing saves to on.
   if (saved && saved.sound === false && saved.soundMigrated !== true) state.sound = true;
   state.soundMigrated = true;
+   const launcherMode = new URLSearchParams(location.search).get('launcher') === '1';
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
-     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
+     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:launcherMode,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
   G.colors={normal:'#d5e8b3',bomb:'#f58d75',lightning:'#ecd77e',frost:'#a6d5e3',prism:'#c4b2e2',gold:'#d4df85'};
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
   G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');

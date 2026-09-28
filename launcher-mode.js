@@ -29,6 +29,7 @@
     if (!ready || gameEntered || !window.Game) return;
     gameEntered = true;
     window.Game.paused = false;
+    window.dispatchEvent(new Event('slingbreak:enter'));
     window.Game.audio?.sync?.();
     window.Game.ui?.();
     document.documentElement.classList.add('launcher-entered');

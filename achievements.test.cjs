@@ -13,9 +13,9 @@ const kill=(G,a,depth=0)=>G.withArrow(a,()=>G.hit(G.bricks[0],100,depth));
 test('concurrent arrows have independent combos and retroactive achievement payouts',()=>{
   const {G}=boot(),a=arrow(G),b=arrow(G);
   kill(G,a);kill(G,b);assert.equal(G.state.coins,6);assert.equal(a.achievement.mult,1);assert.equal(b.achievement.mult,1);
-  kill(G,a);assert.equal(a.achievement.mult,1);assert.equal(a.achievement.paid,6);assert.equal(G.state.coins,9);assert.equal(b.achievement.kills,1);
+  kill(G,a);assert.equal(a.achievement.mult,1);assert.equal(a.achievement.paid,7);assert.equal(G.state.coins,10);assert.equal(b.achievement.kills,1);
   kill(G,a);assert.equal(a.achievement.mult,1);assert.equal(a.achievement.kills,3);
-  kill(G,a);assert.equal(a.achievement.mult,1.5);assert.equal(G.state.achievements.double,1);
+  kill(G,a);assert.equal(a.achievement.mult,1.25);assert.equal(a.achievement.base,17);assert.equal(a.achievement.paid,21);assert.equal(G.state.achievements.double,1);
   kill(G,b);kill(G,b);kill(G,b);assert.equal(G.state.achievements.double,2);
   assert.equal(G.state.coins,a.achievement.paid+b.achievement.paid);
 });
@@ -24,7 +24,7 @@ test('ricochet, frozen, chain and long-flight bonuses combine once per arrow',()
   for(let i=0;i<3;i++)G.onRicochet(a);
   for(let i=0;i<4;i++){G.bricks[0].frozen=true;kill(G,a,1);}
   for(const id of ['bank','trick','ice','chain','air','double'])assert.equal(G.state.achievements[id],1,id);
-  assert.equal(a.achievement.mult,6.25);assert.equal(G.state.coins,Math.round(a.achievement.base*6.25));
+  assert.equal(a.achievement.mult,4);assert.equal(G.state.coins,Math.round(a.achievement.base*4));
 });
 test('split arrows get fresh achievements, chained kills stay with the parent',()=>{
   const {G}=boot(),a=arrow(G);G.bricks[0].type='prism';kill(G,a);

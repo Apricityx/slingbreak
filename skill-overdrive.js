@@ -18,7 +18,7 @@
   function child(source,p,angle,damage,pierce){
     return G.withArrow(source,()=>{
       const a=G.addArrow(p.x,p.y,Math.cos(angle)*25,Math.sin(angle)*25,pierce);
-      if(a){a.damage=damage;a.overdriveChild=true;}
+      if(a){G.setArrowDamage(a,damage);a.overdriveChild=true;}
       return a;
     });
   }
@@ -42,7 +42,7 @@
   const add=G.addArrow;
   G.addArrow=(...args)=>{
     const a=add(...args);if(!a)return a;
-    if(rank('fusepath')||rank('rhythm'))a.pierce+=3;
+    a.pierce+=3*(rank('fusepath')+rank('rhythm'));
     a.overdriveBase=a.damage;return a;
   };
   const shoot=G.shoot;
@@ -103,7 +103,8 @@
       if(a.beats%3===0){a.damage*=4;a.pierce+=2;fx('rhythm',p,100);later(.04,a,()=>area(p,100,G.damage()));G.sound('boom');}
     }
     const dealt=a.damage;
-    try{projectileHit(b,a);}finally{a.damage=base;}
+    // Remove this hit's temporary bonus, retaining growth earned by other skills.
+    try{projectileHit(b,a);}finally{a.damage=base+(a.damage-dealt);}
     if(G.phase!=='flying')return;
     if(rank('overkill')&&!G.bricks.includes(b)){
       a.storedForce=Math.min(G.damage()*4,Math.max(0,dealt*mult-hp)+G.damage()*.5);
