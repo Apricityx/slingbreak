@@ -208,9 +208,6 @@
     if(!(old?.level===S.level&&Array.isArray(old.options)&&old.options.length===3&&new Set(old.options).size===3&&old.options.every(id=>eligible.some(s=>s.id===id)))){
       S.draft={level:S.level,options:G.rollSkills()};
     }
-    // While the launcher preview runs, keep the board interactive and only bank
-    // the draft: entering hands control back to the normal draft flow.
-    if(G.launcherPreview){G.phase='ready';G.drag=null;G.save();G.ui();return;}
     G.phase='draft';G.drag=null;G.save();G.ui();
   };
   G.chooseSkill=id=>{
