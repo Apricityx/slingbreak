@@ -66,7 +66,8 @@
         }
         icons();
       }
-      if(!draft.open&&!window.SlingBreakIntro?.active&&!document.querySelector('dialog[open]'))draft.showModal();
+      const launcherEntered=!document.documentElement.classList.contains('launcher-mode')||document.documentElement.classList.contains('launcher-entered');
+      if(launcherEntered&&!draft.open&&!window.SlingBreakIntro?.active&&!document.querySelector('dialog[open]'))draft.showModal();
     }else{
       if(draft.open)draft.close();
     }
