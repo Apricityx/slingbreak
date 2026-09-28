@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 const Matter=require('./vendor/matter.min.js');
-function boot(saved){
+function boot(saved,search=''){
   let storage=saved?JSON.stringify(saved):null,seed=9128;
   const math=Object.create(Math);math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-  const context={Matter,Math:math,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
+  const context={Matter,Math:math,console,window:{},URLSearchParams,location:{search},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
   vm.createContext(context);for(const file of ['game.js','skills.js','skill-expansion.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);
   const G=context.window.Game;G.burst=G.float=G.ring=()=>{};return{G,read:()=>JSON.parse(storage)};
 }
@@ -268,4 +268,27 @@ test('thunder lottery sometimes adds six triple-damage arcs and bounty caps at t
   assert.ok(wins>0&&wins<25);
   const bounty=ready('bounty').G,plain=ready().G;for(const [n,multiplier] of [[1,1],[2,1.25],[9,3],[20,3]])assert.equal(bounty.reward('normal',n),Math.round(plain.reward('normal',n)*multiplier));
   const special=ready('specialist').G;armor(special);const b=special.bricks[0];b.type='gold';special.projectileHit(b,{damage:2});assert.equal(b.hp,92);assert.equal(special.reward('gold',1),plain.reward('gold',1)*3);assert.equal(special.reward('normal',1),plain.reward('normal',1));
+});
+test('launcher preview stays playable and defers the draft until the player enters',()=>{
+  const {G}=boot(null,'?launcher=1');
+  assert.equal(G.launcherPreview,true);
+  assert.equal(G.launcherMode,true);
+  assert.equal(G.paused,false,'the preview must be interactive while the real game loads');
+  assert.equal(G.phase,'ready','the draft must not gate the loading preview');
+  assert.ok(G.state.draft&&G.state.draft.options.length===3,'the draft is still banked for later');
+  assert.equal(G.shoot(0,100),true,'the sling must be usable during the preview');
+  assert.equal(G.arrows.length,1);
+  // Entering hands the run back to the normal draft flow.
+  G.launcherPreview=false;
+  G.prepareDraft();
+  assert.equal(G.phase,'draft');
+  assert.equal(G.shoot(0,100),false,'shooting pauses until a skill is chosen');
+  assert.equal(G.chooseSkill(G.state.draft.options[0]),true);
+  assert.ok(['ready','entering'].includes(G.phase));
+});
+test('non-launcher games still open the draft before the first shot',()=>{
+  const {G}=boot();
+  assert.equal(G.launcherPreview,false);
+  assert.equal(G.phase,'draft');
+  assert.equal(G.shoot(0,100),false);
 });

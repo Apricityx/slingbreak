@@ -36,6 +36,9 @@
   // running frame loop the preview would otherwise stay blank.
   let animating=false;
   const renderIfIdle=()=>{if(!animating)render();};
+  // The launcher preview only paints a static frame until the player touches it,
+  // so the first interaction starts the shared animation loop on demand.
+  const ensureLoop=()=>{if(animating)return;animating=true;last=performance.now();requestAnimationFrame(frame);};
   new ResizeObserver(()=>{resize();renderIfIdle();}).observe(canvas);resize();
   const line=(x,y,tx,ty,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const forceCompat=new URLSearchParams(location.search).get('forceCompat')==='1';
@@ -268,13 +271,14 @@
   canvas.addEventListener('pointerdown',e=>{
      if(G.paused||!['ready','flying'].includes(G.phase)||e.button>0)return;
     const p=point(e);if(Math.hypot(p.x-G.origin.x,p.y-G.origin.y)>120)return;
-    G.audio.unlock();updatePointer(e);drawStep=0;canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});G.drag={dx:0,dy:0};G.pointer=e.pointerId;G.ui();
+    ensureLoop();G.audio.unlock();updatePointer(e);drawStep=0;canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});G.drag={dx:0,dy:0};G.pointer=e.pointerId;G.ui();
   });
   canvas.addEventListener('pointermove',e=>{if(G.drag&&G.pointer===e.pointerId)updateDrag(e);else updatePointer(e);});
   canvas.addEventListener('pointerup',e=>{if(!G.drag||G.pointer!==e.pointerId)return;const {dx,dy}=G.drag;G.drag=null;G.pointer=null;G.shoot(dx,dy);G.ui();});
   const cancel=()=>{G.drag=null;G.pointer=null;G.pointerPos=null;G.ui();};canvas.addEventListener('pointercancel',cancel);canvas.addEventListener('lostpointercapture',()=>{if(G.drag)cancel();});
   canvas.addEventListener('keydown',e=>{
      if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key))return;e.preventDefault();if(G.paused||!['ready','flying'].includes(G.phase))return;
+    ensureLoop();
     if(e.key==='ArrowLeft')G.keyboardAngle=Math.max(-1.1,G.keyboardAngle-.07);
     if(e.key==='ArrowRight')G.keyboardAngle=Math.min(1.1,G.keyboardAngle+.07);
     if(e.key==='ArrowUp')G.keyboardPower=Math.min(1,G.keyboardPower+.05);
@@ -286,7 +290,7 @@
    function frame(now){const gap=now-last;if(gap>50&&window.SlingAudioDiagnostics?.enabled)window.SlingAudioDiagnostics.record('frame-gap',{durationMs:gap,hidden:document.hidden,paused:G.paused});const delta=Math.min(gap/1000,.05);last=now;acc+=delta;let steps=0;while(acc>=G.physicsStep&&steps++<4){G.tick(G.physicsStep);acc-=G.physicsStep;}if(steps===4)acc=0;render();requestAnimationFrame(frame);}
    if(launcherMode){
      render();
-     window.addEventListener('slingbreak:enter',()=>{animating=true;last=performance.now();requestAnimationFrame(frame)},{once:true});
+     window.addEventListener('slingbreak:enter',ensureLoop,{once:true});
    }else{
      animating=true;requestAnimationFrame(frame);
    }
