@@ -2,6 +2,11 @@
   'use strict';
   const G=Game,canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
   const brickInks={normal:'#75944f',bomb:'#9e4935',lightning:'#8f792e',frost:'#4f8d9e',prism:'#796099',gold:'#809142'};
+  // The board is only hidden while the skill draft dialog is actually open.
+  // Hiding it for the whole `draft` phase blanked the launcher preview, which
+  // suppresses the dialog until the player enters.
+  const draftDialog=document.getElementById('skill-draft');
+  const draftModalOpen=()=>G.phase==='draft'&&!!draftDialog?.open;
   let hpLabels=new WeakMap();
   document.fonts?.addEventListener('loadingdone',()=>{hpLabels=new WeakMap();});
   const hpLabel=b=>{
@@ -25,7 +30,13 @@
      G.drag=null;G.pointer=null;
     G.view={scale,offsetX,offsetY,width:cssW,height:cssH};
   };
-  new ResizeObserver(resize).observe(canvas);resize();
+  // The launcher preview renders a single frame and only starts the animation
+  // loop once the player enters, so the ResizeObserver must repaint for it:
+  // assigning canvas.width/height clears the backing store, and without a
+  // running frame loop the preview would otherwise stay blank.
+  let animating=false;
+  const renderIfIdle=()=>{if(!animating)render();};
+  new ResizeObserver(()=>{resize();renderIfIdle();}).observe(canvas);resize();
   const line=(x,y,tx,ty,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const forceCompat=new URLSearchParams(location.search).get('forceCompat')==='1';
   const useRoundedRectFallback=forceCompat||typeof ctx.roundRect!=='function';
@@ -194,7 +205,7 @@
     ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);
     if(!G.reduced && G.shake)ctx.translate((Math.random()-.5)*G.shake,(Math.random()-.5)*G.shake);
     ctx.strokeStyle='#e6ebdf';ctx.lineWidth=1;ctx.setLineDash([3,7]);ctx.beginPath();ctx.moveTo(85,G.origin.y-130);ctx.lineTo(695,G.origin.y-130);ctx.stroke();ctx.setLineDash([]);
-    if(G.phase!=='draft'){
+    if(!draftModalOpen()){
     for(const b of G.bricks){
       const alpha=boardItemEntrance(b);
       const color=b.frozen?'#b4dce6':G.colors[b.type];
@@ -275,8 +286,8 @@
    function frame(now){const gap=now-last;if(gap>50&&window.SlingAudioDiagnostics?.enabled)window.SlingAudioDiagnostics.record('frame-gap',{durationMs:gap,hidden:document.hidden,paused:G.paused});const delta=Math.min(gap/1000,.05);last=now;acc+=delta;let steps=0;while(acc>=G.physicsStep&&steps++<4){G.tick(G.physicsStep);acc-=G.physicsStep;}if(steps===4)acc=0;render();requestAnimationFrame(frame);}
    if(launcherMode){
      render();
-     window.addEventListener('slingbreak:enter',()=>{last=performance.now();requestAnimationFrame(frame)},{once:true});
+     window.addEventListener('slingbreak:enter',()=>{animating=true;last=performance.now();requestAnimationFrame(frame)},{once:true});
    }else{
-     requestAnimationFrame(frame);
+     animating=true;requestAnimationFrame(frame);
    }
 })();
