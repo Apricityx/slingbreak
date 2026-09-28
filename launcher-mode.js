@@ -29,10 +29,13 @@
     if (!ready || gameEntered || !window.Game) return;
     gameEntered = true;
     window.Game.paused = false;
+    // The preview keeps the board playable; entering returns to the draft flow.
+    window.Game.launcherPreview = false;
     window.dispatchEvent(new Event('slingbreak:enter'));
+    document.documentElement.classList.add('launcher-entered');
+    window.Game.prepareDraft?.();
     window.Game.audio?.sync?.();
     window.Game.ui?.();
-    document.documentElement.classList.add('launcher-entered');
     bridge?.enterGame?.();
   };
   const reportScriptFailure = event => {
