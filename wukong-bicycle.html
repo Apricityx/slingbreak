@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>大圣骑行记 · 筋斗云今日休假</title>
+  <style>
+    :root { color-scheme: light; --ink: #343c32; --paper: #f5f0df; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+    main { max-width: 1440px; min-height: 100svh; margin: auto; padding: 32px 6vw 24px; display: flex; flex-direction: column; }
+    header, footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    header { font-size: 12px; letter-spacing: .16em; padding-bottom: 20px; border-bottom: 1px solid #343c3226; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .seal { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #bc4938; border-radius: 50%; color: #bc4938; font-family: serif; font-size: 19px; }
+    .intro { text-align: center; margin: 44px 0 0; position: relative; z-index: 1; }
+    .eyebrow { font-size: 10px; letter-spacing: .34em; color: #89846c; }
+    h1 { margin: 13px 0; font-family: "STKaiti", "KaiTi", "Songti SC", serif; font-size: clamp(36px, 6vw, 68px); font-weight: 500; letter-spacing: .16em; }
+    .subtitle { font-size: 13px; letter-spacing: .15em; color: #797b68; }
+    .scene { flex: 1; display: grid; align-content: center; }
+    svg { display: block; width: 100%; max-height: 650px; overflow: visible; }
+    footer { border-top: 1px solid #343c3226; padding-top: 20px; font-size: 11px; color: #878774; letter-spacing: .08em; }
+    .tag { border: 1px solid #9b9e8060; border-radius: 30px; padding: 8px 13px; color: #697253; }
+    .rider { animation: bob 1.6s ease-in-out infinite; }
+    .wheel { transform-box: fill-box; transform-origin: center; animation: spin 3s linear infinite; }
+    .scarf { animation: flutter 1.6s ease-in-out infinite; transform-origin: 573px 260px; }
+    .cloud { animation: drift 7s ease-in-out infinite alternate; }
+    .cloud.far { animation-delay: -3s; }
+    .wind { animation: breeze 2s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes bob { 50% { transform: translateY(-4px); } }
+    @keyframes flutter { 50% { transform: rotate(4deg); } }
+    @keyframes drift { to { transform: translateX(18px); } }
+    @keyframes breeze { 50% { opacity: .25; transform: translateX(-10px); } }
+    @media (max-width: 600px) { main { padding: 22px 5vw; } header { font-size: 9px; } .intro { margin-top: 48px; } .scene { margin: 24px -4vw; overflow: hidden; } svg { width: 150%; max-width: none; margin-left: -25%; } footer { font-size: 9px; } .subtitle { font-size: 11px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="brand"><span class="seal">悟</span> 神仙的日常 / IMMORTAL DAYS</div><span>VOL. 001 · 花果山出发</span></header>
+  <section class="intro"><div class="eyebrow">A LITTLE JOURNEY TO THE WEST</div><h1>筋斗云，今日休假。</h1><p class="subtitle">且把十万八千里，骑成一路好风景。</p></section>
+  <div class="scene">
+    <svg viewBox="0 0 1100 600" role="img" aria-labelledby="art-title art-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="art-title">孙悟空骑自行车</title><desc id="art-desc">戴着金箍、穿着虎皮裙的孙悟空骑一辆绿色自行车，红围巾随风飘扬，金箍棒背在身后。远处是夕阳、青山和祥云。</desc>
+      <defs>
+        <linearGradient id="sun" x2="0" y2="1"><stop stop-color="#edbd79"/><stop offset="1" stop-color="#f1d3a0"/></linearGradient>
+        <linearGradient id="mountain" x2="0" y2="1"><stop stop-color="#a9b99a"/><stop offset="1" stop-color="#d7ddc3"/></linearGradient>
+        <pattern id="grain" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="1" cy="3" r=".6" fill="#65593b" opacity=".1"/></pattern>
+        <g id="wheel">
+          <circle r="91" fill="#f5f0df" stroke="#39463e" stroke-width="11"/>
+          <circle r="82" fill="none" stroke="#b5b59a" stroke-width="2"/>
+          <g stroke="#a9ad98" stroke-width="1.7"><path d="M-80 0H80M0-80V80M-57-57L57 57M-57 57L57-57M-74-31L74 31M-74 31L74-31M-31-74L31 74M-31 74L31-74"/></g>
+          <circle r="9" fill="#dbbd6c" stroke="#39463e" stroke-width="3"/>
+        </g>
+      </defs>
+      <!-- 纸上的远山与落日 -->
+      <circle cx="629" cy="220" r="155" fill="url(#sun)" opacity=".8"/>
+      <g class="cloud" fill="none" stroke="#d8ccad" stroke-width="2" stroke-linecap="round"><path d="M155 143h121c30 0 30-26 9-26-15 0-17 15-7 15M182 143c-22-3-20-25-4-26 1-26 39-28 45-8 17-8 31 2 30 15M143 154h85"/></g>
+      <g class="cloud far" fill="none" stroke="#d8ccad" stroke-width="2" stroke-linecap="round"><path d="M807 184h137c27 0 24-24 9-24-14 0-17 15-6 15M833 184c-21-2-22-23-4-28 0-28 37-31 46-9 21-9 38 8 32 20M881 196h84"/></g>
+      <path d="M37 424Q105 388 143 333Q177 285 200 339L257 408Q319 341 350 359L413 425Q466 395 516 426L580 466H37Z" fill="#dce1ca"/>
+      <path d="M637 448Q702 387 751 308Q778 267 801 317Q830 359 846 352Q875 293 897 352Q933 401 1048 445V475H630Z" fill="url(#mountain)"/>
+      <path d="M756 323l23-26 25 43-22-12-11 13ZM862 339l16-15 21 32-19-10Z" fill="#f2efda" opacity=".6"/>
+      <path d="M53 487Q344 460 572 478T1053 476" fill="none" stroke="#b6bd9a" stroke-width="2"/>
+      <ellipse cx="554" cy="515" rx="278" ry="17" fill="#c9ccae" opacity=".35"/>
+      <g fill="none" stroke="#98a37e" stroke-width="2" stroke-linecap="round"><path d="M153 488l-6-16m6 16 8-11M917 491l4-17m-4 17-8-9M962 503l8-6M231 517l-8-4"/></g>
+      <!-- 转动的车轮 -->
+      <g transform="translate(371 414)"><g class="wheel"><use href="#wheel"/></g></g>
+      <g transform="translate(731 414)"><g class="wheel"><use href="#wheel"/></g></g>
+      <!-- 车架 -->
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M292 372a94 94 0 0 1 157-23M651 356a96 96 0 0 1 169 28" stroke="#82987c" stroke-width="5"/>
+        <path d="M371 414l116-121 62 122H371l-6-17M487 293l193-9-131 131M680 284l51 130" stroke="#3f6b5e" stroke-width="10"/>
+        <path d="M487 293l-13-35M680 284l-13-52 39-10" stroke="#39463e" stroke-width="7"/>
+        <path d="M674 249q50 20 43 99" stroke="#737d68" stroke-width="2"/>
+        <path d="M448 258h52" stroke="#523e30" stroke-width="12"/>
+        <path d="M693 224l24-5" stroke="#523e30" stroke-width="10"/>
+        <circle cx="549" cy="415" r="24" fill="#e5d7ad" stroke="#495b47" stroke-width="4"/>
+        <path d="M549 415l30 19m-8 2h25" stroke="#39463e" stroke-width="5"/>
+      </g>
+      <g class="rider">
+        <!-- 如意金箍棒与猴尾 -->
+        <g transform="rotate(-25 458 242)"><rect x="450" y="111" width="13" height="292" rx="5" fill="#a34432" stroke="#643e29" stroke-width="2"/><path d="M450 127h13m-13 11h13m-13 236h13m-13 11h13" stroke="#ebbd5c" stroke-width="9"/></g>
+        <path d="M476 287C423 295 437 354 389 345S342 287 375 281c23-4 32 22 13 29" fill="none" stroke="#764b31" stroke-width="15" stroke-linecap="round"/>
+        <path d="M476 284C423 292 437 351 389 342S342 284 375 278" fill="none" stroke="#bc884d" stroke-width="8" stroke-linecap="round"/>
+        <!-- 远侧腿 -->
+        <path d="M514 289l73 49-58 40" fill="none" stroke="#965c34" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M531 361l-17 24 28 11 16-10-20-10" fill="#333f37" stroke="#333f37" stroke-width="8" stroke-linejoin="round"/>
+        <!-- 随风飘扬的围巾 -->
+        <path class="scarf" d="M577 253C530 235 512 225 476 233S422 209 396 208c13 18 9 23 3 35 36-4 49 22 82 13s56 1 91 13Z" fill="#ba4435"/>
+        <!-- 黄衣与手臂 -->
+        <path d="M541 215c-35 11-50 40-53 64l55 29 48-65Z" fill="#e0ad4c" stroke="#654a32" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M555 237l43 42 65-40" fill="none" stroke="#6f4c31" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M555 235l43 39 33-20" fill="none" stroke="#e6b951" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M636 251l24-13" stroke="#ba844c" stroke-width="15" stroke-linecap="round"/>
+        <path d="M655 238q11-15 22-10l9 8q-4 8-13 6l-9 3" fill="#d7a56b" stroke="#6f4c31" stroke-width="2.5"/>
+        <!-- 虎皮裙 -->
+        <path d="M485 270l62 20 12 33-22-4-13 9-17-13-24 4-17-18Z" fill="#eac168" stroke="#654a32" stroke-width="3"/>
+        <g fill="#544332"><path d="M485 274l18 8-15 4 8 11-19-8ZM512 281l18 7-10 9 6 11-16-9ZM542 296l8 19-15-9ZM492 307l17 5-3 7Z"/></g>
+        <!-- 近侧腿与布靴 -->
+        <path d="M530 317l-17 44 55 51" fill="none" stroke="#795333" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M532 319l-17 40 45 43" fill="none" stroke="#c39150" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M550 398l17-12 19 28q22 2 24 15c-11 7-33 4-40-2Z" fill="#34483e" stroke="#34483e" stroke-width="3"/>
+        <path d="M552 396l16-10m-10 19 17-12" stroke="#ece0ba" stroke-width="5"/>
+        <path d="M574 432h33" stroke="#d4c8a3" stroke-width="4" stroke-linecap="round"/>
+        <!-- 猴脸、毛发与金箍 -->
+        <path d="M536 214l-14-17 4-15-10-9 12-9-5-15 19 1 8-20 13 11 17-13 9 17c26 2 45 25 40 48-3 26-31 45-57 40Z" fill="#a66c37" stroke="#65472f" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M559 165c11-9 22-2 28 6 10-11 25-10 32 0l3 23 16 12c0 10-16 18-29 17-14 18-42 13-51-5-9-17-12-39 1-53Z" fill="#efd19a" stroke="#785234" stroke-width="2.5"/>
+        <circle cx="545" cy="193" r="14" fill="#d6a165" stroke="#785234" stroke-width="3"/><path d="M541 198q-6-13 6-12" fill="none" stroke="#a46e43" stroke-width="3" stroke-linecap="round"/>
+        <path d="M579 186l10-4m13 0 11 2" stroke="#59422f" stroke-width="4" stroke-linecap="round"/>
+        <path d="M584 190v6m23-6v6" stroke="#34392f" stroke-width="4" stroke-linecap="round"/>
+        <path d="M619 200l7 3-7 2" fill="#9d6845"/><path d="M593 211q12 9 24-1" fill="none" stroke="#805332" stroke-width="2.5" stroke-linecap="round"/>
+        <ellipse cx="575" cy="205" rx="8" ry="5" fill="#d98f65" opacity=".65"/>
+        <path d="M533 169q42-24 88 2" fill="none" stroke="#79532e" stroke-width="10"/>
+        <path d="M533 167q42-24 88 2" fill="none" stroke="#f1c755" stroke-width="7"/>
+        <path d="M577 160c-13-14 13-18 12-5-1 7-11 6-10 0m10 0c5-14 23-3 13 5" fill="none" stroke="#f8d879" stroke-width="4" stroke-linecap="round"/>
+        <path d="M546 225l33 9-6 20-31-15Z" fill="#c64d39" stroke="#9e3d30" stroke-width="2"/><path d="M574 241l14 17-17 19-4-27Z" fill="#b44132"/>
+      </g>
+      <g class="wind" fill="none" stroke="#a2ad8d" stroke-width="2" stroke-linecap="round"><path d="M304 233h64m-94 13h48m-30 97h32M801 278h50m-27 12h49"/></g>
+      <g transform="translate(848 99) rotate(8)"><rect width="42" height="96" rx="3" fill="none" stroke="#b7523c" stroke-width="1.5"/><text x="21" y="27" text-anchor="middle" fill="#b7523c" font-size="20" font-family="KaiTi,serif"><tspan x="21">自</tspan><tspan x="21" dy="27">在</tspan><tspan x="21" dy="27">游</tspan></text></g>
+      <path d="M364 550q176 9 372-1" fill="none" stroke="#b6bd9a" stroke-width="1.5" stroke-dasharray="3 9"/>
+      <rect x="30" y="50" width="1040" height="500" fill="url(#grain)" pointer-events="none"/>
+    </svg>
+  </div>
+  <footer><span>一人 · 一车 · 一路逍遥</span><span class="tag">● &nbsp; 今日宜：慢慢来</span><span>花果山 → 下一阵风</span></footer>
+</main>
+</body>
+</html>
