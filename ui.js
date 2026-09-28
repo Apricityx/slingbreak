@@ -2,10 +2,11 @@
   const G=Game,$=id=>document.getElementById(id);
   let comboStamp='',comboAnimation;
   const compact=n=>Number(n.toFixed(3)).toString();
-  const upgrades={power:{name:'弹弓',icon:'crosshair',desc:()=>`拉力 ${Math.round(G.speed()/24*100)}% · 更远射程`},arrow:{name:'箭矢',icon:'move-up-right',desc:()=>`伤害 ${G.damage().toFixed(2)} · 穿透 ${G.penetration()} 块`},brick:{name:'砖块',icon:'blocks',desc:()=>`价值 +${Math.round((G.valueMultiplier()-1)*100)}% · 特殊率 ${(G.specialRate()*100).toFixed(1)}%`},comboCap:{name:'连击强化',icon:'gauge',desc:()=>`每连增幅 +${compact(G.comboStep())}，${G.comboCapKills()} 连达到 ×${compact(G.comboMultiplierCap())} 上限`} };
+  const upgrades={power:{name:'弹弓',icon:'crosshair',desc:()=>`拉力 ${Math.round(G.speed()/24*100)}% · 更远射程`},arrow:{name:'箭矢',icon:'move-up-right',desc:()=>`伤害 ${G.damage().toFixed(2)} · 穿透 ${G.penetration()} 块`},brick:{name:'砖块',icon:'blocks',desc:()=>`价值 +${Math.round((G.valueMultiplier()-1)*100)}% · 特殊率 ${(G.specialRate()*100).toFixed(1)}%`},comboCap:{name:'连击强化',icon:'gauge',desc:()=>`每连增幅 +${compact(G.comboStep())}，${G.comboCapKills()} 连达到 ×${compact(G.comboMultiplierCap())} 上限`},slots:{name:'技能槽位',icon:'layout-grid',desc:()=>`当前 ${G.skillSlots} 个技能槽 · 每关三选一，满槽后自动替换最早的技能`} };
   for(const [key,u] of Object.entries(upgrades)){
      const el=document.createElement('div');el.className='upgrade';el.innerHTML=`<span class="upgrade-icon"><i data-lucide="${u.icon}"></i></span><div><div class="upgrade-title"><b>${u.name}</b><small id="${key}-level"></small></div><p class="upgrade-desc" id="${key}-desc"></p></div><button class="buy-button" id="buy-${key}" aria-label="升级${u.name}"><i data-lucide="plus"></i><span></span></button>`;$('upgrades').append(el);$('buy-'+key).onclick=()=>G.buy(key);
      if(key==='comboCap'){$(key+'-desc').innerHTML='<span class="combo-upgrade-lock" id="combo-upgrade-lock"><i data-lucide="lock-keyhole" aria-hidden="true"></i>砖块 LV.6</span><span class="combo-upgrade-preview" id="combo-upgrade-preview"><span class="upgrade-metric"><small>增幅</small><b id="combo-step-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="combo-step-next"></em></span><span class="upgrade-metric"><small>上限</small><b id="combo-cap-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="combo-cap-next"></em></span></span>';}
+     if(key==='slots'){$(key+'-desc').innerHTML='<span class="combo-upgrade-lock" id="slots-upgrade-lock"><i data-lucide="lock-keyhole" aria-hidden="true"></i><span id="slots-upgrade-lock-text"></span></span><span class="combo-upgrade-preview" id="slots-upgrade-preview"><span class="upgrade-metric"><small>技能槽</small><b id="slots-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="slots-next"></em></span></span><span class="slots-upgrade-done" id="slots-upgrade-done" hidden></span>';}
   }
   const icons=()=>lucide.createIcons();
   G.ui=()=>{
@@ -34,15 +35,28 @@
      $('play-status').textContent=G.paused?'已暂停':G.phase==='clearing'?'下一关即将开始':G.phase==='entering'?'砖块入场中':G.drag?'蓄力中':G.phase==='flying'?'可继续射击':'就绪';
     if(!G.drag)$('power-readout').querySelector('b').textContent='0%';
      for(const [key,u] of Object.entries(upgrades)){
-       const locked=key==='comboCap'&&!G.comboUpgradeUnlocked();
-       $(key+'-level').textContent=key==='comboCap'?'+'+G.state.up[key]:'LV. '+(G.state.up[key]+1);
+       const maxed=key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades;
+       const locked=key==='comboCap'&&!G.comboUpgradeUnlocked()||key==='slots'&&!maxed&&!G.skillSlotReady();
+       $(key+'-level').textContent=key==='comboCap'?'+'+G.state.up[key]:key==='slots'?`${G.skillSlots} / ${G.skillSlotMax}`:'LV. '+(G.state.up[key]+1);
        if(key==='comboCap'){
          $('combo-upgrade-lock').hidden=!locked;$('combo-upgrade-preview').hidden=locked;$(key+'-desc').title=u.desc();
          $('combo-step-current').textContent='+'+compact(G.comboStep());$('combo-step-next').textContent='+'+compact(G.comboStep()+.025);
          $('combo-cap-current').textContent='×'+compact(G.comboMultiplierCap());$('combo-cap-next').textContent='×'+compact(G.comboMultiplierCap()+.5);
+       }else if(key==='slots'){
+         $('slots-upgrade-lock').hidden=!locked||maxed;
+         $('slots-upgrade-preview').hidden=locked||maxed;
+         $('slots-upgrade-done').hidden=!maxed;
+         if(maxed)$('slots-upgrade-done').textContent=`已解锁全部 ${G.skillSlotMax} 个技能槽。`;
+         else{
+           $('slots-upgrade-lock-text').textContent=G.skillSlotUnlockLevel(G.skillSlotBought())+' 关解锁';
+           $('slots-current').textContent=G.skillSlots;$('slots-next').textContent=Math.min(G.skillSlotMax,G.skillSlots+1);
+         }
+         $(key+'-desc').title=maxed?u.desc():locked?`达到第 ${G.skillSlotUnlockLevel(G.skillSlotBought())} 关后开放`:`升级后拥有 ${Math.min(G.skillSlotMax,G.skillSlots+1)} 个技能槽`;
        }else $(key+'-desc').textContent=u.desc();
-       const b=$('buy-'+key),cost=G.cost(key);b.querySelector('span').textContent=locked?'—':G.fmt(cost);b.disabled=locked||G.state.coins<cost||G.phase!=='ready'||G.paused;
-      b.title=locked?'砖块升至 LV.6 后解锁':G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币';
+       const b=$('buy-'+key),cost=G.cost(key);
+       b.querySelector('span').textContent=maxed?'已满级':locked?'—':G.fmt(cost);
+       b.disabled=maxed||locked||G.state.coins<cost||G.phase!=='ready'||G.paused;
+      b.title=maxed?'技能槽已全部解锁':locked?(key==='slots'?`达到第 ${G.skillSlotUnlockLevel(G.skillSlotBought())} 关后解锁`:'砖块升至 LV.6 后解锁'):G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币';
     }
      $('shop-trigger').hidden=false;$('shop-balance').textContent=G.fmt(G.state.coins);
   };
@@ -69,7 +83,7 @@
   $('close-shop').onclick=closeShop;
   shop.addEventListener('cancel',e=>{e.preventDefault();closeShop();});
   shop.addEventListener('click',e=>{if(e.target===shop)closeShop();});
-  shop.addEventListener('close',()=>$('game').focus({preventScroll:true}));
+  shop.addEventListener('close',()=>{$('game').focus({preventScroll:true});G.ui();});
    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.querySelector('dialog[open]'))pause(!G.paused);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){pause(true);if(G.phase!=='clearing')G.save();}});
   window.addEventListener('pagehide',()=>{if(G.phase!=='clearing')G.save();});

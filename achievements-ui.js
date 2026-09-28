@@ -119,7 +119,7 @@
     return resetGame();
   };
   const exact=n=>Math.floor(n).toLocaleString('en-US');
-  let shownMoney=G.shotMoney,shownWallet=G.state.coins,targetMoney=shownMoney,targetWallet=shownWallet;
+  let shownMoney=G.levelMoney,shownWallet=G.state.coins,targetMoney=shownMoney,targetWallet=shownWallet;
   let frame=0,last=0,event=0,library='';
   function animate(time){
     const fraction=1-Math.exp(-Math.min(64,time-(last||time-16))/85);last=time;
@@ -134,9 +134,9 @@
   G.updateAchievementUI=()=>{
     const delta=G.state.coins-targetWallet;
     if(delta>0){$('money-burst').textContent='+'+G.fmt(delta);if(!panel.classList.contains('is-achievement'))pulse('paying');}
-    if(G.shotMoney<targetMoney||G.reduced)shownMoney=G.shotMoney;
+    if(G.levelMoney<targetMoney||G.reduced)shownMoney=G.levelMoney;
     if(G.state.coins<targetWallet||G.reduced)shownWallet=G.state.coins;
-    targetMoney=G.shotMoney;targetWallet=G.state.coins;
+    targetMoney=G.levelMoney;targetWallet=G.state.coins;
     if(!frame)frame=requestAnimationFrame(animate);
     const s=G.latestAchievement;
     const compact=n=>Number(n.toFixed(2)).toString();

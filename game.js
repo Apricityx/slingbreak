@@ -3,13 +3,14 @@
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
   const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
+  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
-  const valid = saved && ['level','coins','total','best'].every(k=>validNumber(saved[k])) && saved.level>=1 && Number.isInteger(saved.level) && saved.up && ['power','arrow','brick'].every(k=>Number.isInteger(saved.up[k])&&saved.up[k]>=0) && (saved.up.comboCap===undefined||Number.isInteger(saved.up.comboCap)&&saved.up.comboCap>=0);
+  const valid = saved && ['level','coins','total','best'].every(k=>validNumber(saved[k])) && saved.level>=1 && Number.isInteger(saved.level) && saved.up && ['power','arrow','brick'].every(k=>Number.isInteger(saved.up[k])&&saved.up[k]>=0) && (saved.up.comboCap===undefined||Number.isInteger(saved.up.comboCap)&&saved.up.comboCap>=0) && (saved.up.slots===undefined||Number.isInteger(saved.up.slots)&&saved.up.slots>=0);
   const state = valid ? saved : defaults();
   state.up.comboCap??=0;
+  state.up.slots??=0;
   // Old records combined concurrent arrows; retain them separately from single-arrow records.
   if(state.comboRulesVersion!==2){state.legacyBest=state.best;state.best=0;state.comboRulesVersion=2;}
   // One-time migration: sound used to default off; flip existing saves to on.
@@ -17,7 +18,7 @@
   state.soundMigrated = true;
    const launcherMode = new URLSearchParams(location.search).get('launcher') === '1';
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
-     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:launcherMode,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
+     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:launcherMode,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
   G.colors={normal:'#d5e8b3',bomb:'#f58d75',lightning:'#ecd77e',frost:'#a6d5e3',prism:'#c4b2e2',gold:'#d4df85'};
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
   G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
@@ -33,8 +34,17 @@
   G.specialRate = () => Math.min(.22,.10+.12*(1-Math.exp(-state.up.brick/12)));
   G.valueMultiplier = () => 1+.16*state.up.brick;
   G.baseHp = () => Math.floor(3+.8*Math.log2(state.level)+.2*Math.log2(state.level)**2);
+   // Skill slots start at one and are expanded by a level-gated shop upgrade:
+   // tier 1 at level 50, tier 2 at 100, tier 3 at 150 (cap four slots).
+   G.skillSlotMax = 4;
+   G.skillSlotUpgrades = G.skillSlotMax-1;
+   G.skillSlotBought = () => Math.min(G.skillSlotUpgrades,state.up.slots|0);
+   G.skillSlotUnlockLevel = bought => 50*(bought+1);
+   G.skillSlotReady = () => G.skillSlotBought()<G.skillSlotUpgrades&&state.level>=G.skillSlotUnlockLevel(G.skillSlotBought());
    G.cost = key => key==='comboCap'
       ? Math.ceil(1500*Math.pow(1.65,state.up.comboCap))
+     : key==='slots'
+      ? Math.ceil(8000*Math.pow(2.15,state.up.slots))
      : Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
   G.comboUpgradeUnlocked = () => state.up.brick>=5||state.up.comboCap>0;
@@ -46,7 +56,7 @@
   G.rageBonus = kills => Math.min(1.2,Math.floor(kills/3)*.2);
   G.reward = (type,n) => Math.max(1,Math.round(3*Math.pow(state.level,1.1)*G.valueMultiplier()*G.mult(n)*(type==='gold'?3:1)));
   G.save = () => {
-     state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:state.level,initial:G.initial,killed:G.killed,bricks:G.bricks.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,hp:b.hp,max:b.max,type:b.type,frozen:b.frozen})),obstacles:G.obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h})),core:!!G.core};
+     state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:state.level,levelMoney:G.levelMoney,initial:G.initial,killed:G.killed,bricks:G.bricks.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,hp:b.hp,max:b.max,type:b.type,frozen:b.frozen})),obstacles:G.obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h})),core:!!G.core};
     try {localStorage.setItem(KEY,JSON.stringify(state));} catch {document.getElementById('save-status').textContent='存档不可用';}
   };
   const makeBrick = data => {
@@ -66,11 +76,11 @@
    G.generate = (restore=false) => {
      G.boardEntrance = null;
      G.nextShotAt=0;
-      G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
+      G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.levelMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
     const board=state.board;
     const validObstacles=board && (board.obstacles===undefined || (Array.isArray(board.obstacles)&&board.obstacles.length<=12&&board.obstacles.every(o=>['x','y','w','h'].every(k=>validNumber(o[k]))&&o.w>0&&o.h>0)));
      if(restore && board && !(board.layoutVersion!==G.layoutVersion&&board.killed===0) && !(board.balanceVersion!==G.balanceVersion&&board.killed===0) && board.level===state.level && Array.isArray(board.bricks) && board.bricks.length<=240 && board.bricks.every(b=>['x','y','w','h','hp','max'].every(k=>validNumber(b[k])) && b.hp>0 && b.w>0 && b.h>0 && b.type in G.colors) && validNumber(board.initial) && validNumber(board.killed) && board.initial>0 && validObstacles){
-      board.bricks.forEach(makeBrick);G.initial=board.initial;G.killed=board.killed;G.threshold=Math.ceil(G.initial*.6);
+      board.bricks.forEach(makeBrick);G.initial=board.initial;G.killed=board.killed;G.levelMoney=validNumber(board.levelMoney)?board.levelMoney:0;G.threshold=Math.ceil(G.initial*.6);
       (board.obstacles||[]).forEach(makeObstacle);
       if(board.balanceVersion!==G.balanceVersion){
         const oldBase=Math.max(1,Math.floor(1+.65*Math.log2(state.level)+.16*Math.log2(state.level)**2));
@@ -127,7 +137,7 @@
   };
   G.clear = () => {
     if(G.phase==='clearing')return;
-    G.phase='clearing';G.clearAt=G.time+2.0;const bonus=G.bonus();state.coins+=bonus;G.shake=14;G.coreFlash=1.6;
+    G.phase='clearing';G.clearAt=G.time+2.0;const bonus=G.bonus();state.coins+=bonus;G.levelMoney+=bonus;G.shake=14;G.coreFlash=1.6;
     G.ring(390,80,'#a4d65e',850);G.burst(390,80,'#93c446',80,3);G.float(390,385,'核心击破','#415d26',35);G.float(390,431,'关卡奖金 + '+G.fmt(bonus),'#709945',24);G.specialSound('win');
     G.bricks.forEach(b=>G.burst(b.x,b.y,G.colors[b.type],6));
     // Core cleanup is deliberately separate from rewarded destruction and combo counters.
@@ -143,7 +153,7 @@
     G.bricks.splice(G.bricks.indexOf(b),1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
     const arrow=G.activeArrow;
     if(arrow){arrow.kills=G.arrowKills(arrow)+1;state.best=Math.max(state.best,arrow.kills);}
-    const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
+    const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.levelMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
     if(b.type!=='normal')G.specialSound(b.type,b.x);
     G.sound('break',G.arrowKills(arrow),b.x);
     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
@@ -175,8 +185,11 @@
   G.buy=key=>{
     if(!(key in state.up)||G.phase!=='ready'||G.paused)return false;
     if(key==='comboCap'&&!G.comboUpgradeUnlocked())return false;
+    if(key==='slots'&&!G.skillSlotReady())return false;
     const cost=G.cost(key);if(state.coins<cost)return false;
-    state.coins-=cost;state.up[key]++;G.save();G.ui();G.sound('upgrade');G.toast?.('升级成功');return true;
+    state.coins-=cost;state.up[key]++;
+    if(key==='slots')state.up.slots=Math.min(G.skillSlotUpgrades,state.up.slots);
+    G.save();G.ui();G.sound('upgrade');G.toast?.('升级成功');return true;
   };
   // Slab intersection supplies an exact entry order and face normal for swept ricochets.
   G.sweep=(bounds,from,to,padding=2.5)=>{

@@ -116,7 +116,8 @@
 #shop .upgrade-metric em{font-size:12px;font-style:normal;font-weight:700;color:#588329}
 #shop .combo-upgrade-lock{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#8a957e}
 #shop .combo-upgrade-lock svg{width:11px;height:11px}
-#shop .combo-upgrade-lock[hidden],#shop .combo-upgrade-preview[hidden]{display:none}
+#shop .combo-upgrade-lock[hidden],#shop .combo-upgrade-preview[hidden],#shop .slots-upgrade-done[hidden]{display:none}
+#shop .slots-upgrade-done{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#6f8a4e}
 #shop .buy-button {
   display: flex;
   align-items: center;

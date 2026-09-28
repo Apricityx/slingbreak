@@ -44,8 +44,9 @@
     $('skill-count').textContent=`${owned.length} / ${G.skillSlots}`;
     if(key!==ownedKey){
       ownedKey=key;$('owned-skills').replaceChildren();
-      if(!owned.length)$('owned-skills').textContent='技能跨关保留，满 4 个后自动替换最早获得的技能';
-      owned.forEach((skill,i)=>{const tag=document.createElement('span');tag.textContent=`${i+1} · ${skill.name}${skill===outgoing?' · 下次替换':''}`;tag.title=skill.describe(1);tag.classList.toggle('is-outgoing',skill===outgoing);$('owned-skills').append(tag);});
+      if(!owned.length)$('owned-skills').textContent=`技能跨关保留，满 ${G.skillSlots} 个后自动替换最早获得的技能`;
+      owned.forEach(skill=>{const tag=document.createElement('span');tag.innerHTML=`<i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}`;tag.title=skill.describe(1);tag.classList.toggle('is-outgoing',skill===outgoing);$('owned-skills').append(tag);});
+      icons();
     }
      if(G.phase==='draft'){
        $('play-status').textContent='选择新技能 · 滚动构筑';
@@ -53,12 +54,12 @@
       if(nextKey!==draftKey){
          draftKey=nextKey;$('draft-options').replaceChildren();
          $('draft-count').textContent=`${owned.length} / ${G.skillSlots} 已装备`;
-         $('draft-rule').textContent=outgoing?`选入新技能后，自动替换最早获得的「${outgoing.name}」，其余 3 个技能继续生效。`:`每关选入 1 个技能，跨关保留；满 ${G.skillSlots} 个后，按获得顺序自动替换最早的技能。`;
+         $('draft-rule').textContent=outgoing?`选入新技能后，自动替换最早获得的「${outgoing.name}」，其余 ${G.skillSlots-1} 个技能继续生效。`:`每关选入 1 个技能，跨关保留；满 ${G.skillSlots} 个后，按获得顺序自动替换最早的技能。`;
          $('draft-loadout').replaceChildren();
          for(let i=0;i<G.skillSlots;i++){
            const skill=owned[i],slot=document.createElement('span');
            slot.className='skill-queue-slot'+(!skill?' is-empty':skill===outgoing?' is-outgoing':'');
-           slot.innerHTML=`<small>${i+1} · ${skill===outgoing?'本次替换':skill?'保留':'空槽'}</small><b>${skill?.name||'等待加入'}</b>`;
+           slot.innerHTML=`<b>${skill?`<i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}`:'等待加入'}</b>`;
            if(skill)slot.title=skill.describe(1);$('draft-loadout').append(slot);
          }
          for(const id of G.state.draft.options){
@@ -84,9 +85,9 @@
   draft.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation();});
   $('open-skills').onclick=()=>{
     libraryPaused=G.paused;G.paused=true;G.drag=null;G.audio.sync();$('library-grid').replaceChildren();
-     const owned=G.activeSkills(),outgoing=G.outgoingSkill();
-     owned.forEach((skill,i)=>{const item=document.createElement('article');item.className='library-item';item.innerHTML=`<span class="skill-family">槽位 ${i+1} · ${skill===outgoing?'下次自动替换':'跨关生效'}</span><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span><h3>${skill.name}</h3>${rarity(skill)}<p>${skill.describe(1)}</p>`;$('library-grid').append(item);});
-     if(!owned.length)$('library-grid').textContent='尚未装备技能。每关选择一个，逐步组成你的四技能构筑。';
+     const owned=G.activeSkills();
+     owned.forEach(skill=>{const item=document.createElement('article');item.className='library-item';item.innerHTML=`<span class="skill-family">${skill.family}</span><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span><h3>${skill.name}</h3>${rarity(skill)}<p>${skill.describe(1)}</p>`;$('library-grid').append(item);});
+     if(!owned.length)$('library-grid').textContent=`尚未装备技能。每关选择一个，逐步组成你的 ${G.skillSlots} 技能构筑。`;
      if(!library.open)library.showModal();icons();
    };
    $('close-skills').onclick=()=>library.close();

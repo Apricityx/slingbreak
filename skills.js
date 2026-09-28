@@ -1,7 +1,8 @@
 (() => {
   'use strict';
   const G=window.Game,S=G.state,{Body}=Matter;
-  const entry=(id,name,family,icon,max,describe)=>({id,name,family,icon,max:1,describe});
+  // minLevel keeps late-game skills out of the draft until the run is deep enough.
+  const entry=(id,name,family,icon,max,describe,minLevel=1)=>({id,name,family,icon,max:1,describe,minLevel});
   const catalog=G.skillCatalog=[
     entry('trident','三叉齐射','箭术','git-fork',3,r=>`每次射击额外发射 5 支扇形箭，继承全部伤害与穿透。`),
     entry('echo','回响齐射','箭术','copy',2,r=>`松弦后自动重放 ${r} 次齐射，完整复制主箭与扇形箭。`),
@@ -62,7 +63,7 @@
     entry('orbital','轨道轰炸','元素','satellite',1,()=>`每次射击锁定砖块最密集的位置，连续轰炸 3 次，每次对 160 范围造成 3 倍基础伤害。`),
     entry('roulette','命运轮盘','核心','disc-3',1,()=>`每箭随机获得一种力量：5 倍伤害并多穿透 10 块；追加 8 支双倍伤害追踪箭；全场受到 2.5 倍基础伤害。`),
     entry('stormfront','天幕裁决','元素','cloud-rain',1,()=>`每次射击随机选中 3 行砖块，逐行轰击，每块受到 3 倍基础伤害。`),
-    entry('boomerang','回旋天轮','箭术','undo-2',1,()=>`箭矢额外穿透 6 块；飞行 0.55 秒后反向折返，伤害变为 3 倍，再获得 6 次穿透，沿途二次收割。`),
+    entry('boomerang','回旋天轮','箭术','undo-2',1,()=>`箭矢额外穿透 6 块；飞行 0.55 秒后反向折返，伤害变为 3 倍，再获得 6 次穿透，沿途二次收割。`,50),
     entry('wormhole','折跃猎手','箭术','waypoints',1,()=>`每箭前 3 次命中后，传送至远处另一块砖旁并重新瞄准；每次折跃箭伤提高初始值的 50%，返还 2 次穿透。`),
     entry('buzzsaw','行刑锯盘','力量','disc-3',1,()=>`每次射击在最密集的一行放出巨型锯盘，横切整个战场；每块砖最多被锯 3 次，每次受到 1.5 倍基础伤害。`),
     entry('siegebreaker','城墙粉碎机','力量','pickaxe',1,()=>`箭矢伤害翻倍。命中合金障碍可直接撞碎并继续前进，碎片冲击周围 155 范围，造成 4 倍基础伤害。`),
@@ -113,7 +114,8 @@
   };
   for(const [tier,entries] of Object.entries(tiers))for(const [id,weight] of entries)Object.assign(catalog.find(s=>s.id===id),{tier,weight});
   const byId=new Map(catalog.map(s=>[s.id,s]));
-  G.skillSlots=4;
+  // One slot is free; the shop upgrade adds up to three more (game.js owns the tiers).
+  Object.defineProperty(G,'skillSlots',{configurable:true,get:()=>1+G.skillSlotBought()});
   const rank=G.skillRank=id=>S.skillScopeVersion===3&&byId.has(id)&&S.skills?.[id]===1?1:0;
   // Skill IDs are non-numeric keys: insertion order survives JSON save/reload
   // and is the FIFO queue, oldest first. Never sort this map by the catalog.
@@ -140,7 +142,8 @@
   normalize();
   let chanceKey=null;
   function draftPool(){
-    const pool=catalog.filter(s=>!rank(s.id)),key=Object.keys(S.skills).join(',');
+    // Skills with a minLevel stay out of the draw until the run reaches them.
+    const pool=catalog.filter(s=>!rank(s.id)&&S.level>=(s.minLevel||1)),key=Object.keys(S.skills).join(',')+'@'+S.level;
     if(key!==chanceKey){
       chanceKey=key;catalog.forEach(s=>s.chance=0);
       const total=pool.reduce((sum,s)=>sum+s.weight,0);
@@ -195,7 +198,7 @@
   };
   G.chooseSkill=id=>{
     const skill=byId.get(id);
-    if(G.phase!=='draft'||G.paused||!skill||S.draft?.level!==S.level||!S.draft.options.includes(id)||S.skillChosenLevel===S.level||rank(id)>=skill.max)return false;
+    if(G.phase!=='draft'||G.paused||!skill||S.draft?.level!==S.level||!S.draft.options.includes(id)||S.skillChosenLevel===S.level||rank(id)>=skill.max||S.level<(skill.minLevel||1))return false;
     const queue=G.activeSkills().map(s=>s.id);
     if(queue.length===G.skillSlots)queue.shift();
     queue.push(id);S.skills=Object.fromEntries(queue.map(skillId=>[skillId,1]));S.skillChosenLevel=S.level;S.draft=null;
@@ -348,7 +351,7 @@
   };
   G.buy=key=>{
     const result=base.buy(key);
-    if(result&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
+    if(result&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;if(S.up.slots>G.skillSlotUpgrades)S.up.slots=G.skillSlotUpgrades;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
     return result;
   };
   G.generate=restore=>{jobs=[];resetShot();normalize();base.generate(restore);G.prepareDraft();G.save();G.ui();};

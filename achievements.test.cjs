@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const Matter=require('./vendor/matter.min.js');
 function boot(skill){
   let stored;
-  const c={Matter,console,window:{},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>null,setItem:(k,v)=>stored=v},document:{getElementById:()=>({})}};
+  const c={Matter,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>null,setItem:(k,v)=>stored=v},document:{getElementById:()=>({})}};
   vm.createContext(c);for(const f of ['game.js','skills.js','achievements.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+f,'utf8'),c);
   const G=c.window.Game;G.state.skills=skill?{[skill]:1}:{};G.state.skillChosenLevel=1;G.phase='ready';G.threshold=999;
   G.bricks.forEach(b=>{b.type='normal';b.hp=b.max=1;});

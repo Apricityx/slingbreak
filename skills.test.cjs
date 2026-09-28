@@ -3,11 +3,13 @@ const Matter=require('./vendor/matter.min.js');
 function boot(saved){
   let storage=saved?JSON.stringify(saved):null,seed=9128;
   const math=Object.create(Math);math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-  const context={Matter,Math:math,console,window:{},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
+  const context={Matter,Math:math,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
   vm.createContext(context);for(const file of ['game.js','skills.js','skill-expansion.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);
   const G=context.window.Game;G.burst=G.float=G.ring=()=>{};return{G,read:()=>JSON.parse(storage)};
 }
-function ready(ids){const result=boot(),G=result.G;G.state.skills=Object.fromEntries((Array.isArray(ids)?ids:ids?[ids]:[]).map(id=>[id,1]));G.state.skillChosenLevel=G.state.level;G.state.draft=null;G.phase='ready';return result;}
+// Tests that predate the level-gated slot upgrade play with all four slots unlocked.
+const fresh=()=>({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:3},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
+function ready(ids){const result=boot(fresh()),G=result.G;G.state.skills=Object.fromEntries((Array.isArray(ids)?ids:ids?[ids]:[]).map(id=>[id,1]));G.state.skillChosenLevel=G.state.level;G.state.draft=null;G.phase='ready';return result;}
 function choose(G,id){G.state.draft={level:G.state.level,options:[id,...G.skillCatalog.filter(s=>s.id!==id&&!G.skillRank(s.id)).slice(0,2).map(s=>s.id)]};G.prepareDraft();assert.equal(G.chooseSkill(id),true);}
 function finish(G){for(let i=0;i<1800&&G.phase==='flying';i++)G.tick(1/120);assert.notEqual(G.phase,'flying');if(G.time<G.nextShotAt)G.tick(G.nextShotAt-G.time);}
 function park(G){for(const a of G.arrows){Matter.Body.setPosition(a.body,{x:390,y:1350});Matter.Body.setVelocity(a.body,{x:0,y:0});}}
@@ -43,7 +45,7 @@ test('equipped skills remain active but cannot be drawn or selected twice',()=>{
   choose(G,'heavy');assert.equal(G.damage(),5.6);assert.deepEqual(Object.keys(G.state.skills),['titan','heavy']);
 });
 test('four slots rotate oldest-first across levels and reloads, with no replacement argument',()=>{
-  let {G,read}=boot();const history=[];
+  let {G,read}=boot(fresh());const history=[];
   for(const id of ['titan','mint','ice','heavy','piercer','titan']){
     if(history.length){G.clear();G.tick(2.1);}
     choose(G,id);history.push(id);
@@ -119,12 +121,41 @@ test('ordinary homing prioritizes an exposed nearby core instead of steering awa
 });
 test('weighted draws are unique and observed inclusion matches displayed probabilities',()=>{
   const {G}=boot(),counts=Object.fromEntries(G.skillCatalog.map(s=>[s.id,0])),n=60000;
+  G.state.level=50; // Past every minLevel gate so the whole catalog is drawable.
   assert.equal(new Set(G.skillCatalog.map(s=>s.id)).size,81);
   assert.ok(G.skillCatalog.every(s=>Number.isFinite(s.weight)&&s.weight>0));
   assert.ok(Math.abs(G.skillCatalog.reduce((sum,s)=>sum+s.chance,0)-3)<1e-10);
   for(let i=0;i<n;i++){const options=G.rollSkills();assert.equal(new Set(options).size,3);for(const id of options)counts[id]++;}
   for(const s of G.skillCatalog){assert.ok(s.tier in G.skillTiers);assert.ok(Math.abs(counts[s.id]/n-s.chance)<.006,s.id);}
   for(const [common,rare] of [['white','blue'],['blue','gold']])assert.ok(Math.min(...G.skillCatalog.filter(s=>s.tier===common).map(s=>s.chance))>Math.max(...G.skillCatalog.filter(s=>s.tier===rare).map(s=>s.chance)));
+});
+test('boomerang stays out of the draw until the run reaches level 50',()=>{
+  const {G}=boot(),boomerang=G.skillCatalog.find(s=>s.id==='boomerang');
+  assert.equal(boomerang.minLevel,50);
+  for(const level of [1,25,49]){
+    G.state.level=level;
+    for(let i=0;i<400;i++)assert.ok(!G.rollSkills().includes('boomerang'),`level ${level}`);
+    assert.equal(boomerang.chance,0,`level ${level} chance`);
+  }
+  G.state.level=50;
+  const seen=new Set();
+  for(let i=0;i<400;i++)for(const id of G.rollSkills())seen.add(id);
+  assert.ok(seen.has('boomerang'));
+  assert.ok(boomerang.chance>0);
+  // A draft persisted before the gate must be re-rolled rather than offered.
+  G.state.level=49;G.state.skillChosenLevel=0;
+  G.state.draft={level:49,options:['boomerang','ice','mint']};
+  G.prepareDraft();
+  assert.ok(!G.state.draft.options.includes('boomerang'));
+  assert.equal(G.chooseSkill('boomerang'),false);
+  assert.equal(G.skillRank('boomerang'),0);
+});
+test('skill slot count follows the purchased shop tiers up to four',()=>{
+  const {G}=boot();assert.equal(G.skillSlots,1);
+  G.state.up.slots=1;assert.equal(G.skillSlots,2);
+  G.state.up.slots=2;assert.equal(G.skillSlots,3);
+  G.state.up.slots=3;assert.equal(G.skillSlots,4);
+  G.state.up.slots=9;assert.equal(G.skillSlots,4);assert.equal(G.skillSlotBought(),3);
 });
 test('weighted draws exclude all equipped slots and probabilities reflect the smaller pool',()=>{
   const G=ready(['echo','titan','ice','railgun']).G;G.clear();G.tick(2.1);

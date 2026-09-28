@@ -49,7 +49,7 @@
     s.baseMult=G.mult(s.kills);s.bountyMult=G.bountyMultiplier?.(s.kills)||1;s.base+=G.reward(b.type,s.kills);
     return evaluate(a);
   };
-  G.awardCore=a=>{a.achievement.core=true;const money=evaluate(a);G.state.coins+=money;G.shotMoney+=money;};
+  G.awardCore=a=>{a.achievement.core=true;const money=evaluate(a);G.state.coins+=money;G.shotMoney+=money;G.levelMoney+=money;};
   const ricochet=G.onRicochet;
   G.onRicochet=a=>{if(!a.achievement)G.initAchievementArrow(a);a.achievement.bounces++;ricochet?.(a);};
   const shoot=G.shoot,generate=G.generate;

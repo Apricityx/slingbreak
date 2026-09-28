@@ -6,7 +6,7 @@ const Matter=require('./vendor/matter.min.js');
 const source=fs.readFileSync(__dirname+'/game.js','utf8');
 function boot(saved){
   let storage=saved?JSON.stringify(saved):null;
-  const context={Matter,console,window:{},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
+  const context={Matter,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
   vm.createContext(context);vm.runInContext(source,context);
   return {G:context.window.Game,read:()=>JSON.parse(storage)};
 }
@@ -56,6 +56,22 @@ test('combo upgrades unlock at brick tier five and raise both the step and cap',
   G.state.up.brick=5;assert.equal(G.cost('comboCap'),1500);assert.equal(G.cost('brick'),Math.ceil(120*1.5**5));
   assert.equal(G.buy('comboCap'),true);assert.equal(G.comboMultiplierCap(),3.5);assert.equal(G.comboStep(),.275);assert.equal(G.comboCapKills(),11);assert.equal(G.mult(10000),3.5);assert.equal(G.state.up.comboCap,1);
   assert.equal(G.cost('comboCap'),2475);const loaded=boot(read()).G;assert.equal(loaded.state.up.comboCap,1);assert.equal(loaded.comboMultiplierCap(),3.5);assert.equal(loaded.comboStep(),.275);
+});
+test('skill slots unlock one at a time on the level-gated shop upgrade',()=>{
+  const {G,read}=boot();assert.equal(G.skillSlotBought(),0);assert.equal(G.skillSlotMax,4);assert.equal(G.skillSlotUpgrades,3);
+  G.state.coins=Number.MAX_SAFE_INTEGER;
+  assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
+  G.state.level=50;assert.equal(G.skillSlotReady(),true);assert.equal(G.cost('slots'),8000);assert.equal(G.buy('slots'),true);
+  assert.equal(G.skillSlotBought(),1);assert.equal(G.state.up.slots,1);
+  G.state.level=99;assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
+  G.state.level=100;assert.equal(G.cost('slots'),Math.ceil(8000*2.15));assert.equal(G.buy('slots'),true);
+  G.state.level=150;assert.equal(G.buy('slots'),true);assert.equal(G.skillSlotBought(),3);
+  assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
+  const loaded=boot(read()).G;assert.equal(loaded.skillSlotBought(),3);assert.equal(loaded.state.up.slots,3);
+});
+test('legacy saves without a slots key start at zero bought upgrades',()=>{
+  const {G}=boot({level:12,coins:50,total:0,best:0,comboRulesVersion:2,up:{power:0,arrow:0,brick:0,comboCap:0}});
+  assert.equal(G.state.up.slots,0);assert.equal(G.skillSlotBought(),0);
 });
 test('fixed world keeps the sling beneath the lowest brick row with clear separation',()=>{
    const {G}=boot();assert.equal(G.H,1400);assert.equal(G.origin.y,970);

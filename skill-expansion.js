@@ -105,7 +105,7 @@
       const c=runtime().contract;c.targets=c.targets.filter(p=>p.x!==b.x||p.y!==b.y);
       fx('contract',b.x,b.y,{r:75,force:true});
       if(!c.targets.length){
-        c.rounds++;const bounty=Math.round(G.bonus()*.4);G.state.coins+=bounty;G.shotMoney+=bounty;
+        c.rounds++;const bounty=Math.round(G.bonus()*.4);G.state.coins+=bounty;G.shotMoney+=bounty;G.levelMoney+=bounty;
         G.arrows.forEach(a=>a.pierce+=4);G.float(390,G.origin.y-110,'契约完成 +'+G.fmt(bounty),colors.contract,24);G.sound('upgrade');
         fx('contract',390,G.origin.y-130,{r:145,force:true});
         // Rearm next tick, after the current destruction chain has finished.

@@ -111,14 +111,16 @@
          }
          const path=smoothPrediction(prediction,now);
         let travelled=0;
-         ctx.save();ctx.strokeStyle=predictionColor('#4f7d2d');ctx.lineWidth=2.6;ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=predictionColor('#d8f3ae');ctx.shadowBlur=5;
+         // Enhanced glow for better feel — shadowBlur bumped from 5→9
+         ctx.save();ctx.strokeStyle=predictionColor('#4f7d2d');ctx.lineWidth=2.6;ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=predictionColor('#d8f3ae');ctx.shadowBlur=9;
         for(let i=1;i<path.length;i++){
           const a=path[i-1],b=path[i],segment=Math.hypot(b.x-a.x,b.y-a.y),fade=Math.min(1,Math.max(0,(PREDICTION_MAX-travelled)/(PREDICTION_MAX-PREDICTION_FADE_START)));
           if(fade<=0)break;ctx.globalAlpha=.9*fade;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();travelled+=segment;
         }
         ctx.restore();travelled=0;
          const dotColor=predictionColor('#78a943');
-         path.forEach((p,i)=>{if(i>0)travelled+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);if(i%6===0){const fade=Math.min(1,Math.max(0,(PREDICTION_MAX-travelled)/(PREDICTION_MAX-PREDICTION_FADE_START)));ctx.globalAlpha=.85*fade;circle(p.x,p.y,2.8,dotColor);}});ctx.globalAlpha=1;
+         // Trail dots slightly larger (2.8→3.0) and a touch more opaque for snappier read
+         path.forEach((p,i)=>{if(i>0)travelled+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);if(i%6===0){const fade=Math.min(1,Math.max(0,(PREDICTION_MAX-travelled)/(PREDICTION_MAX-PREDICTION_FADE_START)));ctx.globalAlpha=.9*fade;circle(p.x,p.y,3.0,dotColor);}});ctx.globalAlpha=1;
       }else{
          ctx.save();ctx.globalAlpha=.8;ctx.setLineDash([4,7]);line(x,y-65,x+Math.sin(G.keyboardAngle)*40,y-110,predictionColor('#6f9c41'),1.7);ctx.restore();
       }
@@ -141,7 +143,53 @@
     ctx.globalAlpha=eased;
     return eased;
   }
-  function render(){
+   // Particles are tiny solid squares. Painting them one at a time pays a full
+   // save/restore, a translate+rotate and a colour-string parse per particle,
+   // which dominates the frame once there are hundreds of them. Instead bucket
+   // them by paint style (colour + quantised alpha) and emit one path fill per
+   // style: no per-particle transform or state churn, and each colour is parsed
+   // once per frame instead of once per particle. Buckets are reused across
+   // frames, so the steady state allocates nothing.
+   const PARTICLE_ALPHA_STEPS = 8;
+   const particleColorIds = new Map();
+   const particleBuckets = [];
+   const drawParticles = () => {
+     for (const p of G.particles) {
+       // Colour id is cached on the particle so the per-frame hot loop does no
+       // string hashing or allocation; alpha is quantised into fixed steps.
+       let id = p._pid;
+       if (id === undefined) {
+         id = particleColorIds.get(p.color);
+         if (id === undefined) { id = particleColorIds.size; particleColorIds.set(p.color, id); }
+         p._pid = id;
+       }
+       const alpha = p.life * 2;
+       const step = alpha >= 1 ? PARTICLE_ALPHA_STEPS : alpha <= 0 ? 0 : (alpha * PARTICLE_ALPHA_STEPS) | 0;
+       const index = id * (PARTICLE_ALPHA_STEPS + 1) + step;
+       let bucket = particleBuckets[index];
+       if (bucket === undefined) particleBuckets[index] = bucket = { color: p.color, alpha: step / PARTICLE_ALPHA_STEPS, list: [] };
+       bucket.list.push(p);
+     }
+     ctx.globalAlpha = 1;
+     for (const bucket of particleBuckets) {
+       if (bucket === undefined) continue;
+       const list = bucket.list;
+       if (list.length === 0) continue;
+       if (bucket.alpha > 0) {
+         ctx.globalAlpha = bucket.alpha;
+         ctx.fillStyle = bucket.color;
+         ctx.beginPath();
+         for (let i = 0; i < list.length; i++) {
+           const p = list[i], half = p.size / 2;
+           ctx.rect(p.x - half, p.y - half, p.size, p.size);
+         }
+         ctx.fill();
+       }
+       list.length = 0;
+     }
+     ctx.globalAlpha = 1;
+   };
+   function render(){
     const dpr=canvas.width/cssW;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
     ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);
     if(!G.reduced && G.shake)ctx.translate((Math.random()-.5)*G.shake,(Math.random()-.5)*G.shake);
@@ -189,10 +237,11 @@
     }
     G.rings.forEach(r=>{ctx.globalAlpha=r.life/r.max*.65;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r*(1-r.life/r.max),0,Math.PI*2);ctx.stroke();});ctx.globalAlpha=1;
     G.bolts.forEach(b=>{ctx.globalAlpha=Math.min(1,b.life*4);ctx.strokeStyle='#bea33e';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(b.x,b.y);for(let i=1;i<6;i++)ctx.lineTo(b.x+(b.tx-b.x)*i/6+(Math.random()-.5)*18,b.y+(b.ty-b.y)*i/6+(Math.random()-.5)*18);ctx.lineTo(b.tx,b.ty);ctx.stroke();});ctx.globalAlpha=1;
-    G.arrows.forEach(a=>{if(!a.skillVisual)a.trail.forEach((p,i)=>{ctx.globalAlpha=i/a.trail.length*.3;circle(p.x,p.y,1.8,a.color||'#8baa65');});ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||'#343f2b');});
+    // Arrow trail alpha bumped from .3→.45, dot radius from 1.8→2.2 for snappier feel
+    G.arrows.forEach(a=>{if(!a.skillVisual)a.trail.forEach((p,i)=>{ctx.globalAlpha=i/a.trail.length*.45;circle(p.x,p.y,2.2,a.color||'#8baa65');});ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||'#343f2b');});
     drawSling();
     G.drawSkillEffects?.(ctx,'front');
-    G.particles.forEach(p=>{ctx.save();ctx.globalAlpha=Math.min(1,p.life*2);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);ctx.restore();});
+    drawParticles();
     G.texts.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);label(p.text,p.x,p.y,p.size,p.color,'DM Sans',600);});ctx.globalAlpha=1;
     if(G.coreFlash>0){ctx.fillStyle=`rgba(201,239,162,${G.coreFlash*.13})`;ctx.fillRect(0,0,780,G.H);}
     drawPointer();

@@ -78,12 +78,11 @@
   // The newest skill leads the arrow styling; all four remain visible and active.
   const active=()=>G.activeSkills().at(-1);
   const effects=[],cooldowns=new Map();
-  let lastId=null,lastState='',lastQueueKey='',lastPulse=-10,acquiredTimer;
+  let lastId=null,lastState='',lastQueueKey='',lastPulse=-10,viewId=null;
   const hud=document.createElement('div');hud.className='skill-live';
-  hud.innerHTML='<div class="skill-live-main"><span class="skill-live-icon"></span><span class="skill-live-copy"><span class="skill-live-heading"><strong></strong><button type="button" class="skill-live-details" aria-label="查看全部已装备技能">全部技能</button></span><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span><span class="skill-live-acquired" role="status"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg><span></span></span></span></div><div class="skill-queue" aria-label="生效技能，从最早到最新"></div>';
+  hud.innerHTML='<div class="skill-live-main"><span class="skill-live-icon"></span><span class="skill-live-copy"><span class="skill-live-heading"><strong></strong><button type="button" class="skill-live-details" aria-label="查看全部已装备技能">全部技能</button></span><small></small></span><span class="skill-live-state"><span></span><span class="skill-live-meter"><i></i></span></span></div><div class="skill-queue" aria-label="已装备技能，按获得顺序排列"></div>';
   document.getElementById('arena').before(hud);
   const icon=hud.querySelector('.skill-live-icon'),name=hud.querySelector('strong'),description=hud.querySelector('small'),status=hud.querySelector('.skill-live-state > span'),meter=hud.querySelector('.skill-live-meter i');
-  const acquired=hud.querySelector('.skill-live-acquired > span');
   const queue=hud.querySelector('.skill-queue');
   hud.querySelector('.skill-live-details').onclick=()=>document.getElementById('open-skills').click();
   function animate(node,cls){node.classList.remove(cls);void node.offsetWidth;node.classList.add(cls);}
@@ -103,34 +102,58 @@
     if(!G.reduced&&effects.length<35)G.burst(x,y,p.accent,options.kind==='mark'?2:4,.55);
     if(G.time-lastPulse>.35){lastPulse=G.time;animate(hud,'is-triggered');}
   };
+  // Clicking a queued skill pins its description in the live panel; clicking
+  // the pinned skill again falls back to the newest one.
+  function selectView(id){
+    const previous=lastId;
+    viewId=viewId===id?null:id;
+    refresh();
+    if(lastId!==previous)animate(hud,'is-switching');
+  }
   function refresh(){
-    const s=active();
+    const owned=G.activeSkills();
+    if(viewId&&!owned.some(skill=>skill.id===viewId))viewId=null;
+    const s=(viewId&&owned.find(skill=>skill.id===viewId))||active();
     const queueKey=JSON.stringify(G.state.skills);
     if(queueKey!==lastQueueKey){
-      lastQueueKey=queueKey;const owned=G.activeSkills(),outgoing=G.outgoingSkill();
+      lastQueueKey=queueKey;const outgoing=G.outgoingSkill();
       queue.replaceChildren();
       for(let i=0;i<G.skillSlots;i++){
-        const skill=owned[i],slot=document.createElement('span');
-        slot.className='skill-queue-slot'+(!skill?' is-empty':skill===outgoing?' is-outgoing':'');
-        slot.innerHTML=`<small>${i+1} · ${skill===outgoing?'下次替换':skill?'生效中':'空槽'}</small><b>${skill?.name||'等待加入'}</b>`;
-        if(skill)slot.title=skill.describe(1);queue.append(slot);
+        const skill=owned[i];
+        if(!skill){
+          const slot=document.createElement('span');
+          slot.className='skill-queue-slot is-empty';slot.innerHTML='<b>等待加入</b>';queue.append(slot);continue;
+        }
+        const slot=document.createElement('button');
+        slot.type='button';slot.dataset.skill=skill.id;
+        slot.className='skill-queue-slot'+(skill===outgoing?' is-outgoing':'');
+        slot.style.setProperty('--skill-color',profiles[skill.id]?.color||'#8a9380');
+        slot.title=`${skill.name}：${skill.describe(1)}`;
+        slot.setAttribute('aria-label',`查看${skill.name}的技能说明`);
+        slot.innerHTML=`<b><i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}</b>`;
+        slot.onclick=()=>selectView(skill.id);
+        queue.append(slot);lucide.createIcons({root:slot});
       }
     }
+    const shownId=s?s.id:null;
+    queue.querySelectorAll('.skill-queue-slot[data-skill]').forEach(slot=>{
+      const on=slot.dataset.skill===shownId;
+      slot.classList.toggle('is-viewing',on);
+      slot.setAttribute('aria-pressed',String(on));
+    });
     if(!s){
       if(lastId!=='__none__'){
-        clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
         lastId='__none__';lastState='';
         hud.style.setProperty('--skill-color','#8a9380');
-        name.textContent='四槽构筑';description.textContent='技能跨关保留，满槽后自动替换最早获得的技能';
+        name.textContent=`${G.skillSlots} 槽构筑`;description.textContent='技能跨关保留，满槽后自动替换最早获得的技能';
         icon.innerHTML='<i data-lucide="sparkles"></i>';lucide.createIcons({root:icon});
         status.textContent='待选择';meter.style.transform='scaleX(0)';
       }
       return;
     }
     if(lastId!==s.id){
-      clearTimeout(acquiredTimer);hud.classList.remove('is-acquired');acquired.textContent='';
       lastId=s.id;lastState='';const p=profiles[s.id];hud.style.setProperty('--skill-color',p.color);
-      name.textContent='最新 · '+s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
+      name.textContent=s.name;description.textContent=s.describe(1);icon.innerHTML=`<i data-lucide="${s.icon}"></i>`;lucide.createIcons({root:icon});
     }
     const shots=G.state.skillRuntime.shots,period={legion:3,pulse:3,reaper:3,supernova:4}[s.id];
     let text=`${G.activeSkills().length} / ${G.skillSlots} 生效`,progress=1;status.title='';
@@ -148,11 +171,8 @@
   }
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{
-    const outgoing=G.outgoingSkill();
     const result=choose(id);if(!result)return result;
-    refresh();animate(hud,'is-acquired');
-    acquired.textContent=outgoing?'已轮换':'已加入';
-    clearTimeout(acquiredTimer);acquiredTimer=setTimeout(()=>{hud.classList.remove('is-acquired');acquired.textContent='';},1800);
+    viewId=null;refresh();
     if(id==='decay'){const p=profiles[id];G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});}
     return result;
   };
