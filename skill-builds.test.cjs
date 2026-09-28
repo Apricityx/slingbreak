@@ -3,7 +3,7 @@ const Matter=require('./vendor/matter.min.js');
 const files=['game.js','skills.js','achievements.js','skill-expansion.js','skill-overdrive.js'];
 
 function boot(ids=[]){
-  let stored=JSON.stringify({level:1,coins:0,total:0,best:0,comboRulesVersion:2,up:{power:0,arrow:0,brick:0,comboCap:0,slots:3},skills:Object.fromEntries(ids.map(id=>[id,1])),skillScopeVersion:3,skillChosenLevel:ids.length?1:0}),seed=8241;
+  let stored=JSON.stringify({level:1,coins:0,total:0,best:0,comboRulesVersion:2,up:{power:0,arrow:0,brick:0,comboCap:0,slots:3},skills:Object.fromEntries(ids.map(id=>[id,1])),skillScopeVersion:3,skillChosenLevel:ids.length?1:0,skillGateVersion:1}),seed=8241;
   const math=Object.create(Math);math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   const context={Matter,Math:math,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>stored,setItem:(key,value)=>stored=value},document:{getElementById:()=>({})}};
   vm.createContext(context);for(const file of files)vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);

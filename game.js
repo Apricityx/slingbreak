@@ -34,17 +34,17 @@
   G.specialRate = () => Math.min(.22,.10+.12*(1-Math.exp(-state.up.brick/12)));
   G.valueMultiplier = () => 1+.16*state.up.brick;
   G.baseHp = () => Math.floor(3+.8*Math.log2(state.level)+.2*Math.log2(state.level)**2);
-   // Skill slots start at one and are expanded by a level-gated shop upgrade:
-   // tier 1 at level 50, tier 2 at 100, tier 3 at 150 (cap four slots).
+   // Skill slots start at one; a shop purchase adds one each time for 100K,
+   // 10M then 1B coins (cap four slots).
    G.skillSlotMax = 4;
    G.skillSlotUpgrades = G.skillSlotMax-1;
    G.skillSlotBought = () => Math.min(G.skillSlotUpgrades,state.up.slots|0);
-   G.skillSlotUnlockLevel = bought => 50*(bought+1);
-   G.skillSlotReady = () => G.skillSlotBought()<G.skillSlotUpgrades&&state.level>=G.skillSlotUnlockLevel(G.skillSlotBought());
+   const slotPrices=[1e5,1e7,1e9];
+   G.skillSlotCost = bought => slotPrices[Math.min(slotPrices.length-1,Math.max(0,bought))];
    G.cost = key => key==='comboCap'
       ? Math.ceil(1500*Math.pow(1.65,state.up.comboCap))
      : key==='slots'
-      ? Math.ceil(8000*Math.pow(2.15,state.up.slots))
+      ? Math.ceil(G.skillSlotCost(state.up.slots))
      : Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
   G.comboUpgradeUnlocked = () => state.up.brick>=5||state.up.comboCap>0;
@@ -185,7 +185,7 @@
   G.buy=key=>{
     if(!(key in state.up)||G.phase!=='ready'||G.paused)return false;
     if(key==='comboCap'&&!G.comboUpgradeUnlocked())return false;
-    if(key==='slots'&&!G.skillSlotReady())return false;
+    if(key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades)return false;
     const cost=G.cost(key);if(state.coins<cost)return false;
     state.coins-=cost;state.up[key]++;
     if(key==='slots')state.up.slots=Math.min(G.skillSlotUpgrades,state.up.slots);

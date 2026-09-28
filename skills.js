@@ -116,6 +116,8 @@
   const byId=new Map(catalog.map(s=>[s.id,s]));
   // One slot is free; the shop upgrade adds up to three more (game.js owns the tiers).
   Object.defineProperty(G,'skillSlots',{configurable:true,get:()=>1+G.skillSlotBought()});
+  // Bumped when a skill gains a level gate, so older saves are migrated once.
+  G.skillGateVersion=1;
   const rank=G.skillRank=id=>S.skillScopeVersion===3&&byId.has(id)&&S.skills?.[id]===1?1:0;
   // Skill IDs are non-numeric keys: insertion order survives JSON save/reload
   // and is the FIFO queue, oldest first. Never sort this map by the catalog.
@@ -136,6 +138,18 @@
     }
     const entries=S.skills&&typeof S.skills==='object'&&!Array.isArray(S.skills)?Object.entries(S.skills):[];
     S.skills=Object.fromEntries(entries.filter(([id,value])=>byId.has(id)&&value===1).slice(-G.skillSlots));
+    // Migration: a gated skill must not stay equipped in a save that predates the
+    // gate, so revoke any the run has not reached yet and let it be drawn again.
+    if(S.skillGateVersion!==G.skillGateVersion){
+      S.skillGateVersion=G.skillGateVersion;
+      for(const id of Object.keys(S.skills)){
+        const skill=byId.get(id);
+        if(skill&&S.level<(skill.minLevel||1)){
+          delete S.skills[id];
+          (G.revokedSkills??=[]).push(skill);
+        }
+      }
+    }
     if(!Number.isInteger(S.skillChosenLevel)||S.skillChosenLevel<0||S.skillChosenLevel>S.level||!Object.keys(S.skills).length)S.skillChosenLevel=0;
     if(!S.skillRuntime||S.skillRuntime.level!==S.level)S.skillRuntime={level:S.level,shots:0,forge:false,decay:false};
   }
@@ -351,7 +365,9 @@
   };
   G.buy=key=>{
     const result=base.buy(key);
-    if(result&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;if(S.up.slots>G.skillSlotUpgrades)S.up.slots=G.skillSlotUpgrades;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
+    // The slot upgrade is a structural unlock, so 神匠赐福 cannot apply to it:
+    // keep its charge for a real upgrade instead of wasting it here.
+    if(result&&key!=='slots'&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
     return result;
   };
   G.generate=restore=>{jobs=[];resetShot();normalize();base.generate(restore);G.prepareDraft();G.save();G.ui();};

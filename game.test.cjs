@@ -57,16 +57,17 @@ test('combo upgrades unlock at brick tier five and raise both the step and cap',
   assert.equal(G.buy('comboCap'),true);assert.equal(G.comboMultiplierCap(),3.5);assert.equal(G.comboStep(),.275);assert.equal(G.comboCapKills(),11);assert.equal(G.mult(10000),3.5);assert.equal(G.state.up.comboCap,1);
   assert.equal(G.cost('comboCap'),2475);const loaded=boot(read()).G;assert.equal(loaded.state.up.comboCap,1);assert.equal(loaded.comboMultiplierCap(),3.5);assert.equal(loaded.comboStep(),.275);
 });
-test('skill slots unlock one at a time on the level-gated shop upgrade',()=>{
+test('skill slots are bought one at a time for 100K, 10M then 1B',()=>{
   const {G,read}=boot();assert.equal(G.skillSlotBought(),0);assert.equal(G.skillSlotMax,4);assert.equal(G.skillSlotUpgrades,3);
-  G.state.coins=Number.MAX_SAFE_INTEGER;
-  assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
-  G.state.level=50;assert.equal(G.skillSlotReady(),true);assert.equal(G.cost('slots'),8000);assert.equal(G.buy('slots'),true);
-  assert.equal(G.skillSlotBought(),1);assert.equal(G.state.up.slots,1);
-  G.state.level=99;assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
-  G.state.level=100;assert.equal(G.cost('slots'),Math.ceil(8000*2.15));assert.equal(G.buy('slots'),true);
-  G.state.level=150;assert.equal(G.buy('slots'),true);assert.equal(G.skillSlotBought(),3);
-  assert.equal(G.skillSlotReady(),false);assert.equal(G.buy('slots'),false);
+  assert.equal(G.skillSlotCost(0),1e5);assert.equal(G.skillSlotCost(1),1e7);assert.equal(G.skillSlotCost(2),1e9);
+  G.state.coins=99999;assert.equal(G.cost('slots'),1e5);assert.equal(G.buy('slots'),false);assert.equal(G.skillSlotBought(),0);
+  G.state.coins=1e5;assert.equal(G.buy('slots'),true);assert.equal(G.skillSlotBought(),1);assert.equal(G.state.up.slots,1);assert.equal(G.state.coins,0);
+  assert.equal(G.cost('slots'),1e7);assert.equal(G.buy('slots'),false);
+  G.state.coins=1e7;assert.equal(G.buy('slots'),true);assert.equal(G.skillSlotBought(),2);assert.equal(G.state.coins,0);
+  assert.equal(G.cost('slots'),1e9);
+  G.state.coins=1e9;assert.equal(G.buy('slots'),true);assert.equal(G.skillSlotBought(),3);assert.equal(G.state.coins,0);
+  // Maxed out: no further purchase even with plenty of coins.
+  G.state.coins=1e12;assert.equal(G.buy('slots'),false);assert.equal(G.skillSlotBought(),3);assert.equal(G.state.up.slots,3);
   const loaded=boot(read()).G;assert.equal(loaded.skillSlotBought(),3);assert.equal(loaded.state.up.slots,3);
 });
 test('legacy saves without a slots key start at zero bought upgrades',()=>{

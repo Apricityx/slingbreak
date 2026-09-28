@@ -1,3 +1,6 @@
 # audio-diagnostics runtime exports (device logs, not source)
 *.txt
 *.log
+
+# OpenChamber tooling artifacts (browser screenshots)
+.openchamber/
