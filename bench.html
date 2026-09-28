@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlingBreak · 粒子 / FPS 基准测试</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; padding: 16px; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, monospace; background: #f5f6f3; color: #1d2417; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    .hint { color: #5c6b4d; margin: 0 0 12px; }
+    canvas#game { width: 390px; height: 380px; display: block; background: #eef2e5; border: 1px solid #b9c6a6; border-radius: 6px; }
+    pre#bench-output { white-space: pre; overflow: auto; margin: 12px 0 0; padding: 12px; background: #fff; border: 1px solid #c7d2b6; border-radius: 6px; max-width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>SlingBreak · 粒子数量 / FPS 基准</h1>
+  <p class="hint">复用游戏真实循环（game.js 物理 + render.js 绘制）。参数：
+    <code>?counts=0,100,…&amp;sample=1800&amp;warmup=600&amp;sim=1&amp;dpr=1</code></p>
+  <canvas id="game" width="780" height="760" aria-hidden="true"></canvas>
+  <!-- render.js reads this node while dragging; the benchmark never drags. -->
+  <span id="power-readout" hidden>POWER <b>0%</b></span>
+  <pre id="bench-output">starting…</pre>
+
+  <script src="vendor/matter.min.js"></script>
+  <script src="game.js"></script>
+  <script src="render.js"></script>
+  <script src="bench.js"></script>
+</body>
+</html>
