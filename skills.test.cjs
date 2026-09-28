@@ -269,26 +269,24 @@ test('thunder lottery sometimes adds six triple-damage arcs and bounty caps at t
   const bounty=ready('bounty').G,plain=ready().G;for(const [n,multiplier] of [[1,1],[2,1.25],[9,3],[20,3]])assert.equal(bounty.reward('normal',n),Math.round(plain.reward('normal',n)*multiplier));
   const special=ready('specialist').G;armor(special);const b=special.bricks[0];b.type='gold';special.projectileHit(b,{damage:2});assert.equal(b.hp,92);assert.equal(special.reward('gold',1),plain.reward('gold',1)*3);assert.equal(special.reward('normal',1),plain.reward('normal',1));
 });
-test('launcher preview stays playable and defers the draft until the player enters',()=>{
-  const {G}=boot(null,'?launcher=1');
-  assert.equal(G.launcherPreview,true);
-  assert.equal(G.launcherMode,true);
-  assert.equal(G.paused,false,'the preview must be interactive while the real game loads');
-  assert.equal(G.phase,'ready','the draft must not gate the loading preview');
-  assert.ok(G.state.draft&&G.state.draft.options.length===3,'the draft is still banked for later');
-  assert.equal(G.shoot(0,100),true,'the sling must be usable during the preview');
-  assert.equal(G.arrows.length,1);
-  // Entering hands the run back to the normal draft flow.
-  G.launcherPreview=false;
-  G.prepareDraft();
-  assert.equal(G.phase,'draft');
-  assert.equal(G.shoot(0,100),false,'shooting pauses until a skill is chosen');
-  assert.equal(G.chooseSkill(G.state.draft.options[0]),true);
-  assert.ok(['ready','entering'].includes(G.phase));
-});
-test('non-launcher games still open the draft before the first shot',()=>{
-  const {G}=boot();
-  assert.equal(G.launcherPreview,false);
-  assert.equal(G.phase,'draft');
-  assert.equal(G.shoot(0,100),false);
-});
+for(const search of ['', '?launcher=1']){
+  test(`draft, shooting, reload and next-level behavior are shared (${search||'normal'})`,()=>{
+    const {G,read}=boot(null,search);
+    assert.equal(G.paused,false);
+    assert.equal(G.phase,'draft');
+    assert.equal(G.shoot(0,100),false,'choose a skill before shooting in either mode');
+    assert.equal(G.chooseSkill(G.state.draft.options[0]),true);
+    assert.equal(G.phase,'ready'); // reduced motion in this harness
+    assert.equal(G.shoot(0,100),true);
+    G.save();
+    const loaded=boot(read(),search).G;
+    assert.equal(loaded.phase,'ready','an already chosen skill survives reload');
+    assert.deepEqual(Object.keys(loaded.state.skills),Object.keys(G.state.skills));
+    loaded.clear();loaded.tick(3);
+    assert.equal(loaded.state.level,2);
+    assert.equal(loaded.phase,'draft','each new level offers a skill in either mode');
+    assert.equal(loaded.shoot(0,100),false);
+    assert.equal(loaded.chooseSkill(loaded.state.draft.options[0]),true);
+    assert.equal(loaded.shoot(0,100),true);
+  });
+}

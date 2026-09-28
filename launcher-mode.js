@@ -26,16 +26,9 @@
     phase.textContent = bounded >= 100 ? '即将就绪' : '正在加载';
   };
   const enterGame = () => {
-    if (!ready || gameEntered || !window.Game) return;
+    if (!ready || gameEntered) return;
     gameEntered = true;
-    window.Game.paused = false;
-    // The preview keeps the board playable; entering returns to the draft flow.
-    window.Game.launcherPreview = false;
-    window.dispatchEvent(new Event('slingbreak:enter'));
-    document.documentElement.classList.add('launcher-entered');
-    window.Game.prepareDraft?.();
-    window.Game.audio?.sync?.();
-    window.Game.ui?.();
+    // This button enters the native game; it does not advance the minigame.
     bridge?.enterGame?.();
   };
   const reportScriptFailure = event => {
@@ -52,7 +45,6 @@
     progress.classList.add('is-ready');
     document.documentElement.classList.add('launcher-ready');
     readyButton.hidden = false;
-    readyButton.focus({preventScroll:true});
   };
   readyButton.addEventListener('click', enterGame);
   window.SlingBreakLauncher = {setProgress, setReady, enterGame, pageReady: () => bridge?.onPageReady?.()};

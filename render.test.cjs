@@ -10,7 +10,7 @@ const renderSource=fs.readFileSync(__dirname+'/render.js','utf8');
 // context instead of a real canvas. Every context call is logged, which lets a
 // test distinguish "the board was painted" from "the board stayed blank".
 function boot({launcher=false, phase='ready', draftOpen=false}={}){
-  const calls=[];
+  const calls=[],frames=[];
   const target={};
   const ctx=new Proxy(target,{
     get(t,prop){
@@ -33,13 +33,12 @@ function boot({launcher=false, phase='ready', draftOpen=false}={}){
     devicePixelRatio:1,
     matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),
     performance:{now:()=>0},
-    requestAnimationFrame:()=>0,cancelAnimationFrame(){},
+    requestAnimationFrame:callback=>{frames.push(callback);return frames.length;},cancelAnimationFrame(){},
     ResizeObserver:ResizeObserverStub,
     localStorage:{getItem:()=>null,setItem(){}},
     document:{getElementById:id=>elements[id]||makeElement(),querySelector:()=>makeElement(),querySelectorAll:()=>[],fonts:{addEventListener(){}},addEventListener(){},documentElement:{classList:{add(){},remove(){},contains:()=>false}}},
     window:{addEventListener(){},dispatchEvent(){}},
   };
-  context.window.Game=context.window.Game;
   vm.createContext(context);
   vm.runInContext(gameSource,context);
   context.Game=context.window.Game;
@@ -48,35 +47,36 @@ function boot({launcher=false, phase='ready', draftOpen=false}={}){
   G.generate(false);
   G.phase=phase;
   vm.runInContext(renderSource,context);
-  return {G,calls,observers,count:prop=>calls.filter(c=>c[0]===prop).length};
+  return {G,calls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
 }
 
-test('launcher preview paints the board during the suppressed draft phase',()=>{
-  const {G,calls,count}=boot({launcher:true,phase:'draft',draftOpen:false});
+for(const launcher of [false,true]){
+test(`the frame loop paints before any input (${launcher?'launcher':'normal'})`,()=>{
+  const {G,calls,count,step,frames}=boot({launcher,phase:'ready'});
+  step(20);
+  assert.ok(G.time>0,'simulation must advance without a gesture or native entry');
+  assert.equal(frames.length,1,'keep exactly one running frame loop');
   assert.ok(G.bricks.length>0,'board should have bricks to paint');
   // Two rounded fills per brick; the sling only contributes five power pips.
-  assert.ok(count('roundRect')>G.bricks.length,'bricks must be painted before the player enters');
+  assert.ok(count('roundRect')>G.bricks.length,'bricks must be painted');
   assert.ok(calls.some(c=>c[0]==='fillText'),'board labels must be painted');
 });
 
-test('an open draft dialog still hides the board',()=>{
-  const {G,count}=boot({launcher:true,phase:'draft',draftOpen:true});
+test(`an open draft dialog hides the board (${launcher?'launcher':'normal'})`,()=>{
+  const {count,step}=boot({launcher,phase:'draft',draftOpen:true});
+  step(20);
   // Only the five sling power pips remain; no brick geometry is emitted.
   assert.equal(count('roundRect'),5,'board must stay hidden while the draft dialog is open');
 });
 
-test('the launcher repaints when the canvas resizes before the loop starts',()=>{
-  const {observers,calls,count}=boot({launcher:true,phase:'ready'});
-  assert.equal(observers.length,1,'render.js should observe the canvas');
-  const before=calls.length;
-  observers[0].callback([]);
-  assert.ok(calls.length>before,'resize must repaint while no animation frame is running');
-  assert.ok(count('roundRect')>0);
-});
-
-test('a running animation loop does not double paint on resize',()=>{
-  const {observers,calls}=boot({launcher:false,phase:'ready'});
+test(`resize is repainted by the next frame (${launcher?'launcher':'normal'})`,()=>{
+  const {observers,calls,step,count}=boot({launcher,phase:'ready'});
+  step(20);
+  calls.length=0;
   const before=calls.length;
   observers[0].callback([]);
   assert.equal(calls.length,before,'the frame loop owns repainting once it is running');
+  step(40);
+  assert.ok(count('roundRect')>5,'resize must not leave the board blank');
 });
+}
