@@ -1,0 +1,158 @@
+/* ============================================================
+   SLINGBREAK — COLOUR TOKENS
+   Every stylesheet reads colour from here. palette.js sets
+   [data-theme] on <html> before first paint; canvas colours live
+   in palette.js (SlingTheme.canvas) and mirror these values.
+   Text tokens are tuned for WCAG AA on --bg / --surface:
+   --ink ≥ 12:1, --text-2 ≥ 5:1, --text-3 ≥ 4.5:1.
+   ============================================================ */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page: #dfe3d9;
+  --bg: #f5f6f3;
+  --surface: #fafbf7;
+  --surface-2: #eff2e9;
+  --surface-3: #e6ebdd;
+  --line: #e0e3da;
+  --line-2: #d3dac8;
+
+  --ink: #22271f;
+  --ink-2: #44503b;
+  --text-2: #5a6453;
+  --text-3: #656c5d;
+  --muted: var(--text-3);
+
+  --accent: #b6ed66;
+  --accent-hover: #a5df55;
+  --on-accent: #2a3d1c;
+  --accent-ink: #48731f;
+  --accent-ink-strong: #3b5d1f;
+  --accent-soft: #e5f0d6;
+  --accent-soft-2: #d9ebc3;
+  --accent-line: #b9d596;
+  --accent-bar: #8fc24f;
+  --focus: #48731f;
+  --green: var(--accent);
+
+  --buy: #c6efa0;
+  --buy-hover: #aee571;
+  --buy-line: #a4c77b;
+  --on-buy: #2d451b;
+  --disabled-bg: #eceee6;
+  --disabled-ink: #62695a;
+  --disabled-line: #e1e5d8;
+
+  --gold-ink: #85651d;
+  --gold-soft: #f7f0d8;
+  --gold-line: #e0cd94;
+  --warm-ink: #8a622c;
+  --warm-soft: #f6eee1;
+  --warm-line: #d8b88c;
+  --coral: #f67b65;
+  --danger: #e0533f;
+
+  /* Inverse panels (income strip, shop trigger, level wipe). */
+  --panel: #252e20;
+  --panel-2: #3d5528;
+  --on-panel: #f2f6ea;
+  --on-panel-2: #aebda2;
+  --panel-accent: #c4f589;
+
+  --overlay: #fafbf7e8;
+  --scrim: #26302380;
+  --scrim-strong: #26302391;
+  --shadow: #26342133;
+  --shadow-soft: #25292314;
+
+  /* Combo heat tiers, cool → hot. */
+  --heat-0: #56703a;
+  --heat-1: #3a7f1c;
+  --heat-2: #a85f0c;
+  --heat-3: #c8431d;
+
+  --legend-bomb-bg: #ffe1d8;  --legend-bomb: #b0492f;
+  --legend-lightning-bg: #f6edbd; --legend-lightning: #7f6a10;
+  --legend-frost-bg: #dceff5; --legend-frost: #2f7486;
+  --legend-prism-bg: #e6dff8; --legend-prism: #6a55a0;
+  --legend-gold-bg: #fbe9c4;  --legend-gold: #8a5a0c;
+  --legend-metal-bg: #dce1dc; --legend-metal: #586456;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0b0d0a;
+  --bg: #131711;
+  --surface: #1a1f17;
+  --surface-2: #20261c;
+  --surface-3: #29301f;
+  --line: #2c3427;
+  --line-2: #3a4432;
+
+  --ink: #e6ecde;
+  --ink-2: #c3ccb8;
+  --text-2: #a3ad98;
+  --text-3: #8a947f;
+
+  --accent: #b6ed66;
+  --accent-hover: #c4f589;
+  --on-accent: #1d2a12;
+  --accent-ink: #a3d465;
+  --accent-ink-strong: #c4f589;
+  --accent-soft: #223020;
+  --accent-soft-2: #2b3d24;
+  --accent-line: #4a6b2c;
+  --accent-bar: #8fc24f;
+  --focus: #b6ed66;
+
+  --buy: #2f4a1c;
+  --buy-hover: #3b5d22;
+  --buy-line: #4f7a2a;
+  --on-buy: #d6f5ae;
+  --disabled-bg: #1e231b;
+  --disabled-ink: #8a947f;
+  --disabled-line: #2a3125;
+
+  --gold-ink: #e0bd62;
+  --gold-soft: #33291a;
+  --gold-line: #6b5526;
+  --warm-ink: #e0b27a;
+  --warm-soft: #30271c;
+  --warm-line: #6b5230;
+  --danger: #ff6b55;
+
+  --panel: #0e120c;
+  --panel-2: #22301a;
+  --on-panel: #e6ecde;
+  --on-panel-2: #8e9a84;
+  --panel-accent: #c4f589;
+
+  --overlay: #1a1f17e8;
+  --scrim: #000000a0;
+  --scrim-strong: #000000b0;
+  --shadow: #00000080;
+  --shadow-soft: #00000040;
+
+  --heat-0: #9fb98a;
+  --heat-1: #8fd14f;
+  --heat-2: #f0a13a;
+  --heat-3: #ff7043;
+
+  --legend-bomb-bg: #3a221c;  --legend-bomb: #f6a38f;
+  --legend-lightning-bg: #35301a; --legend-lightning: #f3e27a;
+  --legend-frost-bg: #1a3139; --legend-frost: #a9d8e6;
+  --legend-prism-bg: #2a2438; --legend-prism: #cbbbe9;
+  --legend-gold-bg: #3a2a14;  --legend-gold: #e9b85a;
+  --legend-metal-bg: #2a2f2a; --legend-metal: #b5bdb3;
+}
+
+/* A short cross-fade when the player switches theme (settings.js adds the class). */
+:root.theme-switching,
+:root.theme-switching *,
+:root.theme-switching *::before,
+:root.theme-switching *::after {
+  transition: background-color .28s ease, border-color .28s ease, color .28s ease, fill .28s ease, stroke .28s ease !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root.theme-switching, :root.theme-switching * { transition: none !important; }
+}

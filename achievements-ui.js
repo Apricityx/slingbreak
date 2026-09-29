@@ -20,102 +20,158 @@
   const bonusText=n=>'+'+Number(n.toFixed(2))+'x';
   // Match reading order to the visual bottom placement.
   $('arena').after(panel);
-  const pops=document.createElement('div');pops.className='achievement-pops';pops.setAttribute('aria-live','polite');panel.querySelector('.earnings-main').append(pops);
-  const achievementQueue=[],stackedAchievements=[],handoffAt=840,exitDuration=480,sceneEnterDuration=220,maxStacked=2;
-  let popFrame=0,popLast=0,playbackSpeed=1,currentAchievement=null,exitElapsed=null,sceneProgress=0;
-  const hasAchievementWork=()=>achievementQueue.length||currentAchievement||stackedAchievements.length||sceneProgress>0;
-  const isAchievementBlocked=()=>G.paused||document.hidden||!!document.querySelector('dialog[open]');
-  const scheduleAchievementFrame=()=>{
-    if(!popFrame&&hasAchievementWork()&&!isAchievementBlocked())popFrame=requestAnimationFrame(playAchievements);
-  };
-  function createPop(item){
+  const pops=document.createElement('div');pops.className='achievement-pops';pops.setAttribute('aria-hidden','true');panel.querySelector('.earnings-main').append(pops);
+  // One polite announcement per card, not per DOM change.
+  const announcer=document.createElement('p');announcer.className='sr-only';announcer.setAttribute('role','status');panel.append(announcer);
+  // Cards animate on the compositor: CSS/WAAPI own transform and opacity, and JS
+  // only keeps a small clock for hand-offs. Achievements from the same arrow
+  // merge into one card, so a burst reads as one big moment instead of flicker.
+  const holdFor=760,mergeHold=520,exitDuration=380,maxStacked=2,maxMarks=3;
+  const queue=[],stacked=[];
+  let current=null,exiting=null,popLast=0,speed=1,popFrame=0;
+  const reduced=()=>G.reduced||matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const blocked=()=>G.paused||document.hidden||!!document.querySelector('dialog[open]');
+  const busy=()=>queue.length||current||stacked.length||exiting;
+  const scheduleAchievementFrame=()=>{if(!popFrame&&busy()&&!blocked())popFrame=requestAnimationFrame(loop);};
+  const title=g=>g.items.length===1?g.items[0].name:`${['','','双重','三重','四重'][g.items.length]||g.items.length+' 重'}成就`;
+  const subtitle=g=>g.items.length>1?g.items.map(i=>i.name).join(' · '):'';
+  const replay=(el,cls)=>{if(!el||reduced())return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);};
+  const play=(el,frames,options)=>reduced()?null:el.animate(frames,options);
+  function markup(g){
+    const hero=g.hero;
+    hero.classList.toggle('is-major',g.bonus>=1||g.items.length>=3);
+    hero.style.setProperty('--hero-accent',emblems[g.items.at(-1).id].color);
+    hero.querySelector('.achievement-hero-name').textContent=title(g);
+    const sub=hero.querySelector('.achievement-hero-sub');sub.textContent=subtitle(g);sub.hidden=!sub.textContent;
+    hero.querySelector('.achievement-hero-bonus').textContent=bonusText(g.bonus);
+    g.el.setAttribute('aria-label',`第 ${g.arrow} 支箭，${title(g)}，加成 ${bonusText(g.bonus)}`);
+  }
+  function addMark(g,item){
+    const marks=g.hero.querySelector('.achievement-hero-marks'),mark=document.createElement('span');
+    mark.className='achievement-hero-mark';mark.innerHTML=emblemSVG(item.id);mark.style.setProperty('--mark-accent',emblems[item.id].color);
+    marks.append(mark);while(marks.children.length>maxMarks)marks.firstElementChild.remove();
+    [...marks.children].forEach((m,i,all)=>m.style.setProperty('--mark-index',all.length-1-i));
+    g.mark=mark;
+  }
+  function open(g){
     const el=document.createElement('div');el.className='achievement-pop';
-    const hero=document.createElement('div');hero.className='achievement-hero';hero.setAttribute('aria-hidden','true');
-    hero.innerHTML='<span class="achievement-hero-mark"></span><strong class="achievement-hero-name"></strong><span class="achievement-hero-bonus"></span><span class="achievement-hero-rays">'+[-150,-100,-50,0,50,100,150].map(angle=>`<i style="--ray-angle:${angle}deg"></i>`).join('')+'</span>';
-    hero.style.setProperty('--hero-accent',emblems[item.id].color);hero.classList.toggle('is-major',item.bonus>=1);
-    const mark=hero.querySelector('.achievement-hero-mark'),bonus=hero.querySelector('.achievement-hero-bonus');
-    mark.innerHTML=emblemSVG(item.id);hero.querySelector('.achievement-hero-name').textContent=item.name;bonus.textContent=bonusText(item.bonus);
-    el.setAttribute('aria-label',`第 ${item.arrow} 支箭，${item.name}，加成 ${bonusText(item.bonus)}`);
-    el.append(hero);pops.append(el);
-    el.style.zIndex=String(maxStacked+1);
-    panel.classList.add('is-achievement');
-    currentAchievement={el,hero,mark,bonus,elapsed:0,opacity:0,depth:0,dismiss:0};
+    el.innerHTML='<div class="achievement-hero"><i class="hero-flash"></i><i class="hero-sweep"></i><span class="achievement-hero-marks"></span><span class="achievement-hero-rays">'+[-150,-100,-50,0,50,100,150].map(a=>`<i style="--ray-angle:${a}deg"></i>`).join('')+'</span><span class="achievement-hero-text"><strong class="achievement-hero-name"></strong><small class="achievement-hero-sub" hidden></small></span><span class="achievement-hero-bonus"></span></div>';
+    g.el=el;g.hero=el.firstElementChild;g.age=0;g.hold=holdFor;
+    g.items.forEach(item=>addMark(g,item));markup(g);
+    pops.append(el);panel.classList.add('is-achievement');
+    current=g;bumpBadge();
+  }
+  function restack(){
+    stacked.forEach((g,i)=>{
+      const depth=i+1;g.el.style.zIndex=String(maxStacked-i);
+      g.depthAnim?.cancel();
+      g.depthAnim=play(g.hero,[{transform:`translateY(${-(depth-1)*7}px) scale(${1-(depth-1)*.06})`},{transform:`translateY(${-depth*7}px) scale(${1-depth*.06})`}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      if(!g.depthAnim)g.hero.style.transform=`translateY(${-depth*7}px) scale(${1-depth*.06})`;
+      g.el.style.opacity=String(1-depth*.28);
+    });
   }
   function stackCurrent(){
-    currentAchievement.el.setAttribute('aria-hidden','true');
-    stackedAchievements.unshift(currentAchievement);currentAchievement=null;
-    if(stackedAchievements.length>maxStacked)stackedAchievements.pop().el.remove();
-    stackedAchievements.forEach((p,i)=>{p.el.style.zIndex=String(maxStacked-i);});
+    current.el.style.zIndex='';stacked.unshift(current);current=null;
+    while(stacked.length>maxStacked)stacked.pop().el.remove();
+    restack();
   }
-  function drawPop(p,slot,step,dt){
-    const age=p.elapsed,enter=Math.min(1,age/160);
-    const ease=t=>t*t*(3-2*t),launch=Math.min(1,age/260);
-    const exitTarget=exitElapsed===null?0:ease(Math.max(0,Math.min(1,(exitElapsed-slot*40)/(exitDuration-stackedAchievements.length*40))));
-    p.dismiss=G.reduced?exitTarget:p.dismiss+(exitTarget-p.dismiss)*(1-Math.exp(-dt/65));
-    const exit=p.dismiss;
-    const spring=1+2.7*Math.pow(launch-1,3)+1.7*Math.pow(launch-1,2);
-    p.depth=G.reduced?slot:p.depth+(slot-p.depth)*(1-Math.exp(-step/150));
-    p.opacity=(G.reduced?1:ease(enter))*(1-p.depth*.1);p.el.style.opacity=p.opacity;
-    // Back cards step upward and shrink within the same clipped stage.
-    const impact=G.reduced?1:Math.min(1.025,.9+.1*spring+.015*Math.sin(Math.PI*launch));
-    const scale=impact*(1-p.depth*.06)*(1-(G.reduced?0:.06*exit));
-    const y=4-p.depth*7+(G.reduced?0:4*exit);
-    p.hero.style.transform=`translateY(${y}px) scale(${scale})`;
-    p.hero.style.setProperty('--stack-depth',p.depth);
-    p.mark.style.transform=G.reduced?'none':`scale(${.65+.35*spring}) rotate(${-10*(1-spring)}deg)`;
-    p.bonus.style.transform=G.reduced?'none':`scale(${.75+.25*spring})`;
-    p.hero.style.setProperty('--hero-flash',G.reduced?'0':Math.max(0,1-age/320));
-    p.hero.style.setProperty('--hero-sweep',G.reduced?'-60%':`${-60+Math.min(1,age/460)*190}%`);
-    p.hero.style.setProperty('--burst-radius',`${22+Math.min(1,age/430)*62}px`);
-    p.hero.style.setProperty('--burst-fade',G.reduced?'0':Math.max(0,1-age/440));
+  function startExit(){
+    const cards=[current,...stacked].filter(Boolean);
+    exiting={cards,age:0,pay:cards.reduce((n,g)=>n+g.pay,0),arrow:current?.arrow};
+    cards.forEach((g,i)=>{g.exit=play(g.el,[{opacity:g.el.style.opacity||1,transform:'none'},{opacity:0,transform:'translateY(6px) scale(.94)'}],{duration:exitDuration-i*40,delay:i*40,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'});});
+    current=null;stacked.length=0;
+    panel.classList.remove('is-achievement');
   }
-  function playAchievements(time){
+  // Coins fly only once the level total is back in view; a card that opens
+  // straight after inherits the unpaid amount instead.
+  function finishExit(){
+    const pay=exiting.pay;exiting.cards.forEach(g=>g.el.remove());exiting=null;
+    if(queue.length)queue[0].pay+=pay;else flyPayout(pay);
+  }
+  // Merging into a card that is already leaving brings it straight back.
+  function revive(g){
+    exiting.cards.forEach(c=>{if(c!==g)c.el.remove();});exiting=null;
+    g.exit?.cancel();g.exit=null;g.el.style.opacity='';g.el.style.zIndex='';g.depthAnim?.cancel();g.hero.style.transform='';
+    current=g;panel.classList.add('is-achievement');
+  }
+  function loop(time){
     popFrame=0;
+    if(blocked()){popLast=0;return;}
     const dt=Math.min(50,popLast?time-popLast:0);popLast=time;
-    const paused=isAchievementBlocked();
-    if(paused){popLast=0;return;}
-    // A new burst reverses an unfinished return without flashing the money view.
-    if(exitElapsed!==null&&achievementQueue.length){exitElapsed=null;if(currentAchievement)stackCurrent();}
-    // Finish the real-time scene entrance before accelerating queued cards.
-    const step=dt*(sceneProgress<1?1:playbackSpeed);
-    if(exitElapsed!==null){
-      exitElapsed+=dt;
-      if(exitElapsed>=exitDuration){
-        currentAchievement?.el.remove();currentAchievement=null;
-        stackedAchievements.forEach(p=>p.el.remove());stackedAchievements.length=0;exitElapsed=null;
+    // A queued card cuts an exit short rather than waiting behind it.
+    if(exiting){exiting.age+=dt;if(exiting.age>=exitDuration||queue.length)finishExit();}
+    if(current){
+      current.age+=dt*speed;
+      if(current.age>=current.hold){if(queue.length)stackCurrent();else startExit();}
+    }
+    if(!current&&!exiting&&queue.length)open(queue.shift());
+    if(!queue.length)speed=1;
+    if(busy())popFrame=requestAnimationFrame(loop);else popLast=0;
+  }
+  // ── The payoff: a spark links the arrow to its card, and the back-paid coins
+  // fly into the level total when the card steps aside.
+  let sparks=0;
+  function toClient(p){
+    if(!p)return null;
+    const r=$('game').getBoundingClientRect(),v=G.view||{scale:r.width/G.W,offsetX:0,offsetY:0};
+    return{x:r.left+v.offsetX+p.x*v.scale,y:r.top+v.offsetY+p.y*v.scale};
+  }
+  function launchSpark(from,color,g){
+    if(reduced()||!from||sparks>=6)return;
+    const target=(g.mark&&g===current?g.mark:pops).getBoundingClientRect();
+    const tx=target.left+Math.min(40,target.width/2),ty=target.top+target.height/2;
+    const spark=document.createElement('i');spark.className='achievement-spark';spark.style.setProperty('--spark-color',color);document.body.append(spark);sparks++;
+    const mx=(from.x+tx)/2+(from.x<tx?-60:60),my=Math.min(from.y,ty)-40;
+    spark.animate([
+      {transform:`translate(${from.x}px,${from.y}px) scale(.4)`,opacity:0},
+      {transform:`translate(${from.x}px,${from.y-18}px) scale(1.2)`,opacity:1,offset:.15},
+      {transform:`translate(${mx}px,${my}px) scale(1)`,opacity:1,offset:.55},
+      {transform:`translate(${tx}px,${ty}px) scale(.6)`,opacity:.9}
+    ],{duration:520,easing:'cubic-bezier(.45,0,.3,1)'}).finished.finally(()=>{
+      spark.remove();sparks--;
+      if(g.el?.isConnected){replay(g.hero,'is-struck');replay(g.mark,'is-landing');}
+    });
+  }
+  function flyPayout(amount){
+    if(amount<1)return;
+    const readout=$('shot-money'),from=pops.getBoundingClientRect(),to=readout.getBoundingClientRect();
+    const land=()=>{replay(panel,'is-backpaid');};
+    if(reduced()||!from.width){land();return;}
+    const chip=document.createElement('b');chip.className='achievement-payout-chip';chip.textContent='+'+G.fmt(amount);document.body.append(chip);
+    chip.animate([
+      {transform:`translate(${from.right-90}px,${from.top+from.height/2}px) scale(.8)`,opacity:0},
+      {transform:`translate(${from.right-100}px,${from.top+from.height/2-10}px) scale(1.1)`,opacity:1,offset:.25},
+      {transform:`translate(${to.left+to.width*.6}px,${to.top+to.height/2}px) scale(.7)`,opacity:.2}
+    ],{duration:560,delay:120,easing:'cubic-bezier(.5,0,.3,1)',fill:'backwards'}).finished.finally(()=>{chip.remove();land();});
+  }
+  function bumpBadge(){replay($('achievement-badge'),'is-bumped');}
+  G.showAchievement=(item,score)=>{
+    const entry={id:item.id,name:item.name,bonus:item.bonus};
+    // Back-pay this unlock adds to the arrow: its bonus applied to what the arrow already earned.
+    const pay=Math.max(0,(score.base||0)*item.bonus);
+    let g=[current,...queue].find(g=>g&&g.arrow===score.id);
+    if(!g&&exiting?.arrow===score.id){g=exiting.cards.find(c=>c.arrow===score.id);if(g)revive(g);}
+    if(g){
+      g.items.push(entry);g.bonus+=item.bonus;g.pay+=pay;
+      if(g.el){
+        addMark(g,entry);markup(g);g.hold=Math.max(g.hold,g.age+mergeHold);
+        replay(g.hero.querySelector('.achievement-hero-bonus'),'is-bumped');replay(g.hero,'is-struck');bumpBadge();
       }
     }else{
-      if(currentAchievement)currentAchievement.elapsed+=step;
-      if(currentAchievement&&currentAchievement.elapsed>=handoffAt){
-        if(achievementQueue.length)stackCurrent();else exitElapsed=0;
-      }
+      g={arrow:score.id,items:[entry],bonus:item.bonus,pay,el:null};queue.push(g);
     }
-    if(!currentAchievement&&achievementQueue.length&&exitElapsed===null)createPop(achievementQueue.shift());
-    stackedAchievements.forEach((p,i)=>{p.elapsed+=step;drawPop(p,i+1,step,dt);});
-    if(currentAchievement)drawPop(currentAchievement,0,step,dt);
-    // One reversible blend drives both layers, independent of card opacity or queue speed.
-    const showAchievements=!!currentAchievement&&exitElapsed===null;
-    sceneProgress=showAchievements?Math.min(1,sceneProgress+dt/sceneEnterDuration):Math.max(0,sceneProgress-dt/exitDuration);
-    const blend=sceneProgress*sceneProgress*(3-2*sceneProgress);
-    panel.style.setProperty('--achievement-scene',blend);
-    if(!currentAchievement&&!stackedAchievements.length&&sceneProgress===0&&panel.classList.contains('is-achievement')){
-      panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
-    }
-    if(hasAchievementWork())popFrame=requestAnimationFrame(playAchievements);
-    else{popLast=0;playbackSpeed=1;}
-  }
-  G.showAchievement=(item,score)=>{
-    achievementQueue.push({id:item.id,name:item.name,bonus:item.bonus,arrow:score.id});
-    const backlog=achievementQueue.length+(currentAchievement?1:0);
-    // Keep handoffs fast until the queue drains; the final exit has its own clock.
-    playbackSpeed=Math.max(playbackSpeed,Math.min(8,1+Math.max(0,backlog-1)*.45));
+    announcer.textContent=`第 ${g.arrow} 支箭，${title(g)}，加成 ${bonusText(g.bonus)}`;
+    // Backlog still moves faster, but never so fast that a card cannot be read.
+    speed=Math.min(2,1+queue.length*.35);
+    const hook=G.juiceAchievement?.(score.id,item.name,emblems[item.id].color);
+    launchSpark(toClient(hook),emblems[item.id].color,g);
     scheduleAchievementFrame();
   };
   const resetGame=G.reset;
   G.reset=()=>{
-    achievementQueue.length=0;stackedAchievements.length=0;currentAchievement=null;exitElapsed=null;pops.replaceChildren();
-    panel.classList.remove('is-achievement');panel.style.removeProperty('--achievement-scene');
-    cancelAnimationFrame(popFrame);popFrame=0;popLast=0;playbackSpeed=1;sceneProgress=0;
+    queue.length=0;stacked.length=0;current=null;exiting=null;pops.replaceChildren();
+    panel.classList.remove('is-achievement');
+    cancelAnimationFrame(popFrame);popFrame=0;popLast=0;speed=1;
     return resetGame();
   };
   const exact=n=>Math.floor(n).toLocaleString('en-US');

@@ -1,9 +1,9 @@
 /* Game feel layer (juice.js) and the level report (transitions.js). */
 
 /* ── Combo heat: the counter and arena edge warm up tier by tier. */
-.combo[data-heat="1"]{--combo-color:#5f8a2f}
-.combo[data-heat="2"]{--combo-color:#c9812a}
-.combo[data-heat="3"]{--combo-color:#d0572c;filter:drop-shadow(0 0 10px #f0a13a90) drop-shadow(0 2px 8px #fafbf7)}
+.combo[data-heat="1"]{--combo-color:var(--heat-1)}
+.combo[data-heat="2"]{--combo-color:var(--heat-2)}
+.combo[data-heat="3"]{--combo-color:var(--heat-3);filter:drop-shadow(0 0 10px #f0a13a90) drop-shadow(0 2px 8px var(--surface))}
 .combo[data-heat="3"] #combo-count{animation:combo-burn .6s ease-in-out infinite alternate}
 /* Layer hints only while overdrive burns: the looping text-shadow repaints just
    the counter's own layer, and the drop-shadow filter is applied by the
@@ -27,27 +27,27 @@
 .record-banner small{font-size:10px;color:#c8b98a}
 
 /* ── Level report card under the CLEAR stamp. */
-.level-report{width:min(340px,100%);padding:16px 18px 12px;border:1px solid #d6dfcc;border-radius:9px;background:#fafbf7f2;box-shadow:0 18px 50px #26342130;color:var(--ink);opacity:0}
+.level-report{width:min(340px,100%);padding:16px 18px 12px;border:1px solid var(--line-2);border-radius:9px;background:color-mix(in srgb,var(--surface) 95%,transparent);box-shadow:0 18px 50px var(--shadow);color:var(--ink);opacity:0}
 .report-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.report-head span{font-size:11px;color:#7b876f}
-.report-head strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:#3f5f25}
-.report-bar{display:flex;height:8px;margin:12px 0 8px;overflow:hidden;border-radius:4px;background:#e6ebdf}
+.report-head span{font-size:11px;color:var(--text-3)}
+.report-head strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:var(--accent-ink-strong)}
+.report-bar{display:flex;height:8px;margin:12px 0 8px;overflow:hidden;border-radius:4px;background:var(--surface-3)}
 .report-bar i{width:var(--w);height:100%;transform-origin:left center}
-.report-legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:11px;color:#68785b}
+.report-legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:11px;color:var(--text-2)}
 .report-legend li{display:flex;align-items:center;gap:6px;min-width:0}
 .report-legend li>i{width:8px;height:8px;flex:none;border-radius:2px}
-.report-legend b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;color:#46543b}
-.report-stats{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e0e6d6}
+.report-legend b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.report-stats{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--surface-3)}
 .report-stats div{display:flex;flex-direction:column;gap:2px;min-width:0}
-.report-stats span{font-size:10px;color:#8a957d}
-.report-stats b{display:flex;align-items:center;gap:6px;font:700 20px/1.1 "Barlow Condensed",var(--font);color:#2f4420}
+.report-stats span{font-size:10px;color:var(--text-3)}
+.report-stats b{display:flex;align-items:center;gap:6px;font:700 20px/1.1 "Barlow Condensed",var(--font);color:var(--ink-2)}
 .report-stats b em{padding:1px 5px;border-radius:3px;background:#e8c34a;color:#3a2e0a;font:700 9px/1.4 var(--font);font-style:normal}
-.report-stats small{font-size:10px;color:#8a957d}
-.report-skills{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:#8a957d}
-.report-skills em{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid #d6dfcc;border-radius:4px;background:#edf2e7;color:#526340;font-style:normal;font-size:11px}
+.report-stats small{font-size:10px;color:var(--text-3)}
+.report-skills{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:var(--text-3)}
+.report-skills em{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface-2);color:var(--text-2);font-style:normal;font-size:11px}
 .report-skills em svg{width:12px;height:12px}
-.report-skills em b{font-weight:600;color:#7b876f}
-.report-continue{margin:10px 0 0!important;text-align:center;font-size:10px!important;color:#9aa190!important;animation:report-blink 1.6s 1.4s ease-in-out infinite}
+.report-skills em b{font-weight:600;color:var(--text-3)}
+.report-continue{margin:10px 0 0!important;text-align:center;font-size:10px!important;color:var(--text-3)!important;animation:report-blink 1.6s 1.4s ease-in-out infinite}
 @keyframes report-blink{50%{opacity:.35}}
 @media(max-width:600px){
   .clear-scene{gap:8px;padding:10px}

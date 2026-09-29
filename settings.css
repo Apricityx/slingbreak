@@ -1,0 +1,53 @@
+/* Settings dialog (settings.js). Colours come from tokens.css. */
+.settings-toggle svg{transition:transform .35s cubic-bezier(.2,.8,.2,1.2)}
+@media(hover:hover){.settings-toggle:hover svg{transform:rotate(60deg)}}
+
+#settings{width:min(400px,calc(100vw - 24px));max-height:calc(100dvh - 32px);margin:auto;padding:0;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px var(--shadow);text-align:left}
+#settings::backdrop{background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#settings .settings-panel{display:block;padding:22px}
+#settings .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+#settings .settings-heading h2{margin:6px 0 0;font-size:22px;line-height:1.3}
+#settings .settings-heading .icon-button{flex:0 0 44px;width:44px;height:44px;border:1px solid var(--line)}
+#settings .eyebrow{letter-spacing:1.5px;color:var(--text-3)}
+
+.settings-group{margin:0;padding:16px 0 0;border:0;border-top:1px solid var(--line);min-width:0}
+.settings-group legend{float:left;width:100%;margin:0 0 12px;padding:0;font-size:13px;font-weight:600;color:var(--ink)}
+.theme-options{clear:both;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.theme-option{position:relative;display:flex;flex-direction:column;gap:9px;padding:8px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.theme-option input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}
+@media(hover:hover){.theme-option:hover{border-color:var(--accent-line)}}
+.theme-option:has(input:checked){border-color:var(--accent-ink);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent-ink)}
+.theme-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:3px}
+.theme-name{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap}
+.theme-option:has(input:checked) .theme-name{color:var(--ink)}
+.theme-name svg{width:14px;height:14px;flex:none}
+
+/* Mini previews: a page strip with a brick row and a lime core dot. The swatch
+   colours are fixed on purpose so each option previews its own theme. */
+.theme-swatch{position:relative;display:grid;height:58px;overflow:hidden;border-radius:5px;border:1px solid var(--line)}
+.theme-swatch i{grid-area:1/1;display:block}
+.theme-swatch i:first-child{--s-bg:#f5f6f3;--s-brick:#dce2d0;--s-hot:#f6a38f;--s-bar:#252e20}
+.theme-swatch.is-dark i:first-child{--s-bg:#131711;--s-brick:#323b2b;--s-hot:#a2503e;--s-bar:#0e120c}
+.theme-swatch i:first-child,.theme-swatch i:last-child{background:
+  radial-gradient(circle at 50% 22%,#b6ed66 0 4px,transparent 4.5px),
+  linear-gradient(90deg,transparent 12%,var(--s-brick) 12% 30%,transparent 30% 36%,var(--s-hot) 36% 54%,transparent 54% 60%,var(--s-brick) 60% 78%,transparent 78%) 0 34px/100% 7px no-repeat,
+  linear-gradient(var(--s-bar),var(--s-bar)) 0 100%/100% 9px no-repeat,
+  var(--s-bg)}
+.theme-swatch i:last-child{display:none;--s-bg:#131711;--s-brick:#323b2b;--s-hot:#a2503e;--s-bar:#0e120c;clip-path:polygon(100% 0,100% 100%,0 100%)}
+.theme-swatch.is-system i:last-child{display:block}
+
+.settings-hint{min-height:1.6em;margin:12px 0 0!important;font-size:11px!important;line-height:1.6;color:var(--text-3)!important}
+.sound-group{margin-top:18px;clear:both}
+.sound-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;font-size:13px;font-weight:600}
+.sound-heading output{font-variant-numeric:tabular-nums;color:var(--accent-ink)}
+#sound-volume{display:block;width:100%;margin:0;accent-color:var(--accent-ink);cursor:pointer}
+#sound-volume:focus-visible{outline:2px solid var(--focus);outline-offset:4px}
+.sound-scale{display:flex;justify-content:space-between;margin-top:9px;font-size:11px;color:var(--text-3)}
+.sound-group .settings-hint{margin-top:10px!important}
+
+@media(max-width:380px){
+  #settings .settings-panel{padding:18px 16px}
+  .theme-options{gap:7px}
+  .theme-swatch{height:48px}
+}
+@media(prefers-reduced-motion:reduce){.settings-toggle svg,.theme-option{transition:none}}

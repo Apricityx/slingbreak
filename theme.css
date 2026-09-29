@@ -97,7 +97,7 @@ button:active:not(:disabled) {
 @media (hover: hover) {
   .skill-card:not(:disabled):hover {
     transform: translateY(-6px) !important;
-    box-shadow: 0 12px 28px #35462b20 !important;
+    box-shadow: 0 12px 28px var(--shadow-soft) !important;
   }
 }
 .skill-card:not(:disabled):active {
@@ -227,8 +227,8 @@ button:active:not(:disabled) {
 /* The draft screen stays visually stable while the pointer moves across it. */
 #skill-draft .skill-card:hover {
   transform: none !important;
-  background: #f3f6ee !important;
-  border-color: #d6dfcc !important;
+  background: var(--surface-2) !important;
+  border-color: var(--line-2) !important;
   box-shadow: none !important;
 }
 #skill-draft .skill-card:hover .skill-emblem,

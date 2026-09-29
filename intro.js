@@ -13,7 +13,8 @@
   canvas.width = 640 * ratio;
   canvas.height = 460 * ratio;
   ctx.scale(ratio, ratio);
-  const colors = ['#b6ed66', '#f67b65', '#dce4d4'];
+  const P = window.SlingTheme?.canvas.intro || {dot: '#cdd3c6', frame: P.frame, band: P.band, trail: P.trail, blocks: ['#b6ed66', '#f67b65', '#dce4d4'], sheen: '#ffffff70'};
+  const colors = P.blocks;
   const blocks = Array.from({length: 15}, (_, i) => ({
     x: 192 + (i % 5) * 53,
     y: 68 + Math.floor(i / 5) * 43,
@@ -68,7 +69,7 @@
     ctx.globalAlpha = .55;
     for (let x = 136; x <= 504; x += 23) {
       for (let y = 45; y < 420; y += 23) {
-        ctx.fillStyle = '#cdd3c6';
+        ctx.fillStyle = P.dot;
         ctx.fillRect(x, y, 1.5, 1.5);
       }
     }
@@ -82,7 +83,7 @@
         ctx.scale(reveal, reveal);
         ctx.fillStyle = block.color;
         ctx.fillRect(-22, -16, 44, 32);
-        ctx.fillStyle = '#ffffff70';
+        ctx.fillStyle = P.sheen;
         ctx.fillRect(-17, -11, 34, 3);
       } else {
         // Deterministic fragments keep the same rhythm on every entry.
@@ -105,8 +106,8 @@
 
     const anchorY = 326 + (flight ? (1 - ease(flight * 3)) : 1) * pull * 47;
     ctx.globalAlpha = 1 - ease((t - 1620) / 400);
-    line([[320, 343], [320, 399]], '#343d2d', 14);
-    line([[276, 314], [290, 348], [320, 366], [350, 348], [364, 314]], '#343d2d', 10);
+    line([[320, 343], [320, 399]], P.frame, 14);
+    line([[276, 314], [290, 348], [320, 366], [350, 348], [364, 314]], P.frame, 10);
     line([[276, 314], [320, anchorY], [364, 314]], '#91bd55', 4);
     if (!burst) {
       const arrowY = 326 + pull * 47 - flight * 210;
@@ -115,8 +116,8 @@
         line([[320, arrowY + 18], [320, arrowY + 75]], '#8fbd4f', 6);
         ctx.globalAlpha = 1;
       }
-      line([[320, arrowY], [320, arrowY - 66]], '#343d2d', 3);
-      line([[311, arrowY - 55], [320, arrowY - 68], [329, arrowY - 55]], '#343d2d', 3);
+      line([[320, arrowY], [320, arrowY - 66]], P.frame, 3);
+      line([[311, arrowY - 55], [320, arrowY - 68], [329, arrowY - 55]], P.frame, 3);
       line([[312, arrowY - 4], [320, arrowY + 3], [328, arrowY - 4]], '#f67b65', 3);
     }
     ctx.globalAlpha = 1;

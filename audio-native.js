@@ -4,7 +4,7 @@
   window.createSlingNativeAudio=({intervals,log,onReady})=>{
     const host=window.SlingNativeAudio,Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
     if(!host||!Offline)return null;
-    let state='idle',session=0,rate=0,info=null,preparationTimer=null;
+    let state='idle',session=0,rate=0,info=null,preparationTimer=null,generation=0;
     const samples=new Map(),last=new Map();
     const describe=voice=>{
       if(voice.kind==='tone'){
@@ -24,7 +24,7 @@
       // Reapply master gain and resume from the next sound/gesture.
       Game.audio?.sync();
     }
-    async function render(v,noise){
+    async function render(v,noise,current){
       const ctx=new Offline(1,Math.ceil(rate*(v.duration+.025)),rate);
       const envelope=ctx.createGain();
       envelope.gain.setValueAtTime(.0001,0);
@@ -48,6 +48,7 @@
       }
       source.start();source.stop(v.duration+.025);
       const pcm=(await ctx.startRendering()).getChannelData(0);
+      if(generation!==current)return null;
       const bytes=new Uint8Array(pcm.length*4),view=new DataView(bytes.buffer);
       for(let i=0;i<pcm.length;i++)view.setFloat32(i*4,pcm[i],true);
       let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
@@ -56,6 +57,7 @@
     async function prepare(){
       if(state!=='idle')return;
       state='preparing';
+      const current=++generation;
       preparationTimer=setTimeout(()=>fail(Error('Native preparation timed out')),30000);
       try{
         info=JSON.parse(host.begin());
@@ -69,19 +71,27 @@
         for(let i=0;i<noise.length;i++)noise[i]=Math.random()*2-1;
         for(const recipe of recipes)for(const voice of recipe){
           const v=describe(voice),k=key(v);if(samples.has(k))continue;
-          const id=samples.size,data=await render(v,noise);
-          if(state!=='preparing')return;
+          const id=samples.size,data=await render(v,noise,current);
+          if(state!=='preparing'||generation!==current)return;
           if(!host.upload(session,id,data))throw Error('Native sample upload rejected');
           samples.set(k,id);
           // Yield between uploads; no synthesis or PCM transfer on the impact path.
           await new Promise(resolve=>setTimeout(resolve,0));
         }
-        if(state!=='preparing')return;
+        if(state!=='preparing'||generation!==current)return;
         if(!host.commit(session))throw Error('Native stream start failed');
         clearTimeout(preparationTimer);
         state='ready';onReady();sync();
         log('native-ready',{samples:samples.size,audio:snapshot()});
-      }catch(error){fail(error);}
+      }catch(error){if(generation===current)fail(error);}
+    }
+    function disable(){
+      if(state==='idle'||state==='closed')return;
+      ++generation;
+      clearTimeout(preparationTimer);
+      // Muting alone leaves the native stream and its render thread running.
+      try{if(session)host.release(session);}catch{}
+      state='idle';session=0;rate=0;info=null;samples.clear();last.clear();
     }
     function snapshot(){
       let hostState=null;
@@ -91,7 +101,7 @@
     function sync(){
       if(state!=='ready')return;
       try{
-        const silent=!Game.state.sound||Game.paused||document.hidden;
+        const silent=!Game.state.sound||Game.state.volume!==100||Game.paused||document.hidden;
         if(!host.setMuted(session,silent))throw Error('Native stream unavailable');
         if(silent)last.clear();
       }catch(error){fail(error);}
@@ -116,7 +126,7 @@
       }catch(error){fail(error);return false;}
     }
     document.addEventListener('visibilitychange',sync);
-    window.addEventListener('pagehide',()=>{state='closed';clearTimeout(preparationTimer);try{host.release(session);}catch{}});
-    return {get ready(){return state==='ready';},prepare,play,sync,snapshot};
+    window.addEventListener('pagehide',()=>{disable();state='closed';});
+    return {get ready(){return state==='ready';},prepare,play,sync,disable,snapshot};
   };
 })();

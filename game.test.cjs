@@ -10,6 +10,17 @@ function boot(saved){
   vm.createContext(context);vm.runInContext(source,context);
   return {G:context.window.Game,read:()=>JSON.parse(storage)};
 }
+test('volume defaults, migrates and survives save and game reset',()=>{
+  const {G,read}=boot();assert.equal(G.state.volume,100);
+  G.state.volume=0;G.state.sound=false;G.save();
+  const loaded=boot(read()).G;assert.equal(loaded.state.volume,0);assert.equal(loaded.state.sound,false);
+  loaded.reset();assert.equal(loaded.state.volume,0);assert.equal(loaded.state.sound,false);
+  assert.equal(boot(read()).G.state.volume,0);
+  const legacy={...read(),volume:undefined,sound:false,soundMigrated:true};
+  assert.equal(boot(legacy).G.state.volume,0);
+  assert.equal(boot({...legacy,soundMigrated:false}).G.state.volume,100);
+  assert.equal(boot({...legacy,volume:1000}).G.state.volume,0);
+});
 test('prediction matches every live physics step through obstacle and wall ricochets',()=>{
   for(const [x,y,vx,vy] of [[390,970,-18,-16],[30,600,-23,-8],[750,40,20,-18],[390,36,3,-24],[300,540,22,0],[390,650,4,-25]]){
     const {G}=boot();Matter.Composite.clear(G.engine.world);G.bricks=[];G.obstacles=[];

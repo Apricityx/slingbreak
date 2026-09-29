@@ -1,0 +1,61 @@
+/* Achievement cards, compositor-only (achievements-ui.js). One-shot effects are
+   real elements with keyframes, so no custom property changes per frame. */
+
+/* The scene blend is a class toggle, not a per-frame variable. */
+.earnings-summary{opacity:1;transform:none;transition:opacity .22s ease,transform .22s ease}
+.earnings.is-achievement .earnings-summary{opacity:0;transform:translateY(-5px)}
+.achievement-pops{opacity:1;will-change:auto}
+.achievement-pop{opacity:1;will-change:auto}
+
+/* Card: pops in with a spring, no brightness filter on stacked cards. */
+.achievement-hero{grid-template-columns:auto minmax(0,1fr) auto;filter:none;animation:hero-in .42s cubic-bezier(.2,1.35,.4,1) both;will-change:auto}
+.achievement-hero:before,.achievement-hero:after,.achievement-hero-mark:before,.achievement-hero-mark:after{content:none}
+@keyframes hero-in{0%{opacity:0;transform:translateY(10px) scale(.88)}100%{opacity:1;transform:none}}
+.achievement-hero.is-struck{animation:hero-in .42s cubic-bezier(.2,1.35,.4,1) both,hero-struck .32s ease-out}
+@keyframes hero-struck{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--hero-light) 70%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+
+.hero-flash,.hero-sweep{position:absolute;pointer-events:none}
+.hero-flash{inset:0;background:radial-gradient(ellipse at 18% 50%,#f4ffd8,transparent 72%);opacity:0;animation:hero-flash .34s ease-out}
+.hero-sweep{top:-30%;bottom:-30%;left:0;width:35%;background:linear-gradient(90deg,transparent,#f7ffe340,transparent);transform:translateX(-180%) skewX(-22deg);animation:hero-sweep .5s .05s cubic-bezier(.3,0,.2,1) both}
+.is-struck>.hero-flash{animation:hero-flash .34s ease-out}
+@keyframes hero-flash{0%{opacity:.5}100%{opacity:0}}
+@keyframes hero-sweep{to{transform:translateX(420%) skewX(-22deg)}}
+
+/* Emblems stack like dealt tokens; the newest lands on top. */
+.achievement-hero-marks{position:relative;z-index:1;display:grid;min-width:56px}
+.achievement-hero-marks>.achievement-hero-mark{grid-area:1/1;--mark-index:0;color:color-mix(in srgb,var(--mark-accent) 35%,#eaffb9);transform:translate(calc(var(--mark-index) * -9px),calc(var(--mark-index) * 3px)) rotate(calc(var(--mark-index) * -8deg)) scale(calc(1 - var(--mark-index) * .08));opacity:calc(1 - var(--mark-index) * .3);transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .3s;animation:mark-in .46s cubic-bezier(.2,1.4,.4,1) both}
+.achievement-hero-marks>.achievement-hero-mark:has(~ .achievement-hero-mark){animation:none}
+.achievement-hero-mark.is-landing{animation:mark-land .3s ease-out}
+@keyframes mark-in{0%{scale:.5;rotate:-18deg;opacity:0}100%{scale:1;rotate:0deg;opacity:1}}
+@keyframes mark-land{50%{scale:1.14}}
+
+/* Rays burst once. */
+.achievement-hero-rays i{opacity:0;animation:hero-ray .44s ease-out both}
+@keyframes hero-ray{0%{opacity:1;transform:rotate(var(--ray-angle)) translateX(22px)}100%{opacity:0;transform:rotate(var(--ray-angle)) translateX(84px)}}
+.is-struck .achievement-hero-rays i{animation:hero-ray .44s ease-out both}
+
+/* Name + merged subtitle, bonus bumps on merge. */
+.achievement-hero-text{position:relative;z-index:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.achievement-hero-sub{font-size:11px;font-weight:600;letter-spacing:0;color:color-mix(in srgb,var(--hero-light) 70%,#d8e6cc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.achievement-hero-sub[hidden]{display:none}
+.achievement-hero-bonus{animation:bonus-in .4s .08s cubic-bezier(.2,1.4,.4,1) both}
+.achievement-hero-bonus.is-bumped{animation:bonus-bump .34s cubic-bezier(.2,1.4,.4,1)}
+@keyframes bonus-in{0%{opacity:0;scale:.6}100%{opacity:1;scale:1}}
+@keyframes bonus-bump{0%{scale:1.35;color:#fff}100%{scale:1}}
+
+/* Spark from the arrow to its card, and the back-pay chip into the level total. */
+.achievement-spark{position:fixed;left:0;top:0;z-index:1000;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,var(--spark-color) 60%,transparent 72%);box-shadow:0 0 12px 3px var(--spark-color);pointer-events:none}
+.achievement-payout-chip{position:fixed;left:0;top:0;z-index:1000;margin-top:-10px;padding:2px 8px;border-radius:5px;background:#e8c34a;color:#2e2508;font:700 14px/1.4 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 4px 14px #b48a1c60;pointer-events:none}
+.earnings.is-backpaid #shot-money{animation:backpay .46s cubic-bezier(.2,1.4,.4,1)}
+@keyframes backpay{0%{scale:1}35%{scale:1.14;color:#ffe08a}100%{scale:1}}
+#achievement-badge.is-bumped{animation:badge-bump .36s cubic-bezier(.2,1.4,.4,1)}
+@keyframes badge-bump{0%{scale:1}40%{scale:1.25;box-shadow:0 0 0 4px var(--accent-soft,#e7f3d6)}100%{scale:1}}
+
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+@media(max-width:400px){.achievement-hero-marks{min-width:44px}.achievement-hero-sub{font-size:10px}}
+@media(prefers-reduced-motion:reduce){
+  .earnings-summary{transition:none}
+  .achievement-hero,.achievement-hero *,.earnings.is-backpaid #shot-money,#achievement-badge.is-bumped{animation:none!important;transition:none!important}
+  .hero-flash,.hero-sweep,.achievement-hero-rays{display:none}
+}

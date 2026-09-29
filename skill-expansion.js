@@ -204,7 +204,7 @@
     }
     for(const saw of saws){
       ctx.save();ctx.translate(saw.x,saw.y);ctx.rotate(G.reduced?0:(G.time-saw.born)*saw.direction*10);ctx.globalAlpha=.95;
-      ctx.fillStyle='#f4f2e9';ctx.beginPath();ctx.arc(0,0,38,0,TAU);ctx.fill();
+      ctx.fillStyle=window.SlingTheme?.canvas.sawDisc||'#f4f2e9';ctx.beginPath();ctx.arc(0,0,38,0,TAU);ctx.fill();
       G.paintSkillSignature?.(ctx,'buzzsaw',.6,53,colors.buzzsaw,'#d4bb79');ctx.restore();
     }
     if(rank('contract'))for(const p of runtime().contract?.targets||[]){

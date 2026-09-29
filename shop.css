@@ -1,6 +1,6 @@
-.shop-trigger{position:absolute;right:22px;bottom:52px;z-index:12;display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 15px;border:1px solid #91b75a;border-radius:7px;background:#252e20;color:#f4f8ec;box-shadow:0 12px 30px #26342130;font-size:12px;font-weight:700;animation:shop-trigger-in .32s cubic-bezier(.22,1,.36,1) both}
+.shop-trigger{position:absolute;right:22px;bottom:52px;z-index:12;display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 15px;border:1px solid var(--accent-line);border-radius:7px;background:var(--panel);color:var(--on-panel);box-shadow:0 12px 30px var(--shadow);font-size:12px;font-weight:700;animation:shop-trigger-in .32s cubic-bezier(.22,1,.36,1) both}
 .shop-trigger.is-leaving{animation:shop-trigger-out .2s ease-in both;pointer-events:none}
-.shop-trigger:hover{background:#3d5528;transform:translateY(-2px)}
+.shop-trigger:hover{background:var(--panel-2);transform:translateY(-2px)}
 .shop-trigger svg{width:19px;height:19px}
 .shop-trigger[hidden]{display:none}
 
@@ -12,14 +12,14 @@
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fafbf7;
-  box-shadow: 0 24px 80px #1e291b38;
+  background: var(--surface);
+  box-shadow: 0 24px 80px var(--shadow);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   text-align: left;
 }
-#shop::backdrop{background:#26302380;backdrop-filter:blur(6px);animation:shop-backdrop-in .24s ease-out both}
+#shop::backdrop{background:var(--scrim);backdrop-filter:blur(6px);animation:shop-backdrop-in .24s ease-out both}
 #shop[open]{animation:shop-in .32s cubic-bezier(.22,1,.36,1) both}
 #shop.is-closing{animation:shop-out .2s ease-in both}
 #shop.is-closing::backdrop{animation:shop-backdrop-out .2s ease-in both}
@@ -53,7 +53,7 @@
 }
 #shop .shop-intro {
   margin: 12px 0 20px;
-  color: #71806a;
+  color: var(--text-2);
   font-size: 12px;
   line-height: 1.7;
 }
@@ -66,12 +66,12 @@
   padding: 14px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  color: #66745d;
+  color: var(--text-2);
   font-size: 12px;
 }
 #shop .shop-balance strong {
   min-width: 0;
-  color: #33442a;
+  color: var(--ink-2);
   font-size: 23px;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -95,30 +95,30 @@
   place-items: center;
   width: 36px;
   height: 44px;
-  color: #5d6a51;
+  color: var(--text-2);
 }
 #shop .upgrade-icon svg { width: 24px; height: 24px; }
 #shop .upgrade-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
 #shop .upgrade-title b { font-size: 14px; font-weight: 600; line-height: 1.4; }
-#shop .upgrade-title small { color: #78816e; font-size: 10px; white-space: nowrap; }
+#shop .upgrade-title small { color: var(--text-3); font-size: 10px; white-space: nowrap; }
 #shop .upgrade-desc {
   margin: 5px 0 0;
-  color: #78816e;
+  color: var(--text-3);
   font-size: 11px;
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
 #shop .combo-upgrade-preview{display:grid;gap:4px;margin-top:8px}
 #shop .upgrade-metric{display:grid;grid-template-columns:26px minmax(0,1fr) 12px minmax(0,1fr);align-items:center;gap:4px;font-variant-numeric:tabular-nums;line-height:1.3}
-#shop .upgrade-metric small{font-size:9px;color:#8a957e}
-#shop .upgrade-metric b{font-size:12px;font-weight:500;color:#7e8973}
-#shop .upgrade-metric svg{width:11px;height:11px;color:#a3b294}
-#shop .upgrade-metric em{font-size:12px;font-style:normal;font-weight:700;color:#588329}
-#shop .combo-upgrade-lock{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#8a957e}
+#shop .upgrade-metric small{font-size:9px;color:var(--text-3)}
+#shop .upgrade-metric b{font-size:12px;font-weight:500;color:var(--text-3)}
+#shop .upgrade-metric svg{width:11px;height:11px;color:var(--text-3)}
+#shop .upgrade-metric em{font-size:12px;font-style:normal;font-weight:700;color:var(--accent-ink)}
+#shop .combo-upgrade-lock{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--text-3)}
 #shop .combo-upgrade-lock svg{width:11px;height:11px}
 #shop .combo-upgrade-lock[hidden],#shop .combo-upgrade-preview[hidden],#shop .slots-upgrade-done[hidden]{display:none}
-#shop .slots-upgrade-done{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#6f8a4e}
-#shop .slots-forge-note{display:block;margin-top:6px;font-size:10px;color:#a1843f}
+#shop .slots-upgrade-done{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--accent-ink)}
+#shop .slots-forge-note{display:block;margin-top:6px;font-size:10px;color:var(--gold-ink)}
 #shop .slots-forge-note[hidden]{display:none}
 #shop .buy-button {
   display: flex;
@@ -130,18 +130,18 @@
   min-height: 44px;
   height: auto;
   padding: 10px 8px;
-  border: 1px solid #a4c77b;
+  border: 1px solid var(--buy-line);
   border-radius: 6px;
-  background: #c6efa0;
-  color: #31491e;
+  background: var(--buy);
+  color: var(--on-buy);
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 #shop .buy-button svg { flex: 0 0 14px; width: 14px; height: 14px; }
 #shop .buy-button span { min-width: 0; overflow-wrap: anywhere; }
-#shop .buy-button:hover:not(:disabled) { background: #aee571; }
-#shop .buy-button:disabled { background: #eceee6; color: #89917f; border-color: #e1e5d8; }
+#shop .buy-button:hover:not(:disabled) { background: var(--buy-hover); }
+#shop .buy-button:disabled { background: var(--disabled-bg); color: var(--disabled-ink); border-color: var(--line); }
 
 @keyframes shop-in{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes shop-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.98)}}
