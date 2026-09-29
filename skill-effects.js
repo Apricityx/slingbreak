@@ -83,6 +83,10 @@
   hud.innerHTML='<div class="skill-queue" aria-label="已装备技能，按获得顺序排列"></div>';
   document.getElementById('arena').before(hud);
   const queue=hud.querySelector('.skill-queue');
+  // Slots reserve the height of the longest skill name (see .skill-queue-slot::after),
+  // so a name that wraps at this width cannot resize the HUD and rescale the board.
+  const longestName=G.skillCatalog.reduce((a,s)=>s.name.length>a.length?s.name:a,'等待加入');
+  document.documentElement.style.setProperty('--skill-name-sizer',JSON.stringify(longestName));
   // A skill's full text lives in a modal so the in-game bar stays compact.
   const detail=document.getElementById('skill-detail'),detailEmblem=document.getElementById('skill-detail-emblem'),detailName=document.getElementById('skill-detail-name'),detailFamily=document.getElementById('skill-detail-family'),detailMeta=document.getElementById('skill-detail-meta'),detailText=document.getElementById('skill-detail-text');
   let detailPaused=null;

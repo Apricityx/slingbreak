@@ -34,7 +34,7 @@
       <div class="launcher-progress-track" id="launcher-progress-track" role="progressbar" aria-label="游戏加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="launcher-progress-bar"></span></div>
       <div class="launcher-action"><span class="launcher-waiting" id="launcher-waiting"><span class="launcher-loader" aria-hidden="true"></span>加载中<span class="launcher-waiting-dots" aria-hidden="true">···</span></span><button class="launcher-ready-button" id="launcher-ready-button" type="button" hidden><i data-lucide="play" aria-hidden="true"></i><span>启动游戏</span><i data-lucide="arrow-up-right" aria-hidden="true"></i></button></div>
     </section>
-    <div class="header-right"><span class="wallet-readout" aria-label="钱包余额"><i data-lucide="wallet" aria-hidden="true"></i><b id="live-wallet">0</b></span><span class="save-status" id="save-status"><span></span>本地存档</span></div>
+    <div class="header-right"><button class="icon-button fullscreen-toggle" id="fullscreen-toggle" type="button" aria-label="进入全屏" title="进入全屏" aria-pressed="false"><i data-lucide="maximize" aria-hidden="true"></i></button><span class="wallet-readout" aria-label="钱包余额"><i data-lucide="wallet" aria-hidden="true"></i><b id="live-wallet">0</b></span><span class="save-status" id="save-status"><span></span>本地存档</span></div>
   </header>
   <main class="workspace">
     <section class="arena-section" aria-label="游戏区域">
@@ -92,6 +92,7 @@
   <script src="intro.js"></script>
   <script src="transitions.js"></script>
   <script src="juice.js"></script>
+  <script src="fullscreen.js"></script>
   <script>window.SlingBreakLauncher?.pageReady?.();</script>
 </body>
 </html>
