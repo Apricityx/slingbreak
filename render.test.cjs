@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const Matter=require('./vendor/matter.min.js');
 const gameSource=fs.readFileSync(__dirname+'/game.js','utf8');
 const renderSource=fs.readFileSync(__dirname+'/render.js','utf8');
+const paletteSource=fs.readFileSync(__dirname+'/palette.js','utf8');
 
 // render.js is a DOM renderer, so the harness drives it with a recording 2D
 // context instead of a real canvas. Every context call is logged, which lets a
@@ -16,7 +17,7 @@ const recordingContext=calls=>new Proxy({},{
     t[prop]=(...args)=>{calls.push([prop,args]);};
     return t[prop];
   },
-  set(t,prop,value){t[prop]=value;return true;}
+  set(t,prop,value){t[prop]=value;if(prop==='fillStyle')calls.push(['fillStyle',[value]]);return true;}
 });
 // `layers` exposes document.createElement so render.js enables its offscreen
 // caches; everything painted into an offscreen canvas lands in layerCalls.
@@ -43,6 +44,8 @@ function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={})
     window:{addEventListener(){},dispatchEvent(){}},
   };
   vm.createContext(context);
+  // index.html loads palette.js in <head>, before any game script.
+  vm.runInContext(paletteSource,context);
   vm.runInContext(gameSource,context);
   context.Game=context.window.Game;
   const G=context.Game;
@@ -50,7 +53,7 @@ function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={})
   G.generate(false);
   G.phase=phase;
   vm.runInContext(renderSource,context);
-  return {G,calls,layerCalls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
+  return {G,theme:context.window.SlingTheme,calls,layerCalls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
 }
 
 // Regression: a hit changes hp and starts a flash in the same frame. The flash
@@ -75,6 +78,22 @@ for(const [name,act] of [
     assert.equal(layerBricks(layerCalls),G.bricks.length*2+G.obstacles.length*3,'board layer must be rebuilt with the post-hit bricks');
   });
 }
+
+// A theme switch must not leave the cached board in the old palette.
+test('switching theme rebuilds the cached board in the new palette',()=>{
+  const {G,theme,layerCalls,step}=boot({phase:'ready',layers:true});
+  G.paused=true;settle(G);
+  step(20);step(40);
+  const fills=()=>layerCalls.filter(c=>c[0]==='fillStyle').map(c=>c[1][0]);
+  assert.ok(fills().includes(theme.palettes.light.brick.normal),'light board uses the light brick fill');
+  layerCalls.length=0;step(60);
+  assert.equal(layerBricks(layerCalls),0,'settled board is cached');
+  theme.set('dark');step(80);
+  assert.ok(layerBricks(layerCalls)>0,'theme change invalidates the board layer');
+  assert.ok(fills().includes(theme.palettes.dark.brick.normal),'rebuilt board uses the dark brick fill');
+  assert.ok(!fills().includes(theme.palettes.light.brick.normal),'no light brick fill leaks into the dark layer');
+  assert.equal(G.colors.normal,theme.palettes.dark.brick.normal,'particle colours follow the theme too');
+});
 
 for(const launcher of [false,true]){
 test(`the frame loop paints before any input (${launcher?'launcher':'normal'})`,()=>{

@@ -29,9 +29,9 @@ html.intro-pending { background: var(--bg); }
   padding: 32px 20px 76px;
 }
 .intro-title { text-align: center; flex: 0 0 auto; }
-.intro-title > span { font: 600 13px "Barlow Condensed", var(--font); letter-spacing: 0; color: #697163; }
+.intro-title > span { font: 600 13px "Barlow Condensed", var(--font); letter-spacing: 0; color: var(--text-2); }
 #intro-title { margin: 10px 0 0; font-size: 52px; line-height: 1.2; font-weight: 800; letter-spacing: 0; }
-#intro-title span { color: #6e9c3e; }
+#intro-title span { color: var(--accent-ink); }
 #intro-canvas { display: block; width: min(640px, 100%); height: auto; max-height: 55dvh; object-fit: contain; aspect-ratio: 640 / 460; }
 #intro-skip {
   position: absolute;
@@ -43,9 +43,9 @@ html.intro-pending { background: var(--bg); }
   border: 1px solid var(--line);
   border-radius: 6px;
   background: transparent;
-  color: #555f4f;
+  color: var(--text-2);
 }
-#intro-skip:hover { background: #e8eddf; }
+#intro-skip:hover { background: var(--surface-3); }
 #game-intro.is-leaving { animation: intro-exit 320ms ease-out both; pointer-events: none; }
 #game-intro.is-leaving::backdrop { animation: intro-exit 320ms ease-out both; }
 @keyframes intro-exit { to { opacity: 0; } }

@@ -228,7 +228,7 @@
     return{transform:`translate(${dx}px,${dy}px) scale(${k})`,opacity:0};
   }
   const backdrop=(dialog,frames,duration)=>{try{return dialog.animate(frames,{duration,easing:'ease-out',fill:'forwards',pseudoElement:'::backdrop'});}catch{return null;}};
-  for(const dialog of ['shop','skill-library','skill-detail','reset-dialog','equipment'].map($).filter(Boolean)){
+  for(const dialog of ['shop','skill-library','skill-detail','reset-dialog','equipment','settings'].map($).filter(Boolean)){
     dialog.classList.add('is-morph');
     let source=null,closing=false,fade=null;
     new MutationObserver(()=>{

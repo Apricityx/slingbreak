@@ -7,16 +7,28 @@
   let context,master,mix,echo,noiseBuffer,keepAlive,resumeAttempt=null;
   const sources=new Set(),lastRequestMs=new Map();
   let currentType='',priorityVoice=false;
+  const enabled=()=>G.state.sound&&G.state.volume>0;
+  // The native bridge exposes mute but not gain. Use Web Audio for partial
+  // volumes rather than playing those sounds at the wrong level.
+  const useNative=()=>enabled()&&G.state.volume===100;
   const intervals={draw:.065,break:.018,boom:.055,lightning:.06,frost:.07,prism:.06,gold:.06,ricochet:.035,tap:.03};
   const native=window.createSlingNativeAudio?.({intervals,log,onReady(){
     // Switch only after every sample is uploaded and the native stream is running.
-    if(context){master.gain.cancelScheduledValues(context.currentTime);master.gain.value=0;
-      for(const source of sources)try{source.stop();}catch{}
-      // A late suspend completion must not leave the fallback context asleep.
-      context.suspend().then(()=>{if(!native?.ready)ensure();}).catch(()=>{});
-    }
+    if(!useNative()){native?.disable();return;}
+    closeContext();
     lastRequestMs.clear();
   }});
+  function closeContext(){
+    if(!context)return;
+    const old=context;
+    context=null;master=null;mix=null;echo=null;noiseBuffer=null;resumeAttempt=null;
+    for(const source of sources)try{source.stop();}catch{}
+    sources.clear();lastRequestMs.clear();
+    try{keepAlive?.stop();}catch{}
+    keepAlive=null;
+    old.onstatechange=null;
+    old.close().catch(()=>{});
+  }
   const ensure=(fromGesture=false)=>{
     if(!context){
       const Audio=window.AudioContext||window.webkitAudioContext;
@@ -29,7 +41,7 @@
         try{context=new Audio({latencyHint:0});requestedHint=0;}catch(error){log('context-fallback',{hint:0,error:diagnostics?.errorInfo(error)});context=new Audio();requestedHint='default';}
       }
       log('context-created',{requestedHint,state:context.state,sampleRate:context.sampleRate,baseLatency:context.baseLatency??null,outputLatency:context.outputLatency??null,highBaseLatency:Number.isFinite(context.baseLatency)?context.baseLatency>=.05:null,baseLatencyThresholdMs:50});
-      master=context.createGain();master.gain.value=G.paused?0:.7;
+      master=context.createGain();master.gain.value=G.paused?0:.7*G.state.volume/100;
       mix=context.createGain();
       // Limit peaks without the DynamicsCompressor's mandatory look-ahead delay.
       const ceiling=context.createWaveShaper(),curve=new Float32Array(2048);
@@ -118,14 +130,15 @@
       if(native?.ready)return native.snapshot();
       return context?{state:context.state,sampleRate:context.sampleRate,baseLatency:context.baseLatency??null,outputLatency:context.outputLatency??null}:null;
     },
-    unlock(){if(G.state.sound)try{native?.prepare();if(native?.ready)native.sync();else ensure(true);}catch(error){log('unlock-error',{error:diagnostics?.errorInfo(error)});}},
+    unlock(){if(enabled())try{if(useNative())native?.prepare();if(native?.ready&&useNative())native.sync();else ensure(true);}catch(error){log('unlock-error',{error:diagnostics?.errorInfo(error)});}},
     sync(){
-      native?.sync();
-      if(native?.ready)return;
+      if(!enabled()){native?.disable();closeContext();return;}
+      if(useNative())native?.sync();else native?.disable();
+      if(native?.ready&&useNative()){closeContext();return;}
       if(!context)return;
-      const silent=!G.state.sound||G.paused,t=context.currentTime;
+      const silent=G.paused||document.hidden,t=context.currentTime;
       log('audio-sync',{silent,state:context.state,currentTime:t});
-      master.gain.cancelScheduledValues(t);master.gain.setTargetAtTime(silent?0:.7,t,.012);
+      master.gain.cancelScheduledValues(t);master.gain.setTargetAtTime(silent?0:.7*G.state.volume/100,t,.012);
         if(silent){for(const source of sources)try{source.stop(t+.04);}catch{}lastRequestMs.clear();}
     }
   };
@@ -136,14 +149,17 @@
   document.addEventListener('click',unlock,{capture:true,passive:true});
   document.addEventListener('keydown',unlock,{capture:true});
   G.sound=(type,n=1,x=390,priority=false)=>{
+    // Do not synthesize, prepare samples, wake an audio device or even trace
+    // individual game impacts while the volume is zero.
+    if(!enabled())return;
     const tracing=diagnostics?.enabled;
     activeSound=tracing?{id:++soundSequence,type,atMs:performance.now()}:null;
     if(tracing)log('sound-request',{...activeSound,n,x,priority,lastInput:diagnostics.lastInput,audio:G.audio.diagnosticSnapshot()});
     const skip=(reason,details)=>{if(tracing)log('sound-skipped',{soundId:activeSound.id,type,reason,...details});};
-    if(!G.state.sound||G.paused){skip(G.paused?'paused':'muted');return;}
+    if(G.paused){skip('paused');return;}
     try{
-      native?.prepare();
-      if(native?.play(type,n,x,priority,activeSound?.id))return;
+      if(useNative())native?.prepare();
+      if(useNative()&&native?.play(type,n,x,priority,activeSound?.id))return;
       if(!ensure()){skip('context-not-running');return;}
       const t=context.currentTime,requestMs=performance.now();
        if(priority){

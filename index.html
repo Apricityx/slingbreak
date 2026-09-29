@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f5f6f3">
   <title>弓引力 · SLING / BREAK</title>
+  <!-- Resolves the colour theme before first paint (no light flash in dark mode). -->
+  <script src="palette.js"></script>
+  <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="skills.css">
   <link rel="stylesheet" href="mobile.css">
@@ -16,6 +19,8 @@
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="transitions.css">
   <link rel="stylesheet" href="juice.css">
+  <link rel="stylesheet" href="settings.css">
+  <link rel="stylesheet" href="achievements-fx.css">
   <script>window.SlingBreakIntro = {active: true}; document.documentElement.classList.add('intro-pending'); if (new URLSearchParams(location.search).get('launcher') === '1') document.documentElement.classList.add('launcher-mode-pending');</script>
 </head>
 <body>
@@ -34,7 +39,7 @@
       <div class="launcher-progress-track" id="launcher-progress-track" role="progressbar" aria-label="游戏加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="launcher-progress-bar"></span></div>
       <div class="launcher-action"><span class="launcher-waiting" id="launcher-waiting"><span class="launcher-loader" aria-hidden="true"></span>加载中<span class="launcher-waiting-dots" aria-hidden="true">···</span></span><button class="launcher-ready-button" id="launcher-ready-button" type="button" hidden><i data-lucide="play" aria-hidden="true"></i><span>启动游戏</span><i data-lucide="arrow-up-right" aria-hidden="true"></i></button></div>
     </section>
-    <div class="header-right"><button class="icon-button fullscreen-toggle" id="fullscreen-toggle" type="button" aria-label="进入全屏" title="进入全屏" aria-pressed="false"><i data-lucide="maximize" aria-hidden="true"></i></button><span class="wallet-readout" aria-label="钱包余额"><i data-lucide="wallet" aria-hidden="true"></i><b id="live-wallet">0</b></span><span class="save-status" id="save-status"><span></span>本地存档</span></div>
+    <div class="header-right"><button class="icon-button settings-toggle" id="settings-toggle" type="button" aria-label="设置" title="设置" aria-haspopup="dialog" aria-controls="settings"><i data-lucide="settings" aria-hidden="true"></i></button><button class="icon-button fullscreen-toggle" id="fullscreen-toggle" type="button" aria-label="进入全屏" title="进入全屏" aria-pressed="false"><i data-lucide="maximize" aria-hidden="true"></i></button><span class="wallet-readout" aria-label="钱包余额"><i data-lucide="wallet" aria-hidden="true"></i><b id="live-wallet">0</b></span><span class="save-status" id="save-status"><span></span>本地存档</span></div>
   </header>
   <main class="workspace">
     <section class="arena-section" aria-label="游戏区域">
@@ -70,6 +75,24 @@
    <dialog id="skill-draft" aria-labelledby="draft-title" aria-describedby="draft-rule"><div class="draft-header"><h2 id="draft-title">加入下一块拼图</h2><span id="draft-count" class="draft-level">0 / 4</span></div><p id="draft-rule" class="draft-intro"></p><div id="draft-loadout" class="skill-queue" aria-label="当前技能，按获得顺序排列"></div><div id="draft-options" class="draft-options"></div></dialog>
    <dialog id="skill-library" aria-labelledby="library-title"><div class="draft-header"><h2 id="library-title">我的构筑</h2><button id="close-skills" class="icon-button" type="button" aria-label="关闭技能详情"><i data-lucide="x"></i></button></div><p class="draft-intro">按获得顺序排列 · 跨关生效 · 满槽时自动替换最早的技能</p><div id="library-grid" class="library-grid"></div></dialog>
    <dialog id="skill-detail" aria-labelledby="skill-detail-name"><div class="skill-detail-card"><div class="skill-detail-head"><span class="skill-emblem" id="skill-detail-emblem"></span><div class="skill-detail-title"><h2 id="skill-detail-name"></h2><span class="skill-family" id="skill-detail-family"></span></div><button id="close-skill-detail" class="icon-button" type="button" aria-label="关闭技能说明"><i data-lucide="x"></i></button></div><div class="skill-detail-meta" id="skill-detail-meta"></div><p class="skill-detail-text" id="skill-detail-text"></p></div></dialog>
+  <dialog id="settings" aria-labelledby="settings-title"><div class="settings-panel">
+    <div class="settings-heading"><div><span class="eyebrow">SETTINGS</span><h2 id="settings-title">设置</h2></div><button id="close-settings" class="icon-button" type="button" aria-label="关闭设置"><i data-lucide="x" aria-hidden="true"></i></button></div>
+    <fieldset class="settings-group" aria-describedby="theme-hint">
+      <legend>外观</legend>
+      <div class="theme-options">
+        <label class="theme-option"><input type="radio" name="theme" value="system"><span class="theme-swatch is-system" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="monitor" aria-hidden="true"></i>跟随系统</span></label>
+        <label class="theme-option"><input type="radio" name="theme" value="light"><span class="theme-swatch is-light" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="sun" aria-hidden="true"></i>亮色</span></label>
+        <label class="theme-option"><input type="radio" name="theme" value="dark"><span class="theme-swatch is-dark" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="moon" aria-hidden="true"></i>深色</span></label>
+      </div>
+      <p class="settings-hint" id="theme-hint" role="status"></p>
+    </fieldset>
+    <div class="settings-group sound-group">
+      <div class="sound-heading"><label for="sound-volume">声音大小</label><output id="sound-volume-value" for="sound-volume">100%</output></div>
+      <input id="sound-volume" type="range" min="0" max="100" step="1" value="100" aria-describedby="sound-hint">
+      <div class="sound-scale" aria-hidden="true"><span>静音</span><span>最大</span></div>
+      <p class="settings-hint" id="sound-hint">调到 0 时停止音频播放</p>
+    </div>
+  </div></dialog>
   <!-- Register the native loading bridge before any optional bundle can fail. -->
   <script src="launcher-mode.js"></script>
   <script src="vendor/matter.min.js"></script>
@@ -93,6 +116,7 @@
   <script src="transitions.js"></script>
   <script src="juice.js"></script>
   <script src="fullscreen.js"></script>
+  <script src="settings.js"></script>
   <script>window.SlingBreakLauncher?.pageReady?.();</script>
 </body>
 </html>

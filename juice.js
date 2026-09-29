@@ -6,7 +6,8 @@
   const G=Game,$=id=>document.getElementById(id);
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),still=()=>motion.matches;
   const arena=$('arena'),canvas=$('game'),combo=$('combo');
-  const tierNames=['','连击','势不可挡','满倍率'],tierColors=['#566e37','#5f8a2f','#c9812a','#d0572c'];
+  // Tier colours follow the theme (palette.js heat ramp: cool green → amber → red).
+  const tierNames=['','连击','势不可挡','满倍率'],tierColor=tier=>(window.SlingTheme?.canvas.heat||['#56703a','#3a7f1c','#a85f0c','#c8431d'])[tier];
   const tierOf=kills=>{const cap=G.comboCapKills();return kills>=cap?3:kills>=Math.max(5,Math.ceil(cap*.66))?2:kills>=4?1:0;};
 
   // ── Time control. Slow motion scales dt; hit-stop skips simulation entirely.
@@ -62,18 +63,25 @@
     }
     tallies.length=alive;
   }
+  // Achievements UI: flash the unlock over its arrow's tally and report where it is.
+  G.juiceAchievement=(scoreId,name,color)=>{
+    const t=tallies.find(t=>t.arrow?.achievement?.id===scoreId);
+    if(t){t.callout={text:name,tier:tierOf(t.kills),color,life:.9};t.pop=1;t.life=Math.max(t.life,1);return{x:t.x,y:t.y};}
+    const a=G.arrows.find(a=>a.achievement?.id===scoreId);
+    return a?{x:a.body.position.x,y:a.body.position.y}:null;
+  };
   function drawTallies(ctx){
     ctx.save();ctx.textAlign='center';ctx.lineJoin='round';
     for(const t of tallies){
       const tier=tierOf(t.kills),size=17+Math.min(20,Math.log2(t.count+1)*4.2)+(still()?0:t.pop*7);
       ctx.globalAlpha=Math.min(1,t.life*2.4);
-      ctx.font=`700 ${size}px "DM Sans","Noto Sans SC",sans-serif`;ctx.lineWidth=5;ctx.strokeStyle='#fafbf7';
-      const text='+'+G.fmt(t.total);ctx.strokeText(text,t.x,t.y);ctx.fillStyle=tierColors[tier];ctx.fillText(text,t.x,t.y);
-      if(t.count>1){ctx.font='600 12px "DM Sans","Noto Sans SC",sans-serif';ctx.lineWidth=4;const sub=`${t.count} 块`;ctx.strokeText(sub,t.x,t.y+16);ctx.fillStyle='#7d8b6c';ctx.fillText(sub,t.x,t.y+16);}
+      ctx.font=`700 ${size}px "DM Sans","Noto Sans SC",sans-serif`;ctx.lineWidth=5;ctx.strokeStyle=window.SlingTheme?.canvas.text.outline||'#fafbf7';
+      const text='+'+G.fmt(t.total);ctx.strokeText(text,t.x,t.y);ctx.fillStyle=tierColor(tier);ctx.fillText(text,t.x,t.y);
+      if(t.count>1){ctx.font='600 12px "DM Sans","Noto Sans SC",sans-serif';ctx.lineWidth=4;const sub=`${t.count} 块`;ctx.strokeText(sub,t.x,t.y+16);ctx.fillStyle=window.SlingTheme?.canvas.text.sub||'#5a6453';ctx.fillText(sub,t.x,t.y+16);}
       if(t.callout){
         const c=t.callout,p=1-c.life/.9;ctx.globalAlpha=Math.min(1,c.life*3);
         ctx.font=`800 ${16+(1-Math.min(1,p*4))*10}px "Noto Sans SC","DM Sans",sans-serif`;ctx.lineWidth=5;
-        ctx.strokeText(c.text,t.x,t.y-size-4-p*14);ctx.fillStyle=tierColors[c.tier];ctx.fillText(c.text,t.x,t.y-size-4-p*14);
+        ctx.strokeText(c.text,t.x,t.y-size-4-p*14);ctx.fillStyle=c.color||tierColor(c.tier);ctx.fillText(c.text,t.x,t.y-size-4-p*14);
       }
     }
     ctx.restore();
@@ -142,11 +150,11 @@
     const a=G.activeArrow;if(!a)return result;
     const kills=G.arrowKills(a),tier=tierOf(kills);
     stats.bestKills=Math.max(stats.bestKills,kills);
-    if(!still()&&tier){G.shake=Math.min(8+tier*3,G.shake+tier*.8);G.burst(b.x,b.y,tierColors[tier],tier*4,1+tier*.3);}
+    if(!still()&&tier){G.shake=Math.min(8+tier*3,G.shake+tier*.8);G.burst(b.x,b.y,tierColor(tier),tier*4,1+tier*.3);}
     if(tier>(a.heat||0)){
       a.heat=tier;
       const t=tallies.find(t=>t.arrow===a);if(t)t.callout={text:tierNames[tier],tier,life:.9};
-      if(tier>=2){G.ring(b.x,b.y,tierColors[tier],150+tier*40);G.sound('gold',1,b.x);}
+      if(tier>=2){G.ring(b.x,b.y,tierColor(tier),150+tier*40);G.sound('gold',1,b.x);}
       if(tier===3){a.overdrive=true;hitstop(45);if(!still())arena.animate([{boxShadow:'inset 0 0 0 3px #f0a13a'},{boxShadow:'inset 0 0 0 0 #f0a13a00'}],{duration:500,easing:'ease-out'});}
     }
     combo.dataset.heat=tier;arena.dataset.heat=tier;

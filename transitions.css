@@ -29,22 +29,22 @@
 /* ── 6. Clear stamp and coin flight. */
 .clear-scene{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;overflow:hidden;cursor:pointer}
 .clear-scene.is-static>*{opacity:1}
-.clear-stamp{display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;color:#2f4420;text-align:center;opacity:0}
-.clear-stamp span{font:600 12px "Barlow Condensed",var(--font);letter-spacing:3px;color:#6f8e4b}
-.clear-stamp strong{font:800 clamp(46px,9vw,84px)/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:#3f5f25;text-shadow:0 3px 0 #c6efa0,0 10px 30px #9bcc5d80}
-.clear-stamp b{margin-top:6px;padding:4px 12px;border-radius:5px;background:#252e20;color:#c4f589;font:600 18px "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums}
+.clear-stamp{display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;color:var(--ink-2);text-align:center;opacity:0}
+.clear-stamp span{font:600 12px "Barlow Condensed",var(--font);letter-spacing:3px;color:var(--accent-ink)}
+.clear-stamp strong{font:800 clamp(46px,9vw,84px)/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:var(--accent-ink-strong);text-shadow:0 3px 0 var(--buy),0 10px 30px color-mix(in srgb,var(--accent-bar) 50%,transparent)}
+.clear-stamp b{margin-top:6px;padding:4px 12px;border-radius:5px;background:var(--panel);color:var(--accent-hover);font:600 18px "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums}
 .flying-coin{position:fixed;left:0;top:0;z-index:1000;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6c2,#e8c34a 55%,#b48a1c);box-shadow:0 0 10px #f1d26a90;pointer-events:none}
 
 /* ── 7 / 11. Curtain wipe between boards. */
 .level-wipe{position:absolute;inset:0;z-index:14;pointer-events:none}
 .level-wipe>*{position:absolute;inset:0;clip-path:inset(0 100% 0 0)}
-.level-wipe-accent{background:#9bcc5d}
-.level-wipe-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#252e20;color:#f2f6ea}
-.level-wipe-panel span{font:600 13px "Barlow Condensed",var(--font);letter-spacing:5px;color:#9bcc5d}
+.level-wipe-accent{background:var(--accent-bar)}
+.level-wipe-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--panel);color:var(--on-panel)}
+.level-wipe-panel span{font:600 13px "Barlow Condensed",var(--font);letter-spacing:5px;color:var(--accent-bar)}
 .level-wipe-panel strong{display:flex;flex-direction:column;height:1em;overflow:hidden;font:700 clamp(64px,14vw,132px)/1 "Barlow Condensed",var(--font);letter-spacing:2px}
 .level-wipe-panel strong b{display:block;height:1em;font:inherit}
-.level-wipe-panel strong b:last-child:not(:first-child){color:#c4f589}
-.level-wipe-panel em{font-style:normal;font-size:12px;letter-spacing:2px;color:#a9b69b}
+.level-wipe-panel strong b:last-child:not(:first-child){color:var(--accent-hover)}
+.level-wipe-panel em{font-style:normal;font-size:12px;letter-spacing:2px;color:var(--on-panel-2)}
 
 /* Level tag odometer. */
 .level-tag{position:relative;overflow:hidden}

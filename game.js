@@ -3,7 +3,7 @@
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
   const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
+  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,volume:100,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
@@ -16,9 +16,15 @@
   // One-time migration: sound used to default off; flip existing saves to on.
   if (saved && saved.sound === false && saved.soundMigrated !== true) state.sound = true;
   state.soundMigrated = true;
+  state.volume = Number.isInteger(state.volume) && state.volume>=0 && state.volume<=100 ? state.volume : state.sound===false ? 0 : 100;
+  state.sound = state.volume>0;
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
      const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
-  G.colors={normal:'#d5e8b3',bomb:'#f58d75',lightning:'#ecd77e',frost:'#a6d5e3',prism:'#c4b2e2',gold:'#d4df85'};
+  // Brick fills and board text follow the active colour theme (palette.js); the
+  // fallback matches the light palette for hosts that load game.js on its own.
+  const theme=()=>window.SlingTheme?.canvas;
+  const lightBricks={normal:'#dce2d0',bomb:'#f6a38f',lightning:'#f3e27a',frost:'#a9d8e6',prism:'#cbbbe9',gold:'#e9b85a'};
+  Object.defineProperty(G,'colors',{enumerable:true,get:()=>theme()?.brick||lightBricks});
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
   G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
    G.balanceVersion=3;
@@ -125,7 +131,7 @@
     if(G.particles.length>300)G.particles.splice(0,G.particles.length-300);
   };
   G.ring=(x,y,color,r=90)=>G.rings.push({x,y,color,r,life:.55,max:.55});
-  G.float=(x,y,text,color='#566e37',size=17)=>G.texts.push({x,y,text,color,size,life:1.05});
+  G.float=(x,y,text,color=theme()?.text.float||'#48652c',size=17)=>G.texts.push({x,y,text,color,size,life:1.05});
   G.spawnCore = (quiet=false) => {
     if(G.core || G.phase==='clearing')return;
     G.predictionVersion++;
@@ -137,7 +143,7 @@
   G.clear = () => {
     if(G.phase==='clearing')return;
     G.phase='clearing';G.clearAt=G.time+2.0;const bonus=G.bonus();state.coins+=bonus;G.levelMoney+=bonus;G.shake=14;G.coreFlash=1.6;
-    G.ring(390,80,'#a4d65e',850);G.burst(390,80,'#93c446',80,3);G.float(390,385,'核心击破','#415d26',35);G.float(390,431,'关卡奖金 + '+G.fmt(bonus),'#709945',24);G.specialSound('win');
+    G.ring(390,80,'#a4d65e',850);G.burst(390,80,'#93c446',80,3);G.float(390,385,'核心击破',theme()?.text.coreTitle||'#3b5d1f',35);G.float(390,431,'关卡奖金 + '+G.fmt(bonus),theme()?.text.coreBonus||'#4d7a26',24);G.specialSound('win');
     G.bricks.forEach(b=>G.burst(b.x,b.y,G.colors[b.type],6));
     // Core cleanup is deliberately separate from rewarded destruction and combo counters.
     G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;Composite.clear(engine.world);
@@ -286,6 +292,6 @@
   };
   G.sound=()=>{};
   G.specialSound=(type,x=390)=>G.sound(type==='bomb'?'boom':type,1,x,true);
-  G.reset=()=>{Object.assign(state,defaults());G.paused=false;G.generate();};
+  G.reset=()=>{const volume=state.volume;Object.assign(state,defaults(),{volume,sound:volume>0,soundMigrated:true});G.paused=false;G.generate();};
   G.generate(true);
 })();
