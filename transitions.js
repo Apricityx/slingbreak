@@ -56,35 +56,75 @@
       flight.finished.then(()=>{coin.remove();target.animate([{scale:'1.14'},{scale:'1'}],{duration:200,easing:'ease-out'});},()=>coin.remove());
     }
   }
-  async function stampClear(level,bonus){
-    const stamp=document.createElement('div');stamp.className='clear-stamp';stamp.setAttribute('aria-hidden','true');
-    stamp.innerHTML=`<span>LEVEL ${pad(level)}</span><strong>CLEAR</strong><b>+ 0</b>`;
-    arena.append(stamp);
-    const amount=stamp.querySelector('b');
+  const esc=text=>String(text).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function reportMarkup(r){
+    const sum=r.parts.reduce((n,p)=>n+p.value,0)||1;
+    const bar=r.parts.map(p=>`<i style="--w:${(p.value/sum*100).toFixed(2)}%;background:${p.color}"></i>`).join('');
+    const legend=r.parts.map(p=>`<li><i style="background:${p.color}"></i>${p.label}<b>${G.fmt(p.value)}</b></li>`).join('');
+    const skills=r.skills.length?`<div class="report-skills"><span>主力技能</span>${r.skills.map(s=>`<em><i data-lucide="${esc(s.icon)}"></i>${esc(s.name)}<b>×${s.count}</b></em>`).join('')}</div>`:'';
+    return `<div class="report-head"><span>本关收益</span><strong data-count="${r.total}">0</strong></div>
+      <div class="report-bar">${bar}</div><ul class="report-legend">${legend}</ul>
+      <div class="report-stats"><div><span>最佳一箭</span><b>${r.bestKills} 连${r.record?'<em>新纪录</em>':''}</b><small>+${G.fmt(r.bestMoney)}</small></div><div><span>射出</span><b>${r.shots}</b><small>箭</small></div><div><span>击碎</span><b>${r.bricks}</b><small>块</small></div></div>
+      ${skills}<p class="report-continue">点击继续</p>`;
+  }
+  // Settlement scene: CLEAR stamp, then the level report. It stays until the
+  // curtain takes over, and a tap (or Space/Enter) skips ahead once coins land.
+  let clearShownAt=0;
+  const skipClear=()=>{if(G.phase==='clearing'&&performance.now()-clearShownAt>700)G.clearAt=Math.min(G.clearAt,G.time+.05);};
+  document.addEventListener('keydown',e=>{if(G.phase==='clearing'&&(e.key===' '||e.key==='Enter')&&!document.querySelector('dialog[open]')){e.preventDefault();skipClear();}});
+  async function stampClear(level,bonus,report){
+    clearShownAt=performance.now();
+    const scene=document.createElement('div');scene.className='clear-scene';
+    scene.innerHTML=`<div class="clear-stamp" aria-hidden="true"><span>LEVEL ${pad(level)}</span><strong>CLEAR</strong><b data-count="${bonus}">+ 0</b></div>${report?`<section class="level-report" role="status" aria-label="第 ${level} 关小结">${reportMarkup(report)}</section>`:''}`;
+    scene.addEventListener('pointerdown',skipClear);
+    arena.append(scene);lucide.createIcons({root:scene});
+    const stamp=scene.firstElementChild,card=scene.querySelector('.level-report');
+    const counters=[...scene.querySelectorAll('[data-count]')];
+    if(still()){
+      scene.classList.add('is-static');
+      for(const el of counters)el.textContent=(el.tagName==='B'?'+ ':'')+G.fmt(Number(el.dataset.count));
+      while(G.phase==='clearing'&&scene.isConnected)await wait(50);
+      scene.remove();return;
+    }
     await wait(140);
     stamp.animate([{opacity:0,scale:'1.7',filter:'blur(8px)'},{opacity:1,scale:'.95',filter:'blur(0)',offset:.55},{opacity:1,scale:'1',filter:'blur(0)'}],{duration:340,easing:'ease-out',fill:'both'});
     const start=performance.now();
     const count=()=>{
-      const p=Math.min(1,(performance.now()-start-120)/760),e=1-(1-Math.max(0,p))**3;
-      amount.textContent='+ '+G.fmt(Math.round(bonus*e));
-      if(p<1&&stamp.isConnected)requestAnimationFrame(count);
+      const p=Math.min(1,(performance.now()-start-120)/900),e=1-(1-Math.max(0,p))**3;
+      for(const el of counters)el.textContent=(el.tagName==='B'?'+ ':'')+G.fmt(Math.round(Number(el.dataset.count)*e));
+      if(p<1&&scene.isConnected)requestAnimationFrame(count);
     };
     requestAnimationFrame(count);
     flyCoins(bonus);
-    await wait(1300);
-    await settle(stamp.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -20px'}],{duration:260,easing:accel,fill:'forwards'}));
-    stamp.remove();
+    if(card){
+      card.animate([{opacity:0,translate:'0 26px',scale:'.96'},{opacity:1,translate:'0 0',scale:'1'}],{duration:480,delay:380,easing:spring,fill:'both'});
+      [...card.children].forEach((row,i)=>row.animate([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0'}],{duration:340,delay:480+i*70,easing:out,fill:'both'}));
+      [...card.querySelectorAll('.report-bar i')].forEach((seg,i)=>seg.animate([{scale:'0 1'},{scale:'1 1'}],{duration:520,delay:620+i*110,easing:out,fill:'both'}));
+    }
+    // Leave with the curtain (next level) or at once if the run was reset.
+    while(G.phase==='clearing'&&scene.isConnected)await wait(50);
+    await settle(scene.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -20px'}],{duration:240,easing:accel,fill:'forwards'}));
+    scene.remove();
   }
   const clear=G.clear;
   G.clear=(...args)=>{
     if(G.phase==='clearing')return clear(...args);
     const level=G.state.level,result=clear(...args);
-    if(G.phase!=='clearing'||still())return result;
+    if(G.phase!=='clearing')return result;
+    if(still()){
+      // No stamp or coins, but the report is information and still deserves reading time.
+      const bonus=G.settledBonus??G.bonus(level),report=G.levelReport?.(level,bonus);
+      if(report){G.clearAt=G.time+3.4;stampClear(level,bonus,report);}
+      return result;
+    }
     frozenUntil=performance.now()+130;
     // The DOM stamp carries the same message as these canvas floats.
     G.texts=G.texts.filter(t=>t.text!=='核心击破'&&!String(t.text).startsWith('关卡奖金'));
     canvas.animate([{filter:'brightness(1.9) saturate(1.5)'},{filter:'none'}],{duration:340,easing:'ease-out'});
-    stampClear(level,G.settledBonus??G.bonus(level));
+    const bonus=G.settledBonus??G.bonus(level),report=G.levelReport?.(level,bonus);
+    // The report needs reading time; the player can tap through it early.
+    if(report)G.clearAt=G.time+3.4;
+    stampClear(level,bonus,report);
     return result;
   };
 

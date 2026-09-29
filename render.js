@@ -1,12 +1,16 @@
 (() => {
   'use strict';
-  const G=Game,canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+  const G=Game,canvas=document.getElementById('game'),mainCtx=canvas.getContext('2d');
+  // Drawing helpers paint into `ctx`; cached layers swap it for an offscreen context.
+  let ctx=mainCtx;
+  const paintInto=(target,fn)=>{const previous=ctx;ctx=target;try{fn();}finally{ctx=previous;}};
   const brickInks={normal:'#75944f',bomb:'#9e4935',lightning:'#8f792e',frost:'#4f8d9e',prism:'#796099',gold:'#809142'};
   // Hide the board only while the skill draft dialog is actually open.
   const draftDialog=document.getElementById('skill-draft');
   const draftModalOpen=()=>G.holdDraft||G.phase==='draft'&&!!draftDialog?.open;
   let hpLabels=new WeakMap();
-  document.fonts?.addEventListener('loadingdone',()=>{hpLabels=new WeakMap();});
+  let boardLayerValid=false;
+  document.fonts?.addEventListener('loadingdone',()=>{hpLabels=new WeakMap();boardLayerValid=false;});
   const hpLabel=b=>{
     const hp=Math.ceil(b.hp),cached=hpLabels.get(b);
     if(cached&&cached.hp===hp&&cached.w===b.w&&cached.h===b.h&&cached.type===b.type)return cached;
@@ -23,7 +27,7 @@
       // Keep the backing store sharp on high-density phones without making
       // the animation buffer unnecessarily expensive on extreme DPR screens.
       const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
-     cssW=r.width;cssH=r.height;canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);prediction=null;
+     cssW=r.width;cssH=r.height;canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);prediction=null;boardLayerValid=false;
      scale=Math.min(cssW/G.W,cssH/1100);G.H=cssH/scale;offsetX=(cssW-G.W*scale)/2;offsetY=0;G.origin.y=Math.min(G.H-180,970);
      G.drag=null;G.pointer=null;
     G.view={scale,offsetX,offsetY,width:cssW,height:cssH};
@@ -87,8 +91,39 @@
     ctx.save();ctx.translate(c.x,c.y);ctx.scale(entrance,entrance);ctx.rotate((1-Math.min(1,t*1.4))*-Math.PI/2);
     ctx.strokeStyle='#a4cd72';ctx.lineWidth=1;ctx.globalAlpha=.5;
     for(let i=0;i<2;i++){ctx.save();ctx.rotate(G.time*(i?-.5:.4));ctx.setLineDash([12,8,3,8]);ctx.beginPath();ctx.arc(0,0,40+i*10+pulse*2,0,Math.PI*2);ctx.stroke();ctx.restore();}
-    ctx.globalAlpha=1;ctx.rotate(Math.PI/4);ctx.shadowColor='#a2d865';ctx.shadowBlur=G.reduced?0:18+pulse*6;rounded(-21,-21,42,42,4,'#b6ed66');ctx.shadowBlur=0;ctx.strokeStyle='#608938';ctx.lineWidth=1.5;ctx.strokeRect(-14,-14,28,28);ctx.fillStyle='#5a7b38';ctx.fillRect(-4,-4,8,8);ctx.restore();
+    ctx.globalAlpha=1;ctx.rotate(Math.PI/4);
+    // The pulsing glow is quantised to 1/4 px so a settled core can blit a
+    // cached shadow sprite instead of re-blurring every frame.
+    const blur=G.reduced?0:Math.round((18+pulse*6)*4)/4;
+    if(!(blur&&age>=1.1&&!G.shake&&drawCoreGlowSprite(blur,c))){ctx.shadowColor='#a2d865';ctx.shadowBlur=blur;}
+    rounded(-21,-21,42,42,4,'#b6ed66');ctx.shadowBlur=0;ctx.strokeStyle='#608938';ctx.lineWidth=1.5;ctx.strokeRect(-14,-14,28,28);ctx.fillStyle='#5a7b38';ctx.fillRect(-4,-4,8,8);ctx.restore();
     label('THE CORE',390,49,9,'#81966a','DM Sans',600);
+  }
+  // Shadow-only sprites of the settled core, keyed by blur and device placement.
+  // shadowBlur/shadowOffset ignore the transform, so the shape is drawn far off
+  // the sprite and only its shadow is offset back in; the crisp face is still
+  // painted live on top, exactly as a direct shadowed fill would composite.
+  const coreGlow={key:'',sprites:new Map()},GLOW_OFFSET=4096;
+  function drawCoreGlowSprite(blur,c){
+    if(typeof document.createElement!=='function')return false;
+    const dpr=canvas.width/cssW,s=scale*dpr;
+    const cx=(offsetX+c.x*scale)*dpr,cy=(offsetY+c.y*scale)*dpr;
+    const key=`${s}:${cx}:${cy}`;
+    if(coreGlow.key!==key){coreGlow.key=key;coreGlow.sprites.clear();}
+    let sprite=coreGlow.sprites.get(blur);
+    if(!sprite){
+      // Half-diagonal of the rotated 42px square plus Skia's ~3σ blur reach.
+      const reach=Math.ceil(21*Math.SQRT2*s+blur*1.5+4),size=reach*2;
+      const ox=Math.floor(cx)-reach,oy=Math.floor(cy)-reach;
+      const el=document.createElement('canvas');el.width=size;el.height=size;
+      const g=el.getContext('2d');
+      g.setTransform(s*Math.SQRT1_2,s*Math.SQRT1_2,-s*Math.SQRT1_2,s*Math.SQRT1_2,cx-ox-GLOW_OFFSET,cy-oy);
+      g.shadowColor='#a2d865';g.shadowBlur=blur;g.shadowOffsetX=GLOW_OFFSET;
+      paintInto(g,()=>rounded(-21,-21,42,42,4,'#b6ed66'));
+      sprite={el,ox,oy};coreGlow.sprites.set(blur,sprite);
+    }
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(sprite.el,sprite.ox,sprite.oy);ctx.restore();
+    return true;
   }
    const PREDICTION_MAX=720,PREDICTION_FADE_START=500;
    const predictionColor=ready=>{
@@ -222,6 +257,62 @@
     if(!G.reduced && G.shake)ctx.translate((Math.random()-.5)*G.shake,(Math.random()-.5)*G.shake);
     ctx.strokeStyle='#e6ebdf';ctx.lineWidth=1;ctx.setLineDash([3,7]);ctx.beginPath();ctx.moveTo(85,G.origin.y-130);ctx.lineTo(695,G.origin.y-130);ctx.stroke();ctx.setLineDash([]);
     if(!draftModalOpen()){
+    drawBoardCached();
+    drawCore();
+    G.drawSkillMechanics?.(ctx);
+    G.drawSkillEffects?.(ctx,'field');
+    }
+    G.rings.forEach(r=>{ctx.globalAlpha=r.life/r.max*.65;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r*(1-r.life/r.max),0,Math.PI*2);ctx.stroke();});ctx.globalAlpha=1;
+    G.bolts.forEach(b=>{ctx.globalAlpha=Math.min(1,b.life*4);ctx.strokeStyle='#bea33e';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(b.x,b.y);for(let i=1;i<6;i++)ctx.lineTo(b.x+(b.tx-b.x)*i/6+(Math.random()-.5)*18,b.y+(b.ty-b.y)*i/6+(Math.random()-.5)*18);ctx.lineTo(b.tx,b.ty);ctx.stroke();});ctx.globalAlpha=1;
+    // Arrow trail alpha bumped from .3→.45, dot radius from 1.8→2.2 for snappier feel
+    G.arrows.forEach(a=>{if(!a.skillVisual)a.trail.forEach((p,i)=>{ctx.globalAlpha=i/a.trail.length*.45;circle(p.x,p.y,2.2,a.color||'#8baa65');});ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||'#343f2b');});
+    drawSling();
+    G.drawSkillEffects?.(ctx,'front');
+    drawParticles();
+    G.texts.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);label(p.text,p.x,p.y,p.size,p.color,'DM Sans',600);});ctx.globalAlpha=1;
+    if(G.coreFlash>0){ctx.fillStyle=`rgba(201,239,162,${G.coreFlash*.13})`;ctx.fillRect(0,0,780,G.H);}
+    drawPointer();
+    ctx.restore();
+  }
+  // Bricks and barriers are static between hits, so the settled board is
+  // rasterised once into a device-resolution layer and blitted 1:1. Anything
+  // animating (entrance, hit flash, screen shake) paints live as before.
+  const boardLayer=typeof document.createElement==='function'?document.createElement('canvas'):null;
+  const boardLayerCtx=boardLayer?.getContext?.('2d')||null;
+  const typeIds={normal:1,bomb:2,lightning:3,frost:4,prism:5,gold:6};
+  let boardState=[],nextBoardState=[];
+  const boardChanged=()=>{
+    const s=nextBoardState;s.length=0;
+    for(const b of G.bricks)s.push(b.x,b.y,b.w,b.h,Math.ceil(b.hp),b.hp<b.max?1:0,b.max,typeIds[b.type]||0,b.frozen?1:0);
+    s.push(-1);
+    for(const o of G.obstacles)s.push(o.x,o.y,o.w,o.h);
+    let changed=s.length!==boardState.length;
+    for(let i=0;!changed&&i<s.length;i++)changed=s[i]!==boardState[i];
+    if(changed){nextBoardState=boardState;boardState=s;}
+    return changed;
+  };
+  const boardAnimating=()=>{
+    if(G.boardEntrance||(!G.reduced&&G.shake))return true;
+    for(const b of G.bricks)if(b.flash>0)return true;
+    for(const o of G.obstacles)if(o.flash>0)return true;
+    return false;
+  };
+  function drawBoardCached(){
+    // A change seen while painting live (e.g. hp drops in the same frame the
+    // hit flash starts) must still invalidate the layer for when it settles.
+    if(boardChanged())boardLayerValid=false;
+    if(!boardLayerCtx||boardAnimating()){drawBoard();return;}
+    if(!boardLayerValid){
+      if(boardLayer.width!==canvas.width||boardLayer.height!==canvas.height){boardLayer.width=canvas.width;boardLayer.height=canvas.height;}
+      const dpr=canvas.width/cssW;
+      boardLayerCtx.save();boardLayerCtx.setTransform(1,0,0,1,0,0);boardLayerCtx.clearRect(0,0,boardLayer.width,boardLayer.height);
+      boardLayerCtx.setTransform(dpr*scale,0,0,dpr*scale,dpr*offsetX,dpr*offsetY);
+      paintInto(boardLayerCtx,drawBoard);
+      boardLayerCtx.restore();boardLayerValid=true;
+    }
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(boardLayer,0,0);ctx.restore();
+  }
+  function drawBoard(){
     for(const b of G.bricks){
       const alpha=boardItemEntrance(b);
       const color=b.frozen?'#b4dce6':G.colors[b.type];
@@ -258,21 +349,6 @@
       if(o.flash>0){ctx.globalAlpha=o.flash*3*alpha;rounded(left,top,o.w,o.h,4,'#e7f5d3');ctx.globalAlpha=alpha;}
       ctx.restore();
     }
-    drawCore();
-    G.drawSkillMechanics?.(ctx);
-    G.drawSkillEffects?.(ctx,'field');
-    }
-    G.rings.forEach(r=>{ctx.globalAlpha=r.life/r.max*.65;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r*(1-r.life/r.max),0,Math.PI*2);ctx.stroke();});ctx.globalAlpha=1;
-    G.bolts.forEach(b=>{ctx.globalAlpha=Math.min(1,b.life*4);ctx.strokeStyle='#bea33e';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(b.x,b.y);for(let i=1;i<6;i++)ctx.lineTo(b.x+(b.tx-b.x)*i/6+(Math.random()-.5)*18,b.y+(b.ty-b.y)*i/6+(Math.random()-.5)*18);ctx.lineTo(b.tx,b.ty);ctx.stroke();});ctx.globalAlpha=1;
-    // Arrow trail alpha bumped from .3→.45, dot radius from 1.8→2.2 for snappier feel
-    G.arrows.forEach(a=>{if(!a.skillVisual)a.trail.forEach((p,i)=>{ctx.globalAlpha=i/a.trail.length*.45;circle(p.x,p.y,2.2,a.color||'#8baa65');});ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||'#343f2b');});
-    drawSling();
-    G.drawSkillEffects?.(ctx,'front');
-    drawParticles();
-    G.texts.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);label(p.text,p.x,p.y,p.size,p.color,'DM Sans',600);});ctx.globalAlpha=1;
-    if(G.coreFlash>0){ctx.fillStyle=`rgba(201,239,162,${G.coreFlash*.13})`;ctx.fillRect(0,0,780,G.H);}
-    drawPointer();
-    ctx.restore();
   }
   const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale};};
   let drawStep=0;

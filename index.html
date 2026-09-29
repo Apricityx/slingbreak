@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="intro.css">
   <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="transitions.css">
+  <link rel="stylesheet" href="juice.css">
   <script>window.SlingBreakIntro = {active: true}; document.documentElement.classList.add('intro-pending'); if (new URLSearchParams(location.search).get('launcher') === '1') document.documentElement.classList.add('launcher-mode-pending');</script>
 </head>
 <body>
@@ -72,7 +73,7 @@
   <!-- Register the native loading bridge before any optional bundle can fail. -->
   <script src="launcher-mode.js"></script>
   <script src="vendor/matter.min.js"></script>
-  <script src="vendor/lucide.min.js"></script>
+  <script src="vendor/lucide-subset.js"></script>
   <script src="game.js"></script>
   <script src="audio-diagnostics.js"></script>
   <script src="audio-recipes.js"></script>
@@ -90,6 +91,7 @@
   <script src="achievements-ui.js"></script>
   <script src="intro.js"></script>
   <script src="transitions.js"></script>
+  <script src="juice.js"></script>
   <script>window.SlingBreakLauncher?.pageReady?.();</script>
 </body>
 </html>
