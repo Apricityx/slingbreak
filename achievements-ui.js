@@ -119,6 +119,11 @@
     return resetGame();
   };
   const exact=n=>Math.floor(n).toLocaleString('en-US');
+  // Skip unchanged writes: rewriting identical text still replaces the node and dirties layout.
+  const setText=(el,value)=>{value=String(value);if(el.textContent!==value)el.textContent=value;};
+  const setTitle=(el,value)=>{if(el.title!==value)el.title=value;};
+  const setAttr=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value);};
+  const setHidden=(el,value)=>{if(el.hidden!==value)el.hidden=value;};
   let shownMoney=G.levelMoney,shownWallet=G.state.coins,targetMoney=shownMoney,targetWallet=shownWallet;
   let frame=0,last=0,event=0,library='';
   function animate(time){
@@ -126,7 +131,7 @@
     shownMoney+=(targetMoney-shownMoney)*fraction;shownWallet+=(targetWallet-shownWallet)*fraction;
     if(Math.abs(targetMoney-shownMoney)<1)shownMoney=targetMoney;
     if(Math.abs(targetWallet-shownWallet)<1)shownWallet=targetWallet;
-    $('shot-money').textContent='+ '+G.fmt(shownMoney);$('live-wallet').textContent=exact(shownWallet);
+    setText($('shot-money'),'+ '+G.fmt(shownMoney));setText($('live-wallet'),exact(shownWallet));
     if(shownMoney!==targetMoney||shownWallet!==targetWallet)frame=requestAnimationFrame(animate);else{frame=0;last=0;}
   }
   function pulse(name){panel.classList.remove(name);void panel.offsetWidth;panel.classList.add(name);}
@@ -140,20 +145,22 @@
     if(!frame)frame=requestAnimationFrame(animate);
     const s=G.latestAchievement;
     const compact=n=>Number(n.toFixed(2)).toString();
-    $('arrow-receipt').hidden=!s;
-    $('score-source').textContent=s?'#'+s.id:'—';
-    $('score-tag').title=s?`最近得分：第 ${s.id} 箭`:'等待得分';
-    $('achievement-mult').textContent='×'+compact(s?.mult||1);
-    $('achievement-badge').hidden=!(s?.mult>1);
-    $('achievement-badge').title=`成就倍率 ×${compact(s?.mult||1)}，作用于整箭并追补收入`;
-    $('achievement-badge').setAttribute('aria-label',$('achievement-badge').title);
-    $('bounty-mult').textContent='×'+compact(s?.bountyMult||1);
-    $('bounty-badge').hidden=!(s?.bountyMult>1);
-    $('bounty-badge').title=`当前赏金倍率 ×${compact(s?.bountyMult||1)}`;
-    $('bounty-badge').setAttribute('aria-label',$('bounty-badge').title);
-    $('arrow-income').textContent='+'+G.fmt(s?.paid||0);
-    $('arrow-receipt').setAttribute('aria-label',s?`第 ${s.id} 箭砖块收入 ${Math.round(s.paid)} 金币`:'等待得分');
-    $('combo-rules').textContent=`当前装备：第 1 块连击倍率 ×1，此后每块增加 ${G.comboStep().toFixed(3)}，第 ${G.comboCapKills()} 块达到 ×${G.comboMultiplierCap().toFixed(1)} 上限。砖块 LV.6 解锁连击强化，每级让每连增幅 +0.025、倍率上限 +0.5；第 2 块起即可提高倍率。`;
+    setHidden($('arrow-receipt'),!s);
+    setText($('score-source'),s?'#'+s.id:'—');
+    setTitle($('score-tag'),s?`最近得分：第 ${s.id} 箭`:'等待得分');
+    setText($('achievement-mult'),'×'+compact(s?.mult||1));
+    const achievementTitle=`成就倍率 ×${compact(s?.mult||1)}，作用于整箭并追补收入`;
+    setHidden($('achievement-badge'),!(s?.mult>1));
+    setTitle($('achievement-badge'),achievementTitle);
+    setAttr($('achievement-badge'),'aria-label',achievementTitle);
+    const bountyTitle=`当前赏金倍率 ×${compact(s?.bountyMult||1)}`;
+    setText($('bounty-mult'),'×'+compact(s?.bountyMult||1));
+    setHidden($('bounty-badge'),!(s?.bountyMult>1));
+    setTitle($('bounty-badge'),bountyTitle);
+    setAttr($('bounty-badge'),'aria-label',bountyTitle);
+    setText($('arrow-income'),'+'+G.fmt(s?.paid||0));
+    setAttr($('arrow-receipt'),'aria-label',s?`第 ${s.id} 箭砖块收入 ${Math.round(s.paid)} 金币`:'等待得分');
+    setText($('combo-rules'),`当前装备：第 1 块连击倍率 ×1，此后每块增加 ${G.comboStep().toFixed(3)}，第 ${G.comboCapKills()} 块达到 ×${G.comboMultiplierCap().toFixed(1)} 上限。砖块 LV.6 解锁连击强化，每级让每连增幅 +0.025、倍率上限 +0.5；第 2 块起即可提高倍率。`);
      const e=G.achievementEvent;
     if(e&&e.serial!==event){event=e.serial;$('achievement-ticker').textContent=`第 ${e.arrow} 支箭 · ${e.name} · ${bonusText(e.bonus)}`;$('achievement-ticker').classList.add('hot');}
     else if(!e){event=0;$('achievement-ticker').textContent='';$('achievement-ticker').classList.remove('hot');}

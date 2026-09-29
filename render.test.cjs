@@ -9,18 +9,20 @@ const renderSource=fs.readFileSync(__dirname+'/render.js','utf8');
 // render.js is a DOM renderer, so the harness drives it with a recording 2D
 // context instead of a real canvas. Every context call is logged, which lets a
 // test distinguish "the board was painted" from "the board stayed blank".
-function boot({launcher=false, phase='ready', draftOpen=false}={}){
-  const calls=[],frames=[];
-  const target={};
-  const ctx=new Proxy(target,{
-    get(t,prop){
-      if(prop in t)return t[prop];
-      if(prop==='measureText'){t[prop]=()=>({width:10});return t[prop];}
-      t[prop]=(...args)=>{calls.push([prop,args]);};
-      return t[prop];
-    },
-    set(t,prop,value){t[prop]=value;return true;}
-  });
+const recordingContext=calls=>new Proxy({},{
+  get(t,prop){
+    if(prop in t)return t[prop];
+    if(prop==='measureText'){t[prop]=()=>({width:10});return t[prop];}
+    t[prop]=(...args)=>{calls.push([prop,args]);};
+    return t[prop];
+  },
+  set(t,prop,value){t[prop]=value;return true;}
+});
+// `layers` exposes document.createElement so render.js enables its offscreen
+// caches; everything painted into an offscreen canvas lands in layerCalls.
+function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={}){
+  const calls=[],frames=[],layerCalls=[];
+  const ctx=recordingContext(calls);
   const makeElement=()=>({textContent:'',hidden:false,open:false,style:{},classList:{add(){},remove(){},toggle(){},contains:()=>false},addEventListener(){},focus(){},querySelector:()=>makeElement(),querySelectorAll:()=>[]});
   const canvas={width:780,height:760,style:{},tabIndex:0,getContext:()=>ctx,getBoundingClientRect:()=>({width:780,height:760,left:0,top:0,right:780,bottom:760}),addEventListener(){},setPointerCapture(){},focus(){},classList:{add(){},remove(){},contains:()=>false}};
   const dialog=makeElement();dialog.open=draftOpen;
@@ -36,7 +38,8 @@ function boot({launcher=false, phase='ready', draftOpen=false}={}){
     requestAnimationFrame:callback=>{frames.push(callback);return frames.length;},cancelAnimationFrame(){},
     ResizeObserver:ResizeObserverStub,
     localStorage:{getItem:()=>null,setItem(){}},
-    document:{getElementById:id=>elements[id]||makeElement(),querySelector:()=>makeElement(),querySelectorAll:()=>[],fonts:{addEventListener(){}},addEventListener(){},documentElement:{classList:{add(){},remove(){},contains:()=>false}}},
+    document:{getElementById:id=>elements[id]||makeElement(),querySelector:()=>makeElement(),querySelectorAll:()=>[],fonts:{addEventListener(){}},addEventListener(){},documentElement:{classList:{add(){},remove(){},contains:()=>false}},
+      ...(layers?{createElement:()=>{const layer=recordingContext(layerCalls);return {width:0,height:0,getContext:()=>layer};}}:{})},
     window:{addEventListener(){},dispatchEvent(){}},
   };
   vm.createContext(context);
@@ -47,7 +50,30 @@ function boot({launcher=false, phase='ready', draftOpen=false}={}){
   G.generate(false);
   G.phase=phase;
   vm.runInContext(renderSource,context);
-  return {G,calls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
+  return {G,calls,layerCalls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
+}
+
+// Regression: a hit changes hp and starts a flash in the same frame. The flash
+// frames paint live, and the cached board must still be rebuilt afterwards
+// instead of blitting the pre-hit board (stale hp / resurrected bricks).
+const settle=G=>{for(const b of G.bricks)b.flash=0;for(const o of G.obstacles)o.flash=0;G.shake=0;};
+const layerBricks=layerCalls=>layerCalls.filter(c=>c[0]==='roundRect').length;
+for(const [name,act] of [
+  ['a damaged brick',G=>{const b=G.bricks.find(b=>b.type==='normal');b.hp=b.max-.5;b.flash=.16;}],
+  ['a destroyed brick',G=>{const b=G.bricks[0];G.bricks.splice(0,1);G.bricks[0].flash=.16;G.shake=1.5;return b;}],
+]){
+  test(`the cached board repaints ${name} once its hit flash ends`,()=>{
+    const {G,layerCalls,step}=boot({phase:'ready',layers:true});
+    G.paused=true;
+    step(20);
+    assert.ok(layerBricks(layerCalls)>0,'first frame builds the board layer');
+    layerCalls.length=0;step(40);
+    assert.equal(layerBricks(layerCalls),0,'an unchanged board is blitted from cache');
+    act(G);step(60);
+    settle(G);layerCalls.length=0;step(80);
+    // Two rounded fills per brick, three per barrier.
+    assert.equal(layerBricks(layerCalls),G.bricks.length*2+G.obstacles.length*3,'board layer must be rebuilt with the post-hit bricks');
+  });
 }
 
 for(const launcher of [false,true]){

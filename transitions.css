@@ -27,7 +27,9 @@
 @keyframes overlay-sink{to{opacity:0;transform:translateY(-10px) scale(.98)}}
 
 /* ── 6. Clear stamp and coin flight. */
-.clear-stamp{position:absolute;left:50%;top:34%;z-index:9;display:flex;flex-direction:column;align-items:center;gap:2px;transform:translate(-50%,-50%);pointer-events:none;color:#2f4420;text-align:center;opacity:0}
+.clear-scene{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;overflow:hidden;cursor:pointer}
+.clear-scene.is-static>*{opacity:1}
+.clear-stamp{display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;color:#2f4420;text-align:center;opacity:0}
 .clear-stamp span{font:600 12px "Barlow Condensed",var(--font);letter-spacing:3px;color:#6f8e4b}
 .clear-stamp strong{font:800 clamp(46px,9vw,84px)/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:#3f5f25;text-shadow:0 3px 0 #c6efa0,0 10px 30px #9bcc5d80}
 .clear-stamp b{margin-top:6px;padding:4px 12px;border-radius:5px;background:#252e20;color:#c4f589;font:600 18px "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums}

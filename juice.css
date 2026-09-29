@@ -1,0 +1,63 @@
+/* Game feel layer (juice.js) and the level report (transitions.js). */
+
+/* ── Combo heat: the counter and arena edge warm up tier by tier. */
+.combo[data-heat="1"]{--combo-color:#5f8a2f}
+.combo[data-heat="2"]{--combo-color:#c9812a}
+.combo[data-heat="3"]{--combo-color:#d0572c;filter:drop-shadow(0 0 10px #f0a13a90) drop-shadow(0 2px 8px #fafbf7)}
+.combo[data-heat="3"] #combo-count{animation:combo-burn .6s ease-in-out infinite alternate}
+/* Layer hints only while overdrive burns: the looping text-shadow repaints just
+   the counter's own layer, and the drop-shadow filter is applied by the
+   compositor instead of re-rasterising the whole combo block every frame. */
+.combo[data-heat="3"]{will-change:filter}
+.combo[data-heat="3"] #combo-count{will-change:transform}
+@keyframes combo-burn{to{text-shadow:0 0 14px #ffb347}}
+.arena::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 0 0 transparent;transition:box-shadow .35s ease}
+.arena[data-heat="2"]::after{box-shadow:inset 0 0 40px -12px #e0ad2c80}
+.arena[data-heat="3"]::after{box-shadow:inset 0 0 60px -10px #f0a13ab0}
+
+/* ── Slow motion near the core. */
+.slowmo-vignette{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 12%,transparent 35%,#1e291b55 100%);transition:opacity .18s ease}
+.arena.is-slowmo .slowmo-vignette{opacity:1}
+.arena.is-slowmo canvas{filter:saturate(1.25) contrast(1.05)}
+
+/* ── Record banner. */
+.record-banner{position:absolute;left:50%;top:64px;z-index:9;translate:-50% 0;display:flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #d9b24a;border-radius:8px;background:#2a2515ee;color:#fff3cf;box-shadow:0 10px 30px #b48a1c55;pointer-events:none;white-space:nowrap}
+.record-banner span{font-size:11px;font-weight:700;letter-spacing:1px;color:#f1d26a}
+.record-banner strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:#ffe08a}
+.record-banner small{font-size:10px;color:#c8b98a}
+
+/* ── Level report card under the CLEAR stamp. */
+.level-report{width:min(340px,100%);padding:16px 18px 12px;border:1px solid #d6dfcc;border-radius:9px;background:#fafbf7f2;box-shadow:0 18px 50px #26342130;color:var(--ink);opacity:0}
+.report-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.report-head span{font-size:11px;color:#7b876f}
+.report-head strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:#3f5f25}
+.report-bar{display:flex;height:8px;margin:12px 0 8px;overflow:hidden;border-radius:4px;background:#e6ebdf}
+.report-bar i{width:var(--w);height:100%;transform-origin:left center}
+.report-legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:11px;color:#68785b}
+.report-legend li{display:flex;align-items:center;gap:6px;min-width:0}
+.report-legend li>i{width:8px;height:8px;flex:none;border-radius:2px}
+.report-legend b{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums;color:#46543b}
+.report-stats{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e0e6d6}
+.report-stats div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.report-stats span{font-size:10px;color:#8a957d}
+.report-stats b{display:flex;align-items:center;gap:6px;font:700 20px/1.1 "Barlow Condensed",var(--font);color:#2f4420}
+.report-stats b em{padding:1px 5px;border-radius:3px;background:#e8c34a;color:#3a2e0a;font:700 9px/1.4 var(--font);font-style:normal}
+.report-stats small{font-size:10px;color:#8a957d}
+.report-skills{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:#8a957d}
+.report-skills em{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid #d6dfcc;border-radius:4px;background:#edf2e7;color:#526340;font-style:normal;font-size:11px}
+.report-skills em svg{width:12px;height:12px}
+.report-skills em b{font-weight:600;color:#7b876f}
+.report-continue{margin:10px 0 0!important;text-align:center;font-size:10px!important;color:#9aa190!important;animation:report-blink 1.6s 1.4s ease-in-out infinite}
+@keyframes report-blink{50%{opacity:.35}}
+@media(max-width:600px){
+  .clear-scene{gap:8px;padding:10px}
+  .clear-stamp strong{font-size:44px}
+  .level-report{padding:12px 14px 10px}
+  .report-head strong,.record-banner strong{font-size:24px}
+  .report-stats b{font-size:17px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .combo[data-heat="3"] #combo-count,.report-continue{animation:none}
+  .arena::after,.slowmo-vignette{transition:none}
+}

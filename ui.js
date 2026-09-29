@@ -9,20 +9,29 @@
      if(key==='slots'){$(key+'-desc').innerHTML='<span class="combo-upgrade-preview" id="slots-upgrade-preview"><span class="upgrade-metric"><small>技能槽</small><b id="slots-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="slots-next"></em></span></span><span class="slots-upgrade-done" id="slots-upgrade-done" hidden></span><span class="slots-forge-note" id="slots-forge-note" hidden>神匠赐福不可用于该升级</span>';}
   }
   const icons=()=>lucide.createIcons();
+  // G.ui() runs up to once per frame while arrows fly. Writing an unchanged
+  // textContent still replaces the text node and dirties layout, so every
+  // write below is skipped when the value is already current.
+  const setText=(el,value)=>{value=String(value);if(el.textContent!==value)el.textContent=value;};
+  const setTitle=(el,value)=>{if(el.title!==value)el.title=value;};
+  const setAttr=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value);};
+  const setHidden=(el,value)=>{if(el.hidden!==value)el.hidden=value;};
+  let progressWidth='';
   G.ui=()=>{
-    $('level').textContent=String(G.phase==='clearing'?G.state.level-1:G.state.level).padStart(2,'0');
-    $('balance').textContent=G.fmt(G.state.coins);$('total-destroyed').textContent=G.fmt(G.state.total);$('best-combo').textContent=G.state.best;
-    $('best-combo').title=G.state.legacyBest?`旧版多箭合计纪录：${G.state.legacyBest}；当前只记录单箭连击`:'单支箭及其连锁、延迟伤害的最高击碎数';
-    $('shot-money').title=`本轮所有箭合计击碎 ${G.roundKills} 块，金额包含独立奖金`;
-    $('progress-label').textContent=Math.min(G.killed,G.threshold)+' / '+G.threshold;
-    $('progress-bar').style.width=Math.min(100,G.killed/G.threshold*100)+'%';$('core-label').textContent=G.core?'核心已显现':G.phase==='clearing'?'核心击破':'核心解锁';
-    $('core-required').textContent=G.threshold;$('core-bonus').textContent='+ '+G.fmt(G.phase==='clearing'&&G.settledBonus!==undefined?G.settledBonus:G.bonus(G.phase==='clearing'?G.state.level-1:G.state.level));
+    setText($('level'),String(G.phase==='clearing'?G.state.level-1:G.state.level).padStart(2,'0'));
+    setText($('balance'),G.fmt(G.state.coins));setText($('total-destroyed'),G.fmt(G.state.total));setText($('best-combo'),G.state.best);
+    setTitle($('best-combo'),G.state.legacyBest?`旧版多箭合计纪录：${G.state.legacyBest}；当前只记录单箭连击`:'单支箭及其连锁、延迟伤害的最高击碎数');
+    setTitle($('shot-money'),`本轮所有箭合计击碎 ${G.roundKills} 块，金额包含独立奖金`);
+    setText($('progress-label'),Math.min(G.killed,G.threshold)+' / '+G.threshold);
+    const width=Math.min(100,G.killed/G.threshold*100)+'%';if(width!==progressWidth){progressWidth=width;$('progress-bar').style.width=width;}
+    setText($('core-label'),G.core?'核心已显现':G.phase==='clearing'?'核心击破':'核心解锁');
+    setText($('core-required'),G.threshold);setText($('core-bonus'),'+ '+G.fmt(G.phase==='clearing'&&G.settledBonus!==undefined?G.settledBonus:G.bonus(G.phase==='clearing'?G.state.level-1:G.state.level)));
     const arrowScore=G.latestAchievement;
     const combo=$('combo'),kills=arrowScore?.kills||0,capKills=arrowScore?.capKills||G.comboCapKills(),capped=kills>=capKills;
     combo.classList.toggle('visible',kills>=1&&['ready','flying'].includes(G.phase));combo.classList.toggle('is-capped',capped);
-    combo.setAttribute('aria-label',arrowScore?`第 ${arrowScore.id} 箭，${kills} 连击，倍率 ${compact(arrowScore.baseMult)}，${capped?'已封顶':`距封顶还差 ${capKills-kills} 块`}`:'等待连击');
-    $('combo-count').textContent=kills;$('combo-source').textContent=arrowScore?'#'+arrowScore.id:'—';
-    $('combo-mult').textContent='×'+compact(arrowScore?.baseMult||1);
+    setAttr(combo,'aria-label',arrowScore?`第 ${arrowScore.id} 箭，${kills} 连击，倍率 ${compact(arrowScore.baseMult)}，${capped?'已封顶':`距封顶还差 ${capKills-kills} 块`}`:'等待连击');
+    setText($('combo-count'),kills);setText($('combo-source'),arrowScore?'#'+arrowScore.id:'—');
+    setText($('combo-mult'),'×'+compact(arrowScore?.baseMult||1));
     const stamp=arrowScore?`${arrowScore.id}:${kills}`:'';
     if(stamp!==comboStamp){
       const switched=combo.dataset.arrow!==String(arrowScore?.id||'');combo.dataset.arrow=arrowScore?.id||'';
@@ -32,33 +41,33 @@
       if(arrowScore&&!G.reduced)comboAnimation=$('combo-count').animate([{transform:switched?'translateY(5px) scale(.85)':'scale(1.2)',opacity:switched ? .3 : 1},{transform:'translateY(0) scale(1)',opacity:1}],{duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
       comboStamp=stamp;
     }
-     $('play-status').textContent=G.paused?'已暂停':G.phase==='clearing'?'下一关即将开始':G.phase==='entering'?'砖块入场中':G.drag?'蓄力中':G.phase==='flying'?'可继续射击':'就绪';
-    if(!G.drag)$('power-readout').querySelector('b').textContent='0%';
+     setText($('play-status'),G.paused?'已暂停':G.phase==='clearing'?'下一关即将开始':G.phase==='entering'?'砖块入场中':G.drag?'蓄力中':G.phase==='flying'?'可继续射击':'就绪');
+    if(!G.drag)setText($('power-readout').querySelector('b'),'0%');
      for(const [key,u] of Object.entries(upgrades)){
        const maxed=key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades;
        const locked=key==='comboCap'&&!G.comboUpgradeUnlocked();
        const forgeReady=key==='slots'&&!!G.skillRank?.('forge')&&!G.state.skillRuntime?.forge;
-       $(key+'-level').textContent=key==='comboCap'?'+'+G.state.up[key]:key==='slots'?`${G.skillSlots} / ${G.skillSlotMax}`:'LV. '+(G.state.up[key]+1);
+       setText($(key+'-level'),key==='comboCap'?'+'+G.state.up[key]:key==='slots'?`${G.skillSlots} / ${G.skillSlotMax}`:'LV. '+(G.state.up[key]+1));
        if(key==='comboCap'){
-         $('combo-upgrade-lock').hidden=!locked;$('combo-upgrade-preview').hidden=locked;$(key+'-desc').title=u.desc();
-         $('combo-step-current').textContent='+'+compact(G.comboStep());$('combo-step-next').textContent='+'+compact(G.comboStep()+.025);
-         $('combo-cap-current').textContent='×'+compact(G.comboMultiplierCap());$('combo-cap-next').textContent='×'+compact(G.comboMultiplierCap()+.5);
+         setHidden($('combo-upgrade-lock'),!locked);setHidden($('combo-upgrade-preview'),locked);setTitle($(key+'-desc'),u.desc());
+         setText($('combo-step-current'),'+'+compact(G.comboStep()));setText($('combo-step-next'),'+'+compact(G.comboStep()+.025));
+         setText($('combo-cap-current'),'×'+compact(G.comboMultiplierCap()));setText($('combo-cap-next'),'×'+compact(G.comboMultiplierCap()+.5));
        }else if(key==='slots'){
-         $('slots-upgrade-preview').hidden=maxed;
-         $('slots-upgrade-done').hidden=!maxed;
-         $('slots-forge-note').hidden=!(forgeReady&&!maxed);
-         if(maxed)$('slots-upgrade-done').textContent=`已解锁全部 ${G.skillSlotMax} 个技能槽。`;
+         setHidden($('slots-upgrade-preview'),maxed);
+         setHidden($('slots-upgrade-done'),!maxed);
+         setHidden($('slots-forge-note'),!(forgeReady&&!maxed));
+         if(maxed)setText($('slots-upgrade-done'),`已解锁全部 ${G.skillSlotMax} 个技能槽。`);
          else{
-           $('slots-current').textContent=G.skillSlots;$('slots-next').textContent=Math.min(G.skillSlotMax,G.skillSlots+1);
+           setText($('slots-current'),G.skillSlots);setText($('slots-next'),Math.min(G.skillSlotMax,G.skillSlots+1));
          }
-         $(key+'-desc').title=maxed?u.desc():`升级后拥有 ${Math.min(G.skillSlotMax,G.skillSlots+1)} 个技能槽`;
-       }else $(key+'-desc').textContent=u.desc();
-       const b=$('buy-'+key),cost=G.cost(key);
-       b.querySelector('span').textContent=maxed?'已满级':locked?'—':G.fmt(cost);
-       b.disabled=maxed||locked||G.state.coins<cost||G.phase!=='ready'||G.paused;
-      b.title=(maxed?'技能槽已全部解锁':locked?'砖块升至 LV.6 后解锁':G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币')+(forgeReady&&!maxed?' · 神匠赐福不可用于该升级':'');
+         setTitle($(key+'-desc'),maxed?u.desc():`升级后拥有 ${Math.min(G.skillSlotMax,G.skillSlots+1)} 个技能槽`);
+       }else setText($(key+'-desc'),u.desc());
+       const b=$('buy-'+key),cost=G.cost(key),disabled=maxed||locked||G.state.coins<cost||G.phase!=='ready'||G.paused;
+       setText(b.querySelector('span'),maxed?'已满级':locked?'—':G.fmt(cost));
+       if(b.disabled!==disabled)b.disabled=disabled;
+      setTitle(b,(maxed?'技能槽已全部解锁':locked?'砖块升至 LV.6 后解锁':G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币')+(forgeReady&&!maxed?' · 神匠赐福不可用于该升级':''));
     }
-     $('shop-trigger').hidden=false;$('shop-balance').textContent=G.fmt(G.state.coins);
+     setHidden($('shop-trigger'),false);setText($('shop-balance'),G.fmt(G.state.coins));
   };
   let toastTimer;
   G.toast=text=>{$('toast').textContent=text;$('toast').classList.add('visible');$('notice-dock').classList.add('has-toast');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').classList.remove('visible');$('notice-dock').classList.remove('has-toast');},2400);};
@@ -94,7 +103,11 @@
   shop.addEventListener('click',e=>{if(e.target===shop)closeShop();});
   shop.addEventListener('close',()=>{$('game').focus({preventScroll:true});G.ui();});
    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.querySelector('dialog[open]'))pause(!G.paused);});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){pause(true);if(G.phase!=='clearing')G.save();}});
+  // Backgrounding auto-pauses silently: the pause card is only opened on demand.
+  let backgroundPaused=false;
+  const autoPause=()=>{if(G.paused||G.phase==='draft'||document.querySelector('dialog[open]'))return;backgroundPaused=true;G.paused=true;G.audio.sync();G.drag=null;G.pointer=null;G.ui();};
+  const autoResume=()=>{if(!backgroundPaused)return;backgroundPaused=false;G.paused=false;G.audio.sync();G.ui();};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){autoPause();if(G.phase!=='clearing')G.save();}else autoResume();});
   window.addEventListener('pagehide',()=>{if(G.phase!=='clearing')G.save();});
   G.ui();icons();
 })();
