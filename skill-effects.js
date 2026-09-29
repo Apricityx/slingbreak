@@ -75,6 +75,7 @@
     worldfold:['#459c95','#dbbd75','rail',1],starforge:['#bd9141','#71aaa2','comet',1.2]
   };
   for(const [id,[color,accent,trail,duration]] of Object.entries(treatments))Object.assign(profiles[id],{color,accent,trail,duration});
+  G.skillColor=id=>profiles[id]?.color||'#8a9380';
   // The newest skill leads the arrow styling; all four remain visible and active.
   const active=()=>G.activeSkills().at(-1);
   const effects=[],cooldowns=new Map();

@@ -1,0 +1,149 @@
+/* ── Skill draft dialog ──────────────────────────────────────
+   Owns #skill-draft. Loaded last so it settles the older layered rules in
+   skills.css / mobile.css / theme.css. Hooks kept for skills-ui.js selectSkill
+   and the transitions.js deal: .skill-card[data-skill], .skill-emblem,
+   .skill-rarity[data-tier], #draft-loadout .skill-queue-slot.
+   Colors are tokens; --skill-color (per skill, from G.skillColor) and the
+   blue/gold rarity hues are the only fixed accents. */
+
+#skill-draft,.skill-flight{--tier-blue:#439be8;--tier-gold:#e0ad2c}
+#skill-draft{
+  width:min(940px,calc(100vw - 36px));padding:0;border:1px solid var(--line-2);border-radius:14px;
+  background:var(--surface);box-shadow:0 30px 90px -20px var(--shadow),0 0 0 1px color-mix(in srgb,var(--ink) 4%,transparent);
+}
+#skill-draft::backdrop{background:var(--scrim-strong);backdrop-filter:blur(10px) saturate(.8);-webkit-backdrop-filter:blur(10px) saturate(.8)}
+
+/* Header */
+#skill-draft .draft-header{align-items:flex-end;gap:16px;margin:0;padding:26px 28px 0}
+#skill-draft .draft-heading{display:flex;flex-direction:column;gap:6px;min-width:0}
+#skill-draft .draft-kicker{font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--accent-ink)}
+#skill-draft h2{font-size:28px;line-height:1.15;margin:0!important;letter-spacing:0}
+#skill-draft .draft-level{flex:none;padding:6px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface-2);font-size:11px;font-weight:600;letter-spacing:0;color:var(--text-2);font-variant-numeric:tabular-nums}
+
+/* Loadout: where the pick is going and what it pushes out */
+#skill-draft #draft-loadout{grid-template-columns:repeat(var(--slots,4),minmax(0,1fr));gap:8px;margin:18px 28px 0;padding:10px;border-radius:10px;background:var(--surface-2)}
+#skill-draft .skill-queue-slot{position:relative;padding:8px 10px;border-radius:7px;transition:border-color .18s,background-color .18s}
+#skill-draft .skill-queue-slot:not(.is-empty):not(.is-outgoing){background:var(--surface);border-color:var(--line-2)}
+#skill-draft .skill-queue-slot>b svg{color:color-mix(in srgb,var(--skill-color,var(--accent-ink)) 70%,var(--ink))}
+#skill-draft .skill-queue-slot>b{transition:opacity .16s}
+#skill-draft .skill-queue-slot>.slot-preview{grid-area:slot;opacity:0;color:var(--ink)}
+#skill-draft .skill-queue-slot>.slot-preview svg{color:color-mix(in srgb,var(--preview-color,var(--accent-ink)) 70%,var(--ink))}
+#skill-draft .skill-queue-slot.is-previewing{border-style:solid;border-color:color-mix(in srgb,var(--preview-color) 60%,var(--line-2));background:color-mix(in srgb,var(--preview-color) 10%,var(--surface))}
+#skill-draft .skill-queue-slot.is-previewing>b:first-child{opacity:0}
+#skill-draft .skill-queue-slot.is-previewing>.slot-preview{opacity:1}
+#skill-draft .skill-queue-slot.is-outgoing::before,
+#skill-draft .skill-queue-slot.is-previewing::before{position:absolute;top:-8px;right:6px;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:700;line-height:14px;letter-spacing:.04em;white-space:nowrap;pointer-events:none}
+#skill-draft .skill-queue-slot.is-outgoing::before{content:"最早 · 将替换";background:var(--warm-soft);border:1px solid var(--warm-line);color:var(--warm-ink)}
+#skill-draft .skill-queue-slot.is-previewing:not(.is-outgoing)::before{content:"放入这里";background:var(--surface);border:1px solid var(--line-2);color:var(--ink)}
+#skill-draft .skill-queue-slot.is-outgoing.is-previewing::before{content:"替换为新技能"}
+
+/* Cards */
+#skill-draft .draft-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0;padding:22px 28px 0;perspective:1100px}
+:is(#skill-draft,.skill-flight) .skill-card{
+  --tier-line:var(--line-2);--tier-glow:transparent;
+  display:flex;flex-direction:column;min-height:300px;padding:0;overflow:hidden;
+  border:1px solid var(--tier-line);border-radius:11px;background:var(--surface-2);color:var(--ink);text-align:left;
+}
+#skill-draft .skill-card{position:relative;transition:transform .08s,border-color .18s,box-shadow .22s,background-color .18s!important}
+:is(#skill-draft,.skill-flight) .skill-card[data-tier="blue"]{--tier-line:color-mix(in srgb,var(--tier-blue) 45%,var(--line-2));--tier-glow:color-mix(in srgb,var(--tier-blue) 22%,transparent)}
+:is(#skill-draft,.skill-flight) .skill-card[data-tier="gold"]{--tier-line:color-mix(in srgb,var(--tier-gold) 70%,var(--line-2));--tier-glow:color-mix(in srgb,var(--tier-gold) 30%,transparent)}
+#skill-draft .skill-card[data-tier]:not(.is-picked){box-shadow:0 10px 26px -18px var(--tier-glow)}
+#skill-draft .skill-card[data-tier="gold"]:not(.is-picked){box-shadow:0 10px 26px -18px var(--tier-glow),inset 0 1px 0 color-mix(in srgb,var(--tier-gold) 60%,transparent)}
+
+/* Art band: tinted by the skill's own effect color */
+:is(#skill-draft,.skill-flight) .skill-card-art{
+  position:relative;display:grid;place-items:center;height:118px;flex:none;
+  border-bottom:1px solid color-mix(in srgb,var(--skill-color) 18%,var(--line));
+  background:
+    radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--skill-color) 30%,transparent),transparent 62%),
+    repeating-linear-gradient(135deg,color-mix(in srgb,var(--skill-color) 7%,transparent) 0 1px,transparent 1px 9px),
+    color-mix(in srgb,var(--skill-color) 9%,var(--surface));
+}
+:is(#skill-draft,.skill-flight) .skill-card-art::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .22s;background:radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--skill-color) 32%,transparent),transparent 70%)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-emblem{
+  position:relative;z-index:1;width:60px;height:60px;border-radius:16px;
+  border:1px solid color-mix(in srgb,var(--skill-color) 40%,var(--line-2));
+  background:var(--surface);color:color-mix(in srgb,var(--skill-color) 72%,var(--ink));
+  box-shadow:0 8px 20px -10px color-mix(in srgb,var(--skill-color) 70%,transparent),0 0 0 5px color-mix(in srgb,var(--skill-color) 10%,transparent);
+  transition:scale .24s cubic-bezier(.2,1.4,.4,1)!important;
+}
+:is(#skill-draft,.skill-flight) .skill-card .skill-emblem svg{width:30px;height:30px;stroke-width:1.6}
+:is(#skill-draft,.skill-flight) .skill-key{position:absolute;top:10px;right:10px;display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--surface);color:var(--text-2);font:600 11px/1 var(--font);font-variant-numeric:tabular-nums}
+
+/* Rarity ribbon, pinned into the art band's top-left corner */
+:is(#skill-draft,.skill-flight) .skill-card-tier{position:absolute;top:10px;left:10px;z-index:1}
+:is(#skill-draft,.skill-flight) .skill-card .skill-rarity{padding:3px 8px 3px 6px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font-size:10px;font-weight:600;color:var(--text-2)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-rarity .rarity-dot{width:8px;height:8px}
+:is(#skill-draft,.skill-flight) .skill-card .skill-rarity[data-tier="blue"]{border-color:color-mix(in srgb,var(--tier-blue) 45%,var(--line-2));color:var(--ink)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-rarity[data-tier="gold"]{border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold-ink)}
+
+/* Body */
+:is(#skill-draft,.skill-flight) .skill-card-body{display:flex;flex-direction:column;flex:1;min-width:0;padding:16px 18px 0}
+:is(#skill-draft,.skill-flight) .skill-card-name{font-size:20px;font-weight:700;line-height:1.25;color:var(--ink)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-family{margin-top:4px;font-size:10px;letter-spacing:.06em;color:var(--text-3)}
+:is(#skill-draft,.skill-flight) .skill-card-desc{margin:12px 0 14px;font-size:12px;line-height:1.8;color:var(--text-2)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-chance{margin:auto 0 12px;font-size:10px;color:var(--text-3)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-pick{margin:0;padding:11px 18px;width:auto;border-top:1px solid var(--line);font-size:12px;color:var(--accent-ink);transition:background-color .18s}
+:is(#skill-draft,.skill-flight) .skill-card .skill-pick>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(#skill-draft,.skill-flight) .skill-card .skill-pick.is-swap{color:var(--warm-ink)}
+:is(#skill-draft,.skill-flight) .skill-card .skill-pick svg{flex:none;transition:translate .22s cubic-bezier(.2,1.4,.4,1)!important}
+
+/* Hover / focus: the card stays put (theme.css keeps the draft stable) and
+   answers with light instead — border, glow, emblem and arrow. These override
+   theme.css's !important hover reset, and restore a visible focus ring. */
+#skill-draft .skill-card[data-tier]:hover{border-color:var(--tier-line)!important;background:var(--surface-2)!important}
+@media(hover:hover){
+  #skill-draft .skill-card[data-tier]:not(:disabled):hover{
+    border-color:color-mix(in srgb,var(--skill-color) 65%,var(--line-2))!important;
+    box-shadow:0 16px 36px -18px color-mix(in srgb,var(--skill-color) 80%,transparent),0 0 0 3px color-mix(in srgb,var(--skill-color) 16%,transparent)!important;
+  }
+  #skill-draft .skill-card:not(:disabled):hover .skill-card-art::after{opacity:1}
+  #skill-draft .skill-card:not(:disabled):hover .skill-emblem{scale:1.08}
+  #skill-draft .skill-card:not(:disabled):hover .skill-pick{background:color-mix(in srgb,var(--skill-color) 8%,transparent)}
+  #skill-draft .skill-card:not(:disabled):hover .skill-pick svg{translate:3px -3px}
+}
+#skill-draft .skill-card:focus-visible{outline:2px solid var(--ink)!important;outline-offset:3px}
+#skill-draft .skill-card:not(:disabled):focus-visible .skill-card-art::after{opacity:1}
+#skill-draft .skill-card:not(:disabled):focus-visible .skill-emblem{scale:1.08}
+#skill-draft .skill-card:not(:disabled):focus-visible .skill-key{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+
+/* Commit beat (selectSkill): keep the pick lit even under the pointer. */
+#skill-draft .skill-card.is-picked[data-tier]{border-color:var(--pick-color)!important;box-shadow:0 18px 40px -12px var(--pick-color),0 0 0 3px color-mix(in srgb,var(--pick-color) 22%,transparent)!important}
+#skill-draft .skill-card.is-picked::after,
+#skill-draft .skill-card.deal-glint::before{z-index:2}
+
+/* Footer */
+#skill-draft .draft-footer{align-items:center;gap:16px;margin:0;padding:16px 28px 22px}
+#skill-draft .draft-intro{flex:1;min-width:0;margin:0!important;font-size:11px!important;line-height:1.7;color:var(--text-3)}
+#skill-draft .draft-keys{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:10px;color:var(--text-3);white-space:nowrap}
+#skill-draft .draft-keys kbd{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:4px;background:var(--surface-2);color:var(--text-2);font:600 10px/1 var(--font)}
+@media(hover:none),(pointer:coarse){#skill-draft .draft-keys,:is(#skill-draft,.skill-flight) .skill-key{display:none}}
+
+/* Mobile: stacked horizontal cards, art as a side column */
+@media(max-width:720px){
+  #skill-draft{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:12px}
+  #skill-draft .draft-header{padding:18px 16px 0}
+  #skill-draft h2{font-size:22px}
+  #skill-draft #draft-loadout{margin:14px 16px 0;padding:8px;gap:5px}
+  #skill-draft .skill-queue-slot{padding:7px 6px}
+  #skill-draft .skill-queue-slot.is-outgoing::before{content:"将替换";right:3px}
+  #skill-draft .skill-queue-slot.is-previewing:not(.is-outgoing)::before{content:"放这里";right:3px}
+  #skill-draft .skill-queue-slot.is-outgoing.is-previewing::before{content:"换入"}
+  #skill-draft .draft-options{grid-template-columns:1fr;gap:10px;padding:16px 16px 0}
+  :is(#skill-draft,.skill-flight) .skill-card{display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:0;min-height:0}
+  :is(#skill-draft,.skill-flight) .skill-card-art{grid-row:1/4;grid-column:1;height:auto;border-bottom:0;border-right:1px solid color-mix(in srgb,var(--skill-color) 18%,var(--line))}
+  :is(#skill-draft,.skill-flight) .skill-card .skill-emblem{width:46px;height:46px;border-radius:12px}
+  :is(#skill-draft,.skill-flight) .skill-card .skill-emblem svg{width:24px;height:24px}
+  :is(#skill-draft,.skill-flight) .skill-card-tier{position:static;grid-column:2;grid-row:1;padding:12px 14px 0}
+  :is(#skill-draft,.skill-flight) .skill-card-body{grid-column:2;grid-row:2;padding:6px 14px 0}
+  :is(#skill-draft,.skill-flight) .skill-card-name{font-size:17px}
+  :is(#skill-draft,.skill-flight) .skill-card-desc{margin:8px 0 8px;font-size:11px;line-height:1.7}
+  :is(#skill-draft,.skill-flight) .skill-card .skill-chance{margin:0 0 10px}
+  :is(#skill-draft,.skill-flight) .skill-card .skill-pick{grid-column:2;grid-row:3;padding:9px 14px}
+  #skill-draft .draft-footer{padding:12px 16px 16px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  #skill-draft .skill-card,#skill-draft .skill-card .skill-emblem,#skill-draft .skill-card .skill-pick svg,
+  #skill-draft .skill-card-art::after,#skill-draft .skill-queue-slot,#skill-draft .skill-queue-slot>b{transition:none!important}
+}
