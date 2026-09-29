@@ -35,13 +35,16 @@
     intro.active = false;
     dialog.close();
     dialog.classList.remove('is-leaving');
+    document.documentElement.classList.remove('intro-revealing');
     Game.ui?.();
     if (Game.phase !== 'draft') document.getElementById('game').focus({preventScroll: true});
   }
   function leave() {
     if (finished || dialog.classList.contains('is-leaving')) return;
     dialog.classList.add('is-leaving');
-    exitTimer = setTimeout(finish, 340);
+    // The page rises into place while the intro sheet lifts away like a curtain.
+    document.documentElement.classList.add('intro-revealing');
+    exitTimer = setTimeout(finish, 640);
   }
   function onReduced() { if (reduced.matches) finish(); }
   function onVisibility() { if (document.hidden) finish(); }
@@ -124,7 +127,7 @@
   intro.active = true;
   dialog.showModal();
   reveal();
-  document.getElementById('intro-skip').addEventListener('click', finish);
+  document.getElementById('intro-skip').addEventListener('click', leave);
   dialog.addEventListener('cancel', event => { event.preventDefault(); finish(); });
   dialog.addEventListener('keydown', event => { if (event.key === 'Escape') event.stopPropagation(); });
   reduced.addEventListener('change', onReduced);

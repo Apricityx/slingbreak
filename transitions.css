@@ -1,0 +1,69 @@
+/* Cross-state transitions (transitions.js, intro.js, ui.js). */
+
+/* ── 2. Intro → game: the sheet lifts like a curtain, the page rises under it. */
+#game-intro.is-leaving{animation:intro-lift .62s cubic-bezier(.76,0,.24,1) both!important}
+#game-intro.is-leaving::backdrop{animation:intro-backdrop .2s ease-out both!important}
+#game-intro.is-leaving .intro-stage{animation:intro-zoom .62s cubic-bezier(.5,0,.75,0) both}
+@keyframes intro-lift{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 100% 0)}}
+@keyframes intro-backdrop{to{opacity:0}}
+@keyframes intro-zoom{to{opacity:0;transform:translateY(-6%) scale(1.08);filter:blur(4px)}}
+.intro-revealing .site-header{animation:page-rise .7s .08s cubic-bezier(.22,1,.36,1) both}
+.intro-revealing .workspace{animation:page-rise .8s .16s cubic-bezier(.22,1,.36,1) both}
+@keyframes page-rise{from{opacity:0;transform:translateY(28px) scale(.985)}to{opacity:1;transform:none}}
+
+/* ── 8. Pause: the arena drains to grey behind the card, colour returns on resume. */
+.arena canvas{transition:filter .32s ease}
+.arena.is-paused canvas{filter:grayscale(.85) blur(1.5px) brightness(1.04)}
+.overlay:not([hidden]){animation:overlay-in .3s ease-out both}
+.overlay:not([hidden])>*{animation:overlay-rise .42s cubic-bezier(.2,1.3,.4,1) both}
+.overlay:not([hidden])>:nth-child(2){animation-delay:.04s}
+.overlay:not([hidden])>:nth-child(3){animation-delay:.08s}
+.overlay:not([hidden])>:nth-child(4){animation-delay:.12s}
+.overlay.is-leaving{animation:overlay-out .26s ease-in both}
+.overlay.is-leaving>*{animation:overlay-sink .2s cubic-bezier(.5,0,.75,0) both}
+@keyframes overlay-in{from{opacity:0;backdrop-filter:blur(0)}to{opacity:1}}
+@keyframes overlay-out{to{opacity:0;backdrop-filter:blur(0)}}
+@keyframes overlay-rise{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes overlay-sink{to{opacity:0;transform:translateY(-10px) scale(.98)}}
+
+/* ── 6. Clear stamp and coin flight. */
+.clear-stamp{position:absolute;left:50%;top:34%;z-index:9;display:flex;flex-direction:column;align-items:center;gap:2px;transform:translate(-50%,-50%);pointer-events:none;color:#2f4420;text-align:center;opacity:0}
+.clear-stamp span{font:600 12px "Barlow Condensed",var(--font);letter-spacing:3px;color:#6f8e4b}
+.clear-stamp strong{font:800 clamp(46px,9vw,84px)/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:#3f5f25;text-shadow:0 3px 0 #c6efa0,0 10px 30px #9bcc5d80}
+.clear-stamp b{margin-top:6px;padding:4px 12px;border-radius:5px;background:#252e20;color:#c4f589;font:600 18px "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums}
+.flying-coin{position:fixed;left:0;top:0;z-index:1000;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6c2,#e8c34a 55%,#b48a1c);box-shadow:0 0 10px #f1d26a90;pointer-events:none}
+
+/* ── 7 / 11. Curtain wipe between boards. */
+.level-wipe{position:absolute;inset:0;z-index:14;pointer-events:none}
+.level-wipe>*{position:absolute;inset:0;clip-path:inset(0 100% 0 0)}
+.level-wipe-accent{background:#9bcc5d}
+.level-wipe-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#252e20;color:#f2f6ea}
+.level-wipe-panel span{font:600 13px "Barlow Condensed",var(--font);letter-spacing:5px;color:#9bcc5d}
+.level-wipe-panel strong{display:flex;flex-direction:column;height:1em;overflow:hidden;font:700 clamp(64px,14vw,132px)/1 "Barlow Condensed",var(--font);letter-spacing:2px}
+.level-wipe-panel strong b{display:block;height:1em;font:inherit}
+.level-wipe-panel strong b:last-child:not(:first-child){color:#c4f589}
+.level-wipe-panel em{font-style:normal;font-size:12px;letter-spacing:2px;color:#a9b69b}
+
+/* Level tag odometer. */
+.level-tag{position:relative;overflow:hidden}
+.level-ghost{position:absolute;pointer-events:none}
+
+/* ── 3. Draft deal: cards flip on a 3D stage (animation lives in transitions.js). */
+#skill-draft .draft-options{perspective:1100px}
+#skill-draft .skill-card{animation:none!important;transform-style:preserve-3d;backface-visibility:hidden}
+#skill-draft .skill-card.deal-glint{position:relative;overflow:hidden}
+#skill-draft .skill-card.deal-glint::before{content:"";position:absolute;inset:-20% -60%;pointer-events:none;background:linear-gradient(110deg,transparent 42%,#fff8d8d0 50%,transparent 58%);translate:-70% 0;animation:deal-glint .8s var(--glint-delay,.6s) cubic-bezier(.3,0,.2,1) both}
+#skill-draft .skill-card.deal-glint:has(.skill-rarity[data-tier="blue"])::before{background:linear-gradient(110deg,transparent 42%,#dff0ffc0 50%,transparent 58%)}
+@keyframes deal-glint{to{translate:70% 0}}
+
+/* ── 9 / 10. Morph dialogs animate from JS; retire their CSS entrances. */
+dialog.is-morph[open]{animation:none!important}
+dialog.is-morph::backdrop{animation:none!important}
+
+@media(prefers-reduced-motion:reduce){
+  #game-intro.is-leaving,#game-intro.is-leaving::backdrop,#game-intro.is-leaving .intro-stage,
+  .intro-revealing .site-header,.intro-revealing .workspace,
+  .overlay:not([hidden]),.overlay:not([hidden])>*,.overlay.is-leaving,.overlay.is-leaving>*,
+  #skill-draft .skill-card.deal-glint::before{animation:none!important}
+  .arena canvas{transition:none}
+}

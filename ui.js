@@ -62,23 +62,32 @@
   };
   let toastTimer;
   G.toast=text=>{$('toast').textContent=text;$('toast').classList.add('visible');$('notice-dock').classList.add('has-toast');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').classList.remove('visible');$('notice-dock').classList.remove('has-toast');},2400);};
+  // The overlay fades the arena to grey on the way in and hands colour back on the way out.
+  let overlayTimer=0;
+  const showOverlay=show=>{
+    const overlay=$('overlay');clearTimeout(overlayTimer);
+    $('arena').classList.toggle('is-paused',show);
+    if(show){overlay.classList.remove('is-leaving');overlay.hidden=false;return;}
+    if(overlay.hidden)return;
+    if(G.reduced){overlay.hidden=true;return;}
+    overlay.classList.add('is-leaving');
+    overlayTimer=setTimeout(()=>{overlay.hidden=true;overlay.classList.remove('is-leaving');},260);
+  };
   const pause=value=>{
     if(document.getElementById('skill-library')?.open)return;
-    if(G.phase==='draft')value=false;G.paused=value;G.audio.sync();G.drag=null;G.pointer=null;$('overlay').hidden=!value;G.ui();
+    if(G.phase==='draft')value=false;G.paused=value;G.audio.sync();G.drag=null;G.pointer=null;showOverlay(value);G.ui();
+    // A short input lock stops the tap on "继续游戏" from also loosing an arrow.
+    if(!value)G.lockInput?.(260);
   };
   $('resume').onclick=()=>pause(false);
   let wasPaused=false;
   $('reset').onclick=()=>{wasPaused=G.paused;pause(true);$('reset-dialog').showModal();};
   $('cancel-reset').onclick=()=>$('reset-dialog').close();
   $('reset-dialog').addEventListener('close',()=>pause(wasPaused));
-  $('confirm-reset').onclick=()=>{G.reset();wasPaused=false;$('reset-dialog').close();G.toast('新的开始 · LEVEL 1');};
-  const shop=$('shop');let shopClosing=false;
-  const closeShop=()=>{
-    if(!shop.open||shopClosing)return;
-    shopClosing=true;shop.classList.add('is-closing');
-    const finish=()=>{shop.classList.remove('is-closing');shopClosing=false;shop.close();};
-    if(G.reduced)finish();else shop.addEventListener('animationend',finish,{once:true});
-  };
+  $('confirm-reset').onclick=()=>{wasPaused=false;$('reset-dialog').close();if(G.rewind)G.rewind();else{G.reset();G.toast('新的开始 · LEVEL 1');}};
+  const shop=$('shop');
+  // transitions.js animates dialog.close(): the shop folds back into its trigger.
+  const closeShop=()=>shop.close();
   $('shop-trigger').onclick=()=>{G.drag=null;G.pointer=null;shop.showModal();};
   $('close-shop').onclick=closeShop;
   shop.addEventListener('cancel',e=>{e.preventDefault();closeShop();});

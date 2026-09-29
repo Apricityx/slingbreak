@@ -204,6 +204,32 @@ test('weighted draws exclude all equipped slots and probabilities reflect the sm
   for(let i=0;i<n;i++)for(const id of G.rollSkills()){assert.equal(G.skillRank(id),0);counts[id]++;}
   for(const s of G.skillCatalog){assert.ok(Math.abs(counts[s.id]/n-s.chance)<.007,s.id);if(G.skillRank(s.id))assert.equal(s.chance,0);}
 });
+test('a rarer equipped loadout lowers the next draft odds for rare and legendary skills',()=>{
+  const plain=boot().G;plain.state.level=100;plain.rollSkills();
+  const byId=new Map(plain.skillCatalog.map(s=>[s.id,s]));
+  assert.equal(plain.skillRarityPressure(),0);
+  const baseGold=byId.get('meteor').chance,baseWhite=byId.get('echo').chance;
+  // One rare adds a single point of pressure and thins only the rare tiers.
+  const rare=ready('titan').G;rare.state.level=100;rare.rollSkills();
+  const rareById=new Map(rare.skillCatalog.map(s=>[s.id,s]));
+  assert.equal(rare.skillRarityPressure(),1);
+  assert.equal(rareById.get('echo').drawWeight,byId.get('echo').weight);
+  assert.ok(rareById.get('meteor').drawWeight<byId.get('meteor').weight);
+  assert.ok(rareById.get('meteor').chance<baseGold);
+  assert.ok(rareById.get('echo').chance>baseWhite);
+  for(const G of [plain,rare])assert.ok(Math.abs(G.skillCatalog.reduce((sum,s)=>sum+s.chance,0)-3)<1e-10);
+  // A full legendary loadout pushes hardest, yet never inverts the tier ordering.
+  const full=ready(['titan','ice','railgun','reaper']).G;full.state.level=100;full.rollSkills();
+  assert.equal(full.skillRarityPressure(),6);
+  const fullById=new Map(full.skillCatalog.map(s=>[s.id,s]));
+  const drawable=full.skillCatalog.filter(s=>s.chance>0);
+  assert.ok(fullById.get('meteor').drawWeight<rareById.get('meteor').drawWeight);
+  assert.ok(fullById.get('echo').drawWeight===byId.get('echo').weight);
+  assert.ok(Math.min(...drawable.filter(s=>s.tier==='white').map(s=>s.chance))>Math.max(...drawable.filter(s=>s.tier==='blue').map(s=>s.chance)));
+  assert.ok(Math.min(...drawable.filter(s=>s.tier==='blue').map(s=>s.chance))>Math.max(...drawable.filter(s=>s.tier==='gold').map(s=>s.chance)));
+  // Equipped skills still leave the pool, and lower rarities recover the mass.
+  assert.equal(fullById.get('titan').chance,0);assert.equal(fullById.get('railgun').chance,0);
+});
 test('new arrow builds deliver their advertised damage, cadence and projectile counts',()=>{
   const rapid=ready('rapid').G;rapid.shoot(0,100);assert.equal(rapid.nextShotAt,.18);assert.equal(rapid.arrows[0].damage,2.7);
   const heavy=ready('heavy').G;assert.equal(heavy.damage(),3.6);assert.equal(heavy.penetration(),4);
