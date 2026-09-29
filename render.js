@@ -4,7 +4,7 @@
   const brickInks={normal:'#75944f',bomb:'#9e4935',lightning:'#8f792e',frost:'#4f8d9e',prism:'#796099',gold:'#809142'};
   // Hide the board only while the skill draft dialog is actually open.
   const draftDialog=document.getElementById('skill-draft');
-  const draftModalOpen=()=>G.phase==='draft'&&!!draftDialog?.open;
+  const draftModalOpen=()=>G.holdDraft||G.phase==='draft'&&!!draftDialog?.open;
   let hpLabels=new WeakMap();
   document.fonts?.addEventListener('loadingdone',()=>{hpLabels=new WeakMap();});
   const hpLabel=b=>{
@@ -70,8 +70,21 @@
   }
   function drawCore(){
     const c=G.core;if(!c)return;
-    const age=G.time-c.born,entrance=Math.min(1,age/1.1),pulse=Math.sin(G.time*3);
-    ctx.save();ctx.translate(c.x,c.y);ctx.scale(entrance,entrance);
+    const age=G.time-c.born,pulse=Math.sin(G.time*3);
+    // Materialise: a scan line sweeps in, four brackets converge, then the
+    // diamond snaps into place with an elastic overshoot and a quarter spin.
+    const t=Math.max(0,Math.min(1,(age-.25)/.85)),entrance=t===0?0:t===1?1:2**(-10*t)*Math.sin((t*10-.75)*2*Math.PI/3)+1;
+    if(age<1.2){
+      const sweep=Math.min(1,age/.45),fade=1-Math.max(0,(age-.6)/.6);
+      ctx.save();ctx.globalAlpha=fade*.8;ctx.strokeStyle='#a4d65e';ctx.lineWidth=2;
+      line(c.x-330*sweep,c.y,c.x-60,c.y,'#a4d65e',2);line(c.x+60,c.y,c.x+330*sweep,c.y,'#a4d65e',2);
+      const gap=58-38*Math.min(1,age/.5)**2,arm=12;
+      for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){
+        ctx.beginPath();ctx.moveTo(c.x+sx*gap,c.y+sy*(gap-arm));ctx.lineTo(c.x+sx*gap,c.y+sy*gap);ctx.lineTo(c.x+sx*(gap-arm),c.y+sy*gap);ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.save();ctx.translate(c.x,c.y);ctx.scale(entrance,entrance);ctx.rotate((1-Math.min(1,t*1.4))*-Math.PI/2);
     ctx.strokeStyle='#a4cd72';ctx.lineWidth=1;ctx.globalAlpha=.5;
     for(let i=0;i<2;i++){ctx.save();ctx.rotate(G.time*(i?-.5:.4));ctx.setLineDash([12,8,3,8]);ctx.beginPath();ctx.arc(0,0,40+i*10+pulse*2,0,Math.PI*2);ctx.stroke();ctx.restore();}
     ctx.globalAlpha=1;ctx.rotate(Math.PI/4);ctx.shadowColor='#a2d865';ctx.shadowBlur=G.reduced?0:18+pulse*6;rounded(-21,-21,42,42,4,'#b6ed66');ctx.shadowBlur=0;ctx.strokeStyle='#608938';ctx.lineWidth=1.5;ctx.strokeRect(-14,-14,28,28);ctx.fillStyle='#5a7b38';ctx.fillRect(-4,-4,8,8);ctx.restore();
@@ -139,6 +152,17 @@
   function boardItemEntrance(item){
     ctx.save();
     if(!G.boardEntrance)return 1;
+    const o=G.boardEntrance.origin;
+    if(o){
+      // Impact ripple: bricks pop in outward from where the drafted skill landed,
+      // blown slightly away from the origin before springing back into place.
+      const dx=item.x-o.x,dy=item.y-o.y,d=Math.hypot(dx,dy)||1;
+      const p=Math.max(0,Math.min(1,(G.time-G.boardEntrance.start-Math.min(.55,d/1600))/.46));
+      const back=1+2.70158*(p-1)**3+1.70158*(p-1)**2,push=24*(1-p)**2,size=.72+.28*back;
+      ctx.translate(item.x+dx/d*push,item.y+dy/d*push);ctx.scale(size,size);ctx.translate(-item.x,-item.y);
+      const alpha=Math.min(1,p*2.4);ctx.globalAlpha=alpha;
+      return alpha;
+    }
     const delay=Math.max(0,(item.y-170)/60)*.035+(item.x/780)*.045;
     const progress=Math.max(0,Math.min(1,(G.time-G.boardEntrance.start-delay)/.42));
     const eased=1-(1-progress)**3,size=.88+.12*eased;

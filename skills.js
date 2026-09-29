@@ -155,22 +155,31 @@
   }
   normalize();
   let chanceKey=null;
+  // Rarity pressure: the rarer the equipped skills, the more often the next
+  // drafts push back by thinning out the rarer end of the pool. Ordinary skills
+  // add nothing; each equipped rare adds 1 and each legendary adds 2, so a full
+  // legendary loadout reaches 8. drawWeight then scales the base weight down as
+  // the tier rises, keeping every tier's relative ordering intact.
+  const raritySlowdown={white:0,blue:.2,gold:.4};
+  G.skillRarityPressure=()=>G.activeSkills().reduce((sum,skill)=>sum+G.skillTiers[skill.tier].level-1,0);
   function draftPool(){
     // Skills with a minLevel stay out of the draw until the run reaches them.
     const pool=catalog.filter(s=>!rank(s.id)&&S.level>=(s.minLevel||1)),key=Object.keys(S.skills).join(',')+'@'+S.level;
     if(key!==chanceKey){
-      chanceKey=key;catalog.forEach(s=>s.chance=0);
-      const total=pool.reduce((sum,s)=>sum+s.weight,0);
+      chanceKey=key;catalog.forEach(s=>{s.chance=0;s.drawWeight=s.weight;});
+      const pressure=G.skillRarityPressure();
+      for(const s of pool)s.drawWeight=s.weight/(1+raritySlowdown[s.tier]*pressure);
+      const total=pool.reduce((sum,s)=>sum+s.drawWeight,0);
       // Add the probability of selection in each of the three draw positions.
       // Accumulating the remaining-weight factor keeps this quadratic.
-      for(const s of pool)s.chance=s.weight/total;
+      for(const s of pool)s.chance=s.drawWeight/total;
       for(const a of pool){
-        const first=a.weight/total,remaining=total-a.weight;
+        const first=a.drawWeight/total,remaining=total-a.drawWeight;
         let thirdFactor=0;
-        for(const b of pool)if(b!==a)thirdFactor+=b.weight/remaining/(remaining-b.weight);
+        for(const b of pool)if(b!==a)thirdFactor+=b.drawWeight/remaining/(remaining-b.drawWeight);
         for(const s of pool)if(s!==a){
-          s.chance+=first*s.weight/remaining;
-          s.chance+=first*s.weight*(thirdFactor-s.weight/remaining/(remaining-s.weight));
+          s.chance+=first*s.drawWeight/remaining;
+          s.chance+=first*s.drawWeight*(thirdFactor-s.drawWeight/remaining/(remaining-s.drawWeight));
         }
       }
     }
@@ -179,8 +188,8 @@
   G.rollSkills=()=>{
     const pool=draftPool(),selected=[];
     while(selected.length<3&&pool.length){
-      let roll=Math.random()*pool.reduce((sum,s)=>sum+s.weight,0),index=pool.length-1;
-      for(let i=0;i<pool.length;i++){roll-=pool[i].weight;if(roll<0){index=i;break;}}
+      let roll=Math.random()*pool.reduce((sum,s)=>sum+s.drawWeight,0),index=pool.length-1;
+      for(let i=0;i<pool.length;i++){roll-=pool[i].drawWeight;if(roll<0){index=i;break;}}
       selected.push(pool.splice(index,1)[0].id);
     }
     return selected;
