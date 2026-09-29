@@ -40,7 +40,7 @@
       card.style.setProperty('--pick-color',color);card.classList.add('is-picked');
       const lift=play(card,[{translate:'0 0',scale:'1'},{translate:'0 -10px',scale:'1.04'}],{duration:300,easing:spring});
       cards.filter(c=>c!==card).forEach((c,i)=>play(c,[{opacity:1,translate:'0 0',rotate:'0deg',scale:'1'},{opacity:0,translate:'0 34px',rotate:(c.compareDocumentPosition(card)&Node.DOCUMENT_POSITION_FOLLOWING?-4:4)+'deg',scale:'.92'}],{duration:260,delay:40+i*50,easing:'cubic-bezier(.5,0,.75,0)'}));
-      for(const el of [draft.querySelector('.draft-header'),$('draft-rule'),$('draft-loadout')])play(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -8px'}],{duration:220,easing:'ease-in'});
+      for(const el of [draft.querySelector('.draft-header'),draft.querySelector('.draft-footer'),$('draft-loadout')])play(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -8px'}],{duration:220,easing:'ease-in'});
       await waitForAnimations([lift],500);
       await new Promise(r=>setTimeout(r,90));
       // Beat 2: flight. The ghost is a popover so it stays above the modal dialog.
@@ -51,7 +51,7 @@
       const before=new Map(slots.filter(s=>s.dataset.skill).map(s=>[s.dataset.skill,s.getBoundingClientRect()]));
       ghost=document.createElement('div');ghost.className='skill-flight';ghost.setAttribute('aria-hidden','true');
       ghost.style.setProperty('--pick-color',color);
-      ghost.innerHTML=`<div class="skill-flight-card skill-card" style="width:${from.width}px;height:${from.height}px">${card.innerHTML}</div><span class="skill-flight-slot skill-queue-slot"><b><i data-lucide="${skill.icon}"></i>${skill.name}</b></span>`;
+      ghost.innerHTML=`<div class="skill-flight-card skill-card" data-tier="${skill.tier}" style="--skill-color:${G.skillColor(id)};width:${from.width}px;height:${from.height}px">${card.innerHTML.replace(/ id="[^"]*"/g,'')}</div><span class="skill-flight-slot skill-queue-slot"><b><i data-lucide="${skill.icon}"></i>${skill.name}</b></span>`;
       Object.assign(ghost.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
       document.body.append(ghost);lucide.createIcons({root:ghost});
       if(ghost.showPopover){ghost.popover='manual';ghost.showPopover();}
@@ -128,21 +128,39 @@
       const nextKey=JSON.stringify(G.state.draft)+key;
       if(nextKey!==draftKey){
          draftKey=nextKey;$('draft-options').replaceChildren();
+         const options=G.state.draft.options;
+         $('draft-kicker').textContent=`第 ${G.state.level} 关 · ${options.length===3?'三选一':`${options.length} 选 1`}`;
          $('draft-count').textContent=`${owned.length} / ${G.skillSlots} 已装备`;
-         $('draft-rule').textContent=outgoing?`选入新技能后，自动替换最早获得的「${outgoing.name}」，其余 ${G.skillSlots-1} 个技能继续生效。${rarityNote()}`:`每关选入 1 个技能，跨关保留；满 ${G.skillSlots} 个后，按获得顺序自动替换最早的技能。${rarityNote()}`;
+         $('draft-rule').textContent=outgoing?`满槽：选入后替换最早获得的「${outgoing.name}」，其余 ${G.skillSlots-1} 个继续生效。${rarityNote()}`:`技能跨关保留；满 ${G.skillSlots} 个后按获得顺序替换最早的技能。${rarityNote()}`;
          $('draft-loadout').replaceChildren();
+         $('draft-loadout').style.setProperty('--slots',G.skillSlots);
          for(let i=0;i<G.skillSlots;i++){
            const skill=owned[i],slot=document.createElement('span');
            slot.className='skill-queue-slot'+(!skill?' is-empty':skill===outgoing?' is-outgoing':'');
-           slot.innerHTML=`<b>${skill?`<i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}`:'等待加入'}</b>`;
-           if(skill)slot.title=skill.describe(1);$('draft-loadout').append(slot);
+           slot.innerHTML=`<b>${skill?`<i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}`:'等待加入'}</b><b class="slot-preview" aria-hidden="true"></b>`;
+           if(skill){slot.title=skill.describe(1);slot.style.setProperty('--skill-color',G.skillColor(skill.id));}
+           $('draft-loadout').append(slot);
          }
-         for(const id of G.state.draft.options){
+         // The slot this pick lands in: the outgoing one when full, else the first empty.
+         const target=$('draft-loadout').children[outgoing?0:owned.length];
+         options.forEach((id,i)=>{
            const skill=G.skillCatalog.find(s=>s.id===id),button=document.createElement('button');
-           button.className='skill-card';button.dataset.skill=id;button.setAttribute('aria-label',`加入${skill.name}${outgoing?`，自动替换${outgoing.name}`:''}`);
-            button.innerHTML=`<span class="skill-card-top"><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span>${rarity(skill)}</span><h3>${skill.name}</h3><span class="skill-family">${skill.family} / 跨关生效</span><p>${skill.describe(1)}</p>${chance(skill)}<span class="skill-pick">加入技能槽<i data-lucide="arrow-up-right"></i></span>`;
-           button.onclick=()=>selectSkill(id);$('draft-options').append(button);
-        }
+           button.className='skill-card';button.dataset.skill=id;button.dataset.tier=skill.tier;
+           button.style.setProperty('--skill-color',G.skillColor(id));
+           button.setAttribute('aria-keyshortcuts',String(i+1));
+           button.setAttribute('aria-labelledby',`draft-card-${i}-name draft-card-${i}-tier draft-card-${i}-pick`);
+           button.setAttribute('aria-describedby',`draft-card-${i}-desc`);
+           button.innerHTML=`<span class="skill-card-art" aria-hidden="true"><span class="skill-emblem"><i data-lucide="${skill.icon}"></i></span><kbd class="skill-key">${i+1}</kbd></span><span id="draft-card-${i}-tier" class="skill-card-tier">${rarity(skill)}</span><span class="skill-card-body"><strong id="draft-card-${i}-name" class="skill-card-name">${skill.name}</strong><span class="skill-family">${skill.family} · 跨关生效</span><span id="draft-card-${i}-desc" class="skill-card-desc">${skill.describe(1)}</span>${chance(skill)}</span><span id="draft-card-${i}-pick" class="skill-pick${outgoing?' is-swap':''}"><span>${outgoing?`替换「${outgoing.name}」`:'加入技能槽'}</span><i data-lucide="${outgoing?'arrow-left-right':'arrow-up-right'}"></i></span>`;
+           const preview=on=>{
+             if(!target||selecting&&!on)return;
+             target.classList.toggle('is-previewing',on);
+             if(on)target.lastElementChild.innerHTML=button.querySelector('.skill-emblem').innerHTML+skill.name;
+             target.style.setProperty('--preview-color',G.skillColor(id));
+           };
+           button.onpointerenter=()=>preview(true);button.onpointerleave=()=>preview(false);
+           button.onfocus=()=>{if(button.matches(':focus-visible'))preview(true);};button.onblur=()=>preview(false);
+           button.onclick=()=>{preview(true);selectSkill(id);};$('draft-options').append(button);
+        });
         icons();
       }
       if(!G.holdDraft&&!draft.open&&!window.SlingBreakIntro?.active&&!document.querySelector('dialog[open]'))draft.showModal();
@@ -164,7 +182,18 @@
        });
    };
   draft.addEventListener('cancel',e=>e.preventDefault());
-  draft.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation();});
+  draft.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.stopPropagation();return;}
+    if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
+    const cards=[...$('draft-options').children];
+    // 1/2/3 pick directly; arrows walk the row (grid is a column on mobile).
+    const n=Number(e.key);
+    if(n>=1&&n<=cards.length){e.preventDefault();cards[n-1].click();return;}
+    const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key];
+    if(!step)return;
+    const at=cards.indexOf(document.activeElement),next=at<0?(step>0?0:cards.length-1):(at+step+cards.length)%cards.length;
+    e.preventDefault();cards[next]?.focus();
+  });
   $('open-skills').onclick=()=>{
     libraryPaused=G.paused;G.paused=true;G.drag=null;G.audio.sync();$('library-grid').replaceChildren();
      const owned=G.activeSkills();

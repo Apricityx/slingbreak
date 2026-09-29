@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="juice.css">
   <link rel="stylesheet" href="settings.css">
   <link rel="stylesheet" href="achievements-fx.css">
+  <link rel="stylesheet" href="draft.css">
   <script>window.SlingBreakIntro = {active: true}; document.documentElement.classList.add('intro-pending'); if (new URLSearchParams(location.search).get('launcher') === '1') document.documentElement.classList.add('launcher-mode-pending');</script>
 </head>
 <body>
@@ -72,7 +73,7 @@
   </main>
   <dialog id="shop" aria-labelledby="shop-title"><div class="shop-panel"><div class="shop-heading"><div><span class="eyebrow">UPGRADE SHOP</span><h2 id="shop-title">整装，再出发</h2></div><button id="close-shop" class="icon-button" type="button" aria-label="关闭升级商店"><i data-lucide="x"></i></button></div><p class="shop-intro">花费本轮金币，强化下一支箭的能力。</p><div class="shop-balance"><span>可用金币</span><strong>¥ <b id="shop-balance">0</b></strong></div><section class="upgrades-section"><div class="upgrade-list" id="upgrades"></div></section></div></dialog>
   <dialog id="reset-dialog"><h2>从第一箭重新开始？</h2><p>当前关卡、金币与升级将被清空。</p><div><button class="secondary-button" id="cancel-reset">取消</button><button class="primary-button" id="confirm-reset">重新开始</button></div></dialog>
-   <dialog id="skill-draft" aria-labelledby="draft-title" aria-describedby="draft-rule"><div class="draft-header"><h2 id="draft-title">加入下一块拼图</h2><span id="draft-count" class="draft-level">0 / 4</span></div><p id="draft-rule" class="draft-intro"></p><div id="draft-loadout" class="skill-queue" aria-label="当前技能，按获得顺序排列"></div><div id="draft-options" class="draft-options"></div></dialog>
+   <dialog id="skill-draft" aria-labelledby="draft-title" aria-describedby="draft-rule"><div class="draft-header"><div class="draft-heading"><span id="draft-kicker" class="draft-kicker"></span><h2 id="draft-title">加入下一块拼图</h2></div><span id="draft-count" class="draft-level">0 / 4</span></div><div id="draft-loadout" class="skill-queue" aria-label="当前技能，按获得顺序排列"></div><div id="draft-options" class="draft-options"></div><div class="draft-footer"><p id="draft-rule" class="draft-intro"></p><span class="draft-keys" aria-hidden="true"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 快速选择</span></div></dialog>
    <dialog id="skill-library" aria-labelledby="library-title"><div class="draft-header"><h2 id="library-title">我的构筑</h2><button id="close-skills" class="icon-button" type="button" aria-label="关闭技能详情"><i data-lucide="x"></i></button></div><p class="draft-intro">按获得顺序排列 · 跨关生效 · 满槽时自动替换最早的技能</p><div id="library-grid" class="library-grid"></div></dialog>
    <dialog id="skill-detail" aria-labelledby="skill-detail-name"><div class="skill-detail-card"><div class="skill-detail-head"><span class="skill-emblem" id="skill-detail-emblem"></span><div class="skill-detail-title"><h2 id="skill-detail-name"></h2><span class="skill-family" id="skill-detail-family"></span></div><button id="close-skill-detail" class="icon-button" type="button" aria-label="关闭技能说明"><i data-lucide="x"></i></button></div><div class="skill-detail-meta" id="skill-detail-meta"></div><p class="skill-detail-text" id="skill-detail-text"></p></div></dialog>
   <dialog id="settings" aria-labelledby="settings-title"><div class="settings-panel">
