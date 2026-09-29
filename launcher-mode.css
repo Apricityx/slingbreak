@@ -2,6 +2,8 @@
 
 .launcher-mode-pending .launcher-progress{display:grid}
 .launcher-mode .brand{display:none}
+/* The fullscreen toggle belongs to the standalone page, not the native launcher shell. */
+.launcher-mode .fullscreen-toggle,.launcher-mode-pending .fullscreen-toggle{display:none}
 .launcher-mode .site-header{position:relative;display:flex;height:calc(58px + env(safe-area-inset-top));min-height:calc(58px + env(safe-area-inset-top));flex-shrink:0;padding:env(safe-area-inset-top) 12px 0;gap:8px;background:#f5f6f3;border-bottom:1px solid #ccd4c4}
 .launcher-mode .header-right{position:static;flex-shrink:0}
 .launcher-mode .header-right:empty{display:none}

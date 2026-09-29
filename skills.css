@@ -52,10 +52,17 @@
 .skill-queue-slot{display:flex;flex-direction:column;gap:5px;min-width:0;padding:9px 10px;border:1px solid #d6dfcc;border-radius:5px;background:#edf2e7;color:#526340;text-align:left}
 .skill-queue-slot b{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}.skill-queue-slot b svg{width:15px;height:15px;flex:0 0 15px;stroke-width:1.8}
 .skill-queue-slot.is-empty{background:transparent;border-style:dashed;color:#8a9380}
+/* Every slot is as tall as the longest skill name would be at this width: an
+   invisible copy (icon gap included) shares the grid cell with the real label,
+   so equipping a name that wraps never changes the row height. */
+.skill-queue-slot{display:grid;grid-template-areas:"slot";align-content:center}
+.skill-queue-slot>b,.skill-queue-slot::after{grid-area:slot}
+.skill-queue-slot::after{content:var(--skill-name-sizer,"");visibility:hidden;pointer-events:none;padding-left:20px;font-size:12px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.skill-flight-slot::after{content:none}
 .skill-queue-slot.is-outgoing,.owned-skills .is-outgoing{background:#f6eee1;border-color:#d8b88c;color:#916b38}
 .draft-header h2{margin-bottom:0!important}.draft-header .draft-level{white-space:nowrap}
 #skill-library .library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:720px){.skill-queue{gap:5px}.skill-queue-slot{padding:7px 6px}.skill-queue-slot b{font-size:11px}#draft-loadout{margin-bottom:12px}#skill-library .library-grid{grid-template-columns:1fr}}
+@media(max-width:720px){.skill-queue{gap:5px}.skill-queue-slot{padding:7px 6px}.skill-queue-slot b,.skill-queue-slot::after{font-size:11px}#draft-loadout{margin-bottom:12px}#skill-library .library-grid{grid-template-columns:1fr}}
 
 /* ── Draft → board transition (skills-ui.js selectSkill) ── */
 #skill-draft .skill-card.is-picked{position:relative;overflow:hidden;border-color:var(--pick-color)!important;box-shadow:0 18px 40px -12px var(--pick-color),0 0 0 3px color-mix(in srgb,var(--pick-color) 22%,transparent)!important;z-index:1}
