@@ -6,6 +6,9 @@
   if (!button) return;
 
   const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const homeScreen = window.SlingHomeScreen;
+  const canFullscreen = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  const appleFallback = () => homeScreen?.isAppleMobile() && !canFullscreen();
   // `icon:` keys are how vendor/build-lucide-subset.cjs discovers dynamic icons.
   const ICONS = { inactive: {icon: 'maximize'}, active: {icon: 'minimize'} };
 
@@ -17,7 +20,10 @@
       icon.setAttribute('data-lucide', name);
       window.lucide?.createIcons?.();
     }
-    const label = active ? '退出全屏' : '进入全屏';
+    // An installed iPhone web app already hides browser chrome. Do not offer a
+    // nonfunctional fullscreen toggle, or ask it to install itself again.
+    button.hidden = !!(appleFallback() && homeScreen.isStandalone());
+    const label = active ? '退出全屏' : appleFallback() ? '添加到主屏幕，隐藏浏览器工具栏' : '进入全屏';
     if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
     button.title = label;
     button.setAttribute('aria-pressed', String(active));
@@ -30,12 +36,24 @@
   const exitFullscreen = () => document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen?.();
 
   button.addEventListener('click', () => {
-    const action = fullscreenElement() ? exitFullscreen() : requestFullscreen();
-    // Browsers reject untrusted requests; swallow the rejection so the button stays usable.
-    Promise.resolve(action).catch(() => {});
+    if (appleFallback()) {
+      if (!homeScreen.isStandalone()) homeScreen.showGuide();
+      return;
+    }
+    const failed = () => {
+      if (homeScreen?.isAppleMobile() && !homeScreen.isStandalone()) homeScreen.showGuide();
+      else button.title = '全屏请求被浏览器阻止，请检查浏览器权限。';
+    };
+    try {
+      const action = fullscreenElement() ? exitFullscreen() : requestFullscreen();
+      Promise.resolve(action).catch(failed);
+    } catch {
+      failed();
+    }
   });
 
   document.addEventListener('fullscreenchange', render);
   document.addEventListener('webkitfullscreenchange', render);
+  window.addEventListener?.('pageshow', render);
   render();
 })();

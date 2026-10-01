@@ -1,7 +1,6 @@
 (() => {
   const G=Game,$=id=>document.getElementById(id),draft=$('skill-draft'),library=$('skill-library');
   const baseUi=G.ui;let draftKey='',ownedKey='',libraryPaused=false,selecting=false;
-  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   function waitForAnimations(animations,timeout=700){
     return new Promise(resolve=>{
       let settled=false;
@@ -14,6 +13,10 @@
   const spring='cubic-bezier(.2,1.3,.4,1)';
   const hudQueue=()=>document.querySelector('.skill-live .skill-queue');
   const onScreen=r=>r.width>0&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;
+  // The flight ghost lives on <body>, zoomed by the stage scale, and slots sit
+  // inside the scaled stage: both take client px ÷ k.
+  const zk=()=>window.SlingStage?.k||1;
+  const zoomRect=r=>{const k=zk();return{left:r.left/k,top:r.top/k,width:r.width/k,height:r.height/k};};
   // Draft → board, in three beats:
   // 1. commit  – the pick lifts and shines while the other two cards fall away;
   // 2. flight  – a ghost leaves the dialog and arcs into its HUD slot, morphing
@@ -32,7 +35,7 @@
     cards.forEach(c=>c.disabled=true);
     draft.classList.add('is-selecting');
     try{
-      if(reducedMotion.matches||!card){
+      if(G.reduced||!card){
         if(G.chooseSkill(id)){draft.close();$('game').focus({preventScroll:true});}
         return;
       }
@@ -40,15 +43,16 @@
       card.style.setProperty('--pick-color',color);card.classList.add('is-picked');
       const lift=play(card,[{translate:'0 0',scale:'1'},{translate:'0 -10px',scale:'1.04'}],{duration:300,easing:spring});
       cards.filter(c=>c!==card).forEach((c,i)=>play(c,[{opacity:1,translate:'0 0',rotate:'0deg',scale:'1'},{opacity:0,translate:'0 34px',rotate:(c.compareDocumentPosition(card)&Node.DOCUMENT_POSITION_FOLLOWING?-4:4)+'deg',scale:'.92'}],{duration:260,delay:40+i*50,easing:'cubic-bezier(.5,0,.75,0)'}));
-      for(const el of [draft.querySelector('.draft-header'),draft.querySelector('.draft-footer'),$('draft-loadout')])play(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -8px'}],{duration:220,easing:'ease-in'});
+      for(const el of [draft.querySelector('.draft-header'),$('draft-loadout')])play(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -8px'}],{duration:220,easing:'ease-in'});
       await waitForAnimations([lift],500);
       await new Promise(r=>setTimeout(r,90));
       // Beat 2: flight. The ghost is a popover so it stays above the modal dialog.
-      const from=card.getBoundingClientRect(),owned=G.activeSkills(),full=owned.length===G.skillSlots;
+      const from=zoomRect(card.getBoundingClientRect()),owned=G.activeSkills(),full=owned.length===G.skillSlots;
       const queue=hudQueue(),slots=queue?[...queue.children]:[],targetSlot=slots[full?slots.length-1:owned.length];
       let to=targetSlot?.getBoundingClientRect();
-      if(!to||!onScreen(to)){const r=$('game').getBoundingClientRect();to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
-      const before=new Map(slots.filter(s=>s.dataset.skill).map(s=>[s.dataset.skill,s.getBoundingClientRect()]));
+      if(!to||!onScreen(to)){const r=zoomRect($('game').getBoundingClientRect());to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
+      else to=zoomRect(to);
+      const before=new Map(slots.filter(s=>s.dataset.skill).map(s=>[s.dataset.skill,zoomRect(s.getBoundingClientRect())]));
       ghost=document.createElement('div');ghost.className='skill-flight';ghost.setAttribute('aria-hidden','true');
       ghost.style.setProperty('--pick-color',color);
       ghost.innerHTML=`<div class="skill-flight-card skill-card" data-tier="${skill.tier}" style="--skill-color:${G.skillColor(id)};width:${from.width}px;height:${from.height}px">${card.innerHTML.replace(/ id="[^"]*"/g,'')}</div><span class="skill-flight-slot skill-queue-slot"><b><i data-lucide="${skill.icon}"></i>${skill.name}</b></span>`;
@@ -76,7 +80,7 @@
       if(landed)landed.style.visibility='hidden';
       for(const slot of hudQueue()?.children||[]){
         const old=before.get(slot.dataset.skill);if(!old||slot===landed)continue;
-        const now=slot.getBoundingClientRect();
+        const now=zoomRect(slot.getBoundingClientRect());
         slot.animate([{translate:`${old.left-now.left}px ${old.top-now.top}px`},{translate:'0 0'}],{duration:380,easing:spring});
       }
       if(full&&owned[0]){
@@ -95,7 +99,7 @@
         landed.animate([{scale:'1.14',boxShadow:`0 0 0 0 ${color}aa`},{scale:'.97',offset:.45},{scale:'1',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});
       }
       if(entrance&&G.boardEntrance===entrance){
-        const view=G.view,canvas=$('game').getBoundingClientRect();
+        const view=G.view,canvas=zoomRect($('game').getBoundingClientRect());
         const x=((to.left+to.width/2)-canvas.left-(view?.offsetX||0))/(view?.scale||1),y=((to.top+to.height/2)-canvas.top-(view?.offsetY||0))/(view?.scale||1);
         entrance.origin={x:Math.max(40,Math.min(G.W-40,x)),y:Math.max(-120,Math.min(160,y))};
         G.ring(entrance.origin.x,Math.max(60,entrance.origin.y),color,420);G.shake=Math.max(G.shake,6);
@@ -113,7 +117,6 @@
   const icons=()=>lucide.createIcons();
   const rarity=skill=>`<span class="skill-rarity" data-tier="${skill.tier}"><span class="rarity-dot"></span>${G.skillTiers[skill.tier].name}</span>`;
   const chance=skill=>`<span class="skill-chance" title="排除已装备技能后，按权重不重复抽取三个技能；已装备技能稀有度越高，本轮稀有/传说技能权重越低，此值已是调整后的出现率">本轮出现率 ${(skill.chance*100).toFixed(2)}%</span>`;
-  const rarityNote=()=>{const pressure=G.skillRarityPressure();return pressure?`已装备高稀有技能带来 ${pressure} 点稀有度压力，本轮稀有与传说技能出现率下调。`:'';};
   function update(){
     const owned=G.activeSkills(),outgoing=G.outgoingSkill(),key=JSON.stringify(G.state.skills);
     $('skill-count').textContent=`${owned.length} / ${G.skillSlots}`;
@@ -131,7 +134,6 @@
          const options=G.state.draft.options;
          $('draft-kicker').textContent=`第 ${G.state.level} 关 · ${options.length===3?'三选一':`${options.length} 选 1`}`;
          $('draft-count').textContent=`${owned.length} / ${G.skillSlots} 已装备`;
-         $('draft-rule').textContent=outgoing?`满槽：选入后替换最早获得的「${outgoing.name}」，其余 ${G.skillSlots-1} 个继续生效。${rarityNote()}`:`技能跨关保留；满 ${G.skillSlots} 个后按获得顺序替换最早的技能。${rarityNote()}`;
          $('draft-loadout').replaceChildren();
          $('draft-loadout').style.setProperty('--slots',G.skillSlots);
          for(let i=0;i<G.skillSlots;i++){

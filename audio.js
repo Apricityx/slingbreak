@@ -11,7 +11,7 @@
   // The native bridge exposes mute but not gain. Use Web Audio for partial
   // volumes rather than playing those sounds at the wrong level.
   const useNative=()=>enabled()&&G.state.volume===100;
-  const intervals={draw:.065,break:.018,boom:.055,lightning:.06,frost:.07,prism:.06,gold:.06,ricochet:.035,tap:.03};
+  const intervals={draw:.065,break:.018,boom:.055,lightning:.06,frost:.07,prism:.06,gold:.06,ricochet:.035,tap:.03,eyehit:.035,shatter:.05,void:.08,hydra:.05,anchor:.08,shard:.04,clang:.06,meteor:.08,bell:.2,chime:.05,timestop:.3,hiss:.4,devour:1,gulp:.2,regrow:.8,tick:.08,jam:.5};
   const native=window.createSlingNativeAudio?.({intervals,log,onReady(){
     // Switch only after every sample is uploaded and the native stream is running.
     if(!useNative()){native?.disable();return;}

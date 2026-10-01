@@ -195,7 +195,7 @@
   G.generate=(...args)=>{effects.length=0;cooldowns.clear();return generate(...args);};
   const stroke=(ctx,x,y,tx,ty)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const ring=(ctx,x,y,r)=>{ctx.beginPath();ctx.arc(x,y,Math.max(0,r),0,TAU);ctx.stroke();};
-  function drawEffect(ctx,e){
+  function drawEffect(ctx,e,light=true){
     const t=Math.max(0,Math.min(1,(G.time-e.born)/e.duration)),fade=(1-t)**.7,expand=G.reduced?1:1-(1-t)**3;
     ctx.save();ctx.strokeStyle=e.color;ctx.fillStyle=e.color;ctx.lineCap='round';ctx.globalAlpha=fade*.85;ctx.lineWidth=2;
     if(e.kind==='beam'){
@@ -221,42 +221,53 @@
     if(e.kind==='launch')ctx.rotate(e.angle||0);
     if(e.kind==='coin')ctx.translate(0,-t*35);
     const radius=Math.min(e.r,e.kind==='pickup'?115:e.kind==='nova'?190:115);
-    if(!G.reduced&&e.hero&&effects.length<24){ctx.shadowColor=e.accent;ctx.shadowBlur=8;}
+    // One soft lens-flare sprite, not a blur for every snowflake/ray stroke.
+    // Keep heroes luminous even in large chains; no 23 -> 24 quality cliff.
+    if(!G.reduced&&e.hero&&light)G.fx?.glow(ctx,0,0,radius*.7,e.accent,fade*.4);
     ctx.globalAlpha=fade*.9;
     G.paintSkillSignature(ctx,e.id,t,radius,e.color,e.accent,e.kind);
     ctx.restore();
   }
   function drawTrail(ctx,a,p,index){
     const trail=a.trail;if(trail.length<2)return;
-    const motion=G.reduced?0:G.time,style=p.trail;
-    const points=(offset=0,wave=false)=>trail.map((point,i)=>{
-      const next=trail[Math.min(i+1,trail.length-1)],previous=trail[Math.max(0,i-1)],dx=next.x-previous.x,dy=next.y-previous.y,length=Math.hypot(dx,dy)||1;
-      const bend=offset*(wave?Math.sin(i*.85-motion*9):1)*i/trail.length;
-      return{x:point.x-dy/length*bend,y:point.y+dx/length*bend};
-    });
-    const trace=(list,color,width,alpha)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.globalAlpha=alpha;ctx.beginPath();list.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();};
-    ctx.save();ctx.lineCap='round';
-    trace(trail,p.color,style==='heavy'?12:style==='comet'?10:6,.12);
-    if(style==='rail'){trace(points(-3),p.color,2,.6);trace(points(3),p.color,2,.6);trace(trail,p.accent,1.5,.9);}
-    else if(style==='helix'){trace(points(6,true),p.color,2,.65);trace(points(-6,true),p.accent,2,.8);}
-    else if(style==='echo'){trace(points(-5),p.color,2,.4);trace(points(5),p.accent,2,.5);ctx.setLineDash([8,5]);trace(trail,p.color,1.5,.8);}
-    else if(style==='fork'){trace(points(-6),p.color,1.5,.5);trace(points(6),p.accent,1.5,.7);trace(trail,p.color,2,.7);}
-    else if(style==='electric'||style==='zigzag'){
-      const jagged=trail.map((p,i)=>({x:p.x+(i%2?4:-4),y:p.y+(i%2?-3:3)}));trace(jagged,p.color,2,.8);trace(trail,p.accent,1,.75);
-    }else if(style==='dash'||style==='scan'){ctx.setLineDash(style==='scan'?[2,9]:[10,7]);trace(trail,p.color,2.5,.8);}
-    else if(style==='ribbon'||style==='flame'){trace(points(4,true),p.color,4,.55);trace(points(-3,true),p.accent,2,.8);}
-    else if(style==='comet'||style==='heavy'){trace(trail,p.color,style==='heavy'?5:4,.65);trace(trail,p.accent,1.5,.95);}
-    else trace(trail,p.color,1.5,.45);
+    const motion=G.reduced?0:G.time,style=p.trail,crowded=G.arrows.length>24;
+    const detailed=!G.reduced&&(!crowded||index<6||index>=G.arrows.length-2);
+    const trace=(color,width,alpha,offset=0,wave=false,jagged=false)=>{
+      ctx.strokeStyle=color;ctx.lineWidth=width;ctx.globalAlpha=alpha;ctx.beginPath();
+      const stride=crowded&&!detailed?2:1;
+      for(let i=0;i<trail.length;i+=stride){
+        const point=trail[i];let x=point.x,y=point.y;
+        if(offset){const next=trail[Math.min(i+1,trail.length-1)],previous=trail[Math.max(0,i-1)],dx=next.x-previous.x,dy=next.y-previous.y,length=Math.hypot(dx,dy)||1;
+          const bend=offset*(wave?Math.sin(i*.85-motion*9):1)*i/trail.length;x-=dy/length*bend;y+=dx/length*bend;
+        }else if(jagged){x+=i%2?4:-4;y+=i%2?-3:3;}
+        i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+      }
+      const last=trail.at(-1);ctx.lineTo(last.x,last.y);ctx.stroke();
+    };
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+    trace(p.color,style==='heavy'?10:8,.16);
+    if(!detailed){trace(p.color,3,.7);trace(p.accent,1.2,.9);}
+    else if(style==='rail'){trace(p.color,2,.6,-3);trace(p.color,2,.6,3);trace(p.accent,1.5,.9);}
+    else if(style==='helix'){trace(p.color,2,.65,6,true);trace(p.accent,2,.8,-6,true);}
+    else if(style==='echo'){trace(p.color,2,.4,-5);trace(p.accent,2,.5,5);ctx.setLineDash([8,5]);trace(p.color,1.5,.8);}
+    else if(style==='fork'){trace(p.color,1.5,.5,-6);trace(p.accent,1.5,.7,6);trace(p.color,2,.7);}
+    else if(style==='electric'||style==='zigzag'){trace(p.color,2,.8,0,false,true);trace(p.accent,1,.75);}
+    else if(style==='dash'||style==='scan'){ctx.setLineDash(style==='scan'?[2,9]:[10,7]);trace(p.color,2.5,.8);}
+    else if(style==='ribbon'||style==='flame'){trace(p.color,4,.55,4,true);trace(p.accent,2,.8,-3,true);}
+    else if(style==='comet'||style==='heavy'){trace(p.color,style==='heavy'?5:4,.65);trace(p.accent,1.5,.95);}
+    else trace(p.color,1.5,.65);
     ctx.setLineDash([]);
-    if(['beads','spark','crystal','slash'].includes(style))for(let i=2;i<trail.length;i+=3){
-      const point=trail[i],size=1+i/trail.length*2.5;ctx.strokeStyle=i%2?p.color:p.accent;ctx.lineWidth=1.5;ctx.globalAlpha=i/trail.length*.8;
-      if(style==='beads')ring(ctx,point.x,point.y,size);
-      else if(style==='spark'){stroke(ctx,point.x-size,point.y,point.x+size,point.y);stroke(ctx,point.x,point.y-size,point.x,point.y+size);}
-      else if(style==='crystal'){ctx.save();ctx.translate(point.x,point.y);ctx.rotate(Math.PI/4);ctx.strokeRect(-size,-size,size*2,size*2);ctx.restore();}
-      else stroke(ctx,point.x-4,point.y+4,point.x+4,point.y-4);
+    if(detailed&&['beads','spark','crystal','slash'].includes(style)){
+      ctx.beginPath();ctx.strokeStyle=p.accent;ctx.lineWidth=1.5;ctx.globalAlpha=.65;
+      for(let i=2;i<trail.length;i+=3){const point=trail[i],size=1+i/trail.length*2.5,x=point.x,y=point.y;
+        if(style==='beads'){ctx.moveTo(x+size,y);ctx.arc(x,y,size,0,TAU);}
+        else if(style==='spark'){ctx.moveTo(x-size,y);ctx.lineTo(x+size,y);ctx.moveTo(x,y-size);ctx.lineTo(x,y+size);}
+        else if(style==='crystal'){ctx.moveTo(x,y-size*1.4);ctx.lineTo(x+size*1.4,y);ctx.lineTo(x,y+size*1.4);ctx.lineTo(x-size*1.4,y);ctx.closePath();}
+        else{ctx.moveTo(x-4,y+4);ctx.lineTo(x+4,y-4);}
+      }ctx.stroke();
     }
     // Cap detailed projectile ornaments during large volleys; every arrow retains its styled trail.
-    if(index<12){const pos=a.body.position,v=a.body.velocity;ctx.translate(pos.x,pos.y);ctx.rotate(Math.atan2(v.y,v.x)+Math.PI/2);ctx.globalAlpha=.7;
+    if(index<(crowded?6:12)){const pos=a.body.position,v=a.body.velocity;ctx.translate(pos.x,pos.y);ctx.rotate(Math.atan2(v.y,v.x)+Math.PI/2);ctx.globalAlpha=.85;
       G.paintSkillSignature(ctx,a.skillVisual,.5,style==='heavy'?16:12,p.color,p.accent,'aura');
     }
     ctx.restore();
@@ -270,7 +281,7 @@
           const marked=b.skillMarkUntil>G.time;
           const selected=s.id==='decay'||s.id==='execute'&&b.hp/b.max<=.25||s.id==='ambush'&&b.hp>=b.max||s.id==='opportunist'&&b.hp<b.max||s.id==='specialist'&&b.type!=='normal'||s.id==='alchemist'&&b.type==='gold';
           if(marked||selected){ctx.globalAlpha=marked?.65:.35;ctx.lineWidth=marked?2.5:1.5;ctx.strokeRect(b.x-b.w/2-3,b.y-b.h/2-3,b.w+6,b.h+6);}
-          if(b.frozen){ctx.globalAlpha=.8;ctx.strokeStyle='#258eb2';for(const side of [-1,1]){stroke(ctx,b.x+side*(b.w/2-6),b.y-b.h/2,b.x+side*(b.w/2-12),b.y-b.h/2+9);}ctx.strokeStyle=p.color;}
+          if(b.frozen){ctx.save();ctx.globalAlpha=.8;ctx.strokeStyle='#258eb2';ctx.lineWidth=1.5;ctx.lineCap='round';for(const side of [-1,1]){stroke(ctx,b.x+side*(b.w/2-6),b.y-b.h/2,b.x+side*(b.w/2-12),b.y-b.h/2+9);}ctx.restore();}
         }
         if(G.core&&['corehunter','resonance','treasury'].includes(s.id)){ctx.globalAlpha=.7;ctx.setLineDash([7,6]);ring(ctx,G.core.x,G.core.y,62+Math.sin(time*3)*4);ctx.setLineDash([]);}
          if(['hunters','seeking','swarmqueen','bankshot','corehunter'].includes(s.id))G.arrows.slice(0,4).forEach(a=>{
@@ -280,7 +291,15 @@
         });
       }
       for(let i=effects.length-1;i>=0;i--)if(G.time-effects[i].born>=effects[i].duration)effects.splice(i,1);
-      effects.forEach(e=>drawEffect(ctx,e));
+      const fullFrom=Math.max(0,effects.length-(G.reduced?12:24));let priority=0;
+      for(let i=effects.length-1;i>=0;i--){const e=effects[i];
+        // Keep new explosions and the major arena pulses at full scale; older
+        // overlapping hits become small coloured signature sparks, not blank.
+        const major=e.r>=110||['beam','pickup','mark'].includes(e.kind);
+        if(major?priority++<(G.reduced?2:4):i>=fullFrom)drawEffect(ctx,e,i>=effects.length-6);
+        else{const t=Math.min(1,(G.time-e.born)/e.duration);ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=(1-t)*.65;
+          G.paintSkillSignature(ctx,e.id,t,Math.min(24,e.r),e.color,e.accent,e.kind);ctx.restore();}
+      }
     }else{
       refresh();
       if(s){

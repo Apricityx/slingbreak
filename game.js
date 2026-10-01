@@ -2,8 +2,12 @@
 (() => {
   'use strict';
    const {Engine, Bodies, Body, Composite} = Matter;
-  const KEY = 'slingbreak-save-v1';
-  const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,volume:100,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null});
+  // URL-only debug entries must never import or overwrite normal progress.
+  const query = new URLSearchParams(location.search);
+  // The history entry retains the test slot after the one-shot boss parameter
+  // is consumed, so refreshing the cleaned URL resumes the same save.
+  const KEY = query.has('admin') ? 'slingbreak-save-admin-v1' : query.has('boss') || window.history?.state?.slingbreakSaveSlot === 'boss' ? 'slingbreak-save-boss-v1' : 'slingbreak-save-v1';
+   const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,volume:100,performanceMode:false,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null,milestone:null,bossOverride:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
@@ -18,12 +22,18 @@
   state.soundMigrated = true;
   state.volume = Number.isInteger(state.volume) && state.volume>=0 && state.volume<=100 ? state.volume : state.sound===false ? 0 : 100;
   state.sound = state.volume>0;
+   state.performanceMode = state.performanceMode===true;
+   const motion=matchMedia('(prefers-reduced-motion: reduce)');
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
-     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,physicsStep:1/60,predictionVersion:0};
+     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:motion.matches||state.performanceMode,physicsStep:1/60,predictionVersion:0};
+   const syncReduced=()=>{G.reduced=motion.matches||state.performanceMode;document.documentElement?.classList?.toggle('performance-mode',state.performanceMode);};
+   motion.addEventListener?.('change',syncReduced);
+   syncReduced();
+   G.setPerformanceMode=enabled=>{const chosen=enabled===true;if(state.performanceMode===chosen)return;state.performanceMode=chosen;syncReduced();G.resizeCanvas?.();G.save();};
   // Brick fills and board text follow the active colour theme (palette.js); the
   // fallback matches the light palette for hosts that load game.js on its own.
   const theme=()=>window.SlingTheme?.canvas;
-  const lightBricks={normal:'#dce2d0',bomb:'#f6a38f',lightning:'#f3e27a',frost:'#a9d8e6',prism:'#cbbbe9',gold:'#e9b85a'};
+  const lightBricks={normal:'#dce2d0',bomb:'#f6a38f',lightning:'#f3e27a',frost:'#a9d8e6',prism:'#cbbbe9',gold:'#e9b85a',void:'#3a2d52',hydra:'#a3dcc4',shard:'#e4d7ff',anchor:'#5d5470',plate:'#6b6258',magma:'#f08a3c',scale:'#58b3bf',star:'#fff1b8',hour:'#e8d7a6'};
   Object.defineProperty(G,'colors',{enumerable:true,get:()=>theme()?.brick||lightBricks});
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
   G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
@@ -69,6 +79,8 @@
     b.body=Bodies.rectangle(b.x,b.y,b.w,b.h,{isStatic:true,label:'brick'});
     b.body.brick=b;G.bricks.push(b);Composite.add(engine.world,b.body);return b;
   };
+  // Special levels (milestone.js) add bricks mid-level: hydra splits, summons.
+  G.makeBrick=makeBrick;
   const makeObstacle = data => {
     const o={...data,flash:0};
     o.body=Bodies.rectangle(o.x,o.y,o.w,o.h,{isStatic:true,label:'obstacle'});
@@ -94,13 +106,18 @@
         special.slice(Math.floor(G.initial*G.specialRate())).forEach(b=>b.type='normal');
       }
       if(board.core || G.killed>=G.threshold) G.spawnCore(true);
-    }else{
-       const rows=10+Math.min(1,Math.floor((state.level-1)/8));
+    }else G.layout(G.levelMods?.()||{});
+    G.save();G.ui();
+  };
+  // Lays out a fresh board. Special levels (milestone.js) pass mods to reshape
+  // it: rows, barriers, hp scale, special rate and mix, and a starting frost.
+  G.layout = (mods={}) => {
+      const rows=mods.rows||10+Math.min(1,Math.floor((state.level-1)/8));
       const types=['bomb','lightning','frost','prism','gold'];
-      const base=G.baseHp();
+      const base=Math.max(1,Math.round(G.baseHp()*(mods.hp||1)));
       const slots=[];
        for(let r=0;r<rows;r++)for(let c=0;c<7;c++)slots.push({r,c,x:102+c*96,y:170+r*60});
-      const barriers=new Set(),count=5+Math.floor(Math.random()*3)+Math.min(1,Math.floor(state.level/10));
+      const barriers=new Set(),count=mods.barriers||5+Math.floor(Math.random()*3)+Math.min(1,Math.floor(state.level/10));
       // Keep an open central route to the core and separate barriers to avoid sealed pockets.
        for(const s of shuffle(slots.filter(s=>s.r>0&&s.r<rows-1&&s.y<920&&Math.abs(s.c-3)>=2))){
         if(G.obstacles.length>=count)break;
@@ -111,18 +128,18 @@
       for(const s of slots) {
         if(barriers.has(s)||gaps.has(s))continue;
         const hp=base+(Math.random()<.12?1:0);
-         makeBrick({x:s.x,y:s.y,w:84,h:44,hp,max:hp,type:'normal',frozen:false});
+         makeBrick({x:s.x,y:s.y,w:84,h:44,hp,max:hp,type:'normal',frozen:!!mods.frozen});
       }
       // A fixed quota includes the five guaranteed types, so no board exceeds its rate.
       const candidates=shuffle([...G.bricks]);
-      const quota=Math.floor(G.bricks.length*G.specialRate());
+      const quota=Math.floor(G.bricks.length*(mods.specialRate||G.specialRate()));
+      const extra=mods.mix||types;
       for(let i=0;i<quota;i++){
-        candidates[i].type=i<types.length?types[i]:types[Math.floor(Math.random()*types.length)];
+        candidates[i].type=i<types.length?types[i]:extra[Math.floor(Math.random()*extra.length)];
         candidates[i].hp=candidates[i].max=base;
       }
       G.initial=G.bricks.length;G.threshold=Math.ceil(G.initial*.6);
-    }
-    G.save();G.ui();
+      mods.decorate?.();
   };
   G.burst=(x,y,color,count=16,force=1)=>{
     if(G.reduced) count=Math.min(count,5);
@@ -130,8 +147,20 @@
     for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,v=(1+Math.random()*5)*force;G.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1,life:.5+Math.random()*.4,max:1,size:2+Math.random()*5,color,rot:Math.random()*6});}
     if(G.particles.length>300)G.particles.splice(0,G.particles.length-300);
   };
-  G.ring=(x,y,color,r=90)=>G.rings.push({x,y,color,r,life:.55,max:.55});
-  G.float=(x,y,text,color=theme()?.text.float||'#48652c',size=17)=>G.texts.push({x,y,text,color,size,life:1.05});
+  G.ring=(x,y,color,r=90)=>{
+    // Nearby simultaneous detonations read as one brighter shockwave, not a
+    // stack of indistinguishable circles. Never merge the large clear pulses.
+    if(r<260)for(let i=G.rings.length-1;i>=0;i--){const p=G.rings[i];
+      if(p.color===color&&p.life>.48&&Math.abs(p.r-r)<24&&Math.hypot(p.x-x,p.y-y)<24){p.energy=Math.min(2,(p.energy||1)+.2);return G.rings.length;}
+    }
+    G.rings.push({x,y,color,r,life:.55,max:.55,energy:1});
+    const cap=G.reduced?24:48;
+    if(G.rings.length>cap){const index=G.rings.findIndex(p=>p.r<260);G.rings.splice(index<0?0:index,1);}
+    return G.rings.length;
+  };
+  G.float=(x,y,text,color=theme()?.text.float||'#48652c',size=17)=>{
+    G.texts.push({x,y,text,color,size,life:1.05});if(G.texts.length>48)G.texts.splice(0,G.texts.length-48);return G.texts.length;
+  };
   G.spawnCore = (quiet=false) => {
     if(G.core || G.phase==='clearing')return;
     G.predictionVersion++;
@@ -288,10 +317,11 @@
     for(const p of G.particles){p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=dt*7;p.life-=dt;p.rot+=dt*3;if(p.life>0)G.particles[alive++]=p;}G.particles.length=alive;
     alive=0;for(const p of G.texts){p.y-=dt*25;p.life-=dt;if(p.life>0)G.texts[alive++]=p;}G.texts.length=alive;
     for(const items of [G.rings,G.bolts]){alive=0;for(const p of items){p.life-=dt;if(p.life>0)items[alive++]=p;}items.length=alive;}
+    if(G.bolts.length>64)G.bolts.splice(0,G.bolts.length-64);
     G.bricks.forEach(b=>b.flash=Math.max(0,b.flash-dt));G.obstacles.forEach(o=>o.flash=Math.max(0,o.flash-dt));G.shake=Math.max(0,G.shake-dt*28);G.coreFlash=Math.max(0,G.coreFlash-dt*1.4);
   };
   G.sound=()=>{};
   G.specialSound=(type,x=390)=>G.sound(type==='bomb'?'boom':type,1,x,true);
-  G.reset=()=>{const volume=state.volume;Object.assign(state,defaults(),{volume,sound:volume>0,soundMigrated:true});G.paused=false;G.generate();};
+  G.reset=()=>{const volume=state.volume,performanceMode=state.performanceMode;Object.assign(state,defaults(),{volume,sound:volume>0,soundMigrated:true,performanceMode});G.paused=false;G.generate();};
   G.generate(true);
 })();

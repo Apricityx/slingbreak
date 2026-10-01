@@ -4,12 +4,46 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const Matter=require('./vendor/matter.min.js');
 const source=fs.readFileSync(__dirname+'/game.js','utf8');
-function boot(saved){
+function boot(saved,{systemReduced=true}={}){
   let storage=saved?JSON.stringify(saved):null;
-  const context={Matter,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>({matches:true}),localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{getElementById:()=>({})}};
+  let onMotionChange;
+  const motion={matches:systemReduced,addEventListener:(type,fn)=>{onMotionChange=fn;}};
+  const classes=new Set();
+  const context={Matter,console,window:{},URLSearchParams,location:{search:''},matchMedia:()=>motion,localStorage:{getItem:()=>storage,setItem:(k,v)=>storage=v},document:{documentElement:{classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)}},getElementById:()=>({})}};
   vm.createContext(context);vm.runInContext(source,context);
-  return {G:context.window.Game,read:()=>JSON.parse(storage)};
+  return {G:context.window.Game,read:()=>JSON.parse(storage),setSystemReduced:on=>{motion.matches=on;onMotionChange();},hasPerformanceClass:()=>classes.has('performance-mode')};
 }
+test('performance mode follows the saved checkbox and system motion preference independently',()=>{
+  const session=boot(undefined,{systemReduced:false}),{G}=session;
+  assert.equal(G.state.performanceMode,false);assert.equal(G.reduced,false);assert.equal(session.hasPerformanceClass(),false);
+  G.setPerformanceMode(true);
+  assert.equal(G.reduced,true);assert.equal(session.hasPerformanceClass(),true);assert.equal(session.read().performanceMode,true);
+  G.reset();assert.equal(G.state.performanceMode,true);
+  const reloaded=boot(session.read(),{systemReduced:false});
+  assert.equal(reloaded.G.reduced,true);assert.equal(reloaded.hasPerformanceClass(),true);
+  reloaded.setSystemReduced(true);
+  reloaded.G.setPerformanceMode(false);
+  assert.equal(reloaded.G.reduced,true);assert.equal(reloaded.hasPerformanceClass(),false);
+  reloaded.setSystemReduced(false);assert.equal(reloaded.G.reduced,false);
+  assert.equal(boot({...session.read(),performanceMode:'true'},{systemReduced:false}).G.state.performanceMode,false);
+  assert.equal(boot({...session.read(),performanceMode:undefined},{systemReduced:false}).G.state.performanceMode,false);
+});
+test('visual shockwaves merge nearby impacts, remain bounded and preserve major pulses',()=>{
+  const {G}=boot(undefined,{systemReduced:false});G.rings=[];
+  G.ring(100,100,'#ffaa33',90);G.ring(105,105,'#ffaa33',95);
+  assert.equal(G.rings.length,1);assert.ok(G.rings[0].energy>1);
+  G.ring(100,100,'#ffaa33',600);G.ring(100,100,'#ffaa33',600);
+  assert.equal(G.rings.filter(r=>r.r===600).length,2);
+  for(let i=0;i<300;i++)G.ring(i*40,100,'#ffaa33');
+  assert.equal(G.rings.length,48);assert.equal(G.rings.filter(r=>r.r===600).length,2);
+  G.reduced=true;G.rings=[];for(let i=0;i<100;i++)G.ring(i*40,100,'#ffaa33');assert.equal(G.rings.length,24);
+});
+test('visual text and arc budgets never change awarded money or scoring state',()=>{
+  const {G}=boot();const coins=G.state.coins,total=G.state.total;
+  for(let i=0;i<300;i++){G.float(i,i,'+'+i);G.bolts.push({x:i,y:i,tx:0,ty:0,life:1});}
+  assert.equal(G.texts.length,48);G.tick(1/60);assert.ok(G.bolts.length<=64);
+  assert.equal(G.state.coins,coins);assert.equal(G.state.total,total);
+});
 test('volume defaults, migrates and survives save and game reset',()=>{
   const {G,read}=boot();assert.equal(G.state.volume,100);
   G.state.volume=0;G.state.sound=false;G.save();

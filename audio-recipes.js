@@ -40,6 +40,52 @@
       [523,659,784,1047,1319].forEach((f,i)=>{tone(t+.13+i*.08,f,f,.65,.13,'sine',390,true);tone(t+.13+i*.08,f/2,f/2,.45,.07,'triangle');});
     }else if(type==='upgrade'){
       [440,554,659,880].forEach((f,i)=>tone(t+i*.065,f,f,.25,.12,'triangle',390,true));
+    // Abyss rift boss (milestone.js).
+    }else if(type==='abyss'){
+      tone(t,62,36,1.5,.5,'sawtooth');tone(t,93,52,1.2,.22,'triangle');noise(t,1.1,.35,620,'lowpass',390,90);
+      [196,294,392].forEach((f,i)=>tone(t+.2,f,f*1.02,1.1-i*.2,.07/(i+1),'sine',390+(i-1)*120,true));tone(t+.12,220,440,.8,.05,'triangle',390,true);
+    }else if(type==='eyehit'){
+      tone(t,124,46,.24,.42,'sine',x);noise(t,.08,.3,900,'lowpass',x);tone(t+.02,880,620,.2,.08,'triangle',x,true);
+    }else if(type==='shatter'){
+      [2637,3136,3951,4699].forEach((f,i)=>tone(t+i*.018,f,f*.9,.24,.06,'sine',x,true));noise(t,.32,.3,5200,'highpass',x,2400);
+    }else if(type==='void'){
+      tone(t,320,38,.65,.26,'sine',x);noise(t,.55,.22,720,'bandpass',x,110);
+    }else if(type==='hydra'){
+      tone(t,440,880,.12,.12,'triangle',x-80);tone(t+.04,440,880,.12,.12,'triangle',x+80);noise(t,.05,.12,2400,'highpass',x);
+    }else if(type==='anchor'){
+      noise(t,.26,.34,1500,'bandpass',x,300);tone(t,210,88,.32,.24,'triangle',x);[1175,1568].forEach((f,i)=>tone(t+.05+i*.04,f,f,.3,.07,'sine',x,true));
+    }else if(type==='shard'){
+      [3136,3951].forEach((f,i)=>tone(t+i*.02,f,f*.92,.16,.05,'sine',x,true));noise(t,.12,.16,5600,'highpass',x);
+    // Forge colossus, star serpent, chrono sovereign (boss-*.js).
+    }else if(type==='forge'){
+      tone(t,48,30,1.6,.55,'sawtooth');noise(t,1.3,.4,380,'lowpass',390,70);tone(t+.1,96,60,1.1,.2,'square');
+      [131,196,262].forEach((f,i)=>tone(t+.28,f,f,1-i*.15,.08/(i+1),'triangle',390+(i-1)*120,true));[1047,1568].forEach((f,i)=>tone(t+.3+i*.03,f,f*.99,.8,.04,'sine',390,true));
+    }else if(type==='clang'){
+      [523,1109,1661,2489].forEach((f,i)=>tone(t,f,f*.985,.7-i*.12,.11/(i+1),'sine',x,true));noise(t,.06,.3,3800,'highpass',x);tone(t,90,45,.3,.3,'triangle',x);
+    }else if(type==='meteor'){
+      noise(t,.5,.32,900,'bandpass',x,160);tone(t,380,70,.5,.2,'sawtooth',x);tone(t+.35,80,34,.4,.4,'sine',x);
+    }else if(type==='serpent'){
+      noise(t,1.2,.3,2600,'bandpass',390,5200);tone(t,70,44,1.3,.42,'sawtooth');
+      tone(t+.1,330,660,.7,.06,'triangle',390,true);[440,659,880].forEach((f,i)=>tone(t+.25,f,f*1.01,1-i*.2,.06/(i+1),'sine',390+(i-1)*140,true));
+    }else if(type==='hiss'){
+      noise(t,.7,.16,5200,'highpass',x,2600);tone(t,180,90,.5,.06,'sawtooth',x);
+    }else if(type==='devour'){
+      tone(t,55,32,1.8,.45,'sawtooth');noise(t,1.6,.34,300,'lowpass',390,1400);[98,92,87].forEach((f,i)=>tone(t+.25+i*.3,f,f*.9,.7,.12,'triangle',390,true));
+    }else if(type==='regrow'){
+      noise(t,.6,.14,800,'bandpass',x,3600);tone(t,220,660,.6,.1,'triangle',x,true);[880,1319].forEach((f,i)=>tone(t+.35+i*.06,f,f,.35,.05,'sine',x,true));
+    }else if(type==='gulp'){
+      tone(t,140,40,.45,.5,'sine',x);noise(t,.3,.25,500,'lowpass',x,120);
+    }else if(type==='bell'){
+      [220,440,587,880,1175].forEach((f,i)=>tone(t,f,f,1.6-i*.2,.2/(i+1),'sine',x,true));noise(t,.05,.18,2600,'highpass',x);
+    }else if(type==='chime'){
+      [1568,2093,2637].forEach((f,i)=>tone(t+i*.04,f,f,.45,.08,'sine',x,true));
+    }else if(type==='tick'){
+      tone(t,2400,2200,.05,.07,'square',x);noise(t,.03,.1,5200,'highpass',x);
+    }else if(type==='jam'){
+      [0,.07,.14].forEach((d,i)=>noise(t+d,.05,.2,1800+i*600,'bandpass',x));tone(t,90,60,.4,.3,'triangle',x);
+      [392,523,784].forEach((f,i)=>tone(t+.22,f,f*1.01,.9-i*.15,.07/(i+1),'sine',x+(i-1)*120,true));
+    }else if(type==='timestop'){
+      tone(t,1200,90,.7,.22,'sine',390,true);noise(t,.5,.2,1200,'bandpass',390,200);tone(t+.05,60,40,.8,.3,'triangle');
     }
     return voices;
   };

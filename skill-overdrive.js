@@ -224,7 +224,7 @@
   const ring=(ctx,x,y,r)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.stroke();};
   G.drawSkillMechanics=ctx=>{
     draw?.(ctx);ctx.save();ctx.lineCap='round';
-    for(const s of signals){
+    for(let si=Math.max(0,signals.length-(G.reduced?16:32));si<signals.length;si++){const s=signals[si];
       const t=(G.time-s.born)/s.duration;ctx.strokeStyle=colors[s.id];ctx.globalAlpha=1-t;ctx.lineWidth=2;
       if(s.id==='chronicle'){ctx.save();ctx.translate(s.from.x,s.from.y);G.paintSkillSignature(ctx,s.id,t,50,colors[s.id],'#b4c8bf');ctx.restore();}
       else if(s.id==='worldfold'){for(const width of [150,35,3]){ctx.lineWidth=width;ctx.globalAlpha=(1-t)*(width===3?.9:.12);line(ctx,s.from,s.to);}}
@@ -234,7 +234,7 @@
         ring(ctx,s.from.x+(s.to.x-s.from.x)*progress,s.from.y+(s.to.y-s.from.y)*progress,4);
       }
     }
-    for(const f of fields){
+    for(let fi=Math.max(0,fields.length-(G.reduced?3:6));fi<fields.length;fi++){const f=fields[fi];
       const t=Math.min(1,(G.time-f.born)/f.duration);ctx.strokeStyle=colors[f.id];ctx.fillStyle=colors[f.id];ctx.globalAlpha=.75;ctx.lineWidth=2;
       if(f.id==='teslanet'){
         ctx.beginPath();f.vertices.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.stroke();ctx.globalAlpha=G.reduced?.08:.06+Math.sin(t*Math.PI*6)**2*.12;ctx.fill();
@@ -251,9 +251,16 @@
         ctx.globalAlpha=.8;ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.fillText(String(f.stacks),f.x,f.y+6);
       }
     }
-    for(const a of G.arrows)if(a.firewheel){
-      const p=a.body.position,angle=G.reduced?0:G.time*7;ctx.strokeStyle=colors.firewheel;ctx.lineWidth=2;ctx.globalAlpha=.25;ring(ctx,p.x,p.y,90);
-      for(const side of [0,Math.PI]){ctx.save();ctx.translate(p.x+Math.cos(angle+side)*90,p.y+Math.sin(angle+side)*90);ctx.globalAlpha=.9;G.paintSkillSignature(ctx,'firewheel',.5,20,colors.firewheel,'#dec773');ctx.restore();}
+    let wheels=0;for(const a of G.arrows)if(a.firewheel){
+      const p=a.body.position,angle=G.reduced?0:G.time*7,detailed=wheels++<(G.reduced?3:8);
+      ctx.strokeStyle=colors.firewheel;ctx.lineWidth=2;ctx.globalAlpha=.25;
+      if(detailed)ring(ctx,p.x,p.y,90);
+      for(const side of [0,Math.PI]){const x=p.x+Math.cos(angle+side)*90,y=p.y+Math.sin(angle+side)*90;
+        ctx.save();ctx.translate(x,y);ctx.globalAlpha=.9;
+        if(detailed)G.paintSkillSignature(ctx,'firewheel',.5,20,colors.firewheel,'#dec773');
+        else{ctx.fillStyle='#dec773';ctx.beginPath();ctx.arc(0,0,3.5,0,TAU);ctx.fill();}
+        ctx.restore();
+      }
     }
     ctx.restore();
   };

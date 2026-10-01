@@ -2,7 +2,7 @@
 .settings-toggle svg{transition:transform .35s cubic-bezier(.2,.8,.2,1.2)}
 @media(hover:hover){.settings-toggle:hover svg{transform:rotate(60deg)}}
 
-#settings{width:min(400px,calc(100vw - 24px));max-height:calc(100dvh - 32px);margin:auto;padding:0;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px var(--shadow);text-align:left}
+#settings{width:calc(var(--stage-w) - 24px);max-height:calc(var(--stage-h) - 32px);margin:auto;padding:0;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px var(--shadow);text-align:left}
 #settings::backdrop{background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #settings .settings-panel{display:block;padding:22px}
 #settings .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
@@ -37,17 +37,60 @@
 .theme-swatch.is-system i:last-child{display:block}
 
 .settings-hint{min-height:1.6em;margin:12px 0 0!important;font-size:11px!important;line-height:1.6;color:var(--text-3)!important}
+.performance-group{margin-top:18px;clear:both}
+.performance-option{display:flex;align-items:center;gap:12px;cursor:pointer}
+.performance-option input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--accent-ink);cursor:pointer}
+.performance-option input:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.performance-option span{display:grid;gap:4px}
+.performance-option strong{font-size:13px;font-weight:600}
+.performance-option small{font-size:11px;line-height:1.5;color:var(--text-3)}
 .sound-group{margin-top:18px;clear:both}
 .sound-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;font-size:13px;font-weight:600}
 .sound-heading output{font-variant-numeric:tabular-nums;color:var(--accent-ink)}
 #sound-volume{display:block;width:100%;margin:0;accent-color:var(--accent-ink);cursor:pointer}
 #sound-volume:focus-visible{outline:2px solid var(--focus);outline-offset:4px}
 .sound-scale{display:flex;justify-content:space-between;margin-top:9px;font-size:11px;color:var(--text-3)}
-.sound-group .settings-hint{margin-top:10px!important}
+.refresh-group,.install-group{margin-top:18px;clear:both}
+.refresh-group>div,.install-group>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.refresh-group strong,.install-group strong{font-size:13px;font-weight:600}
+.refresh-button{padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);font-size:12px;font-weight:600}
+.refresh-button:hover:not(:disabled){background:var(--surface-3)}
+.refresh-button:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.refresh-button:disabled{opacity:.6}
+.refresh-group .settings-hint,.install-group .settings-hint{margin-top:8px!important}
+.fullscreen-toggle[hidden]{display:none}
 
-@media(max-width:380px){
-  #settings .settings-panel{padding:18px 16px}
-  .theme-options{gap:7px}
-  .theme-swatch{height:48px}
-}
+/* A separate guide can open from either the header or the settings dialog. */
+#home-screen-guide{width:calc(var(--stage-w) - 24px);max-height:calc(var(--stage-h) - 32px);margin:auto;padding:0;overflow:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 24px 80px var(--shadow);text-align:left}
+#home-screen-guide::backdrop{background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#home-screen-guide .home-screen-panel{display:block;padding:22px}
+.home-screen-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.home-screen-heading h2{margin:6px 0 0;font-size:22px;line-height:1.3}
+.home-screen-heading .icon-button{flex:0 0 44px;width:44px;height:44px}
+.home-screen-heading .eyebrow{letter-spacing:1.5px;color:var(--text-3)}
+#home-screen-description{font-size:13px;line-height:1.7;color:var(--text-2)}
+.home-screen-steps{margin:18px 0;padding-left:24px;font-size:13px;line-height:1.8}
+.home-screen-steps li+li{margin-top:12px}
+#home-screen-guide label{display:block;margin-bottom:8px;font-size:12px;color:var(--text-2)}
+#home-screen-guide .home-screen-link{display:flex;gap:8px}
+#home-screen-url{width:0;min-width:0;flex:1;padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:12px;-webkit-user-select:text;user-select:text}
+.home-screen-link button{flex:none}
+#home-screen-url:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.admin-group{margin-top:18px;clear:both}
+.admin-group[hidden]{display:none}
+.admin-group h3{margin:0 0 12px;font-size:14px}
+.admin-group label{display:block;margin-bottom:8px;font-size:12px;color:var(--text-2)}
+.admin-level-controls{display:flex;gap:10px}
+.admin-level-controls input,.admin-level-controls select{width:0;min-width:0;flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);font:inherit}
+.admin-level-controls input:focus-visible,.admin-level-controls select:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.admin-level-controls button{flex:none}
+.admin-group .settings-hint{margin-top:8px!important}
+.admin-group form+form{margin-top:16px}
+
+/* Reuse the reduced-effects presentation when performance mode is chosen manually. */
+.performance-mode *, .performance-mode *::before, .performance-mode *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+.performance-mode #money-burst{display:none}
+.performance-mode .earnings-summary{transform:none}
+.performance-mode #skill-draft .skill-card,.performance-mode #skill-library .library-item{will-change:auto}
+
 @media(prefers-reduced-motion:reduce){.settings-toggle svg,.theme-option{transition:none}}

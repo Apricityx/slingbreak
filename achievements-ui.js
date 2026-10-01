@@ -110,39 +110,51 @@
   }
   // ── The payoff: a spark links the arrow to its card, and the back-paid coins
   // fly into the level total when the card steps aside.
-  let sparks=0;
+  let sparks=0,payouts=0;
   function toClient(p){
     if(!p)return null;
-    const r=$('game').getBoundingClientRect(),v=G.view||{scale:r.width/G.W,offsetX:0,offsetY:0};
-    return{x:r.left+v.offsetX+p.x*v.scale,y:r.top+v.offsetY+p.y*v.scale};
+    const c=$('game'),r=c.getBoundingClientRect(),v=G.view||{scale:r.width/G.W,offsetX:0,offsetY:0};
+    // G.view is canvas layout px; rk maps it to client px under the stage scale.
+    const rk=r.width/(c.clientWidth||r.width)||1;
+    return{x:r.left+(v.offsetX+p.x*v.scale)*rk,y:r.top+(v.offsetY+p.y*v.scale)*rk};
+  }
+  // Sparks and chips live on <body>, zoomed by the stage scale: translate() takes client px ÷ k.
+  const zk=()=>window.SlingStage?.k||1;
+  function toZoomed(p){
+    if(!p)return null;const k=zk();return{x:p.x/k,y:p.y/k};
+  }
+  function zoomRect(r,k){
+    return{left:r.left/k,top:r.top/k,right:r.right/k,width:r.width/k,height:r.height/k};
   }
   function launchSpark(from,color,g){
     if(reduced()||!from||sparks>=6)return;
-    const target=(g.mark&&g===current?g.mark:pops).getBoundingClientRect();
-    const tx=target.left+Math.min(40,target.width/2),ty=target.top+target.height/2;
+    const k=zk(),target=(g.mark&&g===current?g.mark:pops).getBoundingClientRect();
+    const tx=(target.left+Math.min(40*k,target.width/2))/k,ty=(target.top+target.height/2)/k;
     const spark=document.createElement('i');spark.className='achievement-spark';spark.style.setProperty('--spark-color',color);document.body.append(spark);sparks++;
     const mx=(from.x+tx)/2+(from.x<tx?-60:60),my=Math.min(from.y,ty)-40;
-    spark.animate([
+     const clean=()=>{
+       spark.remove();sparks--;
+       if(g.el?.isConnected){replay(g.hero,'is-struck');replay(g.mark,'is-landing');}
+     };
+     spark.animate([
       {transform:`translate(${from.x}px,${from.y}px) scale(.4)`,opacity:0},
       {transform:`translate(${from.x}px,${from.y-18}px) scale(1.2)`,opacity:1,offset:.15},
       {transform:`translate(${mx}px,${my}px) scale(1)`,opacity:1,offset:.55},
       {transform:`translate(${tx}px,${ty}px) scale(.6)`,opacity:.9}
-    ],{duration:520,easing:'cubic-bezier(.45,0,.3,1)'}).finished.finally(()=>{
-      spark.remove();sparks--;
-      if(g.el?.isConnected){replay(g.hero,'is-struck');replay(g.mark,'is-landing');}
-    });
+     ],{duration:520,easing:'cubic-bezier(.45,0,.3,1)'}).finished.then(clean,clean);
   }
   function flyPayout(amount){
     if(amount<1)return;
-    const readout=$('shot-money'),from=pops.getBoundingClientRect(),to=readout.getBoundingClientRect();
+    const k=zk(),readout=$('shot-money'),from=zoomRect(pops.getBoundingClientRect(),k),to=zoomRect(readout.getBoundingClientRect(),k);
     const land=()=>{replay(panel,'is-backpaid');};
-    if(reduced()||!from.width){land();return;}
-    const chip=document.createElement('b');chip.className='achievement-payout-chip';chip.textContent='+'+G.fmt(amount);document.body.append(chip);
+    if(reduced()||!from.width||payouts>=3||document.hidden){land();return;}
+    const chip=document.createElement('b');chip.className='achievement-payout-chip';chip.textContent='+'+G.fmt(amount);document.body.append(chip);payouts++;
+    const clean=()=>{chip.remove();payouts--;land();};
     chip.animate([
       {transform:`translate(${from.right-90}px,${from.top+from.height/2}px) scale(.8)`,opacity:0},
       {transform:`translate(${from.right-100}px,${from.top+from.height/2-10}px) scale(1.1)`,opacity:1,offset:.25},
       {transform:`translate(${to.left+to.width*.6}px,${to.top+to.height/2}px) scale(.7)`,opacity:.2}
-    ],{duration:560,delay:120,easing:'cubic-bezier(.5,0,.3,1)',fill:'backwards'}).finished.finally(()=>{chip.remove();land();});
+    ],{duration:560,delay:120,easing:'cubic-bezier(.5,0,.3,1)',fill:'backwards'}).finished.then(clean,clean);
   }
   function bumpBadge(){replay($('achievement-badge'),'is-bumped');}
   G.showAchievement=(item,score)=>{
@@ -164,7 +176,7 @@
     // Backlog still moves faster, but never so fast that a card cannot be read.
     speed=Math.min(2,1+queue.length*.35);
     const hook=G.juiceAchievement?.(score.id,item.name,emblems[item.id].color);
-    launchSpark(toClient(hook),emblems[item.id].color,g);
+    launchSpark(toZoomed(toClient(hook)),emblems[item.id].color,g);
     scheduleAchievementFrame();
   };
   const resetGame=G.reset;
@@ -201,7 +213,7 @@
     if(!frame)frame=requestAnimationFrame(animate);
     const s=G.latestAchievement;
     const compact=n=>Number(n.toFixed(2)).toString();
-    setHidden($('arrow-receipt'),!s);
+    $('arrow-receipt').classList.toggle('is-idle',!s);
     setText($('score-source'),s?'#'+s.id:'—');
     setTitle($('score-tag'),s?`最近得分：第 ${s.id} 箭`:'等待得分');
     setText($('achievement-mult'),'×'+compact(s?.mult||1));

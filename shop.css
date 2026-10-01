@@ -5,9 +5,9 @@
 .shop-trigger[hidden]{display:none}
 
 #shop {
-  width: min(436px, calc(100vw - 24px));
-  max-width: calc(100vw - 24px);
-  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  width: calc(var(--stage-w) - 24px);
+  max-width: calc(var(--stage-w) - 24px);
+  max-height: calc(var(--stage-h) - 32px);
   margin: auto;
   padding: 0;
   border: 1px solid var(--line);
@@ -149,16 +149,8 @@
 @keyframes shop-trigger-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.92)}}
 @keyframes shop-backdrop-in{from{opacity:0}to{opacity:1}}
 @keyframes shop-backdrop-out{from{opacity:1}to{opacity:0}}
-@media(max-width:720px){
-  .shop-trigger{right:16px;bottom:calc(42px + env(safe-area-inset-bottom));min-width:46px;width:46px;height:46px;justify-content:center;padding:0;border-radius:50%}
+  .shop-trigger{right:16px;bottom:42px;min-width:46px;width:46px;height:46px;justify-content:center;padding:0;border-radius:50%}
   .shop-trigger span{display:none}
-}
-@media(max-width:380px){
-  #shop .shop-panel { padding: 20px 16px; }
-  #shop .shop-heading h2 { font-size: 21px; }
-  #shop .upgrade { grid-template-columns: 28px minmax(0, 1fr) 84px; gap: 8px; }
-  #shop .upgrade-icon { width: 28px; }
-}
 @media(prefers-reduced-motion:reduce){
   .shop-trigger,#shop[open],#shop.is-closing,#shop::backdrop,#shop.is-closing::backdrop{animation:none}
 }

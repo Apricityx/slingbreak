@@ -4,7 +4,7 @@
   // reset rewind, draft deal and dialog morphs. Game rules stay untouched: this
   // file only wraps entry points and choreographs the DOM around them.
   const G=Game,$=id=>document.getElementById(id);
-  const motion=matchMedia('(prefers-reduced-motion: reduce)'),still=()=>motion.matches;
+  const still=()=>G.reduced;
   const arena=$('arena'),canvas=$('game');
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const settle=a=>a.finished.catch(()=>{});
@@ -13,8 +13,13 @@
   const onScreen=r=>r.width>0&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;
   const toClient=(x,y)=>{
     const r=canvas.getBoundingClientRect(),v=G.view||{scale:r.width/G.W,offsetX:0,offsetY:0};
-    return{x:r.left+v.offsetX+x*v.scale,y:r.top+v.offsetY+y*v.scale};
+    // G.view is in canvas layout px; rk maps them to client px under the stage scale.
+    const rk=r.width/(canvas.clientWidth||r.width)||1;
+    return{x:r.left+(v.offsetX+x*v.scale)*rk,y:r.top+(v.offsetY+y*v.scale)*rk};
   };
+  // Body-level layers (coins, dialogs) are zoomed by the stage scale, so their
+  // translate() lengths are in client px ÷ k.
+  const zk=()=>window.SlingStage?.k||1;
 
   // Input lock: while a transition owns the screen, a stray tap cannot fire an arrow.
   let lockedUntil=0;
@@ -32,20 +37,22 @@
   G.spawnCore=(quiet=false,...rest)=>{
     const absent=!G.core,result=spawnCore(quiet,...rest);
     if(absent&&G.core&&!quiet&&!still()){
-      document.querySelector('.core-progress')?.animate([{scale:'1',filter:'none'},{scale:'1.07',filter:'brightness(1.3)',offset:.3},{scale:'1',filter:'none'}],{duration:640,easing:'ease-out'});
+      document.querySelector('.core-gem')?.animate([{scale:'1',filter:'none'},{scale:'1.6',filter:'brightness(1.3)',offset:.3},{scale:'1',filter:'none'}],{duration:640,easing:'ease-out'});
       $('progress-bar')?.animate([{boxShadow:'0 0 0 0 #9bcc5d00'},{boxShadow:'0 0 14px 3px #9bcc5dcc',offset:.35},{boxShadow:'0 0 0 0 #9bcc5d00'}],{duration:1000});
     }
     return result;
   };
 
   // ── 6. Core break → settlement: hit-stop, impact frame, CLEAR stamp, coins to wallet.
+  let flyingCoins=0;
   function flyCoins(bonus){
+    if(still()||document.hidden)return;
     const target=document.querySelector('.wallet-readout'),t=target?.getBoundingClientRect();
     if(!t||!onScreen(t))return;
-    const from=toClient(390,80),count=Math.min(14,6+Math.floor(Math.log10(Math.max(10,bonus))*2));
+    const from=toClient(390,80),count=Math.min(24-flyingCoins,14,6+Math.floor(Math.log10(Math.max(10,bonus))*2));
     for(let i=0;i<count;i++){
-      const coin=document.createElement('i');coin.className='flying-coin';coin.setAttribute('aria-hidden','true');document.body.append(coin);
-      const sx=from.x+(Math.random()-.5)*60,sy=from.y+(Math.random()-.5)*30,ex=t.left+14,ey=t.top+t.height/2;
+      const coin=document.createElement('i');coin.className='flying-coin';coin.setAttribute('aria-hidden','true');document.body.append(coin);flyingCoins++;
+      const k=zk(),sx=from.x/k+(Math.random()-.5)*60,sy=from.y/k+(Math.random()-.5)*30,ex=(t.left+14*k)/k,ey=(t.top+t.height/2)/k;
       const mx=(sx+ex)/2+(Math.random()-.5)*140,my=Math.min(sy,ey)-50-Math.random()*90;
       const flight=coin.animate([
         {transform:`translate(${sx}px,${sy}px) scale(.2)`,opacity:0},
@@ -53,7 +60,8 @@
         {transform:`translate(${mx}px,${my}px) scale(.85)`,opacity:1,offset:.62},
         {transform:`translate(${ex}px,${ey}px) scale(.45)`,opacity:.9}
       ],{duration:860,delay:320+i*55,easing:'cubic-bezier(.45,0,.35,1)',fill:'both'});
-      flight.finished.then(()=>{coin.remove();target.animate([{scale:'1.14'},{scale:'1'}],{duration:200,easing:'ease-out'});},()=>coin.remove());
+      const clean=()=>{coin.remove();flyingCoins--;};
+      flight.finished.then(()=>{clean();if(i===count-1)target.animate([{scale:'1.14'},{scale:'1'}],{duration:200,easing:'ease-out'});},clean);
     }
   }
   const esc=text=>String(text).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -65,6 +73,7 @@
     return `<div class="report-head"><span>本关收益</span><strong data-count="${r.total}">0</strong></div>
       <div class="report-bar">${bar}</div><ul class="report-legend">${legend}</ul>
       <div class="report-stats"><div><span>最佳一箭</span><b>${r.bestKills} 连${r.record?'<em>新纪录</em>':''}</b><small>+${G.fmt(r.bestMoney)}</small></div><div><span>射出</span><b>${r.shots}</b><small>箭</small></div><div><span>击碎</span><b>${r.bricks}</b><small>块</small></div></div>
+      ${r.rift?`<div class="report-rift"><span>${esc(r.rift.title)}</span>${r.rift.items.map(item=>`<em>${esc(item)}</em>`).join('')}</div>`:''}
       ${skills}<p class="report-continue">点击继续</p>`;
   }
   // Settlement scene: CLEAR stamp, then the level report. It stays until the
@@ -160,7 +169,9 @@
     const previous=G.state.level-1;
     if(levelUp){G.holdDraft=true;handoff=true;}
     const result=generate(...args);
-    if(levelUp)wipe({eyebrow:'NEXT LEVEL',from:pad(previous),to:pad(G.state.level),note:'新的局面'}).finally(()=>{G.holdDraft=false;handoff=false;G.ui();});
+    // Special levels (milestone.js) may retitle the curtain via G.levelIntro.
+    const intro=levelUp&&G.levelIntro?.()||{};
+    if(levelUp)wipe({eyebrow:intro.eyebrow||'NEXT LEVEL',from:pad(previous),to:pad(G.state.level),note:intro.note||'新的局面'}).finally(()=>{G.holdDraft=false;handoff=false;G.ui();});
     return result;
   };
   const toast=G.toast;
@@ -225,7 +236,7 @@
     const d=dialog.getBoundingClientRect(),s=source||{left:d.left+d.width/2-24,top:d.top+d.height/2+40,width:48,height:48};
     const dx=s.left+s.width/2-(d.left+d.width/2),dy=s.top+s.height/2-(d.top+d.height/2);
     const k=Math.max(.08,Math.min(.6,Math.max(s.width/d.width,s.height/d.height)));
-    return{transform:`translate(${dx}px,${dy}px) scale(${k})`,opacity:0};
+    return{transform:`translate(${dx/zk()}px,${dy/zk()}px) scale(${k})`,opacity:0};
   }
   const backdrop=(dialog,frames,duration)=>{try{return dialog.animate(frames,{duration,easing:'ease-out',fill:'forwards',pseudoElement:'::backdrop'});}catch{return null;}};
   for(const dialog of ['shop','skill-library','skill-detail','reset-dialog','equipment','settings'].map($).filter(Boolean)){

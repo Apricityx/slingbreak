@@ -21,8 +21,9 @@ function boot({stored=null,systemDark=false,withSettings=false,withAudio=false}=
   const window={localStorage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,v)}};
   const calls=[];
   if(withAudio){
-    window.Game={state:{volume:80,sound:true},audio:{sync:()=>calls.push('sync'),unlock:()=>calls.push('unlock')},save:()=>calls.push('save')};
+    window.Game={state:{volume:80,sound:true,performanceMode:false},reduced:false,setPerformanceMode(on){this.state.performanceMode=on;this.reduced=on;calls.push('performance');},audio:{sync:()=>calls.push('sync'),unlock:()=>calls.push('unlock')},save:()=>calls.push('save')};
     elements['sound-volume']=el({value:''});elements['sound-volume-value']={textContent:''};
+    elements['performance-mode']=el({checked:false});
   }
   const context={window,console,setTimeout:()=>0,clearTimeout(){},
     matchMedia:q=>q.includes('color-scheme')?scheme:{matches:false},
@@ -126,4 +127,15 @@ test('volume control updates and saves immediately, including zero and reload st
   assert.deepEqual(calls,['sync','save','sync','unlock','save']);
   game.state.volume=40;elements['settings-toggle'].handlers.click();
   assert.equal(slider.value,'40');assert.equal(value.textContent,'40%');
+});
+test('performance checkbox reflects saved preference and updates game mode',()=>{
+  const {game,calls,elements}=boot({withSettings:true,withAudio:true});
+  const checkbox=elements['performance-mode'];
+  assert.equal(checkbox.checked,false);
+  checkbox.checked=true;checkbox.handlers.change();
+  assert.equal(game.state.performanceMode,true);assert.deepEqual(calls,['performance']);
+  checkbox.checked=false;elements['settings-toggle'].handlers.click();
+  assert.equal(checkbox.checked,true,'opening settings restores the saved preference');
+  checkbox.checked=false;checkbox.handlers.change();
+  assert.equal(game.state.performanceMode,false);assert.deepEqual(calls,['performance','performance']);
 });

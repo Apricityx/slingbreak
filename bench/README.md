@@ -1,5 +1,10 @@
 # SlingBreak 性能测试 · 粒子数量 vs FPS
 
+> 当前完整游戏的逐特效审计见 [FX-README.md](FX-README.md)，结果见
+> [results/fx-audit/REPORT.md](results/fx-audit/REPORT.md)。下面是较早的普通方块碎屑基准，
+> 不覆盖技能拖尾、发光和 Boss 特效；当前渲染器还依赖 `palette.js`，旧 `bench.html`
+> 未加载这个依赖，不能直接用于验证当前完整游戏。
+
 衡量「屏幕上同时存在多少个粒子」与「帧率」之间的关系，并验证粒子渲染优化的效果。
 
 基准页不是重写一份粒子系统，而是**直接加载游戏真实的 `game.js` 与 `render.js`**，

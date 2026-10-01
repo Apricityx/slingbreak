@@ -2,7 +2,7 @@
   'use strict';
   const G=window.Game,TAU=Math.PI*2;
   // Each signature uses local coordinates so acquisition, impacts and sling auras share an identity.
-  G.paintSkillSignature=(ctx,id,t,r,color,accent,stage='impact')=>{
+  const paint=(ctx,id,t,r,color,accent,stage='impact')=>{
     const p=G.reduced ? .55 : t,ease=1-(1-p)**3,expand=.22+ease*.78,turn=G.reduced?0:p*1.6;
     ctx.save();ctx.scale(r,r);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2/r;ctx.lineCap='round';ctx.lineJoin='round';
     const line=(x,y,tx,ty,w=2)=>{ctx.lineWidth=w/r;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
@@ -188,5 +188,11 @@
     // Fine secondary glints provide a shared material without flattening the silhouettes.
     if(stage!=='aura'&&!G.reduced){ctx.globalAlpha*=.55;secondary(()=>sweep(3,i=>{const a=i*2.4+turn;star(Math.cos(a)*expand*.95,Math.sin(a)*expand*.95,.025+.025*(1-p));}));}
     ctx.restore();
+  };
+  // A transparent bitmap is not free: simple lines are faster as vectors.
+  // Cache the measured path-heavy silhouettes and small repeated ornaments.
+  const cached=new Set('swarmqueen trident blizzard snowburst spectral starforge supernova mint infection buzzsaw pulse'.split(' '));
+  G.paintSkillSignature=(ctx,id,t,r,color,accent,stage='impact')=>{
+    if((r>24&&stage!=='aura'&&!cached.has(id))||!G.fx?.signature(ctx,paint,id,t,r,color,accent,stage))paint(ctx,id,t,r,color,accent,stage);
   };
 })();
