@@ -1,0 +1,358 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "boss-particle",
+      "id": "serpent:debris",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.12125000158945719,
+        "max": 0.8000001907348633
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.017916669448216755,
+        "max": 0.7000002861022949
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:chain-snap",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.15541666944821675,
+        "max": 0.5
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.10000038146972656,
+        "mean": 0.024166667461395265,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:debris",
+      "n": 12,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.20000028610229492,
+        "p95": 0.5999999046325684,
+        "mean": 0.2787500003973643,
+        "max": 3.3000001907348633
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.20000028610229492,
+        "mean": 0.07666667501131694,
+        "max": 3
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:chain-snap",
+      "n": 12,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.5,
+        "p95": 1,
+        "mean": 0.5104166646798451,
+        "max": 2.9000000953674316
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.10000038146972656,
+        "mean": 0.04249998728434245,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:debris",
+      "n": 70,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.6999998092651367,
+        "p95": 0.8999996185302734,
+        "mean": 0.7820833345254262,
+        "max": 9.800000190734863
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.19708333810170492,
+        "max": 2.200000286102295
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:chain-snap",
+      "n": 70,
+      "isolated": true,
+      "costMs": {
+        "samples": 118,
+        "median": 2,
+        "p95": 2.1999998092651367,
+        "mean": 2.033050848265826,
+        "max": 4.5
+      },
+      "submitMs": {
+        "samples": 118,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.13389830670114292,
+        "max": 2.700000286102295
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:debris",
+      "n": 300,
+      "isolated": true,
+      "costMs": {
+        "samples": 82,
+        "median": 2.6000003814697266,
+        "p95": 4.900000095367432,
+        "mean": 2.975609756097561,
+        "max": 7.599999904632568
+      },
+      "submitMs": {
+        "samples": 82,
+        "median": 0.8000001907348633,
+        "p95": 1.799999713897705,
+        "mean": 0.9292683078021537,
+        "max": 5.599999904632568
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:chain-snap",
+      "n": 300,
+      "isolated": true,
+      "costMs": {
+        "samples": 30,
+        "median": 7.900000095367432,
+        "p95": 8.600000381469727,
+        "mean": 7.996666669845581,
+        "max": 10.099999904632568
+      },
+      "submitMs": {
+        "samples": 30,
+        "median": 0.3000001907348633,
+        "p95": 0.5,
+        "mean": 0.34333332379659015,
+        "max": 0.6000003814697266
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:eye-trails",
+      "n": 1,
+      "limit": 2,
+      "synthetic": false,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.19833332896232606,
+        "max": 0.6999998092651367
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.025833324591318766,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:eye-trails",
+      "n": 2,
+      "limit": 2,
+      "synthetic": false,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.10000038146972656,
+        "p95": 0.2999997138977051,
+        "mean": 0.15,
+        "max": 0.3000001907348633
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.020833329359690348,
+        "max": 0.19999980926513672
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "serpent:eye-trails",
+      "n": 16,
+      "limit": 2,
+      "synthetic": true,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.09999990463256836,
+        "p95": 0.19999980926513672,
+        "mean": 0.09708333412806193,
+        "max": 0.20000028610229492
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.00916666587193807,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.09624999761581421,
+        "max": 0.20000028610229492
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.008750003576278687,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "serpent:live-body",
+      "n": 1,
+      "snapshot": {
+        "snakes": [
+          {
+            "mode": "swim",
+            "head": {
+              "x": 573.2237569169404,
+              "y": 649.9803867369037,
+              "a": 8.53697599035105
+            },
+            "segs": 24,
+            "live": 24,
+            "twin": false,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 24,
+            "regen": false,
+            "retreat": false
+          },
+          {
+            "mode": "swim",
+            "head": {
+              "x": 510.8879287619484,
+              "y": 823.1067119189431,
+              "a": 3.3095931092092203
+            },
+            "segs": 24,
+            "live": 24,
+            "twin": true,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 24,
+            "regen": false,
+            "retreat": false
+          }
+        ],
+        "regrowth": 0,
+        "sparks": 0,
+        "portals": 0,
+        "split": {
+          "cut": false,
+          "merging": false
+        },
+        "eclipse": true,
+        "dim": true,
+        "debris": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 14,
+        "median": 17.200000286102295,
+        "p95": 22,
+        "mean": 17.67142857824053,
+        "max": 22
+      },
+      "submitMs": {
+        "samples": 14,
+        "median": 5.199999809265137,
+        "p95": 10,
+        "mean": 5.671428510120937,
+        "max": 10
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": true,
+    "sample": 240,
+    "filter": "serpent:(debris|eye-trails|live-body)|eye:chain-snap",
+    "raf": false,
+    "dom": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      412,
+      572
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 13
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:25:26.528Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

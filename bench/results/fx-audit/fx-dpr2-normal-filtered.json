@@ -1,0 +1,540 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "board",
+      "n": 0,
+      "isolated": false,
+      "costMs": {
+        "samples": 53,
+        "median": 1.4000000953674316,
+        "p95": 1.9000000953674316,
+        "mean": 1.5037735993007444,
+        "max": 2.5
+      },
+      "submitMs": {
+        "samples": 53,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.23584903860991857,
+        "max": 1.3000001907348633
+      }
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 26,
+        "median": 3,
+        "p95": 4.199999809265137,
+        "mean": 3.161538472542396,
+        "max": 5.100000381469727
+      },
+      "submitMs": {
+        "samples": 26,
+        "median": 0.5,
+        "p95": 1.1999998092651367,
+        "mean": 0.580769208761362,
+        "max": 1.4000000953674316
+      }
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 12.699999809265137,
+        "p95": 14.099999904632568,
+        "mean": 12.787499904632568,
+        "max": 14.099999904632568
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 2,
+        "p95": 2.700000286102295,
+        "mean": 1.962499976158142,
+        "max": 2.700000286102295
+      }
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 52,
+        "p95": 54.5,
+        "mean": 50.66250002384186,
+        "max": 54.5
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 6.800000190734863,
+        "p95": 8.200000286102295,
+        "mean": 6.575000047683716,
+        "max": 8.200000286102295
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 19,
+        "median": 4.299999713897705,
+        "p95": 4.800000190734863,
+        "mean": 4.3210526265596085,
+        "max": 4.800000190734863
+      },
+      "submitMs": {
+        "samples": 19,
+        "median": 0.40000009536743164,
+        "p95": 0.9000000953674316,
+        "mean": 0.42105263157894735,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 30.40000009536743,
+        "p95": 36.90000009536743,
+        "mean": 31.874999940395355,
+        "max": 36.90000009536743
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 1.700000286102295,
+        "p95": 2.700000286102295,
+        "mean": 1.8499999642372131,
+        "max": 2.700000286102295
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 58.80000019073486,
+        "p95": 70,
+        "mean": 59.82499998807907,
+        "max": 70
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 3,
+        "p95": 3.799999713897705,
+        "mean": 3.074999988079071,
+        "max": 3.799999713897705
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 18.09999990463257,
+        "p95": 20.40000009536743,
+        "mean": 18.600000023841858,
+        "max": 20.40000009536743
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 2.5,
+        "p95": 3.0999999046325684,
+        "mean": 2.537500023841858,
+        "max": 3.0999999046325684
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 43.39999961853027,
+        "p95": 51.700000286102295,
+        "mean": 44.325000047683716,
+        "max": 51.700000286102295
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 5.799999713897705,
+        "p95": 6.800000190734863,
+        "mean": 5.837500095367432,
+        "max": 6.800000190734863
+      }
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 28,
+        "median": 2.8000001907348633,
+        "p95": 3.1000003814697266,
+        "mean": 2.860714316368103,
+        "max": 3.5
+      },
+      "submitMs": {
+        "samples": 28,
+        "median": 0.40000009536743164,
+        "p95": 0.6000003814697266,
+        "mean": 0.43214287076677593,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 11.799999713897705,
+        "p95": 15.300000190734863,
+        "mean": 12.0625,
+        "max": 15.300000190734863
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 1.5,
+        "p95": 2,
+        "mean": 1.5875000357627869,
+        "max": 2
+      }
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 64,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 20.399999618530273,
+        "p95": 21.100000381469727,
+        "mean": 20.299999952316284,
+        "max": 21.100000381469727
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 2.4000000953674316,
+        "p95": 3.1999998092651367,
+        "mean": 2.5374999046325684,
+        "max": 3.1999998092651367
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "costMs": {
+        "samples": 41,
+        "median": 1.8000001907348633,
+        "p95": 2,
+        "mean": 1.9829268339203625,
+        "max": 6.300000190734863
+      },
+      "submitMs": {
+        "samples": 41,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.33658541702642675,
+        "max": 4.200000286102295
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 7,
+        "p95": 20.90000009536743,
+        "mean": 10.3125,
+        "max": 20.90000009536743
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 0.5,
+        "p95": 3.3000001907348633,
+        "mean": 0.7749999761581421,
+        "max": 3.3000001907348633
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "costMs": {
+        "samples": 8,
+        "median": 30.5,
+        "p95": 32.80000019073486,
+        "mean": 30.275000035762787,
+        "max": 32.80000019073486
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 1.3000001907348633,
+        "p95": 1.5,
+        "mean": 1.3250000476837158,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:shards",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.2999999980131785,
+        "max": 0.40000009536743164
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.01874999205271403,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "forge:meteors",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 103,
+        "median": 0.7999997138977051,
+        "p95": 0.9000000953674316,
+        "mean": 0.7757281608951901,
+        "max": 0.9000000953674316
+      },
+      "submitMs": {
+        "samples": 103,
+        "median": 0.09999990463256836,
+        "p95": 0.10000038146972656,
+        "mean": 0.0640776736065022,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:shards",
+      "n": 12,
+      "isolated": true,
+      "costMs": {
+        "samples": 163,
+        "median": 0.5,
+        "p95": 0.5999999046325684,
+        "mean": 0.4889570511191901,
+        "max": 1.4000000953674316
+      },
+      "submitMs": {
+        "samples": 163,
+        "median": 0.09999990463256836,
+        "p95": 0.10000038146972656,
+        "mean": 0.06134969325153374,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "forge:meteors",
+      "n": 12,
+      "isolated": true,
+      "costMs": {
+        "samples": 24,
+        "median": 3.4000000953674316,
+        "p95": 3.6000003814697266,
+        "mean": 3.4333333373069763,
+        "max": 3.700000286102295
+      },
+      "submitMs": {
+        "samples": 24,
+        "median": 0.19999980926513672,
+        "p95": 0.20000028610229492,
+        "mean": 0.17083340883255005,
+        "max": 0.2999997138977051
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:shards",
+      "n": 70,
+      "isolated": true,
+      "costMs": {
+        "samples": 55,
+        "median": 1.5,
+        "p95": 1.5999999046325684,
+        "mean": 1.4636363636363636,
+        "max": 1.6000003814697266
+      },
+      "submitMs": {
+        "samples": 55,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.20000002600929953,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "forge:meteors",
+      "n": 70,
+      "isolated": true,
+      "costMs": {
+        "samples": 8,
+        "median": 20.40000009536743,
+        "p95": 23.5,
+        "mean": 20.98750001192093,
+        "max": 23.5
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 0.8000001907348633,
+        "p95": 1,
+        "mean": 0.8499999046325684,
+        "max": 1
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "eye:shards",
+      "n": 300,
+      "isolated": true,
+      "costMs": {
+        "samples": 14,
+        "median": 5.899999618530273,
+        "p95": 6.099999904632568,
+        "mean": 5.785714285714286,
+        "max": 6.099999904632568
+      },
+      "submitMs": {
+        "samples": 14,
+        "median": 0.8999996185302734,
+        "p95": 1.0999999046325684,
+        "mean": 0.864285775593349,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "boss-particle",
+      "id": "forge:meteors",
+      "n": 300,
+      "isolated": true,
+      "costMs": {
+        "samples": 8,
+        "median": 109,
+        "p95": 116.30000019073486,
+        "mean": 102.67500001192093,
+        "max": 116.30000019073486
+      },
+      "submitMs": {
+        "samples": 8,
+        "median": 3.299999713897705,
+        "p95": 3.9000000953674316,
+        "mean": 3.2499999403953552,
+        "max": 3.9000000953674316
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.3000001907348633,
+        "mean": 0.2662500023841858,
+        "max": 0.40000009536743164
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.006249996026357015,
+        "max": 0.10000038146972656
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 80,
+    "filter": "baseline|overdrive-glow|blizzard|eye:shards|forge:meteors",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 24
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T03:57:54.350Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

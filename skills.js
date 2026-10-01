@@ -210,6 +210,8 @@
   }
   G.prepareDraft=()=>{
     normalize();
+    // A debug boss entry keeps the current build and bypasses the level draft.
+    if(G.directBossEntry)S.skillChosenLevel=S.level;
     // Apply entry effects only after the new queue is settled: an outgoing
     // decay/resonance must not benefit the board on which it is replaced.
     if(S.skillChosenLevel===S.level){applyLevelPassives();S.draft=null;G.save();return;}

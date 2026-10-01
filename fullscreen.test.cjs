@@ -6,7 +6,7 @@ const source=fs.readFileSync(__dirname+'/fullscreen.js','utf8');
 
 // A minimal header: one toggle button wrapping one [data-lucide] node, plus the
 // fullscreen document API the module touches.
-function boot({withButton=true}={}){
+function boot({withButton=true,standard=true,webkit=false,apple=false,standalone=false,requestError=null}={}){
   const calls=[],listeners={},buttonAttrs=new Map();
   let iconName='maximize';
   const icon={getAttribute:key=>key==='data-lucide'?iconName:null,
@@ -16,12 +16,14 @@ function boot({withButton=true}={}){
     setAttribute:(key,value)=>buttonAttrs.set(key,String(value)),
     querySelector:selector=>selector==='[data-lucide]'?icon:null,
     addEventListener:(name,callback)=>{listeners['button:'+name]=callback;}};
-  const document={documentElement:{requestFullscreen(){calls.push('request');return Promise.resolve();}},
+  const request=()=>{calls.push('request');if(requestError)throw requestError;return Promise.resolve();};
+  const document={documentElement:{...(standard?{requestFullscreen:request}:{}),...(webkit?{webkitRequestFullscreen:request}:{})},
     fullscreenElement:null,
     exitFullscreen(){calls.push('exit');return Promise.resolve();},
     getElementById:id=>withButton&&id==='fullscreen-toggle'?button:null,
     addEventListener:(name,callback)=>{listeners[name]=callback;}};
-  const window={lucide:{createIcons:()=>calls.push('icons')}};
+  const window={lucide:{createIcons:()=>calls.push('icons')},
+    SlingHomeScreen:{isAppleMobile:()=>apple,isStandalone:()=>standalone,showGuide:()=>calls.push('guide')}};
   vm.runInNewContext(source,{document,window,Promise});
   return {button,buttonAttrs,calls,listeners,document,iconName:()=>iconName};
 }
@@ -61,4 +63,43 @@ test('clicking again exits fullscreen',()=>{
 
 test('the module is inert when the header button is absent',()=>{
   assert.doesNotThrow(()=>boot({withButton:false}));
+});
+
+test('iPhone without fullscreen opens the home screen guide instead of doing nothing',()=>{
+  const {button,buttonAttrs,calls,listeners}=boot({standard:false,apple:true});
+  assert.equal(button.hidden,false);
+  assert.match(buttonAttrs.get('aria-label'),/添加到主屏幕/);
+  listeners['button:click']();
+  assert.deepEqual(calls,['guide']);
+});
+
+test('installed iPhone hides the unsupported toggle and does not ask to install again',()=>{
+  const {button,calls,listeners}=boot({standard:false,apple:true,standalone:true});
+  assert.equal(button.hidden,true);
+  listeners['button:click']();
+  assert.deepEqual(calls,[]);
+});
+
+test('iPad prefixed fullscreen still requests native fullscreen',()=>{
+  const {buttonAttrs,calls,listeners,document}=boot({standard:false,webkit:true,apple:true});
+  assert.equal(buttonAttrs.get('aria-label'),'进入全屏');
+  listeners['button:click']();
+  assert.deepEqual(calls,['request']);
+  document.webkitFullscreenElement={};
+  listeners.webkitfullscreenchange();
+  assert.equal(buttonAttrs.get('aria-label'),'退出全屏');
+});
+
+test('a synchronous Apple fullscreen error offers the home screen guide',()=>{
+  const {calls,listeners}=boot({apple:true,requestError:new Error('blocked')});
+  assert.doesNotThrow(()=>listeners['button:click']());
+  assert.deepEqual(calls,['request','guide']);
+});
+
+test('a rejected Apple fullscreen request offers the home screen guide',async()=>{
+  const {calls,listeners,document}=boot({apple:true});
+  document.documentElement.requestFullscreen=()=>Promise.reject(new Error('blocked'));
+  listeners['button:click']();
+  await Promise.resolve();
+  assert.deepEqual(calls,['guide']);
 });

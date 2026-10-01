@@ -8,7 +8,7 @@
 
 #skill-draft,.skill-flight{--tier-blue:#439be8;--tier-gold:#e0ad2c}
 #skill-draft{
-  width:min(940px,calc(100vw - 36px));padding:0;border:1px solid var(--line-2);border-radius:14px;
+  width:calc(var(--stage-w) - 16px);padding:0;border:1px solid var(--line-2);border-radius:14px;
   background:var(--surface);box-shadow:0 30px 90px -20px var(--shadow),0 0 0 1px color-mix(in srgb,var(--ink) 4%,transparent);
 }
 #skill-draft::backdrop{background:var(--scrim-strong);backdrop-filter:blur(10px) saturate(.8);-webkit-backdrop-filter:blur(10px) saturate(.8)}
@@ -38,7 +38,9 @@
 #skill-draft .skill-queue-slot.is-outgoing.is-previewing::before{content:"替换为新技能"}
 
 /* Cards */
-#skill-draft .draft-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0;padding:22px 28px 0;perspective:1100px}
+/* Keep the deal-in transforms out of the dialog's scrollable overflow.
+   Clip rather than hide: this wrapper must not become a scroll container. */
+#skill-draft .draft-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0;padding:22px 28px 0;perspective:1100px;overflow:clip}
 :is(#skill-draft,.skill-flight) .skill-card{
   --tier-line:var(--line-2);--tier-glow:transparent;
   display:flex;flex-direction:column;min-height:300px;padding:0;overflow:hidden;
@@ -120,8 +122,7 @@
 @media(hover:none),(pointer:coarse){#skill-draft .draft-keys,:is(#skill-draft,.skill-flight) .skill-key{display:none}}
 
 /* Mobile: stacked horizontal cards, art as a side column */
-@media(max-width:720px){
-  #skill-draft{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:12px}
+  #skill-draft{width:calc(var(--stage-w) - 16px);max-height:calc(var(--stage-h) - 16px);border-radius:12px}
   #skill-draft .draft-header{padding:18px 16px 0}
   #skill-draft h2{font-size:22px}
   #skill-draft #draft-loadout{margin:14px 16px 0;padding:8px;gap:5px}
@@ -129,7 +130,7 @@
   #skill-draft .skill-queue-slot.is-outgoing::before{content:"将替换";right:3px}
   #skill-draft .skill-queue-slot.is-previewing:not(.is-outgoing)::before{content:"放这里";right:3px}
   #skill-draft .skill-queue-slot.is-outgoing.is-previewing::before{content:"换入"}
-  #skill-draft .draft-options{grid-template-columns:1fr;gap:10px;padding:16px 16px 0}
+  #skill-draft .draft-options{grid-template-columns:1fr;gap:10px;padding:16px}
   :is(#skill-draft,.skill-flight) .skill-card{display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto 1fr auto;column-gap:0;min-height:0}
   :is(#skill-draft,.skill-flight) .skill-card-art{grid-row:1/4;grid-column:1;height:auto;border-bottom:0;border-right:1px solid color-mix(in srgb,var(--skill-color) 18%,var(--line))}
   :is(#skill-draft,.skill-flight) .skill-card .skill-emblem{width:46px;height:46px;border-radius:12px}
@@ -141,7 +142,6 @@
   :is(#skill-draft,.skill-flight) .skill-card .skill-chance{margin:0 0 10px}
   :is(#skill-draft,.skill-flight) .skill-card .skill-pick{grid-column:2;grid-row:3;padding:9px 14px}
   #skill-draft .draft-footer{padding:12px 16px 16px}
-}
 
 @media(prefers-reduced-motion:reduce){
   #skill-draft .skill-card,#skill-draft .skill-card .skill-emblem,#skill-draft .skill-card .skill-pick svg,

@@ -1,0 +1,446 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "animation",
+      "id": "blizzard",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 27.40000009536743,
+      "costMs": {
+        "samples": 240,
+        "median": 6.400000095367432,
+        "p95": 8,
+        "mean": 6.597499996423721,
+        "max": 10
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.5,
+        "p95": 1.5999999046325684,
+        "mean": 0.5570833067099253,
+        "max": 3.6000003814697266
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 4581,
+        "misses": 19,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "blizzard",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 42.89999961853027,
+      "costMs": {
+        "samples": 240,
+        "median": 13.400000095367432,
+        "p95": 16.5,
+        "mean": 13.961666665474574,
+        "max": 45.69999980926514
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 1.1000003814697266,
+        "p95": 2.8000001907348633,
+        "mean": 1.3533333361148834,
+        "max": 14.199999809265137
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 19441,
+        "misses": 53,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "snowburst",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 15.299999713897705,
+      "costMs": {
+        "samples": 240,
+        "median": 6.199999809265137,
+        "p95": 7,
+        "mean": 6.260833334922791,
+        "max": 11.199999809265137
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.40000009536743164,
+        "p95": 1.1999998092651367,
+        "mean": 0.4316666762034098,
+        "max": 2
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 24022,
+        "misses": 72,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "snowburst",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 34.90000009536743,
+      "costMs": {
+        "samples": 240,
+        "median": 11.900000095367432,
+        "p95": 14.899999618530273,
+        "mean": 12.597916664679845,
+        "max": 39.5
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.7000002861022949,
+        "p95": 2.5,
+        "mean": 0.9587500055631002,
+        "max": 13.400000095367432
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 38882,
+        "misses": 106,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "starforge",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 15,
+      "costMs": {
+        "samples": 240,
+        "median": 7.699999809265137,
+        "p95": 8.599999904632568,
+        "mean": 7.765833334128062,
+        "max": 14
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.40000009536743164,
+        "p95": 1.0999999046325684,
+        "mean": 0.4433333396911621,
+        "max": 1.5999999046325684
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 43463,
+        "misses": 125,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "starforge",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 25.399999618530273,
+      "costMs": {
+        "samples": 240,
+        "median": 15.400000095367432,
+        "p95": 20.09999990463257,
+        "mean": 15.954583328962325,
+        "max": 25.90000009536743
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.8000001907348633,
+        "p95": 1.8000001907348633,
+        "mean": 0.9541666587193807,
+        "max": 6.300000190734863
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 58323,
+        "misses": 159,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "mixed",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 18.699999809265137,
+      "costMs": {
+        "samples": 240,
+        "median": 7.299999713897705,
+        "p95": 9.5,
+        "mean": 7.624999998013179,
+        "max": 15.200000286102295
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.40000009536743164,
+        "p95": 2.1999998092651367,
+        "mean": 0.6850000003973643,
+        "max": 7.099999904632568
+      },
+      "cache": {
+        "entries": 67,
+        "bytes": 8848828,
+        "hits": 62803,
+        "misses": 226,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "mixed",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 36.80000019073486,
+      "costMs": {
+        "samples": 234,
+        "median": 14.700000286102295,
+        "p95": 30.700000286102295,
+        "mean": 17.108974358974358,
+        "max": 37.60000038146973
+      },
+      "submitMs": {
+        "samples": 234,
+        "median": 1,
+        "p95": 4.799999713897705,
+        "mean": 1.6935897505181468,
+        "max": 13
+      },
+      "cache": {
+        "entries": 127,
+        "bytes": 9548668,
+        "hits": 75946,
+        "misses": 353,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "firstDrawMs": 1.1999998092651367,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.39999961853027344,
+        "mean": 0.2687500019868215,
+        "max": 0.40000009536743164
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.01250000794728597,
+        "max": 0.20000028610229492
+      },
+      "cache": {
+        "entries": 127,
+        "bytes": 9548668,
+        "hits": 75946,
+        "misses": 353,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "animation",
+      "id": "serpent:atmosphere",
+      "n": 1,
+      "advance": {},
+      "isolated": true,
+      "firstDrawMs": 24,
+      "costMs": {
+        "samples": 240,
+        "median": 7,
+        "p95": 7.300000190734863,
+        "mean": 5.997916668653488,
+        "max": 8.200000286102295
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 2.299999713897705,
+        "p95": 2.5,
+        "mean": 1.2716666499773661,
+        "max": 3.5
+      },
+      "cache": {
+        "entries": 4,
+        "bytes": 2140048,
+        "hits": 76795,
+        "misses": 357,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "serpent:live-body",
+      "n": 1,
+      "snapshot": {
+        "snakes": [
+          {
+            "mode": "swim",
+            "head": {
+              "x": 313.62379354050904,
+              "y": 631.9956101866802,
+              "a": 1.495063911279505
+            },
+            "segs": 24,
+            "live": 24,
+            "twin": false,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 24,
+            "regen": false,
+            "retreat": false
+          },
+          {
+            "mode": "recover",
+            "head": {
+              "x": 312.12982159107924,
+              "y": 223.48195595666766,
+              "a": 0
+            },
+            "segs": 24,
+            "live": 24,
+            "twin": true,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 24,
+            "regen": false,
+            "retreat": false
+          }
+        ],
+        "regrowth": 0,
+        "sparks": 0,
+        "portals": 0,
+        "split": {
+          "cut": false,
+          "merging": false
+        },
+        "eclipse": false,
+        "dim": false,
+        "debris": 0
+      },
+      "isolated": false,
+      "firstDrawMs": 50.299999713897705,
+      "costMs": {
+        "samples": 141,
+        "median": 27.299999713897705,
+        "p95": 40.5,
+        "mean": 28.52907801012621,
+        "max": 42.90000009536743
+      },
+      "submitMs": {
+        "samples": 141,
+        "median": 4.599999904632568,
+        "p95": 7.299999713897705,
+        "mean": 4.8489361553327415,
+        "max": 8.800000190734863
+      },
+      "cache": {
+        "entries": 6,
+        "bytes": 2613136,
+        "hits": 78670,
+        "misses": 359,
+        "maxBytes": 16777216
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 4000,
+    "filter": "^animation/|^boss-scene/serpent:live-body$",
+    "raf": false,
+    "dom": false,
+    "animated": true,
+    "capture": true,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "captures": [
+    {
+      "name": "animation-blizzard-12"
+    },
+    {
+      "name": "animation-blizzard-56"
+    },
+    {
+      "name": "animation-snowburst-12"
+    },
+    {
+      "name": "animation-snowburst-56"
+    },
+    {
+      "name": "animation-starforge-12"
+    },
+    {
+      "name": "animation-starforge-56"
+    },
+    {
+      "name": "animation-mixed-12"
+    },
+    {
+      "name": "animation-mixed-56"
+    },
+    {
+      "name": "baseline-empty-canvas-0"
+    },
+    {
+      "name": "animation-serpent-atmosphere-1"
+    },
+    {
+      "name": "boss-scene-serpent-live-body-1"
+    }
+  ],
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 11
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T08:18:18.457Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

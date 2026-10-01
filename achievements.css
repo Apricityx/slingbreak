@@ -1,4 +1,4 @@
-.earnings{order:3;flex:none;padding:0 0 env(safe-area-inset-bottom);background:var(--panel);color:var(--on-panel);position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.earnings{order:3;flex:none;padding:0;background:var(--panel);color:var(--on-panel);position:relative;overflow:hidden;border-top:1px solid var(--line)}
 .earnings-top{position:relative;display:flex;justify-content:flex-end;align-items:center;min-height:78px;padding:10px 22px 12px;background:var(--bg);color:var(--ink-2);overflow:hidden}
 .earnings-total{min-width:0;display:grid;gap:3px}.earnings-label{font-size:10px;letter-spacing:1px;color:var(--on-panel-2)}.money-readout{position:relative;width:fit-content;max-width:100%}
 .wallet-readout{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:5px;color:var(--text-3);font-size:11px}.wallet-readout svg{width:13px;height:13px}.wallet-readout b{font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink-2)}
@@ -41,21 +41,41 @@
 .achievement-hero-bonus{position:relative;z-index:1;font-family:"Barlow Condensed",sans-serif;font-size:52px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:var(--hero-light);font-variant-numeric:tabular-nums;white-space:nowrap;text-shadow:0 2px 0 #14220e,0 0 24px color-mix(in srgb,var(--hero-light) 35%,transparent);transform-origin:right center}
 .achievement-hero.is-major{--hero-light:#ffe39a;border-color:#d7b65f}.achievement-hero.is-major .achievement-hero-mark{background:#514426;border-color:#efd482;box-shadow:0 0 28px #f3c65940,inset 0 0 14px #f3c65916}
 .achievement-hero-rays{position:absolute;left:41px;top:50%;width:0;height:0;pointer-events:none}.achievement-hero-rays i{position:absolute;left:0;top:0;width:13px;height:2px;border-radius:2px;background:var(--hero-light);box-shadow:0 0 5px var(--hero-light);opacity:var(--burst-fade,0);transform:rotate(var(--ray-angle)) translateX(var(--burst-radius,22px))}
-@media(max-width:400px){.achievement-hero{grid-template-columns:46px minmax(0,1fr) auto;gap:8px;padding:10px}.achievement-hero-mark{width:44px;height:44px;border-radius:10px}.achievement-hero-mark svg{width:30px;height:30px}.achievement-hero-name{font-size:18px;letter-spacing:0}.achievement-hero-bonus{font-size:44px}.achievement-hero-rays{left:33px}}
-/* A compact, in-flow score strip keeps both readouts outside the card stage. */
-.earnings-top .combo{--combo-color:var(--heat-0);position:relative;inset:auto;display:flex;flex-direction:column;align-items:stretch;gap:3px;width:108px;margin-left:auto;opacity:1;transform:none;filter:none}
-.combo-heading{display:flex;align-items:center;justify-content:space-between;color:var(--text-3);font-size:10px;letter-spacing:1px}.earnings-top .combo-arrow{height:auto;font-size:9px;font-weight:400;letter-spacing:0;color:var(--text-3)}
-.combo-values{position:relative;display:flex;align-items:baseline;justify-content:space-between;gap:8px}.earnings-top #combo-count{font-size:28px;line-height:1;letter-spacing:-.5px;font-weight:500}
-.earnings-top .combo-mult{margin:0;padding:0;background:none;border:0;border-radius:0;min-width:0;font-size:17px;font-weight:500;line-height:1;color:var(--combo-color)}
-.combo-meter{display:block;width:100%;height:3px;overflow:hidden;border-radius:2px;margin-top:2px;fill:none}.earnings-top .combo-track{stroke:var(--line)}.earnings-top .combo-progress{stroke-width:3}
-.earnings-top .combo.is-capped{--combo-color:var(--gold-ink)}.earnings-top .combo.is-capped .combo-mult{background:none;border:0}.earnings-top .combo-spark{font-size:10px;right:29px;top:3px;color:var(--gold-ink)}
-@media(max-width:360px){.earnings-top{min-height:72px;padding-left:18px;padding-right:18px}.earnings-main{padding-left:18px;padding-right:18px}.receipt-mark{display:none}#shot-money{font-size:37px}.earnings-top .combo{width:88px}}
-@media(max-height:680px){.earnings-top{padding-top:7px;padding-bottom:8px}}
-.earnings-top{justify-content:space-between;min-height:78px;background:var(--bg);color:var(--ink);border-bottom:1px solid var(--line)}
-.earnings-top>.arrow-receipt{align-items:flex-start;padding:0;border:0}.earnings-top>.arrow-receipt .bonus-badges{justify-content:flex-start}.earnings-top>.arrow-receipt #arrow-income{color:var(--accent-ink-strong)}
+.achievement-hero{grid-template-columns:46px minmax(0,1fr) auto;gap:8px;padding:10px}.achievement-hero-mark{width:44px;height:44px;border-radius:10px}.achievement-hero-mark svg{width:30px;height:30px}.achievement-hero-name{font-size:18px;letter-spacing:0}.achievement-hero-bonus{font-size:44px}.achievement-hero-rays{left:33px}
+/* Top HUD strip: the latest arrow's receipt and combo share one row; the core-unlock
+   meter runs full width beneath them, so nothing overlays the board. */
+.earnings-top{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:7px;min-height:0;padding:8px 16px 9px;background:var(--bg);color:var(--ink);border-bottom:1px solid var(--line)}
+.hud-row{display:flex;align-items:stretch;gap:14px;min-width:0}
+.receipt-heading,.combo-heading{display:flex;align-items:center;gap:6px;height:14px;font-size:10px;letter-spacing:1px;color:var(--text-3);white-space:nowrap}
+.earnings-top>.hud-row>.arrow-receipt{flex:1;align-items:stretch;gap:4px;padding:0;border:0;transition:opacity .2s}
+.arrow-tag{padding:1px 5px 1px 3px;border-radius:3px;background:var(--surface-2);letter-spacing:0;font-size:9px;color:var(--text-2)}
+.arrow-receipt-top{min-width:0;gap:8px}.earnings-top #arrow-income{font-size:26px;letter-spacing:-.3px;color:var(--accent-ink-strong);white-space:nowrap}
+.earnings-top .bonus-badges{flex-wrap:nowrap;justify-content:flex-start}
+.arrow-receipt.is-idle{opacity:.55}.arrow-receipt.is-idle .arrow-tag{visibility:hidden}.arrow-receipt.is-idle #arrow-income{color:var(--text-3)}
+.earnings-top .combo{--combo-color:var(--heat-0);position:relative;inset:auto;display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:none;width:118px;padding-left:14px;border-left:1px solid var(--line);opacity:1;transform:none;filter:none}
+.earnings-top .combo:not(.visible){--combo-color:var(--text-3)}
+.earnings-top .combo-arrow{display:none}
+.combo-meter{display:block;flex:1;min-width:0;height:3px;overflow:hidden;border-radius:2px;fill:none}.earnings-top .combo-track{stroke:var(--line)}.earnings-top .combo-progress{stroke-width:3}
+.combo-values{position:relative;display:flex;align-items:baseline;gap:6px}.earnings-top #combo-count{font-size:26px;line-height:1;letter-spacing:-.5px;font-weight:500}
+.earnings-top .combo-mult{margin:0 0 0 auto;padding:0;background:none;border:0;border-radius:0;min-width:0;font-size:17px;font-weight:500;line-height:1;color:var(--combo-color)}
+.earnings-top .combo.is-capped{--combo-color:var(--gold-ink)}.earnings-top .combo.is-capped .combo-mult{background:none;border:0}.earnings-top .combo-spark{position:static;align-self:center;font-size:10px;line-height:1;color:var(--gold-ink)}
+/* Core-unlock meter: gem · label · track · count. Fills with the accent, then glows once the core is out. */
+.earnings-top .core-progress{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:8px;width:auto;height:14px;font-size:10px;letter-spacing:1px;color:var(--text-3)}
+.core-gem{width:8px;height:8px;margin:0 2px;border:1.5px solid var(--line-2);border-radius:1px;rotate:45deg;transition:background .3s,border-color .3s,box-shadow .3s}
+#core-label{min-width:60px;white-space:nowrap}
+.earnings-top .progress-track{position:relative;height:5px;border-radius:3px;overflow:hidden;background:var(--surface-3)}
+.earnings-top .progress-track::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(25% - 1px),var(--bg) 0 25%,transparent 0 calc(50% - 1px),var(--bg) 0 50%,transparent 0 calc(75% - 1px),var(--bg) 0 75%,transparent 0);pointer-events:none}
+.earnings-top #progress-bar{border-radius:inherit}
+.earnings-top #progress-label{min-width:44px;text-align:right;font-family:"Barlow Condensed",sans-serif;font-size:13px;font-weight:500;letter-spacing:0;color:var(--text-2);font-variant-numeric:tabular-nums}
+.core-progress[data-state="ready"],.core-progress[data-state="cleared"]{color:var(--accent-ink)}
+.core-progress[data-state="ready"] .core-gem,.core-progress[data-state="cleared"] .core-gem{background:var(--accent-bar);border-color:var(--accent-line);box-shadow:0 0 0 3px var(--accent-soft)}
+.core-progress[data-state="ready"] #progress-label,.core-progress[data-state="cleared"] #progress-label{color:var(--accent-ink-strong)}
+.core-progress[data-state="ready"] .core-gem{animation:core-gem-pulse 1.6s ease-in-out infinite}
+.core-progress[data-state="ready"] .progress-track>span{background:linear-gradient(90deg,var(--accent-bar),var(--accent-ink) 50%,var(--accent-bar));background-size:200% 100%;animation:core-bar-flow 2s linear infinite}
+@keyframes core-gem-pulse{50%{box-shadow:0 0 0 5px var(--accent-soft)}}
+@keyframes core-bar-flow{to{background-position:-200% 0}}
 .earnings-main{min-height:78px;box-sizing:border-box;background:var(--panel)}.earnings-main>.earnings-summary{z-index:1}.earnings-main>.earnings-summary .earnings-total{padding-left:0}
 /* The per-arrow income strip is lifted above the skill bar; the rest of the panel stays at the bottom. */
 .arena-section>.earnings-top{flex:none}
-@media(max-width:360px){.earnings-top{padding-left:18px;padding-right:18px;gap:10px}.earnings-top>.arrow-receipt{min-width:0}.earnings-top>.arrow-receipt .bonus-badges{gap:3px}.earnings-top>.arrow-receipt .bonus-badge{padding:3px 4px}#shot-money{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.earnings,.earnings *{animation:none!important}#money-burst{display:none}}
-@media(prefers-reduced-motion:reduce){.achievement-pop,.combo,.combo *{animation:none!important;transition:none!important}.earnings-summary{transform:none}}
+@media(prefers-reduced-motion:reduce){.achievement-pop,.combo,.combo *{animation:none!important;transition:none!important}.earnings-summary{transform:none}.core-progress *{animation:none!important}}

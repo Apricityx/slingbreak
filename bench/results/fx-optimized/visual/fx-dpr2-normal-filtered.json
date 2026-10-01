@@ -1,0 +1,737 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 55.19999980926514,
+      "costMs": {
+        "samples": 19,
+        "median": 2.8000001907348633,
+        "p95": 6.300000190734863,
+        "mean": 3.178947373440391,
+        "max": 6.300000190734863
+      },
+      "submitMs": {
+        "samples": 19,
+        "median": 0.40000009536743164,
+        "p95": 2.4000000953674316,
+        "mean": 0.7052632131074604,
+        "max": 2.4000000953674316
+      },
+      "cache": {
+        "entries": 3,
+        "bytes": 370312,
+        "hits": 63,
+        "misses": 3,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 14.599999904632568,
+      "costMs": {
+        "samples": 12,
+        "median": 6.799999713897705,
+        "p95": 7.400000095367432,
+        "mean": 6.808333317438762,
+        "max": 7.400000095367432
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.5,
+        "p95": 0.8000001907348633,
+        "mean": 0.5749999284744263,
+        "max": 0.8000001907348633
+      },
+      "cache": {
+        "entries": 9,
+        "bytes": 1174048,
+        "hits": 334,
+        "misses": 9,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 15.299999713897705,
+      "costMs": {
+        "samples": 12,
+        "median": 9.800000190734863,
+        "p95": 17.699999809265137,
+        "mean": 11.583333333333334,
+        "max": 17.699999809265137
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.8000001907348633,
+        "p95": 0.9000000953674316,
+        "mean": 0.75,
+        "max": 0.9000000953674316
+      },
+      "cache": {
+        "entries": 9,
+        "bytes": 1174048,
+        "hits": 784,
+        "misses": 9,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 10.099999904632568,
+      "costMs": {
+        "samples": 12,
+        "median": 10.099999904632568,
+        "p95": 14.599999904632568,
+        "mean": 10.574999968210856,
+        "max": 14.599999904632568
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6000003814697266,
+        "p95": 1.299999713897705,
+        "mean": 0.6833333174387614,
+        "max": 1.299999713897705
+      },
+      "cache": {
+        "entries": 9,
+        "bytes": 1174048,
+        "hits": 1249,
+        "misses": 9,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 30.5,
+      "costMs": {
+        "samples": 12,
+        "median": 13.199999809265137,
+        "p95": 18.90000009536743,
+        "mean": 13.391666690508524,
+        "max": 18.90000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.1000003814697266,
+        "p95": 2,
+        "mean": 1.283333381017049,
+        "max": 2
+      },
+      "cache": {
+        "entries": 16,
+        "bytes": 1255696,
+        "hits": 2149,
+        "misses": 16,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 8.699999809265137,
+      "costMs": {
+        "samples": 25,
+        "median": 2.5,
+        "p95": 2.5,
+        "mean": 2.4560000038146974,
+        "max": 2.6000003814697266
+      },
+      "submitMs": {
+        "samples": 25,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.2760000228881836,
+        "max": 0.40000009536743164
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 1626008,
+        "hits": 2230,
+        "misses": 19,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 10.5,
+      "costMs": {
+        "samples": 12,
+        "median": 8.099999904632568,
+        "p95": 8.200000286102295,
+        "mean": 8.00000003973643,
+        "max": 8.200000286102295
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.5,
+        "p95": 0.5999999046325684,
+        "mean": 0.5,
+        "max": 0.5999999046325684
+      },
+      "cache": {
+        "entries": 25,
+        "bytes": 2429744,
+        "hits": 2501,
+        "misses": 25,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 13.400000095367432,
+      "costMs": {
+        "samples": 12,
+        "median": 12.900000095367432,
+        "p95": 22.59999990463257,
+        "mean": 13.741666674613953,
+        "max": 22.59999990463257
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6999998092651367,
+        "p95": 0.9000000953674316,
+        "mean": 0.6833332379659017,
+        "max": 0.9000000953674316
+      },
+      "cache": {
+        "entries": 25,
+        "bytes": 2429744,
+        "hits": 2951,
+        "misses": 25,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 13.900000095367432,
+      "costMs": {
+        "samples": 12,
+        "median": 13.5,
+        "p95": 14.599999904632568,
+        "mean": 13.566666642824808,
+        "max": 14.599999904632568
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6999998092651367,
+        "p95": 0.7999997138977051,
+        "mean": 0.6416666507720947,
+        "max": 0.7999997138977051
+      },
+      "cache": {
+        "entries": 25,
+        "bytes": 2429744,
+        "hits": 3416,
+        "misses": 25,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "firstDrawMs": 21.300000190734863,
+      "costMs": {
+        "samples": 12,
+        "median": 16.799999713897705,
+        "p95": 20.40000009536743,
+        "mean": 17.016666650772095,
+        "max": 20.40000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1,
+        "p95": 4.599999904632568,
+        "mean": 1.4083333015441895,
+        "max": 4.599999904632568
+      },
+      "cache": {
+        "entries": 32,
+        "bytes": 2511392,
+        "hits": 4316,
+        "misses": 32,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 5.300000190734863,
+      "costMs": {
+        "samples": 32,
+        "median": 1.8999996185302734,
+        "p95": 2.0999999046325684,
+        "mean": 1.8812499940395355,
+        "max": 2.1000003814697266
+      },
+      "submitMs": {
+        "samples": 32,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.234375,
+        "max": 0.40000009536743164
+      },
+      "cache": {
+        "entries": 33,
+        "bytes": 2613792,
+        "hits": 4350,
+        "misses": 33,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 7.800000190734863,
+      "costMs": {
+        "samples": 25,
+        "median": 2.4000000953674316,
+        "p95": 2.5999999046325684,
+        "mean": 2.4839999961853025,
+        "max": 4.099999904632568
+      },
+      "submitMs": {
+        "samples": 25,
+        "median": 0.3000001907348633,
+        "p95": 0.5,
+        "mean": 0.37200006484985354,
+        "max": 2
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 4458,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 5.5,
+      "costMs": {
+        "samples": 13,
+        "median": 4.600000381469727,
+        "p95": 5,
+        "mean": 4.653846153846154,
+        "max": 5
+      },
+      "submitMs": {
+        "samples": 13,
+        "median": 0.5,
+        "p95": 0.6000003814697266,
+        "mean": 0.4846153992872972,
+        "max": 0.6000003814697266
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 4650,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 9.5,
+      "costMs": {
+        "samples": 12,
+        "median": 6.900000095367432,
+        "p95": 7.699999809265137,
+        "mean": 6.883333325386047,
+        "max": 7.699999809265137
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6999998092651367,
+        "p95": 1.4000000953674316,
+        "mean": 0.7499999602635702,
+        "max": 1.4000000953674316
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 5085,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 12.699999809265137,
+      "costMs": {
+        "samples": 12,
+        "median": 12.700000286102295,
+        "p95": 14.299999713897705,
+        "mean": 12.958333333333334,
+        "max": 14.299999713897705
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1,
+        "p95": 1.1999998092651367,
+        "mean": 1.0416666269302368,
+        "max": 1.1999998092651367
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 5265,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "firstDrawMs": 14.400000095367432,
+      "costMs": {
+        "samples": 12,
+        "median": 12.300000190734863,
+        "p95": 13.099999904632568,
+        "mean": 12.324999928474426,
+        "max": 13.099999904632568
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.5,
+        "p95": 2.200000286102295,
+        "mean": 1.5166666507720947,
+        "max": 2.200000286102295
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 5610,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "firstDrawMs": 0.5999999046325684,
+      "costMs": {
+        "samples": 235,
+        "median": 0.2999997138977051,
+        "p95": 0.3000001907348633,
+        "mean": 0.25276595785262734,
+        "max": 0.5
+      },
+      "submitMs": {
+        "samples": 235,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.009361705374210438,
+        "max": 0.10000038146972656
+      },
+      "cache": {
+        "entries": 36,
+        "bytes": 2771076,
+        "hits": 5610,
+        "misses": 36,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:idle",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": null,
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "firstDrawMs": 25.300000190734863,
+      "costMs": {
+        "samples": 12,
+        "median": 6.900000095367432,
+        "p95": 7.100000381469727,
+        "mean": 6.883333325386047,
+        "max": 7.100000381469727
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.5999999046325684,
+        "p95": 0.8000001907348633,
+        "mean": 0.5583333571751913,
+        "max": 0.8000001907348633
+      },
+      "cache": {
+        "entries": 37,
+        "bytes": 3360900,
+        "hits": 5624,
+        "misses": 37,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "forge:idle",
+      "n": 1,
+      "snapshot": {
+        "heat": 0,
+        "overheated": false,
+        "meteors": 0,
+        "slam": false,
+        "wind": 0,
+        "palm": {
+          "x": 390,
+          "down": false,
+          "hits": 0
+        }
+      },
+      "isolated": false,
+      "firstDrawMs": 15,
+      "costMs": {
+        "samples": 17,
+        "median": 3.5999999046325684,
+        "p95": 4.399999618530273,
+        "mean": 3.6235294342041016,
+        "max": 4.399999618530273
+      },
+      "submitMs": {
+        "samples": 17,
+        "median": 0.40000009536743164,
+        "p95": 1.1999998092651367,
+        "mean": 0.42352940054500804,
+        "max": 1.1999998092651367
+      },
+      "cache": {
+        "entries": 39,
+        "bytes": 3565700,
+        "hits": 5662,
+        "misses": 39,
+        "maxBytes": 16777216
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:idle",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": null,
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 9,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "firstDrawMs": 24.700000286102295,
+      "costMs": {
+        "samples": 12,
+        "median": 8.199999809265137,
+        "p95": 24.100000381469727,
+        "mean": 11.46666669845581,
+        "max": 24.100000381469727
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.7999997138977051,
+        "p95": 1.3000001907348633,
+        "mean": 0.825000007947286,
+        "max": 1.3000001907348633
+      },
+      "cache": {
+        "entries": 40,
+        "bytes": 4155524,
+        "hits": 5676,
+        "misses": 40,
+        "maxBytes": 16777216
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 60,
+    "filter": "^hero/(blizzard|supernova)$|^core/(overdrive-glow|firewheel)$|^boss-scene/(eye:idle|forge:idle|clock:idle)$",
+    "raf": false,
+    "dom": false,
+    "animated": false,
+    "capture": true,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "captures": [
+    {
+      "name": "hero-blizzard-1"
+    },
+    {
+      "name": "hero-blizzard-12"
+    },
+    {
+      "name": "hero-blizzard-23"
+    },
+    {
+      "name": "hero-blizzard-24"
+    },
+    {
+      "name": "hero-blizzard-56"
+    },
+    {
+      "name": "hero-supernova-1"
+    },
+    {
+      "name": "hero-supernova-12"
+    },
+    {
+      "name": "hero-supernova-23"
+    },
+    {
+      "name": "hero-supernova-24"
+    },
+    {
+      "name": "hero-supernova-56"
+    },
+    {
+      "name": "core-overdrive-glow-1"
+    },
+    {
+      "name": "core-firewheel-1"
+    },
+    {
+      "name": "core-overdrive-glow-12"
+    },
+    {
+      "name": "core-firewheel-12"
+    },
+    {
+      "name": "core-overdrive-glow-64"
+    },
+    {
+      "name": "core-firewheel-64"
+    },
+    {
+      "name": "baseline-empty-canvas-0"
+    },
+    {
+      "name": "boss-scene-eye-idle-1"
+    },
+    {
+      "name": "boss-scene-forge-idle-1"
+    },
+    {
+      "name": "boss-scene-clock-idle-1"
+    }
+  ],
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 20
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T05:28:29.073Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

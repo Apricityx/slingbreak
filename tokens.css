@@ -65,6 +65,13 @@
   --shadow: #26342133;
   --shadow-soft: #25292314;
 
+  /* Letterbox around the fixed stage: a soft sage wash, never pure white. */
+  --letterbox: #d4d9cc;
+  --letterbox-glow: #e6e9df;
+  --letterbox-dot: #22271f14;
+  --frame-edge: #22271f1f;
+  --frame-shadow: #2634212e;
+
   /* Combo heat tiers, cool → hot. */
   --heat-0: #56703a;
   --heat-1: #3a7f1c;
@@ -132,6 +139,13 @@
   --scrim-strong: #000000b0;
   --shadow: #00000080;
   --shadow-soft: #00000040;
+
+  /* Letterbox: deep moss slate with a faint lift, never pure black. */
+  --letterbox: #1b2019;
+  --letterbox-glow: #252b22;
+  --letterbox-dot: #e6ecde0d;
+  --frame-edge: #e6ecde1f;
+  --frame-shadow: #0000008c;
 
   --heat-0: #9fb98a;
   --heat-1: #8fd14f;

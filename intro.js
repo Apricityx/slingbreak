@@ -5,7 +5,7 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const intro = window.SlingBreakIntro;
   const reveal = () => document.documentElement.classList.remove('intro-pending');
-  if (reduced.matches) { intro.active = false; reveal(); Game.ui?.(); return; }
+  if (Game.reduced || new URLSearchParams(location.search).has('boss')) { intro.active = false; reveal(); Game.ui?.(); return; }
   const ctx = canvas.getContext('2d');
   if (!ctx) { intro.active = false; reveal(); Game.ui?.(); return; }
 
@@ -67,17 +67,30 @@
     ctx.clearRect(0, 0, 640, 460);
 
     ctx.globalAlpha = .55;
-    for (let x = 136; x <= 504; x += 23) {
-      for (let y = 45; y < 420; y += 23) {
-        ctx.fillStyle = P.dot;
-        ctx.fillRect(x, y, 1.5, 1.5);
-      }
-    }
+    // Sparse dots are cheaper as one small vector path than a mostly
+    // transparent full-screen bitmap (especially at DPR 2).
+    ctx.fillStyle=P.dot;ctx.beginPath();
+    for(let x=136;x<=504;x+=23)for(let y=45;y<420;y+=23)ctx.rect(x,y,1.5,1.5);
+    ctx.fill();
     ctx.globalAlpha = 1;
-    blocks.forEach((block, i) => {
+    if(burst){
+      // All 60 rotating fragments, three colour fills: no 60 save/translate/
+      // rotate/restore stacks during the opening impact.
+      const progress=ease(burst);ctx.globalAlpha=1-burst;
+      for(const color of colors){ctx.fillStyle=color;ctx.beginPath();
+        blocks.forEach((block,i)=>{if(block.color!==color)return;
+          for(let part=0;part<4;part++){
+            const vx=(i%5-2)*65+(part%2?20:-20),vy=(Math.floor(i/5)-2)*58-(part<2?35:0);
+            const x=block.x+11+(part%2)*22+vx*progress,y=block.y+8+Math.floor(part/2)*16+vy*progress+65*burst*burst;
+            const a=(i%2?1:-1)*burst*(part+1),c=Math.cos(a),s=Math.sin(a);
+            ctx.moveTo(x-9*c+6*s,y-9*s-6*c);ctx.lineTo(x+9*c+6*s,y+9*s-6*c);
+            ctx.lineTo(x+9*c-6*s,y+9*s+6*c);ctx.lineTo(x-9*c-6*s,y-9*s+6*c);ctx.closePath();
+          }
+        });ctx.fill();
+      }
+    }else blocks.forEach((block, i) => {
       const reveal = ease((t - i * 22) / 380);
       ctx.save();
-      if (!burst) {
         ctx.globalAlpha = reveal;
         ctx.translate(block.x + 22, block.y + 16 + (1 - reveal) * 18);
         ctx.scale(reveal, reveal);
@@ -85,22 +98,6 @@
         ctx.fillRect(-22, -16, 44, 32);
         ctx.fillStyle = P.sheen;
         ctx.fillRect(-17, -11, 34, 3);
-      } else {
-        // Deterministic fragments keep the same rhythm on every entry.
-        const progress = ease(burst);
-        for (let part = 0; part < 4; part++) {
-          ctx.save();
-          const vx = (i % 5 - 2) * 65 + (part % 2 ? 20 : -20);
-          const vy = (Math.floor(i / 5) - 2) * 58 - (part < 2 ? 35 : 0);
-          ctx.translate(block.x + 11 + (part % 2) * 22 + vx * progress,
-            block.y + 8 + Math.floor(part / 2) * 16 + vy * progress + 65 * burst * burst);
-          ctx.rotate((i % 2 ? 1 : -1) * burst * (part + 1));
-          ctx.globalAlpha = 1 - burst;
-          ctx.fillStyle = block.color;
-          ctx.fillRect(-9, -6, 18, 12);
-          ctx.restore();
-        }
-      }
       ctx.restore();
     });
 

@@ -1,0 +1,684 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "board",
+      "n": 0,
+      "isolated": false,
+      "frameMs": {
+        "samples": 871,
+        "median": 1.8000001907348633,
+        "p95": 3.3000001907348633,
+        "mean": 2.0646383469468828,
+        "max": 23
+      },
+      "submitMs": {
+        "samples": 872,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.17591743239569008,
+        "max": 4.599999904632568
+      },
+      "fps": 484.3463270353213
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 401,
+        "median": 4.299999713897705,
+        "p95": 5.399999618530273,
+        "mean": 4.482044888256197,
+        "max": 16.799999713897705
+      },
+      "submitMs": {
+        "samples": 402,
+        "median": 0.39999961853027344,
+        "p95": 0.5,
+        "mean": 0.3833333366545872,
+        "max": 3.4000000953674316
+      },
+      "fps": 223.1124464237716
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 58,
+        "median": 30.5,
+        "p95": 35.40000009536743,
+        "mean": 31.010344825941942,
+        "max": 41.5
+      },
+      "submitMs": {
+        "samples": 59,
+        "median": 1.700000286102295,
+        "p95": 2.1999998092651367,
+        "mean": 1.7762711815914864,
+        "max": 4.299999713897705
+      },
+      "fps": 32.247303459955155
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 31,
+        "median": 57.799999713897705,
+        "p95": 62.09999990463257,
+        "mean": 57.935483870967744,
+        "max": 62.30000019073486
+      },
+      "submitMs": {
+        "samples": 32,
+        "median": 2.4000000953674316,
+        "p95": 4.299999713897705,
+        "mean": 2.5812499821186066,
+        "max": 4.599999904632568
+      },
+      "fps": 17.260579064587972
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 97,
+        "median": 18.399999618530273,
+        "p95": 20.40000009536743,
+        "mean": 18.47216495041995,
+        "max": 25.200000286102295
+      },
+      "submitMs": {
+        "samples": 98,
+        "median": 2,
+        "p95": 2.5,
+        "mean": 2.100000021409015,
+        "max": 4.199999809265137
+      },
+      "fps": 54.13550618912516
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 43,
+        "median": 41.200000286102295,
+        "p95": 44.5,
+        "mean": 41.56046511406122,
+        "max": 46
+      },
+      "submitMs": {
+        "samples": 44,
+        "median": 4.400000095367432,
+        "p95": 4.800000190734863,
+        "mean": 4.513636350631714,
+        "max": 6.099999904632568
+      },
+      "fps": 24.061328410438513
+    },
+    {
+      "group": "hero",
+      "id": "snowburst",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 449,
+        "median": 3.9000000953674316,
+        "p95": 4.599999904632568,
+        "mean": 4.002004454555384,
+        "max": 14.5
+      },
+      "submitMs": {
+        "samples": 450,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.3073333273993598,
+        "max": 1
+      },
+      "fps": 249.87478433756476
+    },
+    {
+      "group": "hero",
+      "id": "snowburst",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 70,
+        "median": 24.90000009536743,
+        "p95": 29.299999713897705,
+        "mean": 25.405714287076677,
+        "max": 32.19999980926514
+      },
+      "submitMs": {
+        "samples": 71,
+        "median": 1.299999713897705,
+        "p95": 1.8000001907348633,
+        "mean": 1.3943661434549681,
+        "max": 6.400000095367432
+      },
+      "fps": 39.36122356963913
+    },
+    {
+      "group": "hero",
+      "id": "snowburst",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 36,
+        "median": 48.5,
+        "p95": 61.799999713897705,
+        "mean": 49.855555560853745,
+        "max": 62.90000009536743
+      },
+      "submitMs": {
+        "samples": 37,
+        "median": 2.1999998092651367,
+        "p95": 3.5,
+        "mean": 2.3513513255763696,
+        "max": 4.799999713897705
+      },
+      "fps": 20.057945172818282
+    },
+    {
+      "group": "hero",
+      "id": "snowburst",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 112,
+        "median": 15.200000286102295,
+        "p95": 18.5,
+        "mean": 15.988392859697342,
+        "max": 49.90000009536743
+      },
+      "submitMs": {
+        "samples": 113,
+        "median": 1.8999996185302734,
+        "p95": 2.6999998092651367,
+        "mean": 1.9646017488125151,
+        "max": 4.400000095367432
+      },
+      "fps": 62.54537330770404
+    },
+    {
+      "group": "hero",
+      "id": "snowburst",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 51,
+        "median": 34.19999980926514,
+        "p95": 42,
+        "mean": 35.14313725864186,
+        "max": 51.19999980926514
+      },
+      "submitMs": {
+        "samples": 52,
+        "median": 4,
+        "p95": 5.5,
+        "mean": 4.261538423024691,
+        "max": 6.699999809265137
+      },
+      "fps": 28.4550577440008
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 532,
+        "median": 3.1999998092651367,
+        "p95": 4.599999904632568,
+        "mean": 3.387593984603882,
+        "max": 8.400000095367432
+      },
+      "submitMs": {
+        "samples": 533,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.24465291182498325,
+        "max": 1.1999998092651367
+      },
+      "fps": 295.19476198884917
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 83,
+        "median": 21,
+        "p95": 24.799999713897705,
+        "mean": 21.516867471028522,
+        "max": 31.90000009536743
+      },
+      "submitMs": {
+        "samples": 84,
+        "median": 0.5999999046325684,
+        "p95": 0.9000000953674316,
+        "mean": 0.6869047255743117,
+        "max": 3.4000000953674316
+      },
+      "fps": 46.47516658019362
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 44,
+        "median": 40.200000286102295,
+        "p95": 43.799999713897705,
+        "mean": 40.53863637013869,
+        "max": 45.5
+      },
+      "submitMs": {
+        "samples": 45,
+        "median": 1,
+        "p95": 1.200000286102295,
+        "mean": 1.006666660308838,
+        "max": 1.5999999046325684
+      },
+      "fps": 24.66782530298956
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 134,
+        "median": 13.099999904632568,
+        "p95": 15.399999618530273,
+        "mean": 13.385074626153974,
+        "max": 18.40000009536743
+      },
+      "submitMs": {
+        "samples": 135,
+        "median": 0.8000001907348633,
+        "p95": 1.0999999046325684,
+        "mean": 0.8192592408921984,
+        "max": 1.8999996185302734
+      },
+      "fps": 74.71008028943182
+    },
+    {
+      "group": "hero",
+      "id": "supernova",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 62,
+        "median": 28.59999990463257,
+        "p95": 31.600000381469727,
+        "mean": 28.890322577568792,
+        "max": 35.5
+      },
+      "submitMs": {
+        "samples": 63,
+        "median": 1.5,
+        "p95": 1.6999998092651367,
+        "mean": 1.5222222161671473,
+        "max": 2.3999996185302734
+      },
+      "fps": 34.61366681922847
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 801,
+        "median": 2.0999999046325684,
+        "p95": 2.6999998092651367,
+        "mean": 2.24581772795926,
+        "max": 10.5
+      },
+      "submitMs": {
+        "samples": 802,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.16458853046198438,
+        "max": 1.0999999046325684
+      },
+      "fps": 445.27211071073185
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 627,
+        "median": 2.6999998092651367,
+        "p95": 3.5999999046325684,
+        "mean": 2.8663476878566225,
+        "max": 20.700000286102295
+      },
+      "submitMs": {
+        "samples": 628,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.26719744569936377,
+        "max": 0.9000000953674316
+      },
+      "fps": 348.8760293234953
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 284,
+        "median": 6.099999904632568,
+        "p95": 7.100000381469727,
+        "mean": 6.327464788732394,
+        "max": 17
+      },
+      "submitMs": {
+        "samples": 285,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.31929824896026077,
+        "max": 1
+      },
+      "fps": 158.04117974401782
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 165,
+        "median": 10.400000095367432,
+        "p95": 13.5,
+        "mean": 10.854545454545455,
+        "max": 22.300000190734863
+      },
+      "submitMs": {
+        "samples": 166,
+        "median": 1.0999999046325684,
+        "p95": 1.5999999046325684,
+        "mean": 1.1879518118249364,
+        "max": 3.9000000953674316
+      },
+      "fps": 92.12730318257955
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 62,
+        "median": 28.5,
+        "p95": 30.800000190734863,
+        "mean": 28.582258062977946,
+        "max": 34
+      },
+      "submitMs": {
+        "samples": 63,
+        "median": 1.0999999046325684,
+        "p95": 1.200000286102295,
+        "mean": 1.1349206349206349,
+        "max": 1.8000001907348633
+      },
+      "fps": 34.98673889923627
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 37,
+        "median": 46.700000286102295,
+        "p95": 60.40000009536743,
+        "mean": 48.440540545695534,
+        "max": 65.5
+      },
+      "submitMs": {
+        "samples": 38,
+        "median": 4.800000190734863,
+        "p95": 10.900000095367432,
+        "mean": 5.668421080237941,
+        "max": 10.900000095367432
+      },
+      "fps": 20.64386542211823
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 0,
+      "limit": 300,
+      "synthetic": false,
+      "isolated": false,
+      "frameMs": {
+        "samples": 914,
+        "median": 1.799999713897705,
+        "p95": 2.4000000953674316,
+        "mean": 1.9675054706682,
+        "max": 92.40000009536743
+      },
+      "submitMs": {
+        "samples": 915,
+        "median": 0.10000038146972656,
+        "p95": 0.20000028610229492,
+        "mean": 0.13890710997451197,
+        "max": 1
+      },
+      "fps": 508.2577989785117
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 100,
+      "limit": 300,
+      "synthetic": false,
+      "isolated": false,
+      "frameMs": {
+        "samples": 791,
+        "median": 2,
+        "p95": 3.0999999046325684,
+        "mean": 2.2748419717048423,
+        "max": 46.69999980926514
+      },
+      "submitMs": {
+        "samples": 792,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.19343434198938234,
+        "max": 2.4000000953674316
+      },
+      "fps": 439.59097486256013
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 300,
+      "limit": 300,
+      "synthetic": false,
+      "isolated": false,
+      "frameMs": {
+        "samples": 763,
+        "median": 2.200000286102295,
+        "p95": 2.700000286102295,
+        "mean": 2.3577981651376145,
+        "max": 16
+      },
+      "submitMs": {
+        "samples": 764,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.20418846981687697,
+        "max": 1.0999999046325684
+      },
+      "fps": 424.12451361867704
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 1000,
+      "limit": 300,
+      "synthetic": true,
+      "isolated": false,
+      "frameMs": {
+        "samples": 539,
+        "median": 3.0999999046325684,
+        "p95": 4.300000190734863,
+        "mean": 3.3343228196832375,
+        "max": 14.900000095367432
+      },
+      "submitMs": {
+        "samples": 540,
+        "median": 0.3000001907348633,
+        "p95": 0.5,
+        "mean": 0.3496296343980012,
+        "max": 2.799999713897705
+      },
+      "fps": 299.91097265591117
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 3000,
+      "limit": 300,
+      "synthetic": true,
+      "isolated": false,
+      "frameMs": {
+        "samples": 303,
+        "median": 5.799999713897705,
+        "p95": 6.900000095367432,
+        "mean": 5.929702969667542,
+        "max": 11.699999809265137
+      },
+      "submitMs": {
+        "samples": 304,
+        "median": 0.6999998092651367,
+        "p95": 0.8000001907348633,
+        "mean": 0.7006579025795585,
+        "max": 1.6999998092651367
+      },
+      "fps": 168.64251128856571
+    },
+    {
+      "group": "core",
+      "id": "square-particles",
+      "n": 8000,
+      "limit": 300,
+      "synthetic": true,
+      "isolated": false,
+      "frameMs": {
+        "samples": 140,
+        "median": 12.599999904632568,
+        "p95": 14,
+        "mean": 12.77785714353834,
+        "max": 20.59999990463257
+      },
+      "submitMs": {
+        "samples": 141,
+        "median": 1.700000286102295,
+        "p95": 2,
+        "mean": 1.7652481938084812,
+        "max": 2.799999713897705
+      },
+      "fps": 78.26038347170692
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1476,
+        "median": 0.7999997138977051,
+        "p95": 6,
+        "mean": 1.2193766935731014,
+        "max": 22.199999809265137
+      },
+      "submitMs": {
+        "samples": 1477,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.02010833014486283,
+        "max": 5.400000095367432
+      },
+      "fps": 820.0911213660573
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 1800,
+    "filter": "baseline|hero/(blizzard|snowburst|supernova)|core/(overdrive-glow|firewheel|square-particles)",
+    "raf": true,
+    "dom": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Real rAF + production rendering, without readback; simulation frozen"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 29
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:15:06.959Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

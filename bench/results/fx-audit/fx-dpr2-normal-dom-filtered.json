@@ -1,0 +1,222 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.3012499988079071,
+        "max": 2.8000001907348633
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.010000000397364298,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "dom",
+      "id": "baseline",
+      "n": 0,
+      "actualNodes": 0,
+      "synthetic": false,
+      "spawnMs": 0.09999990463256836,
+      "frameMs": {
+        "samples": 545,
+        "median": 1.8000001907348633,
+        "p95": 3,
+        "mean": 2.19339449558783,
+        "max": 43.19999980926514
+      },
+      "fps": 455.9143382604322
+    },
+    {
+      "group": "dom",
+      "id": "coins",
+      "n": 1,
+      "actualNodes": 14,
+      "synthetic": false,
+      "spawnMs": 2.5,
+      "frameMs": {
+        "samples": 544,
+        "median": 1.9000000953674316,
+        "p95": 3.8000001907348633,
+        "mean": 2.2053308820023254,
+        "max": 12.099999904632568
+      },
+      "fps": 453.4466950791766
+    },
+    {
+      "group": "dom",
+      "id": "coins",
+      "n": 4,
+      "actualNodes": 56,
+      "synthetic": true,
+      "spawnMs": 5.299999713897705,
+      "frameMs": {
+        "samples": 443,
+        "median": 2.5,
+        "p95": 3.9000000953674316,
+        "mean": 2.6999999997847235,
+        "max": 38.5
+      },
+      "fps": 370.37037039990076
+    },
+    {
+      "group": "dom",
+      "id": "coins",
+      "n": 16,
+      "actualNodes": 224,
+      "synthetic": true,
+      "spawnMs": 28,
+      "frameMs": {
+        "samples": 194,
+        "median": 3.6999998092651367,
+        "p95": 15.799999713897705,
+        "mean": 6.1036082469310955,
+        "max": 162.5
+      },
+      "fps": 163.83751373669855
+    },
+    {
+      "group": "dom",
+      "id": "sparks",
+      "n": 1,
+      "actualNodes": 6,
+      "synthetic": false,
+      "spawnMs": 2.4000000953674316,
+      "frameMs": {
+        "samples": 611,
+        "median": 1.8000001907348633,
+        "p95": 2.4000000953674316,
+        "mean": 1.9638297873901267,
+        "max": 16.59999990463257
+      },
+      "fps": 509.20910071792485
+    },
+    {
+      "group": "dom",
+      "id": "sparks",
+      "n": 4,
+      "actualNodes": 6,
+      "synthetic": true,
+      "spawnMs": 2.1999998092651367,
+      "frameMs": {
+        "samples": 585,
+        "median": 1.8000001907348633,
+        "p95": 3,
+        "mean": 2.0485470087100297,
+        "max": 16.800000190734863
+      },
+      "fps": 488.1508677849185
+    },
+    {
+      "group": "dom",
+      "id": "sparks",
+      "n": 16,
+      "actualNodes": 6,
+      "synthetic": true,
+      "spawnMs": 1.799999713897705,
+      "frameMs": {
+        "samples": 680,
+        "median": 1.700000286102295,
+        "p95": 1.9000000953674316,
+        "mean": 1.7626470586832832,
+        "max": 9
+      },
+      "fps": 567.3285500201107
+    },
+    {
+      "group": "dom",
+      "id": "payout",
+      "n": 1,
+      "actualNodes": 1,
+      "synthetic": false,
+      "spawnMs": 0.9000000953674316,
+      "frameMs": {
+        "samples": 620,
+        "median": 1.8000001907348633,
+        "p95": 2.5,
+        "mean": 1.9330645161290323,
+        "max": 7.599999904632568
+      },
+      "fps": 517.3133083020442
+    },
+    {
+      "group": "dom",
+      "id": "payout",
+      "n": 4,
+      "actualNodes": 4,
+      "synthetic": true,
+      "spawnMs": 1.8999996185302734,
+      "frameMs": {
+        "samples": 589,
+        "median": 1.9000000953674316,
+        "p95": 2.6999998092651367,
+        "mean": 2.0351443128796305,
+        "max": 30.700000286102295
+      },
+      "fps": 491.36564599934854
+    },
+    {
+      "group": "dom",
+      "id": "payout",
+      "n": 16,
+      "actualNodes": 16,
+      "synthetic": true,
+      "spawnMs": 5.5,
+      "frameMs": {
+        "samples": 506,
+        "median": 2,
+        "p95": 3.9000000953674316,
+        "mean": 2.3703557314137695,
+        "max": 24.700000286102295
+      },
+      "fps": 421.87760543585676
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 1200,
+    "filter": "^dom/",
+    "raf": false,
+    "dom": true,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 11
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:18:33.097Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

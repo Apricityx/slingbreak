@@ -1,0 +1,351 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.29333333571751913,
+        "max": 1.1999998092651367
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.011250001192092896,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:back",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 58,
+        "median": 4,
+        "p95": 5,
+        "mean": 4.1465517159166,
+        "max": 6.599999904632568
+      },
+      "submitMs": {
+        "samples": 58,
+        "median": 0.10000038146972656,
+        "p95": 0.3000001907348633,
+        "mean": 0.19482758949542867,
+        "max": 2.8999996185302734
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:field",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 80,
+        "median": 3,
+        "p95": 3.5999999046325684,
+        "mean": 3.030000001192093,
+        "max": 4
+      },
+      "submitMs": {
+        "samples": 80,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.261249965429306,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:front",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 1.3000001907348633,
+        "mean": 0.40625,
+        "max": 3.4000000953674316
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.011250001192092896,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:back",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 85,
+        "median": 2.6999998092651367,
+        "p95": 4.099999904632568,
+        "mean": 2.8305882397819966,
+        "max": 4.700000286102295
+      },
+      "submitMs": {
+        "samples": 85,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.12352941176470589,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:field",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.5999999046325684,
+        "p95": 0.6000003814697266,
+        "mean": 0.5545833309491476,
+        "max": 0.7000002861022949
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.10000038146972656,
+        "mean": 0.04875001311302185,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:front",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.3000001907348633,
+        "mean": 0.2587499996026357,
+        "max": 0.5
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.00874999761581421,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "serpent:idle",
+      "n": 1,
+      "snapshot": {
+        "snakes": [
+          {
+            "mode": "emerge",
+            "head": {
+              "x": 390,
+              "y": 150,
+              "a": 1.2858341625102352
+            },
+            "segs": 48,
+            "live": 0,
+            "twin": false,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 48,
+            "regen": false,
+            "retreat": false
+          }
+        ],
+        "regrowth": 0,
+        "sparks": 0,
+        "portals": 1,
+        "split": null,
+        "eclipse": false,
+        "dim": false,
+        "debris": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 24.5,
+        "p95": 32.40000009536743,
+        "mean": 25.116666674613953,
+        "max": 32.40000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 2,
+        "p95": 2.4000000953674316,
+        "mean": 1.9916666348775227,
+        "max": 2.4000000953674316
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:back",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 23,
+        "median": 10.599999904632568,
+        "p95": 11.199999809265137,
+        "mean": 10.630434803340746,
+        "max": 11.300000190734863
+      },
+      "submitMs": {
+        "samples": 23,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.21304346167522928,
+        "max": 0.7999997138977051
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:field",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.8000001907348633,
+        "p95": 1,
+        "mean": 0.8512500007947286,
+        "max": 2.0999999046325684
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.10000001192092896,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:front",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 34,
+        "median": 7.199999809265137,
+        "p95": 7.200000286102295,
+        "mean": 7.161764705882353,
+        "max": 7.400000095367432
+      },
+      "submitMs": {
+        "samples": 34,
+        "median": 0.09999990463256836,
+        "p95": 0.10000038146972656,
+        "mean": 0.07058822407441981,
+        "max": 0.10000038146972656
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:back",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 46,
+        "median": 5.199999809265137,
+        "p95": 5.400000095367432,
+        "mean": 5.2195652153181,
+        "max": 6
+      },
+      "submitMs": {
+        "samples": 46,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.2391304347826087,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:field",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 115,
+        "median": 1.9000000953674316,
+        "p95": 3.200000286102295,
+        "mean": 2.0973913109820823,
+        "max": 6
+      },
+      "submitMs": {
+        "samples": 115,
+        "median": 0.19999980926513672,
+        "p95": 0.5999999046325684,
+        "mean": 0.28086955858313517,
+        "max": 2.799999713897705
+      }
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:front",
+      "n": 1,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.27416666348775226,
+        "max": 0.40000009536743164
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.011666667461395264,
+        "max": 0.19999980926513672
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 240,
+    "filter": "^boss-layer/|^boss-scene/serpent",
+    "raf": false,
+    "dom": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 14
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:17:26.877Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

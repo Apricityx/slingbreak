@@ -4,7 +4,9 @@
 .launcher-mode .brand{display:none}
 /* The fullscreen toggle belongs to the standalone page, not the native launcher shell. */
 .launcher-mode .fullscreen-toggle,.launcher-mode-pending .fullscreen-toggle{display:none}
-.launcher-mode .site-header{position:relative;display:flex;height:calc(58px + env(safe-area-inset-top));min-height:calc(58px + env(safe-area-inset-top));flex-shrink:0;padding:env(safe-area-inset-top) 12px 0;gap:8px;background:var(--bg);border-bottom:1px solid var(--line-2)}
+/* Native launcher installs the app itself; the browser-only shortcut does not apply. */
+.launcher-mode .install-group,.launcher-mode-pending .install-group{display:none}
+.launcher-mode .site-header{position:relative;display:flex;height:58px;min-height:58px;flex-shrink:0;padding:0 12px;gap:8px;background:var(--bg);border-bottom:1px solid var(--line-2)}
 .launcher-mode .header-right{position:static;flex-shrink:0}
 .launcher-mode .header-right:empty{display:none}
 .launcher-mode .launcher-progress{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:30px 6px;align-content:center;gap:4px 12px;flex:1;min-width:0;height:56px;color:var(--ink);letter-spacing:0}

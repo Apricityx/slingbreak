@@ -1,0 +1,735 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "board",
+      "n": 0,
+      "isolated": false,
+      "frameMs": {
+        "samples": 640,
+        "median": 1.8000001907348633,
+        "p95": 2.200000286102295,
+        "mean": 1.8739062502980233,
+        "max": 5.900000095367432
+      },
+      "submitMs": {
+        "samples": 641,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.1680187145001059,
+        "max": 1.5
+      },
+      "fps": 533.6446259469818
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 479,
+        "median": 2.4000000953674316,
+        "p95": 2.8000001907348633,
+        "mean": 2.501043841336117,
+        "max": 5.800000190734863
+      },
+      "submitMs": {
+        "samples": 480,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.19562498231728873,
+        "max": 0.7000002861022949
+      },
+      "fps": 399.8330550918197
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 204,
+        "median": 5.699999809265137,
+        "p95": 6.900000095367432,
+        "mean": 5.873039215218787,
+        "max": 16.799999713897705
+      },
+      "submitMs": {
+        "samples": 205,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.29853657978336984,
+        "max": 0.8000001907348633
+      },
+      "fps": 170.26959353663148
+    },
+    {
+      "group": "impact",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 98,
+        "median": 11.900000095367432,
+        "p95": 14.5,
+        "mean": 12.211224487849645,
+        "max": 18.09999990463257
+      },
+      "submitMs": {
+        "samples": 99,
+        "median": 0.9000000953674316,
+        "p95": 1.1999998092651367,
+        "mean": 0.9363636296204846,
+        "max": 3.8000001907348633
+      },
+      "fps": 81.89186932031389
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 452,
+        "median": 2.5999999046325684,
+        "p95": 2.9000000953674316,
+        "mean": 2.651991150020498,
+        "max": 5
+      },
+      "submitMs": {
+        "samples": 453,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.2123620231156844,
+        "max": 0.9000000953674316
+      },
+      "fps": 377.0751648218248
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 178,
+        "median": 6.599999904632568,
+        "p95": 7.900000095367432,
+        "mean": 6.735393256283878,
+        "max": 11.599999904632568
+      },
+      "submitMs": {
+        "samples": 179,
+        "median": 0.40000009536743164,
+        "p95": 1.5,
+        "mean": 0.4653631348849675,
+        "max": 1.6000003814697266
+      },
+      "fps": 148.469430358359
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 86,
+        "median": 9.699999809265137,
+        "p95": 19.90000009536743,
+        "mean": 13.868604648944943,
+        "max": 291.69999980926514
+      },
+      "submitMs": {
+        "samples": 87,
+        "median": 0.40000009536743164,
+        "p95": 0.6999998092651367,
+        "mean": 0.4643678171881314,
+        "max": 2.5999999046325684
+      },
+      "fps": 72.10530729752075
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 118,
+        "median": 10,
+        "p95": 11.400000095367432,
+        "mean": 10.14237288297233,
+        "max": 14.5
+      },
+      "submitMs": {
+        "samples": 119,
+        "median": 0.40000009536743164,
+        "p95": 0.8000001907348633,
+        "mean": 0.4672268819408256,
+        "max": 1.3000001907348633
+      },
+      "fps": 98.59625666877862
+    },
+    {
+      "group": "hero",
+      "id": "blizzard",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 95,
+        "median": 12.200000286102295,
+        "p95": 14.300000190734863,
+        "mean": 12.504210527319657,
+        "max": 17.199999809265137
+      },
+      "submitMs": {
+        "samples": 96,
+        "median": 0.6999998092651367,
+        "p95": 1.1999998092651367,
+        "mean": 0.7437499910593033,
+        "max": 2.6999998092651367
+      },
+      "fps": 79.97306169911035
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 1,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 441,
+        "median": 2.5999999046325684,
+        "p95": 3.0999999046325684,
+        "mean": 2.720634919986163,
+        "max": 13.200000286102295
+      },
+      "submitMs": {
+        "samples": 442,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.23529412411996142,
+        "max": 1.4000000953674316
+      },
+      "fps": 367.561260297683
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 12,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 230,
+        "median": 5,
+        "p95": 6.599999904632568,
+        "mean": 5.197826086956522,
+        "max": 9
+      },
+      "submitMs": {
+        "samples": 231,
+        "median": 0.40000009536743164,
+        "p95": 0.5999999046325684,
+        "mean": 0.4510822585134795,
+        "max": 1
+      },
+      "fps": 192.38812212463404
+    },
+    {
+      "group": "trail",
+      "id": "blizzard",
+      "n": 64,
+      "limit": 64,
+      "trail": "helix",
+      "isolated": false,
+      "frameMs": {
+        "samples": 122,
+        "median": 9.699999809265137,
+        "p95": 11.299999713897705,
+        "mean": 9.798360656519405,
+        "max": 16.90000009536743
+      },
+      "submitMs": {
+        "samples": 123,
+        "median": 0.9000000953674316,
+        "p95": 1.1999998092651367,
+        "mean": 0.9219512357944395,
+        "max": 2.1999998092651367
+      },
+      "fps": 102.0578885647206
+    },
+    {
+      "group": "impact",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 56,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 482,
+        "median": 2.4000000953674316,
+        "p95": 2.6999998092651367,
+        "mean": 2.485892115786857,
+        "max": 7.099999904632568
+      },
+      "submitMs": {
+        "samples": 483,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.2151138550499705,
+        "max": 0.7999997138977051
+      },
+      "fps": 402.2700718383633
+    },
+    {
+      "group": "impact",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 56,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 220,
+        "median": 5.100000381469727,
+        "p95": 7.400000095367432,
+        "mean": 5.435909091342579,
+        "max": 13
+      },
+      "submitMs": {
+        "samples": 221,
+        "median": 0.5,
+        "p95": 0.6999998092651367,
+        "mean": 0.4710407149198368,
+        "max": 1.0999999046325684
+      },
+      "fps": 183.96186970687853
+    },
+    {
+      "group": "impact",
+      "id": "firewheel",
+      "n": 56,
+      "limit": 56,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 113,
+        "median": 10.300000190734863,
+        "p95": 12,
+        "mean": 10.542477873574317,
+        "max": 16
+      },
+      "submitMs": {
+        "samples": 114,
+        "median": 1,
+        "p95": 1.200000286102295,
+        "mean": 1.0342105187867816,
+        "max": 3.4000000953674316
+      },
+      "fps": 94.85436080511882
+    },
+    {
+      "group": "hero",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 425,
+        "median": 2.6999998092651367,
+        "p95": 3.5,
+        "mean": 2.819294117198271,
+        "max": 9.700000286102295
+      },
+      "submitMs": {
+        "samples": 426,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.244600922848697,
+        "max": 1.1999998092651367
+      },
+      "fps": 354.6987147952374
+    },
+    {
+      "group": "hero",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 192,
+        "median": 6,
+        "p95": 7.699999809265137,
+        "mean": 6.232291668653488,
+        "max": 11.700000286102295
+      },
+      "submitMs": {
+        "samples": 193,
+        "median": 0.5,
+        "p95": 0.7000002861022949,
+        "mean": 0.5476683853821434,
+        "max": 1
+      },
+      "fps": 160.45462137622548
+    },
+    {
+      "group": "hero",
+      "id": "firewheel",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 123,
+        "median": 9.100000381469727,
+        "p95": 13.900000095367432,
+        "mean": 9.732520324427908,
+        "max": 22.700000286102295
+      },
+      "submitMs": {
+        "samples": 124,
+        "median": 0.8000001907348633,
+        "p95": 1.0999999046325684,
+        "mean": 0.837096756504428,
+        "max": 2.299999713897705
+      },
+      "fps": 102.74830842018113
+    },
+    {
+      "group": "hero",
+      "id": "firewheel",
+      "n": 24,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 133,
+        "median": 8.800000190734863,
+        "p95": 9.699999809265137,
+        "mean": 8.973684210526315,
+        "max": 14
+      },
+      "submitMs": {
+        "samples": 134,
+        "median": 0.8000001907348633,
+        "p95": 1,
+        "mean": 0.8447761073041318,
+        "max": 3.5
+      },
+      "fps": 111.43695014662758
+    },
+    {
+      "group": "hero",
+      "id": "firewheel",
+      "n": 56,
+      "limit": 56,
+      "isolated": false,
+      "frameMs": {
+        "samples": 104,
+        "median": 11,
+        "p95": 14.300000190734863,
+        "mean": 11.47019230402433,
+        "max": 18.700000286102295
+      },
+      "submitMs": {
+        "samples": 105,
+        "median": 1.0999999046325684,
+        "p95": 1.4000000953674316,
+        "mean": 1.1295238086155484,
+        "max": 3.4000000953674316
+      },
+      "fps": 87.18249646513327
+    },
+    {
+      "group": "trail",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 64,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 427,
+        "median": 2.5999999046325684,
+        "p95": 4.199999809265137,
+        "mean": 2.807494145645749,
+        "max": 9.699999809265137
+      },
+      "submitMs": {
+        "samples": 428,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.2142523215195843,
+        "max": 1.5
+      },
+      "fps": 356.18952279951804
+    },
+    {
+      "group": "trail",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 64,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 214,
+        "median": 5.100000381469727,
+        "p95": 8.199999809265137,
+        "mean": 5.597196262573528,
+        "max": 18.90000009536743
+      },
+      "submitMs": {
+        "samples": 215,
+        "median": 0.40000009536743164,
+        "p95": 0.6999998092651367,
+        "mean": 0.4469767415246298,
+        "max": 1
+      },
+      "fps": 178.66087824839133
+    },
+    {
+      "group": "trail",
+      "id": "firewheel",
+      "n": 64,
+      "limit": 64,
+      "trail": "flame",
+      "isolated": false,
+      "frameMs": {
+        "samples": 122,
+        "median": 9.300000190734863,
+        "p95": 12,
+        "mean": 9.823770491803279,
+        "max": 17
+      },
+      "submitMs": {
+        "samples": 123,
+        "median": 0.7999997138977051,
+        "p95": 1.299999713897705,
+        "mean": 0.8349593402893563,
+        "max": 2.5
+      },
+      "fps": 101.7939090529829
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 545,
+        "median": 2.0999999046325684,
+        "p95": 2.5999999046325684,
+        "mean": 2.1988990818688627,
+        "max": 9
+      },
+      "submitMs": {
+        "samples": 546,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.18223443834772912,
+        "max": 0.40000009536743164
+      },
+      "fps": 454.7730308523716
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 1,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 386,
+        "median": 2.8000001907348633,
+        "p95": 4.599999904632568,
+        "mean": 3.099999999752934,
+        "max": 15.5
+      },
+      "submitMs": {
+        "samples": 387,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.2671834652430019,
+        "max": 1.700000286102295
+      },
+      "fps": 322.58064518699956
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 231,
+        "median": 4.800000190734863,
+        "p95": 6.399999618530273,
+        "mean": 5.1731601731601735,
+        "max": 28.40000009536743
+      },
+      "submitMs": {
+        "samples": 232,
+        "median": 0.5,
+        "p95": 0.6000003814697266,
+        "mean": 0.507327583329431,
+        "max": 5
+      },
+      "fps": 193.30543933054392
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 12,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 167,
+        "median": 6.699999809265137,
+        "p95": 9.900000095367432,
+        "mean": 7.175449102938532,
+        "max": 12.300000190734863
+      },
+      "submitMs": {
+        "samples": 168,
+        "median": 0.6999998092651367,
+        "p95": 1,
+        "mean": 0.7172619019235883,
+        "max": 3.1000003814697266
+      },
+      "fps": 139.3640991182662
+    },
+    {
+      "group": "core",
+      "id": "overdrive-glow",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 97,
+        "median": 12.199999809265137,
+        "p95": 13.200000286102295,
+        "mean": 12.245360826708607,
+        "max": 14.399999618530273
+      },
+      "submitMs": {
+        "samples": 98,
+        "median": 0.9000000953674316,
+        "p95": 1.0999999046325684,
+        "mean": 0.9071428289218825,
+        "max": 1.0999999046325684
+      },
+      "fps": 81.66357971411341
+    },
+    {
+      "group": "core",
+      "id": "firewheel",
+      "n": 64,
+      "limit": 64,
+      "isolated": false,
+      "frameMs": {
+        "samples": 99,
+        "median": 11.599999904632568,
+        "p95": 15.600000381469727,
+        "mean": 12.011111110147803,
+        "max": 19.59999990463257
+      },
+      "submitMs": {
+        "samples": 100,
+        "median": 1.0999999046325684,
+        "p95": 1.5999999046325684,
+        "mean": 1.187999997138977,
+        "max": 4
+      },
+      "fps": 83.25624422499364
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "frameMs": {
+        "samples": 656,
+        "median": 0.9000000953674316,
+        "p95": 7.200000286102295,
+        "mean": 1.8182926824906978,
+        "max": 18.300000190734863
+      },
+      "submitMs": {
+        "samples": 657,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.019025877367597373,
+        "max": 0.10000038146972656
+      },
+      "fps": 549.9664655913369
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:back",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 214,
+        "median": 5.400000095367432,
+        "p95": 6.899999618530273,
+        "mean": 5.586915889633036,
+        "max": 10.5
+      },
+      "submitMs": {
+        "samples": 215,
+        "median": 0.09999990463256836,
+        "p95": 0.19999980926513672,
+        "mean": 0.08418605493944745,
+        "max": 0.20000028610229492
+      },
+      "fps": 178.98962858123193
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 1200,
+    "filter": "baseline|overdrive-glow|firewheel|blizzard|serpent:back",
+    "raf": true,
+    "dom": false,
+    "animated": false,
+    "capture": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Real rAF + production rendering, without readback; simulation frozen"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 31
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T05:28:03.482Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

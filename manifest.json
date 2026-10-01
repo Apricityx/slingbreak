@@ -1,0 +1,16 @@
+{
+  "id": "./index.html",
+  "name": "弓引力 · SLING / BREAK",
+  "short_name": "弓引力",
+  "description": "一箭打破局面，随时开启一局弓引力。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f6f3",
+  "theme_color": "#f5f6f3",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

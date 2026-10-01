@@ -1,0 +1,2516 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "board",
+      "n": 0,
+      "isolated": false,
+      "costMs": {
+        "samples": 82,
+        "median": 1.4000000953674316,
+        "p95": 2.1000003814697266,
+        "mean": 1.4719512171861602,
+        "max": 3.4000000953674316
+      },
+      "submitMs": {
+        "samples": 82,
+        "median": 0.19999980926513672,
+        "p95": 1.1000003814697266,
+        "mean": 0.2853658490064668,
+        "max": 2.200000286102295
+      },
+      "updateMs": {
+        "samples": 10,
+        "median": 0.004000000953674317,
+        "p95": 0.02,
+        "mean": 0.007300000190734864,
+        "max": 0.02
+      }
+    },
+    {
+      "group": "variant",
+      "id": "supernova:nova",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 26,
+        "median": 4.5,
+        "p95": 5.400000095367432,
+        "mean": 4.680769241773165,
+        "max": 7
+      },
+      "submitMs": {
+        "samples": 26,
+        "median": 0.3000001907348633,
+        "p95": 0.6999998092651367,
+        "mean": 0.3269231136028583,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "variant",
+      "id": "supernova:nova",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 63.89999961853027,
+        "p95": 67.90000009536743,
+        "mean": 63.5833332935969,
+        "max": 67.90000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.1999998092651367,
+        "p95": 1.9000000953674316,
+        "mean": 1.1916666825612385,
+        "max": 1.9000000953674316
+      }
+    },
+    {
+      "group": "variant",
+      "id": "supernova:nova",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 122,
+        "p95": 136,
+        "mean": 116.94999996821086,
+        "max": 136
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.6999998092651367,
+        "p95": 2.5999999046325684,
+        "mean": 1.6833332777023315,
+        "max": 2.5999999046325684
+      }
+    },
+    {
+      "group": "variant",
+      "id": "roulette:nova",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 28,
+        "median": 4.400000095367432,
+        "p95": 4.800000190734863,
+        "mean": 4.432142853736877,
+        "max": 5
+      },
+      "submitMs": {
+        "samples": 28,
+        "median": 0.3000001907348633,
+        "p95": 0.5,
+        "mean": 0.3749999829701015,
+        "max": 1
+      }
+    },
+    {
+      "group": "variant",
+      "id": "roulette:nova",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 36.5,
+        "p95": 51.5,
+        "mean": 37.70000000794729,
+        "max": 51.5
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1,
+        "p95": 1.5,
+        "mean": 1.0666666428248088,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "roulette:nova",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 66.80000019073486,
+        "p95": 70.59999990463257,
+        "mean": 67.34166665871938,
+        "max": 70.59999990463257
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.5,
+        "p95": 5.099999904632568,
+        "mean": 1.75,
+        "max": 5.099999904632568
+      }
+    },
+    {
+      "group": "variant",
+      "id": "pulse:nova",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 20,
+        "median": 6.199999809265137,
+        "p95": 6.300000190734863,
+        "mean": 6.120000004768372,
+        "max": 6.300000190734863
+      },
+      "submitMs": {
+        "samples": 20,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.28000004291534425,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "variant",
+      "id": "pulse:nova",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 70,
+        "p95": 72.30000019073486,
+        "mean": 70.1416666507721,
+        "max": 72.30000019073486
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.9000000953674316,
+        "p95": 1.5,
+        "mean": 0.9500000476837158,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "pulse:nova",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 141.40000009536743,
+        "p95": 167.30000019073486,
+        "mean": 143.5,
+        "max": 167.30000019073486
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.4000000953674316,
+        "p95": 5.400000095367432,
+        "mean": 1.8166666825612385,
+        "max": 5.400000095367432
+      }
+    },
+    {
+      "group": "variant",
+      "id": "orbital:mark",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 38,
+        "median": 3.1999998092651367,
+        "p95": 3.5999999046325684,
+        "mean": 3.1973684210526314,
+        "max": 3.8000001907348633
+      },
+      "submitMs": {
+        "samples": 38,
+        "median": 0.2999997138977051,
+        "p95": 0.5,
+        "mean": 0.3026314785605983,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "variant",
+      "id": "orbital:mark",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 23,
+        "p95": 27,
+        "mean": 23.391666650772095,
+        "max": 27
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.0999999046325684,
+        "p95": 1.8000001907348633,
+        "mean": 1.1166667143503826,
+        "max": 1.8000001907348633
+      }
+    },
+    {
+      "group": "variant",
+      "id": "orbital:mark",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 42.09999990463257,
+        "p95": 47,
+        "mean": 42.55833331743876,
+        "max": 47
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.5,
+        "p95": 4.799999713897705,
+        "mean": 2.016666571299235,
+        "max": 4.799999713897705
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sharpshooter:power",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 45,
+        "median": 2.6999998092651367,
+        "p95": 2.9000000953674316,
+        "mean": 2.702222220102946,
+        "max": 2.9000000953674316
+      },
+      "submitMs": {
+        "samples": 45,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.25333335664537215,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sharpshooter:power",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 18,
+        "p95": 18.40000009536743,
+        "mean": 17.80833335717519,
+        "max": 18.40000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6999998092651367,
+        "p95": 1.1999998092651367,
+        "mean": 0.6999999682108561,
+        "max": 1.1999998092651367
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sharpshooter:power",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 33.09999990463257,
+        "p95": 37.80000019073486,
+        "mean": 33.391666650772095,
+        "max": 37.80000019073486
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1,
+        "p95": 1.200000286102295,
+        "mean": 1.0416667064030964,
+        "max": 1.200000286102295
+      }
+    },
+    {
+      "group": "variant",
+      "id": "legion:split",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 48,
+        "median": 2.5,
+        "p95": 2.5999999046325684,
+        "mean": 2.5208333233992257,
+        "max": 3.3999996185302734
+      },
+      "submitMs": {
+        "samples": 48,
+        "median": 0.2999997138977051,
+        "p95": 0.3000001907348633,
+        "mean": 0.26458324988683063,
+        "max": 1
+      }
+    },
+    {
+      "group": "variant",
+      "id": "legion:split",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 15.800000190734863,
+        "p95": 16.90000009536743,
+        "mean": 15.75000003973643,
+        "max": 16.90000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.9000000953674316,
+        "p95": 1.5,
+        "mean": 0.9333333571751913,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "legion:split",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 30.700000286102295,
+        "p95": 61.39999961853027,
+        "mean": 33.03333330154419,
+        "max": 61.39999961853027
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.9000000953674316,
+        "p95": 8.599999904632568,
+        "mean": 2.633333404858907,
+        "max": 8.599999904632568
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sweep:beam",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 70,
+        "median": 1.700000286102295,
+        "p95": 1.9000000953674316,
+        "mean": 1.7228571483067103,
+        "max": 2.3000001907348633
+      },
+      "submitMs": {
+        "samples": 70,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.21857145854404994,
+        "max": 0.7000002861022949
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sweep:beam",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 20,
+        "median": 6,
+        "p95": 11.200000286102295,
+        "mean": 6.215000009536743,
+        "max": 11.200000286102295
+      },
+      "submitMs": {
+        "samples": 20,
+        "median": 0.5,
+        "p95": 0.5999999046325684,
+        "mean": 0.48500001430511475,
+        "max": 0.5999999046325684
+      }
+    },
+    {
+      "group": "variant",
+      "id": "sweep:beam",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 10.5,
+        "p95": 11.300000190734863,
+        "mean": 10.533333341280619,
+        "max": 11.300000190734863
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.7000002861022949,
+        "p95": 1.5,
+        "mean": 0.7749999761581421,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "lance:beam",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 51,
+        "median": 2.3000001907348633,
+        "p95": 2.5,
+        "mean": 2.3588235238019157,
+        "max": 6
+      },
+      "submitMs": {
+        "samples": 51,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.21764706630332797,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "variant",
+      "id": "lance:beam",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 11.099999904632568,
+        "p95": 11.5,
+        "mean": 10.983333309491476,
+        "max": 11.5
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.5999999046325684,
+        "p95": 0.7000002861022949,
+        "mean": 0.5666666825612386,
+        "max": 0.7000002861022949
+      }
+    },
+    {
+      "group": "variant",
+      "id": "lance:beam",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 22.100000381469727,
+        "p95": 29.59999990463257,
+        "mean": 21.974999984105427,
+        "max": 29.59999990463257
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.9000000953674316,
+        "p95": 1.5,
+        "mean": 1.025000015894572,
+        "max": 1.5
+      }
+    },
+    {
+      "group": "variant",
+      "id": "crossfire:beam",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 64,
+        "median": 1.9000000953674316,
+        "p95": 2,
+        "mean": 1.8921874985098839,
+        "max": 2.5
+      },
+      "submitMs": {
+        "samples": 64,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.23281249403953552,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "variant",
+      "id": "crossfire:beam",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.5,
+        "p95": 9.200000286102295,
+        "mean": 7.6812500059604645,
+        "max": 9.200000286102295
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5,
+        "p95": 1.3000001907348633,
+        "mean": 0.5375000536441803,
+        "max": 1.3000001907348633
+      }
+    },
+    {
+      "group": "variant",
+      "id": "crossfire:beam",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 13.5,
+        "p95": 19.09999990463257,
+        "mean": 13.866666674613953,
+        "max": 19.09999990463257
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.9000000953674316,
+        "p95": 1.4000000953674316,
+        "mean": 0.8916666905085245,
+        "max": 1.4000000953674316
+      }
+    },
+    {
+      "group": "variant",
+      "id": "stormfront:beam",
+      "n": 1,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 52,
+        "median": 2.299999713897705,
+        "p95": 2.5,
+        "mean": 2.325000001833989,
+        "max": 3.1999998092651367
+      },
+      "submitMs": {
+        "samples": 52,
+        "median": 0.2999997138977051,
+        "p95": 0.40000009536743164,
+        "mean": 0.290384631890517,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "variant",
+      "id": "stormfront:beam",
+      "n": 12,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 11.099999904632568,
+        "p95": 13.799999713897705,
+        "mean": 11.40833330154419,
+        "max": 13.799999713897705
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.1999998092651367,
+        "p95": 3.6999998092651367,
+        "mean": 1.3499999046325684,
+        "max": 3.6999998092651367
+      }
+    },
+    {
+      "group": "variant",
+      "id": "stormfront:beam",
+      "n": 23,
+      "limit": 56,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 19.09999990463257,
+        "p95": 25.59999990463257,
+        "mean": 19.741666674613953,
+        "max": 25.59999990463257
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.4000000953674316,
+        "p95": 1.6999998092651367,
+        "mean": 1.3916667699813843,
+        "max": 1.6999998092651367
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "wormhole:portal",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 57,
+        "median": 2.0999999046325684,
+        "p95": 2.200000286102295,
+        "mean": 2.1052631578947367,
+        "max": 2.8000001907348633
+      },
+      "submitMs": {
+        "samples": 57,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.24210525813855624,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "wormhole:portal",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 13,
+        "median": 10,
+        "p95": 15.800000190734863,
+        "mean": 10.3692307472229,
+        "max": 15.800000190734863
+      },
+      "submitMs": {
+        "samples": 13,
+        "median": 0.8000001907348633,
+        "p95": 1,
+        "mean": 0.8307691354017991,
+        "max": 1
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "wormhole:portal",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 63.90000009536743,
+        "p95": 69.69999980926514,
+        "mean": 64.59999998410542,
+        "max": 69.69999980926514
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 5.200000286102295,
+        "p95": 10.800000190734863,
+        "mean": 5.574999928474426,
+        "max": 10.800000190734863
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "siegebreaker:rubble",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 70,
+        "median": 1.5,
+        "p95": 2.4000000953674316,
+        "mean": 1.7100000040871757,
+        "max": 6
+      },
+      "submitMs": {
+        "samples": 70,
+        "median": 0.19999980926513672,
+        "p95": 0.40000009536743164,
+        "mean": 0.20999997002737864,
+        "max": 0.7000002861022949
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "siegebreaker:rubble",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 40,
+        "median": 3,
+        "p95": 3.3000001907348633,
+        "mean": 3.0225000023841857,
+        "max": 3.5
+      },
+      "submitMs": {
+        "samples": 40,
+        "median": 0.5,
+        "p95": 0.6999998092651367,
+        "mean": 0.49249993562698363,
+        "max": 0.7999997138977051
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "siegebreaker:rubble",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 11.699999809265137,
+        "p95": 12.099999904632568,
+        "mean": 11.558333357175192,
+        "max": 12.099999904632568
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.9000000953674316,
+        "p95": 2.0999999046325684,
+        "mean": 1.8666666746139526,
+        "max": 2.0999999046325684
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "threadweaver:cut",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 85,
+        "median": 1.4000000953674316,
+        "p95": 1.5,
+        "mean": 1.4094117725596709,
+        "max": 1.9000000953674316
+      },
+      "submitMs": {
+        "samples": 85,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.12705882577335134,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "threadweaver:cut",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 43,
+        "median": 2.799999713897705,
+        "p95": 3,
+        "mean": 2.7976744230403456,
+        "max": 3.5999999046325684
+      },
+      "submitMs": {
+        "samples": 43,
+        "median": 0.19999980926513672,
+        "p95": 0.20000028610229492,
+        "mean": 0.18372095462887786,
+        "max": 0.6999998092651367
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "threadweaver:cut",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 11.800000190734863,
+        "p95": 15.200000286102295,
+        "mean": 11.941666642824808,
+        "max": 15.200000286102295
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.3000001907348633,
+        "p95": 1.0999999046325684,
+        "mean": 0.3999999364217122,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:seed",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 75,
+        "median": 1.5999999046325684,
+        "p95": 1.700000286102295,
+        "mean": 1.6106666692097982,
+        "max": 2.3000001907348633
+      },
+      "submitMs": {
+        "samples": 75,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.20533334096272787,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:seed",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 25,
+        "median": 4.700000286102295,
+        "p95": 5.099999904632568,
+        "mean": 4.927999992370605,
+        "max": 10
+      },
+      "submitMs": {
+        "samples": 25,
+        "median": 0.6999998092651367,
+        "p95": 0.8000001907348633,
+        "mean": 0.6920000076293945,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:seed",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 26.199999809265137,
+        "p95": 32.200000286102295,
+        "mean": 27.108333349227905,
+        "max": 32.200000286102295
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 3.5,
+        "p95": 5.900000095367432,
+        "mean": 3.7083332935969033,
+        "max": 5.900000095367432
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:root",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 86,
+        "median": 1.4000000953674316,
+        "p95": 1.5,
+        "mean": 1.4023255858310433,
+        "max": 1.8999996185302734
+      },
+      "submitMs": {
+        "samples": 86,
+        "median": 0.10000038146972656,
+        "p95": 0.20000028610229492,
+        "mean": 0.1441860753436421,
+        "max": 0.6999998092651367
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:root",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 63,
+        "median": 1.9000000953674316,
+        "p95": 2.5,
+        "mean": 1.9253968208555192,
+        "max": 2.700000286102295
+      },
+      "submitMs": {
+        "samples": 63,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.17301588209848556,
+        "max": 0.7999997138977051
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "infection:root",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 25,
+        "median": 4.799999713897705,
+        "p95": 6.799999713897705,
+        "mean": 4.96,
+        "max": 7.600000381469727
+      },
+      "submitMs": {
+        "samples": 25,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.20800004959106444,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "transmute:transform",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 79,
+        "median": 1.5,
+        "p95": 1.700000286102295,
+        "mean": 1.5341772067395947,
+        "max": 2.1999998092651367
+      },
+      "submitMs": {
+        "samples": 79,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.1797468451004994,
+        "max": 0.8999996185302734
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "transmute:transform",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 42,
+        "median": 2.8000001907348633,
+        "p95": 3.5,
+        "mean": 2.895238092967442,
+        "max": 4.300000190734863
+      },
+      "submitMs": {
+        "samples": 42,
+        "median": 0.40000009536743164,
+        "p95": 0.7000002861022949,
+        "mean": 0.46904763721284415,
+        "max": 0.8999996185302734
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "transmute:transform",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 10.799999713897705,
+        "p95": 12.199999809265137,
+        "mean": 10.833333333333334,
+        "max": 12.199999809265137
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.8000001907348633,
+        "p95": 2.4000000953674316,
+        "mean": 1.9166667064030964,
+        "max": 2.4000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "spectral:phase",
+      "n": 1,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 66,
+        "median": 1.700000286102295,
+        "p95": 1.9000000953674316,
+        "mean": 1.812121210676251,
+        "max": 7.5
+      },
+      "submitMs": {
+        "samples": 66,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.1772726954835834,
+        "max": 0.7999997138977051
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "spectral:phase",
+      "n": 12,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 24,
+        "median": 5.299999713897705,
+        "p95": 5.400000095367432,
+        "mean": 5.204166670640309,
+        "max": 5.5
+      },
+      "submitMs": {
+        "samples": 24,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.4375,
+        "max": 0.5999999046325684
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "spectral:phase",
+      "n": 80,
+      "limit": 80,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 32.09999990463257,
+        "p95": 34.30000019073486,
+        "mean": 31.683333317438763,
+        "max": 34.30000019073486
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 2.6999998092651367,
+        "p95": 3.700000286102295,
+        "mean": 2.7416666746139526,
+        "max": 3.700000286102295
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "fusepath:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 77,
+        "median": 1.4000000953674316,
+        "p95": 1.799999713897705,
+        "mean": 1.566233758802538,
+        "max": 9.599999904632568
+      },
+      "submitMs": {
+        "samples": 77,
+        "median": 0.19999980926513672,
+        "p95": 0.39999961853027344,
+        "mean": 0.18571428819136185,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "fusepath:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 57,
+        "median": 2,
+        "p95": 3.5,
+        "mean": 2.1438596374110173,
+        "max": 4.400000095367432
+      },
+      "submitMs": {
+        "samples": 57,
+        "median": 0.19999980926513672,
+        "p95": 0.20000028610229492,
+        "mean": 0.15263154213888602,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "fusepath:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.199999809265137,
+        "p95": 14.300000190734863,
+        "mean": 7.956250011920929,
+        "max": 14.300000190734863
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.23125004768371582,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "reboundaim:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 76,
+        "median": 1.5999999046325684,
+        "p95": 1.700000286102295,
+        "mean": 1.5789473684210527,
+        "max": 2.0999999046325684
+      },
+      "submitMs": {
+        "samples": 76,
+        "median": 0.09999990463256836,
+        "p95": 0.2999997138977051,
+        "mean": 0.14078945235202187,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "reboundaim:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 29,
+        "median": 4.200000286102295,
+        "p95": 4.5,
+        "mean": 4.234482748755093,
+        "max": 5.5
+      },
+      "submitMs": {
+        "samples": 29,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.20344824626527983,
+        "max": 1.0999999046325684
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "reboundaim:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 26.5,
+        "p95": 26.90000009536743,
+        "mean": 26.458333333333332,
+        "max": 26.90000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.42500007152557373,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "overkill:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 81,
+        "median": 1.4000000953674316,
+        "p95": 1.5,
+        "mean": 1.4802469147576227,
+        "max": 8.199999809265137
+      },
+      "submitMs": {
+        "samples": 81,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.13950617519425756,
+        "max": 1
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "overkill:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 59,
+        "median": 2,
+        "p95": 2.1999998092651367,
+        "mean": 2.0440677949937722,
+        "max": 2.3000001907348633
+      },
+      "submitMs": {
+        "samples": 59,
+        "median": 0.10000038146972656,
+        "p95": 0.20000028610229492,
+        "mean": 0.14576262942815232,
+        "max": 0.20000028610229492
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "overkill:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 18,
+        "median": 7.099999904632568,
+        "p95": 7.5,
+        "mean": 7.02222220102946,
+        "max": 7.5
+      },
+      "submitMs": {
+        "samples": 18,
+        "median": 0.20000028610229492,
+        "p95": 0.9000000953674316,
+        "mean": 0.2666666242811415,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "chronicle:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 78,
+        "median": 1.5,
+        "p95": 1.6999998092651367,
+        "mean": 1.5384615445748353,
+        "max": 2.5
+      },
+      "submitMs": {
+        "samples": 78,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.184615508103982,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "chronicle:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 37,
+        "median": 3.200000286102295,
+        "p95": 3.5,
+        "mean": 3.2621621698946566,
+        "max": 3.9000000953674316
+      },
+      "submitMs": {
+        "samples": 37,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.4000000051549963,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "chronicle:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 16.40000009536743,
+        "p95": 17.40000009536743,
+        "mean": 16.483333349227905,
+        "max": 17.40000009536743
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.8000001907348633,
+        "p95": 2.4000000953674316,
+        "mean": 1.8916667699813843,
+        "max": 2.4000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 70,
+        "median": 1.5999999046325684,
+        "p95": 1.700000286102295,
+        "mean": 1.7228571483067103,
+        "max": 9.399999618530273
+      },
+      "submitMs": {
+        "samples": 70,
+        "median": 0.10000038146972656,
+        "p95": 0.20000028610229492,
+        "mean": 0.1414285727909633,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 29,
+        "median": 4.299999713897705,
+        "p95": 4.400000095367432,
+        "mean": 4.27241377994932,
+        "max": 4.900000095367432
+      },
+      "submitMs": {
+        "samples": 29,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.17241377666078764,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 26,
+        "p95": 33.19999980926514,
+        "mean": 26.425000031789143,
+        "max": 33.19999980926514
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.3666667143503825,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:signal",
+      "n": 1,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 86,
+        "median": 1.4000000953674316,
+        "p95": 1.5,
+        "mean": 1.4011627906976745,
+        "max": 2.4000000953674316
+      },
+      "submitMs": {
+        "samples": 86,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.13720930454342864,
+        "max": 1.1000003814697266
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:signal",
+      "n": 12,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 59,
+        "median": 2,
+        "p95": 2.200000286102295,
+        "mean": 2.0491525439892784,
+        "max": 2.8000001907348633
+      },
+      "submitMs": {
+        "samples": 59,
+        "median": 0.10000038146972656,
+        "p95": 0.2999997138977051,
+        "mean": 0.16101693298857092,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:signal",
+      "n": 96,
+      "limit": 96,
+      "isolated": false,
+      "costMs": {
+        "samples": 17,
+        "median": 7.099999904632568,
+        "p95": 13.200000286102295,
+        "mean": 7.435294095207663,
+        "max": 13.200000286102295
+      },
+      "submitMs": {
+        "samples": 17,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.20588235294117646,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "buzzsaw:disc",
+      "n": 1,
+      "limit": 6,
+      "isolated": false,
+      "costMs": {
+        "samples": 66,
+        "median": 1.8000001907348633,
+        "p95": 1.9000000953674316,
+        "mean": 1.8196969682520086,
+        "max": 2.5999999046325684
+      },
+      "submitMs": {
+        "samples": 66,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.21363636219140256,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "buzzsaw:disc",
+      "n": 6,
+      "limit": 6,
+      "isolated": false,
+      "costMs": {
+        "samples": 32,
+        "median": 3.9000000953674316,
+        "p95": 4.099999904632568,
+        "mean": 3.8500000089406967,
+        "max": 4.200000286102295
+      },
+      "submitMs": {
+        "samples": 32,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.38437505066394806,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "teslanet:field",
+      "n": 1,
+      "isolated": false,
+      "costMs": {
+        "samples": 80,
+        "median": 1.5,
+        "p95": 1.6000003814697266,
+        "mean": 1.5074999988079072,
+        "max": 2.0999999046325684
+      },
+      "submitMs": {
+        "samples": 80,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.16749999523162842,
+        "max": 0.6999998092651367
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "teslanet:field",
+      "n": 8,
+      "isolated": false,
+      "costMs": {
+        "samples": 37,
+        "median": 3.299999713897705,
+        "p95": 3.4000000953674316,
+        "mean": 3.27567568340817,
+        "max": 4.099999904632568
+      },
+      "submitMs": {
+        "samples": 37,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.20810811584060257,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "teslanet:field",
+      "n": 32,
+      "isolated": false,
+      "costMs": {
+        "samples": 13,
+        "median": 9.600000381469727,
+        "p95": 10.400000095367432,
+        "mean": 9.59999997799213,
+        "max": 10.400000095367432
+      },
+      "submitMs": {
+        "samples": 13,
+        "median": 0.3000001907348633,
+        "p95": 0.40000009536743164,
+        "mean": 0.3153846080486591,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "undertow:field",
+      "n": 1,
+      "isolated": false,
+      "costMs": {
+        "samples": 68,
+        "median": 1.700000286102295,
+        "p95": 1.8000001907348633,
+        "mean": 1.8308823529411764,
+        "max": 8.300000190734863
+      },
+      "submitMs": {
+        "samples": 68,
+        "median": 0.10000038146972656,
+        "p95": 0.20000028610229492,
+        "mean": 0.13529415691600127,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "undertow:field",
+      "n": 8,
+      "isolated": false,
+      "costMs": {
+        "samples": 28,
+        "median": 4.400000095367432,
+        "p95": 4.600000381469727,
+        "mean": 4.414285710879734,
+        "max": 4.600000381469727
+      },
+      "submitMs": {
+        "samples": 28,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.18571438108171737,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "undertow:field",
+      "n": 32,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 14,
+        "p95": 14.200000286102295,
+        "mean": 13.94166668256124,
+        "max": 14.200000286102295
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.20000028610229492,
+        "p95": 0.40000009536743164,
+        "mean": 0.24166667461395264,
+        "max": 0.40000009536743164
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:field",
+      "n": 1,
+      "isolated": false,
+      "costMs": {
+        "samples": 67,
+        "median": 1.799999713897705,
+        "p95": 1.9000000953674316,
+        "mean": 1.795522383789518,
+        "max": 2.700000286102295
+      },
+      "submitMs": {
+        "samples": 67,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.1880596858351978,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:field",
+      "n": 8,
+      "isolated": false,
+      "costMs": {
+        "samples": 25,
+        "median": 4.899999618530273,
+        "p95": 5.100000381469727,
+        "mean": 4.867999992370605,
+        "max": 5.100000381469727
+      },
+      "submitMs": {
+        "samples": 25,
+        "median": 0.39999961853027344,
+        "p95": 0.5,
+        "mean": 0.35999990463256837,
+        "max": 0.6000003814697266
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "worldfold:field",
+      "n": 32,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 15.799999713897705,
+        "p95": 16.699999809265137,
+        "mean": 15.774999896685282,
+        "max": 16.699999809265137
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 0.6999998092651367,
+        "p95": 2,
+        "mean": 0.7666666110356649,
+        "max": 2
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:field",
+      "n": 1,
+      "isolated": false,
+      "costMs": {
+        "samples": 63,
+        "median": 1.9000000953674316,
+        "p95": 2,
+        "mean": 1.903174604688372,
+        "max": 2.0999999046325684
+      },
+      "submitMs": {
+        "samples": 63,
+        "median": 0.20000028610229492,
+        "p95": 0.3000001907348633,
+        "mean": 0.2142857067168705,
+        "max": 0.3000001907348633
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:field",
+      "n": 8,
+      "isolated": false,
+      "costMs": {
+        "samples": 20,
+        "median": 6.299999713897705,
+        "p95": 6.800000190734863,
+        "mean": 6.235000014305115,
+        "max": 6.800000190734863
+      },
+      "submitMs": {
+        "samples": 20,
+        "median": 0.5,
+        "p95": 1.1999998092651367,
+        "mean": 0.5600000143051147,
+        "max": 1.1999998092651367
+      }
+    },
+    {
+      "group": "mechanic",
+      "id": "starforge:field",
+      "n": 32,
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 21.300000190734863,
+        "p95": 22.800000190734863,
+        "mean": 21.316666682561237,
+        "max": 22.800000190734863
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.5,
+        "p95": 2.9000000953674316,
+        "mean": 1.5749999682108562,
+        "max": 2.9000000953674316
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "costMs": {
+        "samples": 240,
+        "median": 0.2999997138977051,
+        "p95": 0.39999961853027344,
+        "mean": 0.2791666666666667,
+        "max": 3.8000001907348633
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.02083333134651184,
+        "max": 3.3000001907348633
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:idle",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": null,
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 17,
+        "median": 7.399999618530273,
+        "p95": 7.599999904632568,
+        "mean": 7.370588218464571,
+        "max": 7.599999904632568
+      },
+      "submitMs": {
+        "samples": 17,
+        "median": 0.5999999046325684,
+        "p95": 0.9000000953674316,
+        "mean": 0.5882352941176471,
+        "max": 0.9000000953674316
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:orbit",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "orbit",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.900000095367432,
+        "p95": 9,
+        "mean": 7.956250011920929,
+        "max": 9
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.7999997138977051,
+        "p95": 1.4000000953674316,
+        "mean": 0.8187499940395355,
+        "max": 1.4000000953674316
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:summon",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "summon",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": {
+          "x": 294,
+          "y": 710
+        },
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.200000286102295,
+        "p95": 11.099999904632568,
+        "mean": 7.59375,
+        "max": 11.099999904632568
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5,
+        "p95": 2.799999713897705,
+        "mean": 0.7062499523162842,
+        "max": 2.799999713897705
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:tear",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "tear",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": {
+          "x": 453.06509125584336,
+          "y": 466
+        },
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 18,
+        "median": 7,
+        "p95": 7.300000190734863,
+        "mean": 7.016666650772095,
+        "max": 7.300000190734863
+      },
+      "submitMs": {
+        "samples": 18,
+        "median": 0.40000009536743164,
+        "p95": 0.6999998092651367,
+        "mean": 0.44999996821085614,
+        "max": 0.6999998092651367
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:gaze",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "gaze",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": 2.250208091500783,
+        "sigil": null,
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 18,
+        "median": 6.800000190734863,
+        "p95": 7,
+        "mean": 6.800000005298191,
+        "max": 7
+      },
+      "submitMs": {
+        "samples": 18,
+        "median": 0.40000009536743164,
+        "p95": 0.5,
+        "mean": 0.4055555396609836,
+        "max": 0.5
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:mirage",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "mirage",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": null,
+        "eyes": [
+          {
+            "x": 390,
+            "y": 92,
+            "real": true
+          },
+          {
+            "x": 390,
+            "y": 92,
+            "real": false
+          },
+          {
+            "x": 390,
+            "y": 92,
+            "real": false
+          }
+        ]
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.900000095367432,
+        "p95": 8.099999904632568,
+        "mean": 7.825000017881393,
+        "max": 8.099999904632568
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5,
+        "p95": 0.5999999046325684,
+        "mean": 0.5124999582767487,
+        "max": 0.5999999046325684
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "eye:doom",
+      "n": 1,
+      "snapshot": {
+        "ward": 100,
+        "shielded": true,
+        "dazed": false,
+        "mend": false,
+        "anchors": 3,
+        "move": "doom",
+        "wells": 0,
+        "watchers": [
+          false,
+          false,
+          false
+        ],
+        "hits": 0,
+        "beam": null,
+        "sigil": null,
+        "tear": null,
+        "eyes": null
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.5,
+        "p95": 7.900000095367432,
+        "mean": 7.5687499940395355,
+        "max": 7.900000095367432
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.40000009536743164,
+        "p95": 0.5999999046325684,
+        "mean": 0.4125000238418579,
+        "max": 0.5999999046325684
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "forge:idle",
+      "n": 1,
+      "snapshot": {
+        "heat": 0,
+        "overheated": false,
+        "meteors": 0,
+        "slam": false,
+        "wind": 0,
+        "palm": {
+          "x": 390,
+          "down": false,
+          "hits": 0
+        }
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 31,
+        "median": 3.8999996185302734,
+        "p95": 5,
+        "mean": 3.938709674342986,
+        "max": 5.099999904632568
+      },
+      "submitMs": {
+        "samples": 31,
+        "median": 0.3000001907348633,
+        "p95": 0.5,
+        "mean": 0.3096774778058452,
+        "max": 0.5999999046325684
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "serpent:idle",
+      "n": 1,
+      "snapshot": {
+        "snakes": [
+          {
+            "mode": "emerge",
+            "head": {
+              "x": 390,
+              "y": 150,
+              "a": 1.486938138739441
+            },
+            "segs": 48,
+            "live": 0,
+            "twin": false,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 48,
+            "regen": false,
+            "retreat": false
+          }
+        ],
+        "regrowth": 0,
+        "sparks": 0,
+        "portals": 1,
+        "split": null,
+        "eclipse": false,
+        "dim": false,
+        "debris": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 12,
+        "median": 22.199999809265137,
+        "p95": 25.299999713897705,
+        "mean": 22.49999996026357,
+        "max": 25.299999713897705
+      },
+      "submitMs": {
+        "samples": 12,
+        "median": 1.6999998092651367,
+        "p95": 2.0999999046325684,
+        "mean": 1.6916666428248088,
+        "max": 2.0999999046325684
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:idle",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": null,
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 10,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 15,
+        "median": 8.199999809265137,
+        "p95": 9.300000190734863,
+        "mean": 8.26000000635783,
+        "max": 9.300000190734863
+      },
+      "submitMs": {
+        "samples": 15,
+        "median": 0.6000003814697266,
+        "p95": 1.5999999046325684,
+        "mean": 0.6999999682108561,
+        "max": 1.5999999046325684
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:stop",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "stop",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 8,
+        "lit": null,
+        "key": {
+          "x": 545.5634918610405,
+          "y": 617.7853172679884
+        },
+        "bell": null,
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 13,
+        "median": 8.200000286102295,
+        "p95": 14.099999904632568,
+        "mean": 9.615384578704834,
+        "max": 14.099999904632568
+      },
+      "submitMs": {
+        "samples": 13,
+        "median": 0.5999999046325684,
+        "p95": 1,
+        "mean": 0.6615384542025052,
+        "max": 1
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:toll",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "toll",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 10,
+        "lit": null,
+        "key": null,
+        "bell": {
+          "x": 492.30354241800654,
+          "y": 800,
+          "tilt": -0.2737315084175862,
+          "k": 1
+        },
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.900000095367432,
+        "p95": 8.400000095367432,
+        "mean": 7.893750011920929,
+        "max": 8.400000095367432
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5999999046325684,
+        "p95": 0.6999998092651367,
+        "mean": 0.5812499821186066,
+        "max": 0.6999998092651367
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:pendulum",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "pendulum",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 9,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": {
+          "x": 546.7675949834677,
+          "y": 794.0739439743643,
+          "k": 1
+        },
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.800000190734863,
+        "p95": 8,
+        "mean": 7.800000011920929,
+        "max": 8
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5,
+        "p95": 0.6000003814697266,
+        "mean": 0.48749998211860657,
+        "max": 0.6000003814697266
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:rewind",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "rewind",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 12,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": null,
+        "ghosts": 3,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 16,
+        "median": 7.900000095367432,
+        "p95": 8.5,
+        "mean": 7.918750017881393,
+        "max": 8.5
+      },
+      "submitMs": {
+        "samples": 16,
+        "median": 0.5,
+        "p95": 0.6000003814697266,
+        "mean": 0.4750000536441803,
+        "max": 0.6000003814697266
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:haste",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "haste",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 9,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 15,
+        "median": 8,
+        "p95": 13.800000190734863,
+        "mean": 8.53333330154419,
+        "max": 13.800000190734863
+      },
+      "submitMs": {
+        "samples": 15,
+        "median": 0.5999999046325684,
+        "p95": 0.8000001907348633,
+        "mean": 0.5866666158040365,
+        "max": 0.8000001907348633
+      }
+    },
+    {
+      "group": "boss-scene",
+      "id": "clock:midnight",
+      "n": 1,
+      "snapshot": {
+        "minute": -1.5707963267948966,
+        "hour": -0.5235987755982989,
+        "hourIdx": 2,
+        "spring": 100,
+        "refill": false,
+        "gears": [
+          false,
+          false,
+          false
+        ],
+        "move": "midnight",
+        "stunned": false,
+        "frozen": null,
+        "wound": 1,
+        "numerals": 9,
+        "lit": null,
+        "key": null,
+        "bell": null,
+        "bob": null,
+        "ghosts": 0,
+        "rung": 0,
+        "hits": 0
+      },
+      "isolated": false,
+      "costMs": {
+        "samples": 14,
+        "median": 8.200000286102295,
+        "p95": 12.800000190734863,
+        "mean": 8.571428537368774,
+        "max": 12.800000190734863
+      },
+      "submitMs": {
+        "samples": 14,
+        "median": 0.5,
+        "p95": 0.6000003814697266,
+        "mean": 0.5214286191122872,
+        "max": 0.6000003814697266
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 120,
+    "filter": "baseline|boss-scene|variant|mechanic",
+    "raf": false,
+    "dom": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 101
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:06:02.059Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

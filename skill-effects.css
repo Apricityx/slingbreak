@@ -6,11 +6,11 @@
 .skill-live[hidden]{display:none}
 .skill-economy-flash{animation:skill-economy .7s ease-out}
 @keyframes skill-economy{0%,35%{background:#5f6f2c;color:var(--on-panel)}100%{background:var(--panel);color:var(--on-panel)}}
-@media(max-width:600px){.skill-live{padding:9px 10px;margin:8px 10px}.skill-live .skill-queue-slot{padding:6px 5px}}
+.skill-live{padding:9px 10px;margin:8px 10px}.skill-live .skill-queue-slot{padding:6px 5px}
 @media(prefers-reduced-motion:reduce){.skill-live *,.skill-live,.skill-economy-flash{animation:none!important;transition:none!important}}
 
 /* Full skill text opens in a modal so the live bar only carries state. */
-#skill-detail{--skill-detail-color:var(--accent-ink);width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 40px);margin:auto;padding:0;overflow:auto;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);box-shadow:0 25px 80px var(--shadow)}
+#skill-detail{--skill-detail-color:var(--accent-ink);width:calc(var(--stage-w) - 32px);max-height:calc(var(--stage-h) - 40px);margin:auto;padding:0;overflow:auto;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);box-shadow:0 25px 80px var(--shadow)}
 #skill-detail::backdrop{background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #skill-detail[open]{animation:skill-detail-in .28s cubic-bezier(.18,1.12,.36,1) both}
 @keyframes skill-detail-in{0%{opacity:0;transform:translateY(14px) scale(.96)}100%{opacity:1;transform:none}}
@@ -21,5 +21,5 @@
 .skill-detail-title h2{margin:0 0 4px;font-size:21px;letter-spacing:0}
 .skill-detail-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
 .skill-detail-text{margin:0;font-size:13px;line-height:1.9;color:var(--text-2);overflow-wrap:anywhere}
-@media(max-width:600px){.skill-detail-card{padding:18px;gap:11px}.skill-detail-title h2{font-size:19px}.skill-detail-text{font-size:12px}}
+.skill-detail-card{padding:18px;gap:11px}.skill-detail-title h2{font-size:19px}.skill-detail-text{font-size:12px}
 @media(prefers-reduced-motion:reduce){#skill-detail[open]{animation:none!important}}

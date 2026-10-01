@@ -21,7 +21,7 @@ const recordingContext=calls=>new Proxy({},{
 });
 // `layers` exposes document.createElement so render.js enables its offscreen
 // caches; everything painted into an offscreen canvas lands in layerCalls.
-function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={}){
+function boot({launcher=false, phase='ready', draftOpen=false, layers=false, dpr=1}={}){
   const calls=[],frames=[],layerCalls=[];
   const ctx=recordingContext(calls);
   const makeElement=()=>({textContent:'',hidden:false,open:false,style:{},classList:{add(){},remove(){},toggle(){},contains:()=>false},addEventListener(){},focus(){},querySelector:()=>makeElement(),querySelectorAll:()=>[]});
@@ -33,13 +33,13 @@ function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={})
   const context={
     Matter,console,URLSearchParams,
     location:{search:launcher?'?launcher=1':''},
-    devicePixelRatio:1,
+     devicePixelRatio:dpr,
     matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}}),
     performance:{now:()=>0},
     requestAnimationFrame:callback=>{frames.push(callback);return frames.length;},cancelAnimationFrame(){},
     ResizeObserver:ResizeObserverStub,
     localStorage:{getItem:()=>null,setItem(){}},
-    document:{getElementById:id=>elements[id]||makeElement(),querySelector:()=>makeElement(),querySelectorAll:()=>[],fonts:{addEventListener(){}},addEventListener(){},documentElement:{classList:{add(){},remove(){},contains:()=>false}},
+     document:{getElementById:id=>elements[id]||makeElement(),querySelector:()=>makeElement(),querySelectorAll:()=>[],fonts:{addEventListener(){}},addEventListener(){},documentElement:{classList:{add(){},remove(){},toggle(){},contains:()=>false}},
       ...(layers?{createElement:()=>{const layer=recordingContext(layerCalls);return {width:0,height:0,getContext:()=>layer};}}:{})},
     window:{addEventListener(){},dispatchEvent(){}},
   };
@@ -53,8 +53,17 @@ function boot({launcher=false, phase='ready', draftOpen=false, layers=false}={})
   G.generate(false);
   G.phase=phase;
   vm.runInContext(renderSource,context);
-  return {G,theme:context.window.SlingTheme,calls,layerCalls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
+   return {G,canvas,theme:context.window.SlingTheme,calls,layerCalls,observers,frames,step:now=>{assert.equal(frames.length,1);frames.shift()(now);},count:prop=>calls.filter(c=>c[0]===prop).length};
 }
+
+test('performance mode lowers canvas resolution immediately and restores it when disabled',()=>{
+  const {G,canvas}=boot({dpr:3});
+  assert.equal(canvas.width,1560);
+  G.setPerformanceMode(true);
+  assert.equal(canvas.width,780);
+  G.setPerformanceMode(false);
+  assert.equal(canvas.width,1560);
+});
 
 // Regression: a hit changes hp and starts a flash in the same frame. The flash
 // frames paint live, and the cached board must still be rebuilt afterwards

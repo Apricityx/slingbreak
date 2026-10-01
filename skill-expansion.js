@@ -188,7 +188,7 @@
   const line=(ctx,a,b)=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();};
   G.drawSkillMechanics=ctx=>{
     ctx.save();ctx.lineCap='round';
-    for(const s of signals){
+    for(let si=Math.max(0,signals.length-(G.reduced?16:32));si<signals.length;si++){const s=signals[si];
       const t=Math.min(1,(G.time-s.born)/s.duration);ctx.strokeStyle=colors[s.id];ctx.globalAlpha=(1-t)*.8;ctx.lineWidth=2;
       if(s.type==='cut'){
         for(const [width,alpha] of [[16,.1],[5,.3],[1.5,.9]]){ctx.lineWidth=width;ctx.globalAlpha=(1-t)*alpha;line(ctx,s.from,s.to);}

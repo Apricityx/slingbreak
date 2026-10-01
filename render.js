@@ -27,15 +27,16 @@
   };
    let scale=1,offsetX=0,offsetY=0,cssW=780,cssH=760,prediction=null;
   const resize=()=>{
-      // Keep the backing store sharp on high-density phones without making
-      // the animation buffer unnecessarily expensive on extreme DPR screens.
-      const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
-     cssW=r.width;cssH=r.height;canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);prediction=null;boardLayerValid=false;
+      // cssW/cssH are stage layout px (fixed on every device, see stage.js); the
+      // backing store follows on-screen density (stage scale × DPR) so the board
+      // stays sharp, capped so extreme DPR screens don't bloat the buffer.
+       const r=canvas.getBoundingClientRect(),stageK=window.SlingStage?.k||1,dpr=Math.min((devicePixelRatio||1)*stageK,G.state.performanceMode?1:2);
+     cssW=canvas.clientWidth||r.width;cssH=canvas.clientHeight||r.height;canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);prediction=null;boardLayerValid=false;
      scale=Math.min(cssW/G.W,cssH/1100);G.H=cssH/scale;offsetX=(cssW-G.W*scale)/2;offsetY=0;G.origin.y=Math.min(G.H-180,970);
      G.drag=null;G.pointer=null;
     G.view={scale,offsetX,offsetY,width:cssW,height:cssH};
   };
-  new ResizeObserver(resize).observe(canvas);resize();
+   new ResizeObserver(resize).observe(canvas);window.addEventListener?.('stagechange',resize);G.resizeCanvas=resize;resize();
   const line=(x,y,tx,ty,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const forceCompat=new URLSearchParams(location.search).get('forceCompat')==='1';
   const useRoundedRectFallback=forceCompat||typeof ctx.roundRect!=='function';
@@ -68,6 +69,17 @@
     if(type==='frost'){for(let i=0;i<6;i++){ctx.rotate(Math.PI/3);line(0,0,0,-8,color,1.5);line(0,-5,-3,-7,color,1.3);line(0,-5,3,-7,color,1.3);}}
     if(type==='prism'){line(0,8,0,0,color,1.6);line(0,0,-6,-6,color,1.6);line(0,0,6,-6,color,1.6);line(-6,-6,-6,-2,color,1.6);line(-6,-6,-2,-6,color,1.6);line(6,-6,6,-2,color,1.6);line(6,-6,2,-6,color,1.6);}
     if(type==='gold'){ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.stroke();label('¥',0,4,11,color);}
+    // Abyss rift bricks (milestone.js).
+    if(type==='void'){ctx.beginPath();for(let i=0;i<=28;i++){const a=i*.42,r=1+i*.29;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(1,0);}ctx.stroke();circle(0,0,1.8,color);}
+    if(type==='hydra'){line(0,9,0,1,color,1.7);line(0,1,-6,-7,color,1.7);line(0,1,6,-7,color,1.7);circle(-6,-7,2,color);circle(6,-7,2,color);}
+    if(type==='shard'){ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(6,0);ctx.lineTo(0,9);ctx.lineTo(-6,0);ctx.closePath();ctx.stroke();line(0,-9,0,9,color,1);}
+    if(type==='anchor'){ctx.beginPath();ctx.arc(0,-6,2.6,0,Math.PI*2);ctx.stroke();line(0,-3.4,0,8,color,1.7);line(-4,-1,4,-1,color,1.5);ctx.beginPath();ctx.arc(0,2,7,.35,Math.PI-.35);ctx.stroke();}
+    // Milestone boss bricks (boss-*.js).
+    if(type==='plate'){ctx.strokeRect(-7,-6,14,12);[[-4,-3],[4,-3],[-4,3],[4,3]].forEach(([x,y])=>circle(x,y,1.3,color));}
+    if(type==='magma'){ctx.beginPath();ctx.moveTo(0,-9);ctx.quadraticCurveTo(7,-1,5,4);ctx.quadraticCurveTo(3,9,0,9);ctx.quadraticCurveTo(-3,9,-5,4);ctx.quadraticCurveTo(-7,-1,0,-9);ctx.stroke();circle(0,4,2,color);}
+    if(type==='scale'){ctx.beginPath();ctx.moveTo(-7,-3);ctx.quadraticCurveTo(0,-11,7,-3);ctx.stroke();ctx.beginPath();ctx.moveTo(-7,4);ctx.quadraticCurveTo(0,-4,7,4);ctx.stroke();}
+    if(type==='star'){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?3.6:8.5;i?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.closePath();ctx.fill();}
+    if(type==='hour'){line(-6,-8,6,-8,color,1.6);line(-6,8,6,8,color,1.6);ctx.beginPath();ctx.moveTo(-5,-8);ctx.lineTo(5,8);ctx.moveTo(5,-8);ctx.lineTo(-5,8);ctx.stroke();circle(0,5,1.6,color);}
     ctx.restore();
   }
   function arrow(x,y,angle,color=P.arrow.shaft,alpha=1){
@@ -98,9 +110,10 @@
     // The pulsing glow is quantised to 1/4 px so a settled core can blit a
     // cached shadow sprite instead of re-blurring every frame.
     const blur=G.reduced?0:Math.round((18+pulse*6)*4)/4;
-    if(!(blur&&age>=1.1&&!G.shake&&drawCoreGlowSprite(blur,c))){ctx.shadowColor=P.core.glow;ctx.shadowBlur=blur;}
+    // A drifting core (milestone.js) moves every frame, so it blurs live.
+    if(!(blur&&age>=1.1&&!G.shake&&!c.drifting&&drawCoreGlowSprite(blur,c))){ctx.shadowColor=P.core.glow;ctx.shadowBlur=blur;}
     rounded(-21,-21,42,42,4,P.core.face);ctx.shadowBlur=0;ctx.strokeStyle=P.core.frame;ctx.lineWidth=1.5;ctx.strokeRect(-14,-14,28,28);ctx.fillStyle=P.core.heart;ctx.fillRect(-4,-4,8,8);ctx.restore();
-    label('THE CORE',390,49,9,P.core.label,'DM Sans',600);
+    label('THE CORE',c.x,49,9,P.core.label,'DM Sans',600);
   }
   // Shadow-only sprites of the settled core, keyed by blur and device placement.
   // shadowBlur/shadowOffset ignore the transform, so the shape is drawn far off
@@ -254,25 +267,71 @@
      }
      ctx.globalAlpha = 1;
    };
-   function render(){
+    function drawRings(){
+      // Bound overdraw even if a debug harness fills the array directly.
+      // Giant core/boss pulses remain visible alongside the freshest impacts.
+      const limit=G.reduced?12:24,start=Math.max(0,G.rings.length-limit);
+      const paint=r=>{const t=r.life/r.max,energy=r.energy||1;
+        ctx.globalAlpha=Math.min(.85,t*.65*energy);ctx.strokeStyle=r.color;ctx.lineWidth=energy>1?2.8:2;
+        ctx.beginPath();ctx.arc(r.x,r.y,r.r*(1-t),0,Math.PI*2);ctx.stroke();
+      };
+      let heroes=0;for(let i=start-1;i>=0&&heroes<3;i--)if(G.rings[i].r>=260){paint(G.rings[i]);heroes++;}
+      for(let i=start;i<G.rings.length;i++)paint(G.rings[i]);ctx.globalAlpha=1;
+    }
+    function drawBolts(){
+      const limit=G.reduced?24:48,start=Math.max(0,G.bolts.length-limit),stamp=Math.floor(G.time*24);
+      ctx.strokeStyle=P.bolt;ctx.lineCap='round';ctx.lineJoin='round';
+      for(let step=0;step<4;step++){
+        ctx.beginPath();let count=0;
+        for(let n=start;n<G.bolts.length;n++){
+          const b=G.bolts[n],alpha=Math.min(1,b.life*4);if(Math.min(3,alpha*4|0)!==step)continue;
+          let path=b._path;if(!path)b._path=path=new Float32Array(10);
+          if(b._stamp!==stamp){for(let i=1;i<6;i++){const jitter=Math.sin((stamp+n*13+i*7)*2.17)*9;
+            path[(i-1)*2]=b.x+(b.tx-b.x)*i/6+jitter;path[(i-1)*2+1]=b.y+(b.ty-b.y)*i/6-jitter*.7;
+          }b._stamp=stamp;}
+          ctx.moveTo(b.x,b.y);for(let i=0;i<10;i+=2)ctx.lineTo(path[i],path[i+1]);ctx.lineTo(b.tx,b.ty);count++;
+        }
+        if(count){ctx.globalAlpha=(step+.5)/4;ctx.lineWidth=2.5;ctx.stroke();
+          if(!G.reduced){
+            // Only the newest eight arcs get the wide corona. Their thin
+            // electrical cores, including older arcs, remain fully visible.
+            ctx.beginPath();let glow=0;
+            for(let n=Math.max(start,G.bolts.length-8);n<G.bolts.length;n++){const b=G.bolts[n];
+              if(Math.min(3,Math.min(1,b.life*4)*4|0)!==step)continue;
+              ctx.moveTo(b.x,b.y);for(let i=0;i<10;i+=2)ctx.lineTo(b._path[i],b._path[i+1]);ctx.lineTo(b.tx,b.ty);glow++;
+            }
+            if(glow){ctx.globalAlpha*=.18;ctx.lineWidth=5;ctx.stroke();}
+          }
+        }
+      }
+      ctx.globalAlpha=1;
+    }
+    function render(){
+    G.fx?.beginFrame();
     const dpr=canvas.width/cssW;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
     ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);
     if(!G.reduced && G.shake)ctx.translate((Math.random()-.5)*G.shake,(Math.random()-.5)*G.shake);
     ctx.strokeStyle=P.guide;ctx.lineWidth=1;ctx.setLineDash([3,7]);ctx.beginPath();ctx.moveTo(85,G.origin.y-130);ctx.lineTo(695,G.origin.y-130);ctx.stroke();ctx.setLineDash([]);
     if(!draftModalOpen()){
+    // Milestone bosses (boss-*.js) paint their body under the bricks.
+    G.drawBossBackdrop?.(ctx);
     drawBoardCached();
     drawCore();
     G.drawSkillMechanics?.(ctx);
     G.drawSkillEffects?.(ctx,'field');
     }
-    G.rings.forEach(r=>{ctx.globalAlpha=r.life/r.max*.65;ctx.strokeStyle=r.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(r.x,r.y,r.r*(1-r.life/r.max),0,Math.PI*2);ctx.stroke();});ctx.globalAlpha=1;
-    G.bolts.forEach(b=>{ctx.globalAlpha=Math.min(1,b.life*4);ctx.strokeStyle=P.bolt;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(b.x,b.y);for(let i=1;i<6;i++)ctx.lineTo(b.x+(b.tx-b.x)*i/6+(Math.random()-.5)*18,b.y+(b.ty-b.y)*i/6+(Math.random()-.5)*18);ctx.lineTo(b.tx,b.ty);ctx.stroke();});ctx.globalAlpha=1;
+    drawRings();drawBolts();
     // Arrow trail alpha bumped from .3→.45, dot radius from 1.8→2.2 for snappier feel
-    G.arrows.forEach(a=>{if(!a.skillVisual)a.trail.forEach((p,i)=>{ctx.globalAlpha=i/a.trail.length*.45;circle(p.x,p.y,2.2,a.color||P.arrow.trail);});ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||P.arrow.shaft);});
+    G.arrows.forEach(a=>{if(!a.skillVisual){ctx.fillStyle=a.color||P.arrow.trail;
+      for(let step=0;step<3;step++){ctx.globalAlpha=(step+1)/3*.45;ctx.beginPath();
+        for(let i=0;i<a.trail.length;i+=G.arrows.length>24?2:1)if(Math.min(2,i/a.trail.length*3|0)===step){const p=a.trail[i];ctx.moveTo(p.x+2.2,p.y);ctx.arc(p.x,p.y,2.2,0,Math.PI*2);}
+        ctx.fill();
+      }
+    }ctx.globalAlpha=1;arrow(a.body.position.x,a.body.position.y,Math.atan2(a.body.velocity.y,a.body.velocity.x),a.color||P.arrow.shaft);});
     drawSling();
     G.drawSkillEffects?.(ctx,'front');
     drawParticles();
-    G.texts.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);label(p.text,p.x,p.y,p.size,p.color,'DM Sans',600);});ctx.globalAlpha=1;
+    for(let i=Math.max(0,G.texts.length-48);i<G.texts.length;i++){const p=G.texts[i];ctx.globalAlpha=Math.min(1,p.life*2);label(p.text,p.x,p.y,p.size,p.color,'DM Sans',600);}ctx.globalAlpha=1;
     if(G.coreFlash>0){ctx.fillStyle=`rgba(${P.coreFlash},${G.coreFlash*.13})`;ctx.fillRect(0,0,780,G.H);}
     drawPointer();
     ctx.restore();
@@ -282,11 +341,11 @@
   // animating (entrance, hit flash, screen shake) paints live as before.
   const boardLayer=typeof document.createElement==='function'?document.createElement('canvas'):null;
   const boardLayerCtx=boardLayer?.getContext?.('2d')||null;
-  const typeIds={normal:1,bomb:2,lightning:3,frost:4,prism:5,gold:6};
+  const typeIds={normal:1,bomb:2,lightning:3,frost:4,prism:5,gold:6,void:7,hydra:8,shard:9,anchor:10,plate:11,magma:12,scale:13,star:14,hour:15};
   let boardState=[],nextBoardState=[];
   const boardChanged=()=>{
     const s=nextBoardState;s.length=0;
-    for(const b of G.bricks)s.push(b.x,b.y,b.w,b.h,Math.ceil(b.hp),b.hp<b.max?1:0,b.max,typeIds[b.type]||0,b.frozen?1:0);
+    for(const b of G.bricks)if(!b.orbit)s.push(b.x,b.y,b.w,b.h,Math.ceil(b.hp),b.hp<b.max?1:0,b.max,typeIds[b.type]||0,b.frozen?1:0);
     s.push(-1);
     for(const o of G.obstacles)s.push(o.x,o.y,o.w,o.h);
     let changed=s.length!==boardState.length;
@@ -296,7 +355,7 @@
   };
   const boardAnimating=()=>{
     if(G.boardEntrance||(!G.reduced&&G.shake))return true;
-    for(const b of G.bricks)if(b.flash>0)return true;
+    for(const b of G.bricks)if(b.flash>0&&!b.orbit)return true;
     for(const o of G.obstacles)if(o.flash>0)return true;
     return false;
   };
@@ -304,7 +363,8 @@
     // A change seen while painting live (e.g. hp drops in the same frame the
     // hit flash starts) must still invalidate the layer for when it settles.
     if(boardChanged())boardLayerValid=false;
-    if(!boardLayerCtx||boardAnimating()){drawBoard();return;}
+    // Orbiting bricks move every frame, so they stay out of the cached layer.
+    if(!boardLayerCtx||boardAnimating()){drawBoard();drawOrbiting();return;}
     if(!boardLayerValid){
       if(boardLayer.width!==canvas.width||boardLayer.height!==canvas.height){boardLayer.width=canvas.width;boardLayer.height=canvas.height;}
       const dpr=canvas.width/cssW;
@@ -314,9 +374,15 @@
       boardLayerCtx.restore();boardLayerValid=true;
     }
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(boardLayer,0,0);ctx.restore();
+    drawOrbiting();
   }
+  function drawOrbiting(){for(const b of G.bricks)if(b.orbit&&!b.skin)drawBrick(b);}
   function drawBoard(){
-    for(const b of G.bricks){
+    for(const b of G.bricks)if(!b.orbit)drawBrick(b);
+    drawObstacles();
+  }
+  function drawBrick(b){
+    {
       const alpha=boardItemEntrance(b);
       const color=b.frozen?P.frozen:P.brick[b.type];
       rounded(b.x-b.w/2,b.y-b.h/2+3,b.w,b.h,5,b.frozen?color:P.brickEdge[b.type]||color);
@@ -339,6 +405,8 @@
       if(b.frozen){ctx.strokeStyle=P.frozenEdge;ctx.lineWidth=1;ctx.strokeRect(b.x-b.w/2+2,b.y-b.h/2+2,b.w-4,b.h-4);}
       ctx.restore();
     }
+  }
+  function drawObstacles(){
     for(const o of G.obstacles){
       const alpha=boardItemEntrance(o);
       const left=o.x-o.w/2,top=o.y-o.h/2,O=P.obstacle;
@@ -353,7 +421,8 @@
       ctx.restore();
     }
   }
-  const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale};};
+  // Client px → canvas layout px (undoes the stage scale), then → world units.
+  const point=e=>{const r=canvas.getBoundingClientRect(),k=r.width/cssW||1;return{x:((e.clientX-r.left)/k-offsetX)/scale,y:((e.clientY-r.top)/k-offsetY)/scale};};
   let drawStep=0;
   const updatePointer=e=>{if(e.pointerType!=='touch'){G.pointerType=e.pointerType;G.pointerPos=point(e);}};
    const powerReadout=document.querySelector('#power-readout b');

@@ -1,0 +1,365 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1484,
+        "median": 0.9000000953674316,
+        "p95": 2.5,
+        "mean": 1.215161724874594,
+        "max": 21.199999809265137
+      },
+      "submitMs": {
+        "samples": 1485,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.019797980183302755,
+        "max": 2.5999999046325684
+      },
+      "fps": 822.935729071948
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:back",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 441,
+        "median": 3.9000000953674316,
+        "p95": 5.099999904632568,
+        "mean": 4.068480725191077,
+        "max": 11.200000286102295
+      },
+      "submitMs": {
+        "samples": 442,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.11266969016234799,
+        "max": 1.5999999046325684
+      },
+      "fps": 245.79199645907988
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:field",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 557,
+        "median": 3.0999999046325684,
+        "p95": 3.9000000953674316,
+        "mean": 3.226391382234529,
+        "max": 21.399999618530273
+      },
+      "submitMs": {
+        "samples": 558,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.178136202596849,
+        "max": 1.4000000953674316
+      },
+      "fps": 309.94379835822076
+    },
+    {
+      "group": "boss-layer",
+      "id": "eye:front",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1199,
+        "median": 0.8000001907348633,
+        "p95": 6.700000286102295,
+        "mean": 1.5026688909809027,
+        "max": 22.800000190734863
+      },
+      "submitMs": {
+        "samples": 1200,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.02133333444595337,
+        "max": 2.4000000953674316
+      },
+      "fps": 665.482599661211
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:back",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 599,
+        "median": 2.9000000953674316,
+        "p95": 3.5,
+        "mean": 3.0035058429125754,
+        "max": 9.100000381469727
+      },
+      "submitMs": {
+        "samples": 600,
+        "median": 0.09999990463256836,
+        "p95": 0.19999980926513672,
+        "mean": 0.07616666316986084,
+        "max": 0.6999998092651367
+      },
+      "fps": 332.94424992037796
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:field",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1101,
+        "median": 1.0999999046325684,
+        "p95": 5.800000190734863,
+        "mean": 1.6348773841961852,
+        "max": 23.799999713897705
+      },
+      "submitMs": {
+        "samples": 1102,
+        "median": 0,
+        "p95": 0.10000038146972656,
+        "mean": 0.05598910880391697,
+        "max": 2.1999998092651367
+      },
+      "fps": 611.6666666666667
+    },
+    {
+      "group": "boss-layer",
+      "id": "forge:front",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 922,
+        "median": 0.9000000953674316,
+        "p95": 7,
+        "mean": 1.9574837307092166,
+        "max": 64.5
+      },
+      "submitMs": {
+        "samples": 923,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.021776812048154688,
+        "max": 4.400000095367432
+      },
+      "fps": 510.85992915899726
+    },
+    {
+      "group": "boss-scene",
+      "id": "serpent:idle",
+      "n": 1,
+      "snapshot": {
+        "snakes": [
+          {
+            "mode": "emerge",
+            "head": {
+              "x": 390,
+              "y": 150,
+              "a": 1.8559029798631113
+            },
+            "segs": 48,
+            "live": 0,
+            "twin": false,
+            "exit": null,
+            "cracks": 0,
+            "fed": 0,
+            "mouth": 0,
+            "max": 48,
+            "regen": false,
+            "retreat": false
+          }
+        ],
+        "regrowth": 0,
+        "sparks": 0,
+        "portals": 1,
+        "split": null,
+        "eclipse": false,
+        "dim": false,
+        "debris": 0
+      },
+      "isolated": false,
+      "frameMs": {
+        "samples": 79,
+        "median": 22.199999809265137,
+        "p95": 26.5,
+        "mean": 22.56455696685405,
+        "max": 30.300000190734863
+      },
+      "submitMs": {
+        "samples": 80,
+        "median": 1.4000000953674316,
+        "p95": 2.4000000953674316,
+        "mean": 1.5124999940395356,
+        "max": 5.5
+      },
+      "fps": 44.31728934314725
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:back",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 170,
+        "median": 10.299999713897705,
+        "p95": 12.099999904632568,
+        "mean": 10.554705883474911,
+        "max": 15.599999904632568
+      },
+      "submitMs": {
+        "samples": 171,
+        "median": 0.19999980926513672,
+        "p95": 0.3000001907348633,
+        "mean": 0.17309943695514524,
+        "max": 0.5
+      },
+      "fps": 94.74446858492388
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:field",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1156,
+        "median": 1.3999996185302734,
+        "p95": 2.700000286102295,
+        "mean": 1.556920415389909,
+        "max": 20.59999990463257
+      },
+      "submitMs": {
+        "samples": 1157,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.12376835640896572,
+        "max": 16.199999809265137
+      },
+      "fps": 642.2935881083966
+    },
+    {
+      "group": "boss-layer",
+      "id": "serpent:front",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 222,
+        "median": 7.900000095367432,
+        "p95": 9.199999809265137,
+        "mean": 8.098198199057364,
+        "max": 11.5
+      },
+      "submitMs": {
+        "samples": 223,
+        "median": 0.09999990463256836,
+        "p95": 0.20000028610229492,
+        "mean": 0.08699550115474136,
+        "max": 1
+      },
+      "fps": 123.4842585251125
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:back",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 309,
+        "median": 5.599999904632568,
+        "p95": 7,
+        "mean": 5.818122976420381,
+        "max": 15.099999904632568
+      },
+      "submitMs": {
+        "samples": 310,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.17548386050808815,
+        "max": 1.200000286102295
+      },
+      "fps": 171.87673826297382
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:field",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 721,
+        "median": 2.200000286102295,
+        "p95": 3.5999999046325684,
+        "mean": 2.4948682381607457,
+        "max": 15.700000286102295
+      },
+      "submitMs": {
+        "samples": 722,
+        "median": 0.19999980926513672,
+        "p95": 0.2999997138977051,
+        "mean": 0.1655124660344005,
+        "max": 2.5999999046325684
+      },
+      "fps": 400.82277079979787
+    },
+    {
+      "group": "boss-layer",
+      "id": "clock:front",
+      "n": 1,
+      "isolated": true,
+      "frameMs": {
+        "samples": 1134,
+        "median": 0.7999997138977051,
+        "p95": 6.799999713897705,
+        "mean": 1.5884479719495017,
+        "max": 13.200000286102295
+      },
+      "submitMs": {
+        "samples": 1135,
+        "median": 0,
+        "p95": 0.09999990463256836,
+        "mean": 0.016475766135732508,
+        "max": 0.19999980926513672
+      },
+      "fps": 629.5453283072912
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 1800,
+    "filter": "^boss-layer/|^boss-scene/serpent",
+    "raf": true,
+    "dom": false,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "method": "Real rAF + production rendering, without readback; simulation frozen"
+  },
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 14
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-01T04:18:09.618Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "a192a479b90fee4c00695c10d2408f9d4900a88a",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile."
+  }
+}

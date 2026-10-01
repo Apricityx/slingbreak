@@ -22,9 +22,13 @@
     setText($('balance'),G.fmt(G.state.coins));setText($('total-destroyed'),G.fmt(G.state.total));setText($('best-combo'),G.state.best);
     setTitle($('best-combo'),G.state.legacyBest?`旧版多箭合计纪录：${G.state.legacyBest}；当前只记录单箭连击`:'单支箭及其连锁、延迟伤害的最高击碎数');
     setTitle($('shot-money'),`本轮所有箭合计击碎 ${G.roundKills} 块，金额包含独立奖金`);
-    setText($('progress-label'),Math.min(G.killed,G.threshold)+' / '+G.threshold);
+    const coreKills=Math.min(G.killed,G.threshold),coreMeter=$('core-progress');
+    setText($('progress-label'),coreKills+' / '+G.threshold);
     const width=Math.min(100,G.killed/G.threshold*100)+'%';if(width!==progressWidth){progressWidth=width;$('progress-bar').style.width=width;}
     setText($('core-label'),G.core?'核心已显现':G.phase==='clearing'?'核心击破':'核心解锁');
+    coreMeter.dataset.state=G.phase==='clearing'?'cleared':G.core?'ready':'locked';
+    setAttr(coreMeter,'aria-valuemax',String(G.threshold));setAttr(coreMeter,'aria-valuenow',String(coreKills));
+    setAttr(coreMeter,'aria-valuetext',G.core?'核心已显现，命中即可清场':`已击碎 ${coreKills} / ${G.threshold} 块`);
     setText($('core-required'),G.threshold);setText($('core-bonus'),'+ '+G.fmt(G.phase==='clearing'&&G.settledBonus!==undefined?G.settledBonus:G.bonus(G.phase==='clearing'?G.state.level-1:G.state.level)));
     const arrowScore=G.latestAchievement;
     const combo=$('combo'),kills=arrowScore?.kills||0,capKills=arrowScore?.capKills||G.comboCapKills(),capped=kills>=capKills;

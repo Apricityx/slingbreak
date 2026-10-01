@@ -4,7 +4,7 @@
   // hit-stop, merged income tallies, record moments and the per-level report.
   // Everything wraps existing entry points; balance and rewards are untouched.
   const G=Game,$=id=>document.getElementById(id);
-  const motion=matchMedia('(prefers-reduced-motion: reduce)'),still=()=>motion.matches;
+  const still=()=>G.reduced;
   const arena=$('arena'),canvas=$('game'),combo=$('combo');
   // Tier colours follow the theme (palette.js heat ramp: cool green → amber → red).
   const tierNames=['','连击','势不可挡','满倍率'],tierColor=tier=>(window.SlingTheme?.canvas.heat||['#56703a','#3a7f1c','#a85f0c','#c8431d'])[tier];
@@ -88,13 +88,19 @@
   }
   // Overdrive arrows (at the combo cap) burn a hot trail.
   function drawOverdrive(ctx){
-    for(const a of G.arrows){
-      if(!a.overdrive||a.trail.length<2)continue;
-      ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#f0a13a';ctx.lineWidth=5;
-      if(!G.reduced){ctx.shadowColor='#ffb347';ctx.shadowBlur=14;}
-      ctx.globalAlpha=.75;ctx.beginPath();a.trail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineTo(a.body.position.x,a.body.position.y);ctx.stroke();
-      ctx.shadowBlur=0;ctx.strokeStyle='#fff3cf';ctx.lineWidth=1.6;ctx.stroke();ctx.restore();
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#f0a13a';ctx.beginPath();let count=0;
+    for(const a of G.arrows){if(!a.overdrive||a.trail.length<2)continue;count++;
+      for(let i=0;i<a.trail.length;i+=G.arrows.length>24?2:1){const p=a.trail[i];i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}
+      ctx.lineTo(a.body.position.x,a.body.position.y);
     }
+    if(count){
+      // Three batched ribbons for the whole volley, with a white-hot core.
+      if(!G.reduced){ctx.globalAlpha=.12;ctx.lineWidth=count>24?8:12;ctx.stroke();}
+      ctx.globalAlpha=.8;ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle='#fff3cf';ctx.lineWidth=1.6;ctx.stroke();
+      if(!G.reduced){let lights=0;for(let i=G.arrows.length-1;i>=0&&lights<12;i--){const a=G.arrows[i];if(!a.overdrive||a.trail.length<2)continue;
+        G.fx?.glow(ctx,a.body.position.x,a.body.position.y,20,'#ffb347',.45);lights++;
+      }}
+    }ctx.restore();
   }
   const drawEffects=G.drawSkillEffects;
   G.drawSkillEffects=(ctx,layer,...rest)=>{
