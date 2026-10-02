@@ -121,11 +121,21 @@
   const rank=G.skillRank=id=>S.skillScopeVersion===3&&byId.has(id)&&S.skills?.[id]===1?1:0;
   // Skill IDs are non-numeric keys: insertion order survives JSON save/reload
   // and is the FIFO queue, oldest first. Never sort this map by the catalog.
-  G.activeSkills=()=>Object.keys(S.skills).filter(id=>rank(id)).map(id=>byId.get(id));
+  let activeCacheSkills=null,activeCacheScope=-1,activeCacheList=[];
+  G.invalidateSkillCache=()=>{activeCacheSkills=null;activeCacheScope=-1;activeCacheList=[];};
+  G.activeSkills=()=>{
+    // Hit effects ask this repeatedly in one synchronous chain. Ownership is
+    // immutable during a shot, so reuse the same short array by object identity.
+    if(activeCacheSkills===S.skills&&activeCacheScope===S.skillScopeVersion)return activeCacheList;
+    activeCacheSkills=S.skills;activeCacheScope=S.skillScopeVersion;
+    activeCacheList=Object.keys(S.skills).filter(id=>rank(id)).map(id=>byId.get(id));
+    return activeCacheList;
+  };
   G.outgoingSkill=()=>G.activeSkills().length===G.skillSlots?G.activeSkills()[0]:null;
   // Explicit child-arrow damage must retain global projectile multipliers.
   G.setArrowDamage=(a,damage)=>{a.damage=damage*(a.skillDamageScale||1);a.expansionBase=a.overdriveBase=a.damage;};
   function normalize(){
+    G.invalidateSkillCache();
     if(S.skillScopeVersion!==3){
       if(S.skillScopeVersion===2){
         // Preserve the currently equipped single-level skill in older saves.
@@ -239,14 +249,14 @@
   // leaves the board. Round-wide quotas still apply to nova and cascade.
   const takeArrow=(a,id,limit)=>!!a&&take(id,limit,a.skillUses??={});
   function enqueue(delay,fn){if(effectBudget--<=0)return;jobs.push({at:G.time+delay,level:S.level,arrow:G.activeArrow,fn});}
-  const nearby=(x,y,r)=>G.bricks.filter(b=>Math.hypot(b.x-x,b.y-y)<r);
+  const nearby=(x,y,r)=>G.bricksNear(x,y,r);
   function area(x,y,r,damage,color='#e8a475',skillId){
     if(G.phase!=='flying')return;G.ring(x,y,color,r);G.sound('boom',1,x);
     if(skillId)G.skillFX?.(skillId,x,y,{r,force:true});
     nearby(x,y,r).forEach(b=>G.hit(b,damage,1));
   }
   function arc(x,y,count,damage,skillId){
-    const targets=[...G.bricks].sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,count);
+    const targets=G.nearestBricks(x,y,count);
     let from={x,y};targets.forEach(b=>{G.bolts.push({x:from.x,y:from.y,tx:b.x,ty:b.y,life:.35});from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
     if(skillId)G.skillFX?.(skillId,x,y,{kind:'electric',r:115});
   }

@@ -4,8 +4,8 @@
 .arena[data-boss="forge"],.boss-bar[data-boss="forge"]{--boss:var(--warm-ink);--boss-bg:var(--warm-soft)}
 .arena[data-boss="serpent"],.boss-bar[data-boss="serpent"]{--boss:var(--legend-frost);--boss-bg:var(--legend-frost-bg)}
 .arena[data-boss="clock"],.boss-bar[data-boss="clock"]{--boss:var(--gold-ink);--boss-bg:var(--gold-soft)}
-.arena.is-rift{border-color:color-mix(in srgb,var(--boss,var(--legend-prism)) 55%,var(--line));background:radial-gradient(ellipse 85% 34% at 50% 0,color-mix(in srgb,var(--boss,var(--legend-prism)) 26%,transparent),transparent 72%),radial-gradient(ellipse 120% 60% at 50% 110%,color-mix(in srgb,var(--boss,var(--legend-prism)) 10%,transparent),transparent 70%),var(--surface)}
-.arena.is-rift.is-rage{border-color:color-mix(in srgb,var(--danger) 55%,var(--line));background:radial-gradient(ellipse 85% 36% at 50% 0,color-mix(in srgb,var(--danger) 22%,transparent),transparent 72%),radial-gradient(ellipse 120% 60% at 50% 110%,color-mix(in srgb,var(--boss,var(--legend-prism)) 12%,transparent),transparent 70%),var(--surface)}
+.arena.is-rift{border-color:var(--mix-boss-55-line);background:radial-gradient(ellipse 85% 34% at 50% 0,var(--mix-boss-26-alpha),transparent 72%),radial-gradient(ellipse 120% 60% at 50% 110%,var(--mix-boss-10-alpha),transparent 70%),var(--surface)}
+.arena.is-rift.is-rage{border-color:var(--mix-danger-55-line);background:radial-gradient(ellipse 85% 36% at 50% 0,var(--mix-danger-22-alpha),transparent 72%),radial-gradient(ellipse 120% 60% at 50% 110%,var(--mix-boss-12-alpha),transparent 70%),var(--surface)}
 
 /* Boss bar: replaces the core meter row, same 14px height. */
 .core-progress[hidden],.boss-bar[hidden]{display:none!important}
@@ -16,9 +16,9 @@
 .boss-track{display:grid;grid-template-columns:repeat(var(--phases,3),1fr);gap:3px;height:6px}
 .boss-seg{position:relative;overflow:hidden;border-radius:2px;background:var(--boss-bg,var(--legend-prism-bg))}
 .boss-seg>i{position:absolute;inset:0 auto 0 0;height:100%}
-.boss-ghost{background:color-mix(in srgb,var(--danger) 70%,var(--boss-bg,var(--legend-prism-bg)));transition:width .5s .35s ease-out}
-.boss-fill{background:linear-gradient(90deg,var(--boss,var(--legend-prism)),color-mix(in srgb,var(--boss,var(--legend-prism)) 70%,var(--danger)));transition:width .12s ease-out}
-.boss-seg.is-current{box-shadow:0 0 0 1px color-mix(in srgb,var(--boss,var(--legend-prism)) 45%,transparent)}
+.boss-ghost{background:var(--mix-danger-70-boss-bg);transition:width .5s .35s ease-out}
+.boss-fill{background:linear-gradient(90deg,var(--boss,var(--legend-prism)),var(--mix-boss-70-danger));transition:width .12s ease-out}
+.boss-seg.is-current{box-shadow:0 0 0 1px var(--mix-boss-45-alpha)}
 .boss-resist{font-weight:600;white-space:nowrap;color:var(--text-3)}
 .boss-resist[hidden]{display:none}
 .boss-bar[data-resist="burst"] .boss-resist{color:var(--danger)}
@@ -26,27 +26,27 @@
 .boss-bar[data-state="exposed"] .boss-state,.boss-bar[data-state="dying"] .boss-state{color:var(--danger)}
 .boss-bar[data-state="exposed"] .boss-gem{background:var(--danger);animation:boss-gem-pulse .9s ease-in-out infinite}
 .boss-bar.is-hit .boss-track{animation:boss-hit .28s ease-out}
-@keyframes boss-gem-pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--danger) 30%,transparent)}}
-@keyframes boss-hit{0%{translate:0 0;filter:brightness(1.8)}30%{translate:-2px 0}60%{translate:2px 0}100%{translate:0 0;filter:none}}
+@keyframes boss-gem-pulse{50%{box-shadow:0 0 0 5px var(--mix-danger-30-alpha)}}
+@keyframes boss-hit{0%{transform:translate(0,0);filter:brightness(1.8)}30%{transform:translate(-2px,0)}60%{transform:translate(2px,0)}100%{transform:translate(0,0);filter:none}}
 
 /* Phase / shield / seal banners slam across the arena. */
 .rift-banner{position:absolute;left:0;right:0;top:34%;z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 16px;pointer-events:none;text-align:center;color:var(--ink)}
-.rift-banner-band{position:absolute;inset:0;z-index:-1;transform-origin:center;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--surface) 92%,transparent) 18%,color-mix(in srgb,var(--surface) 92%,transparent) 82%,transparent);border-block:1px solid color-mix(in srgb,var(--boss,var(--legend-prism)) 50%,transparent)}
+.rift-banner-band{position:absolute;inset:0;z-index:-1;transform-origin:center;background:linear-gradient(90deg,transparent,var(--mix-surface-92-alpha) 18%,var(--mix-surface-92-alpha) 82%,transparent);border-block:1px solid var(--mix-boss-50-alpha)}
 .rift-banner span{font-size:10px;font-weight:700;letter-spacing:3px;color:var(--boss,var(--legend-prism))}
 .rift-banner strong{font-size:30px;line-height:1.15;font-weight:800;letter-spacing:.08em}
 .rift-banner em{font-style:normal;font-size:12px;color:var(--text-2)}
 .rift-banner[data-tone="weak"] span,.rift-banner[data-tone="rage"] span{color:var(--danger)}
-.rift-banner[data-tone="rage"] .rift-banner-band{border-color:color-mix(in srgb,var(--danger) 55%,transparent)}
+.rift-banner[data-tone="rage"] .rift-banner-band{border-color:var(--mix-danger-55-alpha)}
 .rift-banner[data-tone="seal"] strong{color:var(--accent-ink-strong)}
-.rift-callout{position:absolute;left:50%;translate:-50% -50%;z-index:12;display:flex;flex-wrap:nowrap;justify-content:center;align-items:baseline;gap:8px;max-width:94%;padding:4px 12px;white-space:nowrap;border-radius:999px;pointer-events:none;text-align:center;color:var(--ink);background:color-mix(in srgb,var(--surface) 90%,transparent);border:1px solid color-mix(in srgb,var(--boss,var(--legend-prism)) 45%,transparent);box-shadow:0 2px 10px color-mix(in srgb,var(--ink) 12%,transparent)}
+.rift-callout{position:absolute;left:50%;transform:translate(-50%,-50%);z-index:12;display:flex;flex-wrap:nowrap;justify-content:center;align-items:baseline;gap:8px;max-width:94%;padding:4px 12px;white-space:nowrap;border-radius:999px;pointer-events:none;text-align:center;color:var(--ink);background:var(--mix-surface-90-alpha);border:1px solid var(--mix-boss-45-alpha);box-shadow:0 2px 10px var(--mix-ink-12-alpha)}
 .rift-callout span{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--boss,var(--legend-prism))}
 .rift-callout strong{font-size:14px;font-weight:800;letter-spacing:.04em}
 .rift-callout em{font-style:normal;font-size:11px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis}
-.rift-callout[data-tone="weak"]{border-color:color-mix(in srgb,var(--danger) 55%,transparent)}
+.rift-callout[data-tone="weak"]{border-color:var(--mix-danger-55-alpha)}
 .rift-callout[data-tone="weak"] span{color:var(--danger)}
-.rift-flash{position:absolute;inset:0;z-index:11;pointer-events:none;background:radial-gradient(circle at 50% 8%,color-mix(in srgb,var(--boss,var(--legend-prism)) 55%,transparent),transparent 70%)}
-.rift-flash[data-tone="weak"],.rift-flash[data-tone="rage"]{background:radial-gradient(circle at 50% 8%,color-mix(in srgb,var(--danger) 45%,transparent),transparent 70%)}
-.rift-flash[data-tone="seal"]{background:radial-gradient(circle at 50% 8%,var(--surface),color-mix(in srgb,var(--boss,var(--legend-prism)) 30%,transparent) 55%,transparent)}
+.rift-flash{position:absolute;inset:0;z-index:11;pointer-events:none;background:radial-gradient(circle at 50% 8%,var(--mix-boss-55-alpha),transparent 70%)}
+.rift-flash[data-tone="weak"],.rift-flash[data-tone="rage"]{background:radial-gradient(circle at 50% 8%,var(--mix-danger-45-alpha),transparent 70%)}
+.rift-flash[data-tone="seal"]{background:radial-gradient(circle at 50% 8%,var(--surface),var(--mix-boss-30-alpha) 55%,transparent)}
 
 /* Intro: letterbox bars and a glitching title card. */
 .rift-intro{position:absolute;inset:0;z-index:13;pointer-events:none}
@@ -55,7 +55,7 @@
 .rift-intro-bar.bottom{bottom:0;transform-origin:bottom}
 .rift-intro-title{position:absolute;left:0;right:0;top:40%;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;letter-spacing:.14em}
 .rift-intro-title span{font-size:10px;font-weight:700;color:var(--danger);letter-spacing:4px}
-.rift-intro-title strong{font-size:38px;font-weight:900;color:var(--ink);text-shadow:3px 0 color-mix(in srgb,var(--danger) 55%,transparent),-3px 0 color-mix(in srgb,var(--boss,var(--legend-prism)) 60%,transparent)}
+.rift-intro-title strong{font-size:38px;font-weight:900;color:var(--ink);text-shadow:3px 0 var(--mix-danger-55-alpha),-3px 0 var(--mix-boss-60-alpha)}
 .rift-intro-title em{font-style:normal;font-size:11px;letter-spacing:1px;color:var(--text-2)}
 
 .report-rift{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:var(--text-3)}

@@ -1,0 +1,362 @@
+--- agent-tmp/perf-before-source/achievements-ui.js	2026-10-02 07:27:02.000116534 +0000
++++ achievements-ui.js	2026-10-02 07:34:19.269937657 +0000
+@@ -186,7 +186,7 @@
+     cancelAnimationFrame(popFrame);popFrame=0;popLast=0;speed=1;
+     return resetGame();
+   };
+-  const exact=n=>Math.floor(n).toLocaleString('en-US');
++  const exact=n=>G.fmtInteger?G.fmtInteger(n):Math.floor(n).toLocaleString('en-US');
+   // Skip unchanged writes: rewriting identical text still replaces the node and dirties layout.
+   const setText=(el,value)=>{value=String(value);if(el.textContent!==value)el.textContent=value;};
+   const setTitle=(el,value)=>{if(el.title!==value)el.title=value;};
+--- agent-tmp/perf-before-source/fx.js	2026-10-02 07:27:02.004116580 +0000
++++ fx.js	2026-10-02 08:01:52.762083647 +0000
+@@ -6,6 +6,7 @@
+   const cache=new Map(),MAX_BYTES=16*1024*1024,MAX_ENTRIES=384;
+   let bytes=0,hits=0,misses=0;
+   let signatureBuilds=0,buildBudget=Infinity;
++  const warmJobs=[],warmKeys=new Set();let warmScheduled=false,warmGeneration=0;
+   function sprite(key,w,h,paint){
+     let entry=cache.get(key);
+     if(entry){hits++;cache.delete(key);cache.set(key,entry);return entry;}
+@@ -54,14 +55,52 @@
+     const p=G.reduced?.55:Math.round(Math.max(0,Math.min(1,t))*16)/16;
+     const radius=r<=24?16:r<=96?64:r<=160?128:192;
+     const d=Math.round(density()*2)/2,pad=radius*1.35+5,size=Math.ceil(pad*2*d);
+-    const key=`signature:${id}:${stage==='aura'?'aura':'impact'}:${p}:${radius}:${d}:${color}:${accent}:${G.reduced}`;
++    const keyFor=pose=>`signature:${id}:${stage==='aura'?'aura':'impact'}:${pose}:${radius}:${d}:${color}:${accent}:${G.reduced}`;
++    const key=keyFor(p);
+     // New effects must not build seven full atlases on their first frame.
+     // Spend at most two cache builds per production frame; a miss beyond that
+-    // budget paints the original crisp vectors, without delaying the effect.
+-    if(!cache.has(key)){if(signatureBuilds>=buildBudget)return false;signatureBuilds++;}
++    // budget reuses an adjacent pose or paints crisp vectors, without delaying feedback.
++    if(ctx&&!cache.has(key)){
++      if(signatureBuilds>=buildBudget){
++        // Reuse an adjacent cached pose for this frame (at most 1/16 lifetime),
++        // not dozens of uncached complex vectors. No different skill/colour/density.
++        if(!G.reduced)for(const pose of [p-1/16,p+1/16]){const adjacent=keyFor(pose),s=cache.get(adjacent);
++          if(!s)continue;hits++;cache.delete(adjacent);cache.set(adjacent,s);
++          const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);return true;
++        }
++        return false;
++      }
++      signatureBuilds++;
++    }
+     const s=sprite(key,size,size,g=>{g.translate(size/2,size/2);g.scale(d,d);paint(g,id,p,radius,color,accent,stage);});
+     if(!s)return false;
+-    const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);return true;
++    if(ctx){const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);}return true;
++  }
++  function scheduleWarm(delay=0){
++    if(warmScheduled||!warmJobs.length||typeof window==='undefined')return;
++    const idle=typeof window.requestIdleCallback==='function',timer=typeof window.setTimeout==='function';
++    if(!idle&&!timer)return;warmScheduled=true;const generation=warmGeneration;
++    const run=()=>{
++      if(generation!==warmGeneration)return;warmScheduled=false;
++      // Never prebuild while arrows, dragging, a modal or gameplay needs the CPU.
++      if(G.phase!=='ready'||G.paused||G.drag||G.arrows?.length||window.SlingBreakIntro?.active||
++        typeof document!=='undefined'&&document.querySelector?.('dialog[open]')){scheduleWarm(250);return;}
++      const job=warmJobs.shift();warmKeys.delete(job.key);
++      if(!G.skillRank||G.skillRank(job.id))signature(null,job.paint,job.id,job.t,job.r,job.color,job.accent,job.stage);
++      scheduleWarm();
++    };
++    // One small atlas pose per idle callback; Chrome 89 gets the same bounded
++    // setTimeout fallback when requestIdleCallback is unavailable.
++    if(delay&&timer)window.setTimeout(run,delay);
++    else if(idle)window.requestIdleCallback(run,{timeout:1000});else window.setTimeout(run,32);
++  }
++  function prewarm(paint,id,color,accent){
++    const poses=G.reduced?[.55]:Array.from({length:17},(_,i)=>i/16);
++    for(const t of poses){const key=`${id}:${t}:${color}:${accent}:${G.reduced}`;
++      if(warmKeys.has(key)||warmJobs.length>=72)continue;
++      warmKeys.add(key);warmJobs.push({key,paint,id,t,r:75,color,accent,stage:'impact'});
++    }
++    scheduleWarm();
+   }
+   function vignette(ctx,w,h,color,opacity){
+     const s=sprite(`vignette:${color}:${Math.round(h)}`,256,Math.ceil(h/w*256),(g,sw,sh)=>{
+@@ -103,8 +142,9 @@
+     }
+     ctx.restore();
+   }
+-  G.fx={sprite,radial,glow,signature,vignette,layer,hole,shade,shards,
++  G.fx={sprite,radial,glow,signature,prewarm,vignette,layer,hole,shade,shards,
+     beginFrame:()=>{signatureBuilds=0;buildBudget=2;},
+-    clear:()=>{cache.clear();bytes=0;},stats:()=>({entries:cache.size,bytes,hits,misses,maxBytes:MAX_BYTES})};
+-  window.SlingTheme?.onChange(()=>G.fx.clear());
++    clear:()=>{cache.clear();bytes=0;warmJobs.length=0;warmKeys.clear();warmGeneration++;warmScheduled=false;},
++    stats:()=>({entries:cache.size,bytes,hits,misses,maxBytes:MAX_BYTES,warmPending:warmJobs.length})};
++  window.SlingTheme?.onChange(()=>{G.fx.clear();G.prepareSkillFx?.();});
+ })();
+--- agent-tmp/perf-before-source/game.js	2026-10-02 07:27:02.004116580 +0000
++++ game.js	2026-10-02 07:34:19.265937553 +0000
+@@ -36,7 +36,31 @@
+   const lightBricks={normal:'#dce2d0',bomb:'#f6a38f',lightning:'#f3e27a',frost:'#a9d8e6',prism:'#cbbbe9',gold:'#e9b85a',void:'#3a2d52',hydra:'#a3dcc4',shard:'#e4d7ff',anchor:'#5d5470',plate:'#6b6258',magma:'#f08a3c',scale:'#58b3bf',star:'#fff1b8',hour:'#e8d7a6'};
+   Object.defineProperty(G,'colors',{enumerable:true,get:()=>theme()?.brick||lightBricks});
+   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
+-  G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
++  // Reuse ICU's formatter instead of rebuilding it for every hit and tally frame.
++  const integerFormat=typeof Intl!=='undefined'&&Intl.NumberFormat?new Intl.NumberFormat('en-US'):null;
++  G.fmtInteger=n=>integerFormat?integerFormat.format(Math.floor(n)):Math.floor(n).toLocaleString('en-US');
++  G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : G.fmtInteger(n);
++  let uiDirty=false,visuals=new Map();
++  G.requestUi=()=>{uiDirty=true;};
++  G.flushUi=()=>{if(uiDirty){uiDirty=false;G.ui();}};
++  // Only presentation is coalesced. Scoring, damage and source ownership stay synchronous.
++  G.deferVisual=(key,paint)=>visuals.set(key,paint);
++  G.flushVisuals=()=>{if(!visuals.size)return;const pending=visuals;visuals=new Map();for(const paint of pending.values())paint();};
++  G.bricksNear=(x,y,r,inclusive=false)=>{
++    const found=[];for(const b of G.bricks){const dx=b.x-x,dy=b.y-y;
++      if(Math.abs(dx)>r||Math.abs(dy)>r)continue;
++      const d=Math.hypot(dx,dy);if(inclusive?d<=r:d<r)found.push(b);
++    }return found;
++  };
++  G.nearestBricks=(x,y,count,accept)=>{
++    const found=[],distances=[];if(count<=0)return found;
++    // Stable top-k: one distance per brick, no full sort or repeated square roots.
++    for(const b of G.bricks){if(accept&&!accept(b))continue;const d=Math.hypot(b.x-x,b.y-y);
++      let i=found.length;while(i>0&&d<distances[i-1])i--;
++      if(i>=count)continue;found.splice(i,0,b);distances.splice(i,0,d);
++      if(found.length>count){found.pop();distances.pop();}
++    }return found;
++  };
+    G.balanceVersion=3;
+    G.layoutVersion=2;
+    G.nextShotAt=0;
+@@ -91,6 +115,7 @@
+     return items;
+   };
+    G.generate = (restore=false) => {
++     uiDirty=false;visuals.clear();
+      G.boardEntrance = null;
+      G.nextShotAt=0;
+       G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.levelMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
+@@ -144,8 +169,13 @@
+   G.burst=(x,y,color,count=16,force=1)=>{
+     if(G.reduced) count=Math.min(count,5);
+     else count=Math.ceil(count*.55);
+-    for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,v=(1+Math.random()*5)*force;G.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1,life:.5+Math.random()*.4,max:1,size:2+Math.random()*5,color,rot:Math.random()*6});}
+-    if(G.particles.length>300)G.particles.splice(0,G.particles.length-300);
++    const keep=Math.min(count,300),skip=count-keep,reuse=G.particles.splice(0,Math.max(0,G.particles.length+keep-300));
++    for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,v=(1+Math.random()*5)*force,
++      life=.5+Math.random()*.4,size=2+Math.random()*5,rot=Math.random()*6;
++      // Consume the same random sequence even for fragments beyond the capacity.
++      if(i<skip)continue;const p=reuse[i-skip]||{};
++      p.x=x;p.y=y;p.vx=Math.cos(a)*v;p.vy=Math.sin(a)*v-1;p.life=life;p.max=1;p.size=size;p.color=color;p.rot=rot;G.particles.push(p);
++    }
+   };
+   G.ring=(x,y,color,r=90)=>{
+     // Nearby simultaneous detonations read as one brighter shockwave, not a
+@@ -167,7 +197,7 @@
+     const body=Bodies.rectangle(390,80,47,47,{isStatic:true,label:'core',angle:Math.PI/4});
+     G.core={x:390,y:80,body,born:G.time-(quiet?2:0)};Composite.add(engine.world,body);
+     if(!quiet){G.coreFlash=1;G.ring(390,80,'#a4d65e',220);G.burst(390,80,'#a4d65e',45,2);G.shake=6;G.sound('core');G.toast?.('核心已显现 · 命中即可清场');}
+-    G.ui();
++    G.requestUi();
+   };
+   G.clear = () => {
+     if(G.phase==='clearing')return;
+@@ -181,26 +211,26 @@
+     G.ui();
+   };
+   G.hit=(b,damage,depth=0)=>{
+-    if(!G.bricks.includes(b)||G.phase==='clearing')return;
++    const index=G.bricks.indexOf(b);if(index<0||G.phase==='clearing')return;
+     b.hp-=damage*(b.frozen?2:1);b.flash=.16;
+     if(b.hp>0){G.burst(b.x,b.y,G.colors[b.type],4,.5);G.sound('tap',1,b.x);return;}
+-    G.bricks.splice(G.bricks.indexOf(b),1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
++    G.bricks.splice(index,1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
+     const arrow=G.activeArrow;
+     if(arrow){arrow.kills=G.arrowKills(arrow)+1;state.best=Math.max(state.best,arrow.kills);}
+     const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.levelMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
+     if(b.type!=='normal')G.specialSound(b.type,b.x);
+     G.sound('break',G.arrowKills(arrow),b.x);
+     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
+-    const near=(range)=>G.bricks.filter(t=>Math.hypot(t.x-b.x,t.y-b.y)<range);
++    const near=range=>G.bricksNear(b.x,b.y,range);
+     const effect=G.specialConfig?.(b.type)||{};
+     if(depth<70){
+       if(b.type==='bomb'){const radius=effect.radius||132;G.ring(b.x,b.y,'#ed8b6e',radius+4);G.shake=9;near(radius).forEach(t=>G.hit(t,G.damage()*(effect.damage||2),depth+1));}
+-      if(b.type==='lightning'){const targets=[...G.bricks].sort((a,c)=>Math.hypot(a.x-b.x,a.y-b.y)-Math.hypot(c.x-b.x,c.y-b.y)).slice(0,effect.links||5);let prev=b;targets.forEach(t=>{G.bolts.push({x:prev.x,y:prev.y,tx:t.x,ty:t.y,life:.4});prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
++      if(b.type==='lightning'){const targets=G.nearestBricks(b.x,b.y,effect.links||5);let prev=b;targets.forEach(t=>{G.bolts.push({x:prev.x,y:prev.y,tx:t.x,ty:t.y,life:.4});prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
+       if(b.type==='frost'){const radius=effect.radius||140;G.ring(b.x,b.y,'#81bece',radius+4);near(radius).forEach(t=>{t.frozen=true;t.flash=.25;G.hit(t,G.damage()*(effect.damage||.5),depth+1);});}
+       if(b.type==='prism'){G.ring(b.x,b.y,'#b399d8',55);const count=effect.shards||3;for(let i=0;i<count;i++){const a=-.9+i*1.8/(count-1);G.addArrow(b.x,b.y,Math.sin(a)*18,-Math.cos(a)*18,effect.pierce||2);}}
+     }
+     G.onBrickDestroyed?.(b,depth);
+-    G.ui();
++    G.requestUi();
+   };
+   G.addArrow=(x,y,vx,vy,pierce=G.penetration())=>{
+     if(G.arrows.length>=64)return;
+--- agent-tmp/perf-before-source/juice.js	2026-10-02 07:27:02.064117275 +0000
++++ juice.js	2026-10-02 07:58:16.067089135 +0000
+@@ -9,6 +9,14 @@
+   // Tier colours follow the theme (palette.js heat ramp: cool green → amber → red).
+   const tierNames=['','连击','势不可挡','满倍率'],tierColor=tier=>(window.SlingTheme?.canvas.heat||['#56703a','#3a7f1c','#a85f0c','#c8431d'])[tier];
+   const tierOf=kills=>{const cap=G.comboCapKills();return kills>=cap?3:kills>=Math.max(5,Math.ceil(cap*.66))?2:kills>=4?1:0;};
++  let comboPulse=null;
++  const queueCombo=tier=>{
++    const paint=()=>{
++      const heat=G.phase==='flying'?tier:0;combo.dataset.heat=heat;arena.dataset.heat=heat;
++      if(!still()&&heat){comboPulse?.cancel();comboPulse=combo.animate([{transform:`scale(${1+heat*.06})`},{transform:'scale(1)'}],{duration:180,easing:'ease-out'});}
++    };
++    if(G.deferVisual)G.deferVisual('combo-heat',paint);else paint();
++  };
+ 
+   // ── Time control. Slow motion scales dt; hit-stop skips simulation entirely.
+   let scale=1,slowUntil=0,freezeUntil=0,slowCore=null,lastChainStop=0,tickKills=0;
+@@ -163,8 +171,7 @@
+       if(tier>=2){G.ring(b.x,b.y,tierColor(tier),150+tier*40);G.sound('gold',1,b.x);}
+       if(tier===3){a.overdrive=true;hitstop(45);if(!still())arena.animate([{boxShadow:'inset 0 0 0 3px #f0a13a'},{boxShadow:'inset 0 0 0 0 #f0a13a00'}],{duration:500,easing:'ease-out'});}
+     }
+-    combo.dataset.heat=tier;arena.dataset.heat=tier;
+-    if(!still()&&tier)combo.animate([{transform:`scale(${1+tier*.06})`},{transform:'scale(1)'}],{duration:180,easing:'ease-out'});
++    queueCombo(tier);
+     if(recordArrow===a&&banner)banner.querySelector('strong').textContent=kills;
+     else if(!recordArrow&&kills>baseline&&baseline>=4){const previous=baseline;recordArrow=a;baseline=Infinity;showRecord(kills,previous,b);}
+     return result;
+--- agent-tmp/perf-before-source/milestone.js	2026-10-02 07:27:02.064117275 +0000
++++ milestone.js	2026-10-02 08:04:09.423946582 +0000
+@@ -106,7 +106,7 @@
+     const dealt=Math.min(m.hp,scaled);m.hp-=dealt;recent.push({t:G.time,v:dealt});
+     const P=def().palette();
+     if(!quiet&&x!=null)G.float(x,y-18,'-'+G.fmt(scaled),P.hot,scaled>=G.damage()*2?22:16);
+-    pulseBar();syncHud();return dealt;
++    pulseBar();queueHud();return dealt;
+   }
+   const api={
+     G,S,Composite,Body,PHASES,GRAVITY,shuffle,now,
+@@ -208,7 +208,7 @@
+     if(!m.intro&&G.phase==='ready'&&!G.holdDraft)startIntro();
+     if(m.intro&&!dying&&m.hp<=0){if(m.phase<phases())shift();else die();}
+     // The pacing clock only runs while the fight is live, not during intros, shifts or the collapse.
+-    if(fight()&&m.intro&&!dying&&!api.busy()){m.clock=(m.clock||0)+dt;if(recent.length)syncHud();}
++    if(fight()&&m.intro&&!dying&&!api.busy()){m.clock=(m.clock||0)+dt;if(recent.length)queueHud();}
+     if(dying)updateDying();
+     if(entrance&&G.time>=entrance.end){if(G.boardEntrance===entrance)G.boardEntrance=null;entrance=null;}
+     // Moving colliders: refresh the cached aim line a few times a second.
+@@ -364,7 +364,11 @@
+     bar.setAttribute('aria-valuenow',String(total));
+     bar.setAttribute('aria-valuetext',`第 ${m.phase} 相${d.phaseNames[m.phase-1]}，总生命 ${total}%，${st.text}${cut>=10?`，减伤 ${cut}%`:''}`);
+   }
+-  function pulseBar(){if(!bar||G.reduced)return;bar.classList.remove('is-hit');void bar.offsetWidth;bar.classList.add('is-hit');}
++  function pulseBar(){if(!bar||G.reduced)return;
++    const paint=()=>{bar.classList.remove('is-hit');void bar.offsetWidth;bar.classList.add('is-hit');};
++    if(G.deferVisual)G.deferVisual('boss-hit',paint);else paint();
++  }
++  function queueHud(){if(G.deferVisual)G.deferVisual('boss-hud',syncHud);else syncHud();}
+   const ui=G.ui;
+   G.ui=(...args)=>{const result=ui(...args);syncHud();return result;};
+   // Full-screen banners are kept for the big beats: phase shifts, rage and the
+--- agent-tmp/perf-before-source/render.js	2026-10-02 07:27:02.064117275 +0000
++++ render.js	2026-10-02 07:34:19.265937553 +0000
+@@ -307,6 +307,7 @@
+       ctx.globalAlpha=1;
+     }
+     function render(){
++    G.flushUi?.();G.flushVisuals?.();
+     G.fx?.beginFrame();
+     const dpr=canvas.width/cssW;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
+     ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);
+--- agent-tmp/perf-before-source/skill-effects.js	2026-10-02 07:27:02.068117321 +0000
++++ skill-effects.js	2026-10-02 07:38:28.319767729 +0000
+@@ -133,7 +133,7 @@
+     const owned=G.activeSkills();
+     const queueKey=JSON.stringify(G.state.skills);
+     if(queueKey===lastQueueKey)return;
+-    lastQueueKey=queueKey;const outgoing=G.outgoingSkill();
++    lastQueueKey=queueKey;const outgoing=G.outgoingSkill();G.prepareSkillFx();
+     queue.replaceChildren();
+     for(let i=0;i<G.skillSlots;i++){
+       const skill=owned[i];
+@@ -152,6 +152,7 @@
+       queue.append(slot);lucide.createIcons({root:slot});
+     }
+   }
++  G.prepareSkillFx=()=>{for(const skill of G.activeSkills()){const p=profiles[skill.id];if(p)G.warmSkillSignature?.(skill.id,p.color,p.accent);}};
+   const choose=G.chooseSkill;
+   G.chooseSkill=id=>{
+     const result=choose(id);if(!result)return result;
+--- agent-tmp/perf-before-source/skill-expansion.js	2026-10-02 07:27:02.068117321 +0000
++++ skill-expansion.js	2026-10-02 07:34:19.269937657 +0000
+@@ -62,7 +62,7 @@
+     later(.3,source,()=>{
+       fx('infection',origin.x,origin.y,{r:65,force:true});
+       if(G.bricks.includes(b))G.hit(b,chain.damage,1);
+-      const next=G.bricks.filter(t=>!chain.visited.has(t.body.id)&&Math.hypot(t.x-origin.x,t.y-origin.y)<=230).sort((a,b)=>Math.hypot(a.x-origin.x,a.y-origin.y)-Math.hypot(b.x-origin.x,b.y-origin.y)).slice(0,2);
++      const next=G.nearestBricks(origin.x,origin.y,2,t=>!chain.visited.has(t.body.id)&&Math.hypot(t.x-origin.x,t.y-origin.y)<=230);
+       for(const target of next){if(chain.visited.size>=15)break;signal('infection','root',origin,target,.5);infect(target,source,chain);}
+     });
+   }
+--- agent-tmp/perf-before-source/skill-overdrive.js	2026-10-02 07:27:02.068117321 +0000
++++ skill-overdrive.js	2026-10-02 07:34:19.269937657 +0000
+@@ -13,7 +13,7 @@
+     if(signals.length>96)signals.shift();
+   }
+   function area(p,r,damage){
+-    for(const b of [...G.bricks])if(Math.hypot(b.x-p.x,b.y-p.y)<=r)G.hit(b,damage,1);
++    for(const b of G.bricksNear(p.x,p.y,r,true))G.hit(b,damage,1);
+   }
+   function child(source,p,angle,damage,pierce){
+     return G.withArrow(source,()=>{
+--- agent-tmp/perf-before-source/skill-signatures.js	2026-10-02 07:27:02.068117321 +0000
++++ skill-signatures.js	2026-10-02 07:38:28.319767729 +0000
+@@ -192,6 +192,7 @@
+   // A transparent bitmap is not free: simple lines are faster as vectors.
+   // Cache the measured path-heavy silhouettes and small repeated ornaments.
+   const cached=new Set('swarmqueen trident blizzard snowburst spectral starforge supernova mint infection buzzsaw pulse'.split(' '));
++  G.warmSkillSignature=(id,color,accent)=>{if(cached.has(id))G.fx?.prewarm(paint,id,color,accent);};
+   G.paintSkillSignature=(ctx,id,t,r,color,accent,stage='impact')=>{
+     if((r>24&&stage!=='aura'&&!cached.has(id))||!G.fx?.signature(ctx,paint,id,t,r,color,accent,stage))paint(ctx,id,t,r,color,accent,stage);
+   };
+--- agent-tmp/perf-before-source/skills-ui.js	2026-10-02 07:27:02.068117321 +0000
++++ skills-ui.js	2026-10-02 07:34:19.269937657 +0000
+@@ -193,17 +193,19 @@
+     }
+   }
+    let uiQueued=false;
+-   G.ui=()=>{
++   const flushUi=G.flushUi;
++   const paintUi=()=>{
++     if(!uiQueued)return;uiQueued=false;baseUi();update();G.updateAchievementUI?.();
++     if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
++       G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
++       G.revokedSkills=null;
++     }
++   };
++   G.flushUi=()=>{flushUi?.();paintUi();};
++    G.ui=()=>{
+      if(uiQueued)return;
+      uiQueued=true;
+-      requestAnimationFrame(()=>{
+-         uiQueued=false;baseUi();update();G.updateAchievementUI?.();
+-         // Report migrated-away skills once the entry screen no longer covers the HUD.
+-         if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
+-           G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
+-           G.revokedSkills=null;
+-         }
+-       });
++       requestAnimationFrame(paintUi);
+    };
+   draft.addEventListener('cancel',e=>e.preventDefault());
+   draft.addEventListener('keydown',e=>{
+--- agent-tmp/perf-before-source/skills.js	2026-10-02 07:27:02.068117321 +0000
++++ skills.js	2026-10-02 07:34:19.269937657 +0000
+@@ -239,14 +239,14 @@
+   // leaves the board. Round-wide quotas still apply to nova and cascade.
+   const takeArrow=(a,id,limit)=>!!a&&take(id,limit,a.skillUses??={});
+   function enqueue(delay,fn){if(effectBudget--<=0)return;jobs.push({at:G.time+delay,level:S.level,arrow:G.activeArrow,fn});}
+-  const nearby=(x,y,r)=>G.bricks.filter(b=>Math.hypot(b.x-x,b.y-y)<r);
++  const nearby=(x,y,r)=>G.bricksNear(x,y,r);
+   function area(x,y,r,damage,color='#e8a475',skillId){
+     if(G.phase!=='flying')return;G.ring(x,y,color,r);G.sound('boom',1,x);
+     if(skillId)G.skillFX?.(skillId,x,y,{r,force:true});
+     nearby(x,y,r).forEach(b=>G.hit(b,damage,1));
+   }
+   function arc(x,y,count,damage,skillId){
+-    const targets=[...G.bricks].sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,count);
++    const targets=G.nearestBricks(x,y,count);
+     let from={x,y};targets.forEach(b=>{G.bolts.push({x:from.x,y:from.y,tx:b.x,ty:b.y,life:.35});from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
+     if(skillId)G.skillFX?.(skillId,x,y,{kind:'electric',r:115});
+   }

@@ -16,7 +16,7 @@ body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--letterbox-
   border-radius:calc(14 * var(--px));
   box-shadow:
     0 0 0 var(--px) var(--frame-edge),
-    0 0 0 calc(5 * var(--px)) color-mix(in srgb,var(--bg) 55%,var(--letterbox)),
+    0 0 0 calc(5 * var(--px)) var(--mix-bg-55-letterbox),
     0 0 0 calc(6 * var(--px)) var(--frame-edge),
     0 calc(10 * var(--px)) calc(40 * var(--px)) var(--frame-shadow)}
 /* Top-layer and body-level layers sit outside the stage transform, so they take the same scale via zoom. */

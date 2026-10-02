@@ -12,7 +12,7 @@ export function instrument(name, source) {
   if (name === 'skill-overdrive.js') return append('G.__audit.overdrive = {get signals(){return signals;},get fields(){return fields;},reset};');
   if (name === 'intro.js') return append('Game.__audit.intro = {finish,paint:()=>{finished=false;draw(start+1400);finished=true;}};');
   if (name === 'transitions.js') return append('G.__audit.transitions={flyCoins};');
-  if (name === 'achievements-ui.js') return append('G.__audit.achievement={launchSpark,flyPayout};');
+  if (name === 'achievements-ui.js') return append('G.__audit.achievement={launchSpark,flyPayout,replay};');
   const bossHooks = {
     'boss-eye.js': `G.__audit.bosses.eye={
       reset:()=>{wells=[];beams=[];snaps=[];shards=[];move=null;},

@@ -35,3 +35,9 @@ test('achievement sparks and payout chips share bounded budgets that recover aft
   G.__audit.achievement.launchSpark({x:200,y:600},'#ffaa33',{});G.__audit.achievement.flyPayout(1000);assert.equal(body.children.length,2);
   document.hidden=true;G.__audit.achievement.flyPayout(1000);assert.equal(body.children.length,2);assert.equal(G.state.coins,123);
 });
+test('achievement replay is coalesced per element and class when the game has a frame visual queue',async()=>{
+  const {G,body}=await boot('achievements-ui.js');const queued=[];G.deferVisual=(key,paint)=>queued.push({key,paint});
+  const node=body,replay=G.__audit.achievement.replay;
+  replay(node,'is-hit');replay(node,'is-hit');replay(node,'is-other');
+  assert.equal(queued.length,1);queued.forEach(item=>item.paint());assert.ok(queued.every(item=>item.key.indexOf('achievement-replay:')===0));
+});

@@ -106,7 +106,7 @@
     const dealt=Math.min(m.hp,scaled);m.hp-=dealt;recent.push({t:G.time,v:dealt});
     const P=def().palette();
     if(!quiet&&x!=null)G.float(x,y-18,'-'+G.fmt(scaled),P.hot,scaled>=G.damage()*2?22:16);
-    pulseBar();syncHud();return dealt;
+    pulseBar();queueHud();return dealt;
   }
   const api={
     G,S,Composite,Body,PHASES,GRAVITY,shuffle,now,
@@ -208,7 +208,7 @@
     if(!m.intro&&G.phase==='ready'&&!G.holdDraft)startIntro();
     if(m.intro&&!dying&&m.hp<=0){if(m.phase<phases())shift();else die();}
     // The pacing clock only runs while the fight is live, not during intros, shifts or the collapse.
-    if(fight()&&m.intro&&!dying&&!api.busy()){m.clock=(m.clock||0)+dt;if(recent.length)syncHud();}
+    if(fight()&&m.intro&&!dying&&!api.busy()){m.clock=(m.clock||0)+dt;if(recent.length)queueHud();}
     if(dying)updateDying();
     if(entrance&&G.time>=entrance.end){if(G.boardEntrance===entrance)G.boardEntrance=null;entrance=null;}
     // Moving colliders: refresh the cached aim line a few times a second.
@@ -262,7 +262,7 @@
     flash('seal');banner(...d.seal,'seal');
     const dist=b=>Math.hypot(b.x-x,b.y-y),order=[...G.bricks].sort((a,b)=>dist(a)-dist(b));
     dying.queue=order.map(b=>({b,at:G.time+.35+dist(b)/1100}));
-    dying.done=(dying.queue.at(-1)?.at||G.time)+.6;
+    dying.done=(dying.queue[dying.queue.length-1]?.at||G.time)+.6;
   }
   function finish(){
     const m=fight(),d=def();dying=null;
@@ -287,7 +287,7 @@
   G.shoot=(...args)=>{
     if(!fight())return shoot(...args);
     if(dying||G.time<introUntil||G.time<shiftUntil||def().blockShot?.())return false;
-    const fired=shoot(...args);if(fired)def().shot?.(G.arrows.at(-1));return fired;
+    const fired=shoot(...args);if(fired)def().shot?.(G.arrows[G.arrows.length-1]);return fired;
   };
   const spawnCore=G.spawnCore;
   G.spawnCore=(...args)=>fight()?undefined:spawnCore(...args);
@@ -364,7 +364,11 @@
     bar.setAttribute('aria-valuenow',String(total));
     bar.setAttribute('aria-valuetext',`第 ${m.phase} 相${d.phaseNames[m.phase-1]}，总生命 ${total}%，${st.text}${cut>=10?`，减伤 ${cut}%`:''}`);
   }
-  function pulseBar(){if(!bar||G.reduced)return;bar.classList.remove('is-hit');void bar.offsetWidth;bar.classList.add('is-hit');}
+  function pulseBar(){if(!bar||G.reduced)return;
+    const paint=()=>{bar.classList.remove('is-hit');void bar.offsetWidth;bar.classList.add('is-hit');};
+    if(G.deferVisual)G.deferVisual('boss-hit',paint);else paint();
+  }
+  function queueHud(){if(G.deferVisual)G.deferVisual('boss-hud',syncHud);else syncHud();}
   const ui=G.ui;
   G.ui=(...args)=>{const result=ui(...args);syncHud();return result;};
   // Full-screen banners are kept for the big beats: phase shifts, rage and the
@@ -382,8 +386,8 @@
     arena.append(el);
     const life=G.reduced?1600:2100;
     if(!G.reduced){
-      el.animate([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0',offset:.12},{opacity:1,offset:.85},{opacity:0,translate:'0 -6px'}],{duration:life,easing:'ease-out',fill:'forwards'});
-      el.firstElementChild.animate([{scale:'0 1'},{scale:'1 1',offset:.18},{scale:'1 1',offset:.85},{scale:'0 1'}],{duration:life,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+      el.animate([{opacity:0,transform:'translate(0,10px)'},{opacity:1,transform:'translate(0,0)',offset:.12},{opacity:1,offset:.85},{opacity:0,transform:'translate(0,-6px)'}],{duration:life,easing:'ease-out',fill:'forwards'});
+      el.firstElementChild.animate([{transform:'scale(0,1)'},{transform:'scale(1,1)',offset:.18},{transform:'scale(1,1)',offset:.85},{transform:'scale(0,1)'}],{duration:life,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
     }
     setTimeout(()=>el.remove(),life);
   }
@@ -397,7 +401,7 @@
     arena.querySelectorAll('.rift-callout').forEach(old=>old.remove());
     arena.append(el);
     const life=first?2400:1300;
-    if(!G.reduced)el.animate([{opacity:0,translate:'-50% -40%'},{opacity:1,translate:'-50% -50%',offset:.1},{opacity:1,offset:.85},{opacity:0,translate:'-50% -50%'}],{duration:life,easing:'ease-out',fill:'forwards'});
+    if(!G.reduced)el.animate([{opacity:0,transform:'translate(-50%,-40%)'},{opacity:1,transform:'translate(-50%,-50%)',offset:.1},{opacity:1,offset:.85},{opacity:0,transform:'translate(-50%,-50%)'}],{duration:life,easing:'ease-out',fill:'forwards'});
     setTimeout(()=>el.remove(),life);
   }
   function flash(tone){
@@ -405,7 +409,7 @@
     const el=document.createElement('i');el.className='rift-flash';el.dataset.tone=tone;el.setAttribute('aria-hidden','true');arena.append(el);
     el.animate([{opacity:.9},{opacity:0}],{duration:tone==='seal'?1100:600,easing:'ease-out',fill:'forwards'}).finished.then(()=>el.remove(),()=>el.remove());
   }
-  function shakeArena(){if(dom&&arena&&!G.reduced)arena.animate([0,1,2,3,4,5,6].map(i=>({translate:i===6?'0 0':`${(Math.random()-.5)*14}px ${(Math.random()-.5)*10}px`})),{duration:520,easing:'linear'});}
+  function shakeArena(){if(dom&&arena&&!G.reduced)arena.animate([0,1,2,3,4,5,6].map(i=>({transform:i===6?'translate(0,0)':`translate(${(Math.random()-.5)*14}px,${(Math.random()-.5)*10}px)`})),{duration:520,easing:'linear'});}
   function cinematic(){
     if(!dom||!arena)return;
     const d=def(),el=document.createElement('div');el.className='rift-intro';el.setAttribute('role','status');
@@ -413,8 +417,8 @@
     arena.append(el);
     if(G.reduced){setTimeout(()=>el.remove(),1600);return;}
     const [top,bottom,title]=el.children,dur=2600;
-    for(const b of [top,bottom])b.animate([{scale:'1 0'},{scale:'1 1',offset:.15},{scale:'1 1',offset:.85},{scale:'1 0'}],{duration:dur,easing:'cubic-bezier(.65,0,.35,1)',fill:'forwards'});
-    title.animate([{opacity:0,translate:'0 12px'},{opacity:0,offset:.25},{opacity:1,translate:'0 0',offset:.4},{opacity:1,clipPath:'inset(0 0 0 0)',offset:.5},{clipPath:'inset(40% 0 35% 0)',translate:'6px 0',offset:.52},{clipPath:'inset(0 0 0 0)',translate:'0 0',offset:.54},{opacity:1,offset:.84},{opacity:0,translate:'0 -14px'}],{duration:dur,easing:'ease-out',fill:'forwards'});
+    for(const b of [top,bottom])b.animate([{transform:'scale(1,0)'},{transform:'scale(1,1)',offset:.15},{transform:'scale(1,1)',offset:.85},{transform:'scale(1,0)'}],{duration:dur,easing:'cubic-bezier(.65,0,.35,1)',fill:'forwards'});
+    title.animate([{opacity:0,transform:'translate(0,12px)'},{opacity:0,offset:.25},{opacity:1,transform:'translate(0,0)',offset:.4},{opacity:1,clipPath:'inset(0 0 0 0)',offset:.5},{clipPath:'inset(40% 0 35% 0)',transform:'translate(6px,0)',offset:.52},{clipPath:'inset(0 0 0 0)',transform:'translate(0,0)',offset:.54},{opacity:1,offset:.84},{opacity:0,transform:'translate(0,-14px)'}],{duration:dur,easing:'ease-out',fill:'forwards'});
     setTimeout(()=>el.remove(),dur+50);
   }
 

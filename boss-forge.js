@@ -272,7 +272,15 @@
       const down=G.time<palm.down,cracks=palm.hits,x=palm.x,y=PALM.y;
       if(down){ctx.globalAlpha=.25;ctx.setLineDash([4,6]);ctx.strokeStyle=P.ironEdge;ctx.lineWidth=1.5;ctx.strokeRect(x-PALM.half-PALM.r,y-PALM.r,PALM.half*2+PALM.r*2,PALM.r*2);ctx.setLineDash([]);return;}
       ctx.globalAlpha=1;ctx.fillStyle=P.iron;ctx.strokeStyle=palm.flash?P.molten:P.ironEdge;ctx.lineWidth=2.4;
-      ctx.beginPath();ctx.roundRect?ctx.roundRect(x-PALM.half-PALM.r,y-PALM.r,PALM.half*2+PALM.r*2,PALM.r*2,PALM.r):ctx.rect(x-PALM.half-PALM.r,y-PALM.r,PALM.half*2+PALM.r*2,PALM.r*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();
+      if(typeof ctx.roundRect==='function')ctx.roundRect(x-PALM.half-PALM.r,y-PALM.r,PALM.half*2+PALM.r*2,PALM.r*2,PALM.r);
+      else{
+        // Same capsule, not a square-cornered rectangle on Chromium 89.
+        ctx.moveTo(x-PALM.half,y-PALM.r);ctx.lineTo(x+PALM.half,y-PALM.r);
+        ctx.arc(x+PALM.half,y,PALM.r,-Math.PI/2,Math.PI/2);
+        ctx.lineTo(x-PALM.half,y+PALM.r);ctx.arc(x-PALM.half,y,PALM.r,Math.PI/2,Math.PI*1.5);ctx.closePath();
+      }
+      ctx.fill();ctx.stroke();
       ctx.lineWidth=1.4;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x+i*20,y-PALM.r+3);ctx.lineTo(x+i*20,y+PALM.r-3);ctx.stroke();}
       ctx.strokeStyle=P.crack;ctx.lineWidth=1.6;
       for(let i=0;i<cracks;i++){const cx=x-40+i*27;ctx.beginPath();ctx.moveTo(cx,y-PALM.r);ctx.lineTo(cx+6,y-2);ctx.lineTo(cx-3,y+PALM.r);ctx.stroke();}

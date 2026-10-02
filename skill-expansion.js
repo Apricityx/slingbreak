@@ -62,7 +62,7 @@
     later(.3,source,()=>{
       fx('infection',origin.x,origin.y,{r:65,force:true});
       if(G.bricks.includes(b))G.hit(b,chain.damage,1);
-      const next=G.bricks.filter(t=>!chain.visited.has(t.body.id)&&Math.hypot(t.x-origin.x,t.y-origin.y)<=230).sort((a,b)=>Math.hypot(a.x-origin.x,a.y-origin.y)-Math.hypot(b.x-origin.x,b.y-origin.y)).slice(0,2);
+      const next=G.nearestBricks(origin.x,origin.y,2,t=>!chain.visited.has(t.body.id)&&Math.hypot(t.x-origin.x,t.y-origin.y)<=230);
       for(const target of next){if(chain.visited.size>=15)break;signal('infection','root',origin,target,.5);infect(target,source,chain);}
     });
   }
@@ -89,7 +89,7 @@
     if(rank('threadweaver')){
       const chain=a.threadChain??={points:[],seen:new Set()};
       if(chain.points.length>=5||chain.seen.has(b.body.id))return;
-      chain.seen.add(b.body.id);const previous=chain.points.at(-1);chain.points.push(position);
+      chain.seen.add(b.body.id);const previous=chain.points[chain.points.length-1];chain.points.push(position);
       if(previous)later(.045,a,()=>{
         signal('threadweaver','cut',previous,position,.75);fx('threadweaver',position.x,position.y,{r:55});
         for(const target of [...G.bricks])if(G.sweep(target.body.bounds,previous,position,14))G.hit(target,G.damage()*3,1);

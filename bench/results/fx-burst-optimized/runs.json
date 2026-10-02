@@ -1,0 +1,147 @@
+[
+  {
+    "id": "before-normal",
+    "started": "2026-10-02T08:04:15.730Z",
+    "finished": "2026-10-02T08:07:59.519Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--source-root=agent-tmp/perf-before-source",
+      "--filter=^board-burst/",
+      "--board-repeats=3",
+      "--capture=1",
+      "--out=bench/results/fx-burst-optimized/before"
+    ]
+  },
+  {
+    "id": "after-normal",
+    "started": "2026-10-02T08:07:59.519Z",
+    "finished": "2026-10-02T08:11:44.008Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/",
+      "--board-repeats=3",
+      "--capture=1",
+      "--out=bench/results/fx-burst-optimized/after"
+    ]
+  },
+  {
+    "id": "before-reduced",
+    "started": "2026-10-02T08:11:44.008Z",
+    "finished": "2026-10-02T08:15:34.968Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--source-root=agent-tmp/perf-before-source",
+      "--filter=^board-burst/",
+      "--board-repeats=3",
+      "--reduced=1",
+      "--out=bench/results/fx-burst-optimized/before"
+    ]
+  },
+  {
+    "id": "after-reduced",
+    "started": "2026-10-02T08:15:34.969Z",
+    "finished": "2026-10-02T08:19:17.320Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/",
+      "--board-repeats=3",
+      "--reduced=1",
+      "--out=bench/results/fx-burst-optimized/after"
+    ]
+  },
+  {
+    "id": "after-raf",
+    "started": "2026-10-02T08:19:17.321Z",
+    "finished": "2026-10-02T08:20:35.860Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/",
+      "--raf=1",
+      "--out=bench/results/fx-burst-optimized/after"
+    ]
+  },
+  {
+    "id": "after-chrome89",
+    "started": "2026-10-02T08:20:35.861Z",
+    "finished": "2026-10-02T08:21:53.790Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/",
+      "--chrome=/home/apricityx/workspaces/SlayTheAmethystModded/agent-tmp/chrome89-tools/node_modules/puppeteer/.local-chromium/linux-843427/chrome-linux/chrome",
+      "--capture=1",
+      "--out=bench/results/fx-burst-optimized/after/chrome89"
+    ]
+  },
+  {
+    "id": "before-animation",
+    "started": "2026-10-02T08:21:53.791Z",
+    "finished": "2026-10-02T08:22:26.974Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--source-root=agent-tmp/perf-before-source",
+      "--animated=1",
+      "--sample=4000",
+      "--filter=^animation/",
+      "--capture=1",
+      "--out=bench/results/fx-burst-optimized/animation/before"
+    ]
+  },
+  {
+    "id": "after-animation",
+    "started": "2026-10-02T08:22:26.975Z",
+    "finished": "2026-10-02T08:23:00.925Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--animated=1",
+      "--sample=4000",
+      "--filter=^animation/",
+      "--capture=1",
+      "--out=bench/results/fx-burst-optimized/animation/after"
+    ]
+  },
+  {
+    "id": "after-all-fx",
+    "started": "2026-10-02T08:23:00.926Z",
+    "finished": "2026-10-02T08:25:17.084Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--sample=1",
+      "--filter=^(?!board-burst/)",
+      "--out=bench/results/fx-burst-optimized/smoke"
+    ]
+  },
+  {
+    "id": "after-old-fx",
+    "started": "2026-10-02T08:25:17.085Z",
+    "finished": "2026-10-02T08:27:29.911Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--chrome=/home/apricityx/workspaces/SlayTheAmethystModded/agent-tmp/chrome89-tools/node_modules/puppeteer/.local-chromium/linux-843427/chrome-linux/chrome",
+      "--sample=1",
+      "--filter=^(?!board-burst/)",
+      "--out=bench/results/fx-burst-optimized/smoke/chrome89"
+    ]
+  },
+  {
+    "id": "after-profile",
+    "started": "2026-10-02T08:27:29.911Z",
+    "finished": "2026-10-02T08:27:46.534Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/chain:special-22$",
+      "--cpu-profile=1",
+      "--out=agent-tmp/perf-after-profile"
+    ]
+  }
+]

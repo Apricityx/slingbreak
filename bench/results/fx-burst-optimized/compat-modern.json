@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "name": "all shipped JavaScript parses"
+    },
+    {
+      "name": "opening and draft",
+      "paints": 4715
+    },
+    {
+      "name": "sRGB colour parity",
+      "samples": 552
+    },
+    {
+      "name": "pick flight, focus restoration and board entrance",
+      "paints": 30099
+    },
+    {
+      "name": "theme, settings and sound slider",
+      "paints": 32448
+    },
+    {
+      "name": "Web Audio schedules real sources",
+      "sampleRate": 44100
+    },
+    {
+      "name": "full queue replacement",
+      "paints": 62767
+    },
+    {
+      "name": "boss eye",
+      "paints": 24121
+    },
+    {
+      "name": "boss forge",
+      "paints": 26597
+    },
+    {
+      "name": "boss serpent",
+      "paints": 25522
+    },
+    {
+      "name": "boss clock",
+      "paints": 31191
+    },
+    {
+      "name": "launcher mode",
+      "paints": 5641
+    },
+    {
+      "name": "reduced motion",
+      "paints": 343
+    },
+    {
+      "name": "mobile, tablet and desktop stage fits"
+    }
+  ],
+  "errors": [],
+  "version": "Chrome/153.0.8010.12",
+  "passed": true
+}

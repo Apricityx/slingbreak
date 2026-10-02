@@ -192,6 +192,7 @@
   // A transparent bitmap is not free: simple lines are faster as vectors.
   // Cache the measured path-heavy silhouettes and small repeated ornaments.
   const cached=new Set('swarmqueen trident blizzard snowburst spectral starforge supernova mint infection buzzsaw pulse'.split(' '));
+  G.warmSkillSignature=(id,color,accent)=>{if(cached.has(id))G.fx?.prewarm(paint,id,color,accent);};
   G.paintSkillSignature=(ctx,id,t,r,color,accent,stage='impact')=>{
     if((r>24&&stage!=='aura'&&!cached.has(id))||!G.fx?.signature(ctx,paint,id,t,r,color,accent,stage))paint(ctx,id,t,r,color,accent,stage);
   };

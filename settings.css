@@ -16,10 +16,10 @@
 .theme-option{position:relative;display:flex;flex-direction:column;gap:9px;padding:8px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
 .theme-option input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}
 @media(hover:hover){.theme-option:hover{border-color:var(--accent-line)}}
-.theme-option:has(input:checked){border-color:var(--accent-ink);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent-ink)}
-.theme-option:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:3px}
+.theme-option.is-selected{border-color:var(--accent-ink);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent-ink)}
+.theme-option:focus-within{outline:2px solid var(--focus);outline-offset:3px}
 .theme-name{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-2);white-space:nowrap}
-.theme-option:has(input:checked) .theme-name{color:var(--ink)}
+.theme-option.is-selected .theme-name{color:var(--ink)}
 .theme-name svg{width:14px;height:14px;flex:none}
 
 /* Mini previews: a page strip with a brick row and a lime core dot. The swatch
@@ -39,7 +39,8 @@
 .settings-hint{min-height:1.6em;margin:12px 0 0!important;font-size:11px!important;line-height:1.6;color:var(--text-3)!important}
 .performance-group{margin-top:18px;clear:both}
 .performance-option{display:flex;align-items:center;gap:12px;cursor:pointer}
-.performance-option input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--accent-ink);cursor:pointer}
+.performance-option input{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin:0;flex:none;border:1px solid var(--line-2);border-radius:3px;background:var(--surface);cursor:pointer}
+.performance-option input:checked{border-color:var(--accent-ink);background:var(--accent-ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='m4 9 3 3 7-7' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E") center/18px 18px no-repeat}
 .performance-option input:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 .performance-option span{display:grid;gap:4px}
 .performance-option strong{font-size:13px;font-weight:600}
@@ -47,17 +48,27 @@
 .sound-group{margin-top:18px;clear:both}
 .sound-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;font-size:13px;font-weight:600}
 .sound-heading output{font-variant-numeric:tabular-nums;color:var(--accent-ink)}
-#sound-volume{display:block;width:100%;margin:0;accent-color:var(--accent-ink);cursor:pointer}
+#sound-volume{-webkit-appearance:none;appearance:none;display:block;width:100%;height:18px;margin:0;background:transparent;cursor:pointer}
+#sound-volume::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent-ink) var(--volume-fill,100%),var(--line-2) var(--volume-fill,100%))}
+#sound-volume::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border:0;border-radius:50%;background:var(--accent-ink)}
+#sound-volume::-moz-range-track{height:4px;border-radius:2px;background:var(--line-2)}
+#sound-volume::-moz-range-progress{height:4px;border-radius:2px;background:var(--accent-ink)}
+#sound-volume::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:var(--accent-ink)}
 #sound-volume:focus-visible{outline:2px solid var(--focus);outline-offset:4px}
 .sound-scale{display:flex;justify-content:space-between;margin-top:9px;font-size:11px;color:var(--text-3)}
 .refresh-group,.install-group{margin-top:18px;clear:both}
+.progress-group{margin-top:18px;clear:both}
 .refresh-group>div,.install-group>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.progress-group>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.progress-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .refresh-group strong,.install-group strong{font-size:13px;font-weight:600}
+.progress-group strong{font-size:13px;font-weight:600}
 .refresh-button{padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);color:var(--ink);font-size:12px;font-weight:600}
 .refresh-button:hover:not(:disabled){background:var(--surface-3)}
 .refresh-button:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 .refresh-button:disabled{opacity:.6}
 .refresh-group .settings-hint,.install-group .settings-hint{margin-top:8px!important}
+.progress-group .settings-hint{margin-top:8px!important}
 .fullscreen-toggle[hidden]{display:none}
 
 /* A separate guide can open from either the header or the settings dialog. */

@@ -77,7 +77,7 @@
   for(const [id,[color,accent,trail,duration]] of Object.entries(treatments))Object.assign(profiles[id],{color,accent,trail,duration});
   G.skillColor=id=>profiles[id]?.color||'#8a9380';
   // The newest skill leads the arrow styling; all four remain visible and active.
-  const active=()=>G.activeSkills().at(-1);
+  const active=()=>{const skills=G.activeSkills();return skills[skills.length-1];};
   const effects=[],cooldowns=new Map();
   let lastQueueKey='',lastPulse=-10;
   const hud=document.createElement('div');hud.className='skill-live';
@@ -98,7 +98,7 @@
   function openDetail(id){
     const skill=G.skillCatalog.find(s=>s.id===id);
     if(!skill||!detail)return;
-    detail.style.setProperty('--skill-detail-color',profiles[skill.id]?.color||'#6c8c4e');
+    window.SlingColors.set(detail,'--skill-detail-color',profiles[skill.id]?.color||'#6c8c4e');
     detailEmblem.innerHTML=`<i data-lucide="${skill.icon}"></i>`;
     detailName.textContent=skill.name;
     detailFamily.textContent=`${skill.family} · 跨关生效`;
@@ -133,7 +133,7 @@
     const owned=G.activeSkills();
     const queueKey=JSON.stringify(G.state.skills);
     if(queueKey===lastQueueKey)return;
-    lastQueueKey=queueKey;const outgoing=G.outgoingSkill();
+    lastQueueKey=queueKey;const outgoing=G.outgoingSkill();G.prepareSkillFx();
     queue.replaceChildren();
     for(let i=0;i<G.skillSlots;i++){
       const skill=owned[i];
@@ -144,7 +144,7 @@
       const slot=document.createElement('button');
       slot.type='button';slot.dataset.skill=skill.id;
       slot.className='skill-queue-slot'+(skill===outgoing?' is-outgoing':'');
-      slot.style.setProperty('--skill-color',profiles[skill.id]?.color||'#8a9380');
+      window.SlingColors.set(slot,'--skill-color',profiles[skill.id]?.color||'#8a9380');
       slot.title=`${skill.name} · 点击查看说明`;
       slot.setAttribute('aria-label',`查看${skill.name}的技能说明`);
       slot.innerHTML=`<b><i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}</b>`;
@@ -152,6 +152,7 @@
       queue.append(slot);lucide.createIcons({root:slot});
     }
   }
+  G.prepareSkillFx=()=>{for(const skill of G.activeSkills()){const p=profiles[skill.id];if(p)G.warmSkillSignature?.(skill.id,p.color,p.accent);}};
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{
     const result=choose(id);if(!result)return result;
@@ -242,7 +243,7 @@
         }else if(jagged){x+=i%2?4:-4;y+=i%2?-3:3;}
         i?ctx.lineTo(x,y):ctx.moveTo(x,y);
       }
-      const last=trail.at(-1);ctx.lineTo(last.x,last.y);ctx.stroke();
+      const last=trail[trail.length-1];ctx.lineTo(last.x,last.y);ctx.stroke();
     };
     ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
     trace(p.color,style==='heavy'?10:8,.16);

@@ -44,6 +44,62 @@ test('visual text and arc budgets never change awarded money or scoring state',(
   assert.equal(G.texts.length,48);G.tick(1/60);assert.ok(G.bolts.length<=64);
   assert.equal(G.state.coins,coins);assert.equal(G.state.total,total);
 });
+test('destruction coalesces HUD requests but damage, income and core unlock stay synchronous',()=>{
+  const {G}=boot();G.bricks.forEach(b=>b.type='normal');let paints=0;G.ui=()=>paints++;
+  const before=G.state.coins,count=G.bricks.length;
+  for(const b of [...G.bricks])G.hit(b,1e9);
+  assert.equal(G.bricks.length,0);assert.equal(G.killed,count);assert.equal(G.state.total,count);
+  assert.ok(G.state.coins>before);assert.ok(G.core);assert.equal(paints,0);
+  G.flushUi();assert.equal(paints,1);G.flushUi();assert.equal(paints,1);
+  G.requestUi();G.requestUi();G.flushUi();assert.equal(paints,2);
+});
+test('frame visuals merge by identity, do not merge different feedback, and reset drops stale work',()=>{
+  const {G}=boot();const painted=[];
+  G.deferVisual('combo',()=>painted.push('old'));G.deferVisual('boss',()=>painted.push('boss'));
+  G.deferVisual('combo',()=>{painted.push('latest');G.deferVisual('next',()=>painted.push('next'));});
+  G.flushVisuals();assert.deepEqual(painted,['latest','boss']);G.flushVisuals();assert.deepEqual(painted,['latest','boss','next']);
+  G.deferVisual('old-board',()=>painted.push('stale'));G.generate();G.flushVisuals();assert.equal(painted.includes('stale'),false);
+});
+test('nearest and radius queries preserve full-sort order, ties, strict boundaries and moving bricks',()=>{
+  const {G}=boot();G.bricks=[{x:3,y:4},{x:-3,y:4},{x:0,y:0},{x:30,y:40},{x:5,y:0}];
+  for(const [x,y] of [[0,0],[7,12],[-100,5]])for(const n of [0,1,3,8]){
+    const filter=b=>b.x>=0;
+    for(const accept of [undefined,filter]){
+      const expected=G.bricks.filter(b=>!accept||accept(b)).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,n);
+      assert.deepEqual([...G.nearestBricks(x,y,n,accept)],expected);
+    }
+    for(const inclusive of [false,true])for(const r of [0,5,50,150])assert.deepEqual([...G.bricksNear(x,y,r,inclusive)],
+      G.bricks.filter(b=>inclusive?Math.hypot(b.x-x,b.y-y)<=r:Math.hypot(b.x-x,b.y-y)<r));
+  }
+  G.bricks[3].x=0;G.bricks[3].y=0;assert.equal(G.nearestBricks(0,0,2)[1],G.bricks[3]);
+});
+test('cached number formatting is exactly the previous en-US output at every abbreviation boundary',()=>{
+  const {G}=boot();
+  for(const n of [-1234.5,0,3.8,999.9,1000,9999.9,10000,999999,1000000,999999999,1000000000]){
+    assert.equal(G.fmtInteger(n),Math.floor(n).toLocaleString('en-US'));
+    assert.equal(G.fmt(n),n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=10000?(n/1000).toFixed(1)+'k':Math.floor(n).toLocaleString('en-US'));
+  }
+});
+test('reused fragments retain the previous random sequence, capacity, ordering and visual values',()=>{
+  const {G}=boot(undefined,{systemReduced:false});let seed=123;
+  const rng=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const expected=[];const operations=[[16,1],[80,3],[800,1],[0,1],[12,.55]];
+  const context={Matter,window:{},console,URLSearchParams,location:{search:''},Math:Object.create(Math),
+    matchMedia:()=>({matches:false,addEventListener(){}}),localStorage:{getItem:()=>null,setItem(){}},
+    document:{documentElement:{classList:{toggle(){}}},getElementById:()=>({})}};
+  vm.createContext(context);vm.runInContext(source,context);const live=context.window.Game;live.particles=[];
+  for(const reduced of [false,true]){
+    live.reduced=reduced;live.particles=[];expected.length=0;
+    for(const [count,force] of operations){
+      seed=123;const n=reduced?Math.min(count,5):Math.ceil(count*.55);
+      for(let i=0;i<n;i++){const a=rng()*Math.PI*2,v=(1+rng()*5)*force;expected.push({x:10,y:20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1,life:.5+rng()*.4,max:1,size:2+rng()*5,color:'#ffeecc',rot:rng()*6});}
+      if(expected.length>300)expected.splice(0,expected.length-300);const next=rng();
+      seed=123;context.Math.random=rng;live.burst(10,20,'#ffeecc',count,force);
+      assert.equal(rng(),next);assert.equal(JSON.stringify(live.particles),JSON.stringify(expected));
+    }
+  }
+  assert.ok(G.fmt);
+});
 test('volume defaults, migrates and survives save and game reset',()=>{
   const {G,read}=boot();assert.equal(G.state.volume,100);
   G.state.volume=0;G.state.sound=false;G.save();

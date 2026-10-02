@@ -77,7 +77,7 @@
       const cx=side?390+side*170:390,rx=side?110:250,ry=230,dir=side>0?-1:1,len=(sn.max+3)*SPACING,pts=[];
       let t=Math.random()*Math.PI*2,acc=0,prev=null;
       while(acc<len){const p={x:cx+rx*Math.cos(t),y:470+ry*Math.sin(t)};if(prev)acc+=dist(p,prev);pts.push(p);prev=p;t+=dir*.03;}
-      sn.trail=pts;const h=pts.pop(),q=pts.at(-1);
+      sn.trail=pts;const h=pts.pop(),q=pts[pts.length-1];
       sn.head={x:h.x,y:h.y,a:Math.atan2(h.y-q.y,h.x-q.x)};sn.mode='swim';sn.vel=speed();sn.eyes=[];sn.goal=null;
       sn.segs.forEach((s,k)=>{s.off=(k+1)*SPACING;s.glide=0;});
     }
@@ -103,7 +103,7 @@
       }
     }
     function record(sn){
-      const last=sn.trail.at(-1);
+      const last=sn.trail[sn.trail.length-1];
       if(!last||Math.hypot(sn.head.x-last.x,sn.head.y-last.y)>=6){sn.trail.push({x:sn.head.x,y:sn.head.y});const cap=Math.ceil((MAX_SEGS+3)*SPACING/6)+30;if(sn.trail.length>cap)sn.trail.splice(0,sn.trail.length-cap);}
     }
     // ── Motion: the head steers toward roaming goals with a capped turn rate,
@@ -654,8 +654,8 @@
         ctx.restore();
         if(s.b.max>1){ctx.font='700 12px "DM Sans", "Noto Sans SC", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=ink;ctx.fillText(G.fmt(Math.ceil(s.b.hp)),s.x,s.y+1);ctx.textBaseline='alphabetic';}
       }
-      const tail=list.at(-1)?.at(-1);
-      if(tail&&tail.s&&tail===list.at(-1).at(-1)&&tail.k===n-1){
+      const last=list[list.length-1],tail=last?.[last.length-1];
+      if(tail&&tail.s&&tail.k===n-1){
         const a=tail.s.a+Math.PI,len=70;ctx.save();ctx.translate(tail.x,tail.y);ctx.rotate(a+(G.reduced?0:Math.sin(G.time*4)*.25));
         const g=ctx.createLinearGradient(0,0,len,0);g.addColorStop(0,hex(P.star,.9));g.addColorStop(1,hex(P.star,0));
         ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,-10);ctx.quadraticCurveTo(len*.6,-4,len,0);ctx.quadraticCurveTo(len*.6,4,0,10);ctx.closePath();ctx.fill();ctx.restore();

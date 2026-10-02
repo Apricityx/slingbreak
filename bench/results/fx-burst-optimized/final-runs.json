@@ -1,0 +1,27 @@
+[
+  {
+    "id": "normal-tail-recheck",
+    "started": "2026-10-02T08:38:10.294Z",
+    "finished": "2026-10-02T08:38:49.968Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/chain:special-50$",
+      "--board-repeats=3",
+      "--out=bench/results/fx-burst-optimized/recheck/normal-tail"
+    ]
+  },
+  {
+    "id": "reduced-all-fx",
+    "started": "2026-10-02T08:38:49.968Z",
+    "finished": "2026-10-02T08:39:38.206Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--sample=1",
+      "--reduced=1",
+      "--filter=^(?!board-burst/)",
+      "--out=bench/results/fx-burst-optimized/smoke"
+    ]
+  }
+]

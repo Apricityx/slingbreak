@@ -1,0 +1,1009 @@
+{
+  "sampledMs": 13545.226,
+  "burstMs": 307.843,
+  "burstSamples": 157,
+  "burst": [
+    {
+      "location": "G.fmt game.js:39",
+      "selfMs": 80.916
+    },
+    {
+      "location": "animate (eval/native):0",
+      "selfMs": 30.833
+    },
+    {
+      "location": "getBoundingClientRect (eval/native):0",
+      "selfMs": 27.369
+    },
+    {
+      "location": "n.extend matter.min.js:6",
+      "selfMs": 16.179
+    },
+    {
+      "location": "G.hit game.js:183",
+      "selfMs": 15.94
+    },
+    {
+      "location": "G.reward skills.js:201",
+      "selfMs": 15.43
+    },
+    {
+      "location": "G.onBrickDestroyed juice.js:153",
+      "selfMs": 10.977
+    },
+    {
+      "location": "G.burst game.js:144",
+      "selfMs": 8.394
+    },
+    {
+      "location": "G.hit skill-overdrive.js:142",
+      "selfMs": 8.122
+    },
+    {
+      "location": "G.arrowKills game.js:70",
+      "selfMs": 6.902
+    },
+    {
+      "location": "G.onBrickDestroyed skill-effects.js:173",
+      "selfMs": 6.621
+    },
+    {
+      "location": "syncHud milestone.js:340",
+      "selfMs": 5.521
+    },
+    {
+      "location": "G.onBrickDestroyed skill-expansion.js:103",
+      "selfMs": 5.439
+    },
+    {
+      "location": "(anonymous) game.js:199",
+      "selfMs": 5.36
+    },
+    {
+      "location": "G.spawnCore milestone.js:293",
+      "selfMs": 4.992
+    },
+    {
+      "location": "G.awardBrick achievements.js:42",
+      "selfMs": 4.917
+    },
+    {
+      "location": "G.projectileHit skills.js:303",
+      "selfMs": 4.061
+    },
+    {
+      "location": "o.addBody matter.min.js:6",
+      "selfMs": 4.059
+    },
+    {
+      "location": "launchSpark achievements-ui.js:129",
+      "selfMs": 3.212
+    },
+    {
+      "location": "(anonymous) game.js:198",
+      "selfMs": 2.859
+    },
+    {
+      "location": "G.damage skills.js:198",
+      "selfMs": 2.674
+    },
+    {
+      "location": "ensure audio.js:32",
+      "selfMs": 2.513
+    },
+    {
+      "location": "G.projectileHit skill-expansion.js:70",
+      "selfMs": 2.425
+    },
+    {
+      "location": "G.sound audio.js:151",
+      "selfMs": 2.398
+    },
+    {
+      "location": "(anonymous) skills.js:124",
+      "selfMs": 2.266
+    },
+    {
+      "location": "o.remove matter.min.js:6",
+      "selfMs": 2.162
+    },
+    {
+      "location": "G.hit skill-effects.js:167",
+      "selfMs": 2.155
+    },
+    {
+      "location": "o.setVertices matter.min.js:6",
+      "selfMs": 1.954
+    },
+    {
+      "location": "G.showAchievement achievements-ui.js:160",
+      "selfMs": 1.86
+    },
+    {
+      "location": "o.fromPath matter.min.js:6",
+      "selfMs": 1.854
+    },
+    {
+      "location": "(anonymous) game.js:197",
+      "selfMs": 1.612
+    },
+    {
+      "location": "contracted skill-expansion.js:26",
+      "selfMs": 1.317
+    },
+    {
+      "location": "n.mult matter.min.js:6",
+      "selfMs": 1.168
+    },
+    {
+      "location": "G.comboCapKills game.js:68",
+      "selfMs": 1.085
+    },
+    {
+      "location": "near game.js:194",
+      "selfMs": 1.084
+    },
+    {
+      "location": "querySelector (eval/native):0",
+      "selfMs": 1.082
+    },
+    {
+      "location": "G.skillRank skills.js:121",
+      "selfMs": 1.082
+    },
+    {
+      "location": "G.skillFX juice.js:142",
+      "selfMs": 1.079
+    },
+    {
+      "location": "get game.js:37",
+      "selfMs": 1.078
+    },
+    {
+      "location": "point skill-overdrive.js:6",
+      "selfMs": 1.077
+    },
+    {
+      "location": "evaluate achievements.js:28",
+      "selfMs": 1.076
+    },
+    {
+      "location": "G.reward game.js:72",
+      "selfMs": 1.075
+    },
+    {
+      "location": "G.addArrow skill-effects.js:163",
+      "selfMs": 1.063
+    },
+    {
+      "location": "o.translate matter.min.js:6",
+      "selfMs": 1.061
+    },
+    {
+      "location": "toClient achievements-ui.js:114",
+      "selfMs": 0.947
+    },
+    {
+      "location": "o.set matter.min.js:6",
+      "selfMs": 0.593
+    }
+  ],
+  "overall": [
+    {
+      "location": "(program) (eval/native):0",
+      "selfMs": 6141.112
+    },
+    {
+      "location": "getImageData (eval/native):0",
+      "selfMs": 4450.436
+    },
+    {
+      "location": "(idle) (eval/native):0",
+      "selfMs": 381.594
+    },
+    {
+      "location": "querySelectorAll (eval/native):0",
+      "selfMs": 333.168
+    },
+    {
+      "location": "requestAnimationFrame (eval/native):0",
+      "selfMs": 309.878
+    },
+    {
+      "location": "ensure audio.js:32",
+      "selfMs": 191.524
+    },
+    {
+      "location": "G.fmt game.js:39",
+      "selfMs": 132.967
+    },
+    {
+      "location": "drawImage (eval/native):0",
+      "selfMs": 121.159
+    },
+    {
+      "location": "measureBoard (eval/native):235",
+      "selfMs": 94.116
+    },
+    {
+      "location": "replay achievements-ui.js:38",
+      "selfMs": 84.439
+    },
+    {
+      "location": "drawTallies juice.js:73",
+      "selfMs": 77.045
+    },
+    {
+      "location": "(garbage collector) (eval/native):0",
+      "selfMs": 74.627
+    },
+    {
+      "location": "render render.js:309",
+      "selfMs": 69.093
+    },
+    {
+      "location": "save (eval/native):0",
+      "selfMs": 61.038
+    },
+    {
+      "location": "strokeText (eval/native):0",
+      "selfMs": 38.591
+    },
+    {
+      "location": "stroke (eval/native):0",
+      "selfMs": 37.64
+    },
+    {
+      "location": "fill (eval/native):0",
+      "selfMs": 34.494
+    },
+    {
+      "location": "animate (eval/native):0",
+      "selfMs": 32.933
+    },
+    {
+      "location": "translate (eval/native):0",
+      "selfMs": 32.634
+    },
+    {
+      "location": "fillText (eval/native):0",
+      "selfMs": 30.018
+    },
+    {
+      "location": "getBoundingClientRect (eval/native):0",
+      "selfMs": 29.148
+    },
+    {
+      "location": "G.tick skills.js:369",
+      "selfMs": 20.818
+    },
+    {
+      "location": "G.tick game.js:276",
+      "selfMs": 19.74
+    },
+    {
+      "location": "(anonymous) (eval/native):59",
+      "selfMs": 19.736
+    },
+    {
+      "location": "n.extend matter.min.js:6",
+      "selfMs": 18.609
+    },
+    {
+      "location": "G.drawSkillEffects skill-effects.js:275",
+      "selfMs": 18.2
+    },
+    {
+      "location": "observe (eval/native):242",
+      "selfMs": 18.004
+    },
+    {
+      "location": "restore (eval/native):0",
+      "selfMs": 16.955
+    },
+    {
+      "location": "G.hit game.js:183",
+      "selfMs": 15.94
+    },
+    {
+      "location": "G.addArrow skill-effects.js:163",
+      "selfMs": 15.789
+    },
+    {
+      "location": "G.reward skills.js:201",
+      "selfMs": 15.43
+    },
+    {
+      "location": "refresh skill-effects.js:132",
+      "selfMs": 15.268
+    },
+    {
+      "location": "signature fx.js:50",
+      "selfMs": 15.205
+    },
+    {
+      "location": "setTransform (eval/native):0",
+      "selfMs": 15.137
+    },
+    {
+      "location": "replace lucide-subset.js:9",
+      "selfMs": 14.681
+    },
+    {
+      "location": "drawOverdrive juice.js:90",
+      "selfMs": 14.623
+    },
+    {
+      "location": "G.save milestone.js:327",
+      "selfMs": 12.652
+    },
+    {
+      "location": "G.drawSkillEffects juice.js:106",
+      "selfMs": 11.894
+    },
+    {
+      "location": "now (eval/native):0",
+      "selfMs": 11.832
+    },
+    {
+      "location": "G.onBrickDestroyed juice.js:153",
+      "selfMs": 10.977
+    },
+    {
+      "location": "G.paintSkillSignature skill-signatures.js:195",
+      "selfMs": 10.815
+    },
+    {
+      "location": "clearRect (eval/native):0",
+      "selfMs": 10.322
+    },
+    {
+      "location": "paint skill-signatures.js:5",
+      "selfMs": 10.203
+    },
+    {
+      "location": "label render.js:64",
+      "selfMs": 10.095
+    },
+    {
+      "location": "(anonymous) (eval/native):0",
+      "selfMs": 10.056
+    },
+    {
+      "location": "count transitions.js:101",
+      "selfMs": 9.801
+    },
+    {
+      "location": "replaceChild (eval/native):0",
+      "selfMs": 9.68
+    },
+    {
+      "location": "drawSling render.js:160",
+      "selfMs": 9.571
+    },
+    {
+      "location": "sprite fx.js:9",
+      "selfMs": 9.166
+    },
+    {
+      "location": "line render.js:40",
+      "selfMs": 8.885
+    },
+    {
+      "location": "(anonymous) transitions.js:72",
+      "selfMs": 8.528
+    },
+    {
+      "location": "G.burst game.js:144",
+      "selfMs": 8.394
+    },
+    {
+      "location": "G.hit skill-overdrive.js:142",
+      "selfMs": 8.122
+    },
+    {
+      "location": "drawParticles render.js:234",
+      "selfMs": 7.907
+    },
+    {
+      "location": "density fx.js:25",
+      "selfMs": 7.876
+    },
+    {
+      "location": "G.drawSkillMechanics skill-overdrive.js:225",
+      "selfMs": 7.753
+    },
+    {
+      "location": "o.collisions matter.min.js:6",
+      "selfMs": 7.643
+    },
+    {
+      "location": "querySelector (eval/native):0",
+      "selfMs": 7.585
+    },
+    {
+      "location": "trace skill-effects.js:235",
+      "selfMs": 7.316
+    },
+    {
+      "location": "G.arrowKills game.js:70",
+      "selfMs": 6.902
+    },
+    {
+      "location": "roundRect (eval/native):0",
+      "selfMs": 6.712
+    },
+    {
+      "location": "G.onBrickDestroyed skill-effects.js:173",
+      "selfMs": 6.621
+    },
+    {
+      "location": "o.update matter.min.js:6",
+      "selfMs": 6.502
+    },
+    {
+      "location": "G.generate game.js:93",
+      "selfMs": 6.174
+    },
+    {
+      "location": "drawBoardCached render.js:362",
+      "selfMs": 5.881
+    },
+    {
+      "location": "syncHud milestone.js:340",
+      "selfMs": 5.521
+    },
+    {
+      "location": "drawBolts render.js:281",
+      "selfMs": 5.445
+    },
+    {
+      "location": "G.onBrickDestroyed skill-expansion.js:103",
+      "selfMs": 5.439
+    },
+    {
+      "location": "o.setVertices matter.min.js:6",
+      "selfMs": 5.373
+    },
+    {
+      "location": "(anonymous) game.js:199",
+      "selfMs": 5.36
+    },
+    {
+      "location": "G.spawnCore milestone.js:293",
+      "selfMs": 4.992
+    },
+    {
+      "location": "G.skillRank skills.js:121",
+      "selfMs": 4.933
+    },
+    {
+      "location": "G.awardBrick achievements.js:42",
+      "selfMs": 4.917
+    },
+    {
+      "location": "stampClear transitions.js:84",
+      "selfMs": 4.836
+    },
+    {
+      "location": "area skills.js:243",
+      "selfMs": 4.737
+    },
+    {
+      "location": "setItem (eval/native):0",
+      "selfMs": 4.414
+    },
+    {
+      "location": "drawEffect skill-effects.js:198",
+      "selfMs": 4.29
+    },
+    {
+      "location": "G.ui milestone.js:369",
+      "selfMs": 4.201
+    },
+    {
+      "location": "G.drawSkillMechanics skill-expansion.js:189",
+      "selfMs": 4.065
+    },
+    {
+      "location": "G.projectileHit skills.js:303",
+      "selfMs": 4.061
+    },
+    {
+      "location": "o.addBody matter.min.js:6",
+      "selfMs": 4.059
+    },
+    {
+      "location": "remove (eval/native):0",
+      "selfMs": 4.025
+    },
+    {
+      "location": "(anonymous) skill-signatures.js:160",
+      "selfMs": 4.006
+    },
+    {
+      "location": "update boss-music.js:102",
+      "selfMs": 3.865
+    },
+    {
+      "location": "drawTrail skill-effects.js:231",
+      "selfMs": 3.713
+    },
+    {
+      "location": "sweep skill-signatures.js:23",
+      "selfMs": 3.462
+    },
+    {
+      "location": "o.create matter.min.js:6",
+      "selfMs": 3.461
+    },
+    {
+      "location": "glow fx.js:46",
+      "selfMs": 3.375
+    },
+    {
+      "location": "G.tick transitions.js:33",
+      "selfMs": 3.249
+    },
+    {
+      "location": "circle render.js:63",
+      "selfMs": 3.225
+    },
+    {
+      "location": "open achievements-ui.js:56",
+      "selfMs": 3.223
+    },
+    {
+      "location": "setLineDash (eval/native):0",
+      "selfMs": 3.22
+    },
+    {
+      "location": "launchSpark achievements-ui.js:129",
+      "selfMs": 3.212
+    },
+    {
+      "location": "measure (eval/native):192",
+      "selfMs": 3.205
+    },
+    {
+      "location": "G.save game.js:73",
+      "selfMs": 3.072
+    },
+    {
+      "location": "(anonymous) skills.js:124",
+      "selfMs": 3.02
+    },
+    {
+      "location": "o.centre matter.min.js:6",
+      "selfMs": 3.013
+    },
+    {
+      "location": "(anonymous) game.js:198",
+      "selfMs": 2.859
+    },
+    {
+      "location": "G.damage skills.js:198",
+      "selfMs": 2.674
+    },
+    {
+      "location": "(anonymous) game.js:99",
+      "selfMs": 2.637
+    },
+    {
+      "location": "o.fromPath matter.min.js:6",
+      "selfMs": 2.576
+    },
+    {
+      "location": "o.translate matter.min.js:6",
+      "selfMs": 2.48
+    },
+    {
+      "location": "o.setMass matter.min.js:6",
+      "selfMs": 2.451
+    },
+    {
+      "location": "G.projectileHit skill-expansion.js:70",
+      "selfMs": 2.425
+    },
+    {
+      "location": "G.sound audio.js:151",
+      "selfMs": 2.398
+    },
+    {
+      "location": "updateTallies juice.js:56",
+      "selfMs": 2.353
+    },
+    {
+      "location": "(anonymous) skill-signatures.js:189",
+      "selfMs": 2.332
+    },
+    {
+      "location": "o._bodiesUpdate matter.min.js:6",
+      "selfMs": 2.297
+    },
+    {
+      "location": "G.shoot game.js:210",
+      "selfMs": 2.283
+    },
+    {
+      "location": "active skill-effects.js:80",
+      "selfMs": 2.245
+    },
+    {
+      "location": "poly skill-signatures.js:12",
+      "selfMs": 2.223
+    },
+    {
+      "location": "reduced achievements-ui.js:32",
+      "selfMs": 2.188
+    },
+    {
+      "location": "createElementNS (eval/native):0",
+      "selfMs": 2.17
+    },
+    {
+      "location": "o.remove matter.min.js:6",
+      "selfMs": 2.162
+    },
+    {
+      "location": "beginPath (eval/native):0",
+      "selfMs": 2.162
+    },
+    {
+      "location": "G.hit skill-effects.js:167",
+      "selfMs": 2.155
+    },
+    {
+      "location": "paint render.js:274",
+      "selfMs": 2.13
+    },
+    {
+      "location": "draftModalOpen render.js:13",
+      "selfMs": 2.104
+    },
+    {
+      "location": "o.fromVertices matter.min.js:6",
+      "selfMs": 2.083
+    },
+    {
+      "location": "(anonymous) lucide-subset.js:8",
+      "selfMs": 2.063
+    },
+    {
+      "location": "path skill-signatures.js:9",
+      "selfMs": 2.046
+    },
+    {
+      "location": "boardChanged render.js:346",
+      "selfMs": 2.04
+    },
+    {
+      "location": "glyph render.js:65",
+      "selfMs": 1.99
+    },
+    {
+      "location": "(anonymous) render.js:325",
+      "selfMs": 1.985
+    },
+    {
+      "location": "G.tick skill-overdrive.js:172",
+      "selfMs": 1.98
+    },
+    {
+      "location": "setAttribute (eval/native):0",
+      "selfMs": 1.968
+    },
+    {
+      "location": "rank skill-expansion.js:4",
+      "selfMs": 1.937
+    },
+    {
+      "location": "G.showAchievement achievements-ui.js:160",
+      "selfMs": 1.86
+    },
+    {
+      "location": "stats (eval/native):69",
+      "selfMs": 1.825
+    },
+    {
+      "location": "G.tick juice.js:181",
+      "selfMs": 1.744
+    },
+    {
+      "location": "o.set matter.min.js:6",
+      "selfMs": 1.678
+    },
+    {
+      "location": "(anonymous) game.js:197",
+      "selfMs": 1.612
+    },
+    {
+      "location": "arc (eval/native):0",
+      "selfMs": 1.605
+    },
+    {
+      "location": "G.beforePhysics milestone.js:188",
+      "selfMs": 1.603
+    },
+    {
+      "location": "G.activeSkills skills.js:124",
+      "selfMs": 1.571
+    },
+    {
+      "location": "pct (eval/native):68",
+      "selfMs": 1.518
+    },
+    {
+      "location": "draw (eval/native):200",
+      "selfMs": 1.495
+    },
+    {
+      "location": "rounded render.js:43",
+      "selfMs": 1.485
+    },
+    {
+      "location": "G.drawSkillEffects milestone.js:425",
+      "selfMs": 1.439
+    },
+    {
+      "location": "drawObstacles render.js:409",
+      "selfMs": 1.434
+    },
+    {
+      "location": "addMark achievements-ui.js:49",
+      "selfMs": 1.413
+    },
+    {
+      "location": "cases (eval/native):17",
+      "selfMs": 1.352
+    },
+    {
+      "location": "snow skill-signatures.js:19",
+      "selfMs": 1.332
+    },
+    {
+      "location": "contracted skill-expansion.js:26",
+      "selfMs": 1.317
+    },
+    {
+      "location": "measureText (eval/native):0",
+      "selfMs": 1.277
+    },
+    {
+      "location": "G.onRicochet skill-effects.js:185",
+      "selfMs": 1.222
+    },
+    {
+      "location": "flyCoins transitions.js:48",
+      "selfMs": 1.2
+    },
+    {
+      "location": "(anonymous) skill-signatures.js:92",
+      "selfMs": 1.189
+    },
+    {
+      "location": "wait transitions.js:9",
+      "selfMs": 1.179
+    },
+    {
+      "location": "n.mult matter.min.js:6",
+      "selfMs": 1.168
+    },
+    {
+      "location": "pascal lucide-subset.js:8",
+      "selfMs": 1.155
+    },
+    {
+      "location": "emit skill-effects.js:117",
+      "selfMs": 1.147
+    },
+    {
+      "location": "G.reset achievements-ui.js:183",
+      "selfMs": 1.132
+    },
+    {
+      "location": "count (eval/native):238",
+      "selfMs": 1.128
+    },
+    {
+      "location": "(anonymous) skill-signatures.js:12",
+      "selfMs": 1.116
+    },
+    {
+      "location": "(anonymous) lucide-subset.js:14",
+      "selfMs": 1.104
+    },
+    {
+      "location": "close (eval/native):0",
+      "selfMs": 1.099
+    },
+    {
+      "location": "appendChild (eval/native):0",
+      "selfMs": 1.093
+    },
+    {
+      "location": "drawOrbiting render.js:379",
+      "selfMs": 1.088
+    },
+    {
+      "location": "G.comboCapKills game.js:68",
+      "selfMs": 1.085
+    },
+    {
+      "location": "near game.js:194",
+      "selfMs": 1.084
+    },
+    {
+      "location": "channels colors.js:5",
+      "selfMs": 1.082
+    },
+    {
+      "location": "n.normalise matter.min.js:6",
+      "selfMs": 1.082
+    },
+    {
+      "location": "bonusText achievements-ui.js:20",
+      "selfMs": 1.081
+    },
+    {
+      "location": "(anonymous) fx.js:62",
+      "selfMs": 1.079
+    },
+    {
+      "location": "G.skillFX juice.js:142",
+      "selfMs": 1.079
+    },
+    {
+      "location": "get game.js:37",
+      "selfMs": 1.078
+    },
+    {
+      "location": "point skill-overdrive.js:6",
+      "selfMs": 1.077
+    },
+    {
+      "location": "evaluate achievements.js:28",
+      "selfMs": 1.076
+    },
+    {
+      "location": "getContext (eval/native):0",
+      "selfMs": 1.076
+    },
+    {
+      "location": "o.inertia matter.min.js:6",
+      "selfMs": 1.075
+    },
+    {
+      "location": "G.reward game.js:72",
+      "selfMs": 1.075
+    },
+    {
+      "location": "closePath (eval/native):0",
+      "selfMs": 1.075
+    },
+    {
+      "location": "G.beforePhysics skill-expansion.js:139",
+      "selfMs": 1.073
+    },
+    {
+      "location": "(anonymous) matter.min.js:6",
+      "selfMs": 1.073
+    },
+    {
+      "location": "(anonymous) fx.js:29",
+      "selfMs": 1.071
+    },
+    {
+      "location": "yieldFrame (eval/native):71",
+      "selfMs": 1.07
+    },
+    {
+      "location": "(anonymous) (eval/native):9",
+      "selfMs": 1.068
+    },
+    {
+      "location": "o.rectangle matter.min.js:6",
+      "selfMs": 1.066
+    },
+    {
+      "location": "(anonymous) (eval/native):71",
+      "selfMs": 1.066
+    },
+    {
+      "location": "flush (eval/native):201",
+      "selfMs": 1.066
+    },
+    {
+      "location": "G.shoot skill-effects.js:165",
+      "selfMs": 1.024
+    },
+    {
+      "location": "G.shoot achievements.js:56",
+      "selfMs": 1.011
+    },
+    {
+      "location": "toClient achievements-ui.js:114",
+      "selfMs": 0.947
+    },
+    {
+      "location": "G.addArrow skill-overdrive.js:43",
+      "selfMs": 0.928
+    },
+    {
+      "location": "o._bodiesUpdateVelocities matter.min.js:6",
+      "selfMs": 0.91
+    },
+    {
+      "location": "hpLabel render.js:17",
+      "selfMs": 0.873
+    },
+    {
+      "location": "RegExp: ^#[\\da-f]{6}$ (eval/native):0",
+      "selfMs": 0.872
+    },
+    {
+      "location": "loop achievements-ui.js:97",
+      "selfMs": 0.808
+    },
+    {
+      "location": "play achievements-ui.js:39",
+      "selfMs": 0.808
+    },
+    {
+      "location": "G.tick skill-expansion.js:155",
+      "selfMs": 0.567
+    },
+    {
+      "location": "n.update matter.min.js:6",
+      "selfMs": 0.565
+    },
+    {
+      "location": "filter (eval/native):191",
+      "selfMs": 0.56
+    },
+    {
+      "location": "o.setStatic matter.min.js:6",
+      "selfMs": 0.352
+    },
+    {
+      "location": "boardAnimating render.js:356",
+      "selfMs": 0.342
+    },
+    {
+      "location": "blocked achievements-ui.js:33",
+      "selfMs": 0.321
+    },
+    {
+      "location": "fight milestone.js:16",
+      "selfMs": 0.279
+    },
+    {
+      "location": "G.tick milestone.js:218",
+      "selfMs": 0.269
+    },
+    {
+      "location": "o.trigger matter.min.js:6",
+      "selfMs": 0.197
+    },
+    {
+      "location": "G.shoot skills.js:259",
+      "selfMs": 0.11
+    },
+    {
+      "location": "o.postSolvePosition matter.min.js:6",
+      "selfMs": 0.074
+    },
+    {
+      "location": "el lucide-subset.js:7",
+      "selfMs": 0.067
+    },
+    {
+      "location": "drawRings render.js:270",
+      "selfMs": 0.043
+    },
+    {
+      "location": "G.ring game.js:150",
+      "selfMs": 0.023
+    }
+  ]
+}

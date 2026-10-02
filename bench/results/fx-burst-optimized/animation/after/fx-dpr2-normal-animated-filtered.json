@@ -1,0 +1,380 @@
+{
+  "done": true,
+  "results": [
+    {
+      "group": "animation",
+      "id": "blizzard",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 27.30000000447035,
+      "costMs": {
+        "samples": 240,
+        "median": 7.200000002980232,
+        "p95": 17.700000002980232,
+        "mean": 8.75625,
+        "max": 28.399999998509884
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.6000000014901161,
+        "p95": 3.100000001490116,
+        "mean": 1.0833333330849806,
+        "max": 21.899999998509884
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 4585,
+        "misses": 19,
+        "maxBytes": 16777216,
+        "warmPending": 17
+      }
+    },
+    {
+      "group": "animation",
+      "id": "blizzard",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 49.599999994039536,
+      "costMs": {
+        "samples": 219,
+        "median": 14.599999994039536,
+        "p95": 35,
+        "mean": 18.273515981728355,
+        "max": 67.39999999850988
+      },
+      "submitMs": {
+        "samples": 219,
+        "median": 1.2999999970197678,
+        "p95": 5.600000001490116,
+        "mean": 1.9237442925300228,
+        "max": 24.80000000447035
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 18160,
+        "misses": 53,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    },
+    {
+      "group": "animation",
+      "id": "snowburst",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 44.29999999701977,
+      "costMs": {
+        "samples": 240,
+        "median": 6.299999997019768,
+        "p95": 13.400000005960464,
+        "mean": 7.380416666685293,
+        "max": 22.200000002980232
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.3999999985098839,
+        "p95": 1.4000000059604645,
+        "mean": 0.6158333331656952,
+        "max": 12.899999998509884
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 22745,
+        "misses": 72,
+        "maxBytes": 16777216,
+        "warmPending": 17
+      }
+    },
+    {
+      "group": "animation",
+      "id": "snowburst",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 74.39999999850988,
+      "costMs": {
+        "samples": 240,
+        "median": 12.899999998509884,
+        "p95": 30.30000000447035,
+        "mean": 15.647499999931703,
+        "max": 55.79999999701977
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.8999999985098839,
+        "p95": 4.399999998509884,
+        "mean": 1.3695833332215746,
+        "max": 20.299999997019768
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 37643,
+        "misses": 106,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    },
+    {
+      "group": "animation",
+      "id": "starforge",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 15.799999997019768,
+      "costMs": {
+        "samples": 240,
+        "median": 8.200000002980232,
+        "p95": 13,
+        "mean": 9.145833333333334,
+        "max": 36.70000000298023
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.4000000059604645,
+        "p95": 1.3000000044703484,
+        "mean": 0.5837499999441207,
+        "max": 10.5
+      },
+      "cache": {
+        "entries": 19,
+        "bytes": 2513608,
+        "hits": 42228,
+        "misses": 125,
+        "maxBytes": 16777216,
+        "warmPending": 17
+      }
+    },
+    {
+      "group": "animation",
+      "id": "starforge",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 34.80000000447035,
+      "costMs": {
+        "samples": 205,
+        "median": 15.799999997019768,
+        "p95": 38.70000000298023,
+        "mean": 19.610243902373604,
+        "max": 80.5
+      },
+      "submitMs": {
+        "samples": 205,
+        "median": 0.8999999985098839,
+        "p95": 4.5,
+        "mean": 1.3878048779397476,
+        "max": 13.899999998509884
+      },
+      "cache": {
+        "entries": 34,
+        "bytes": 2688568,
+        "hits": 54921,
+        "misses": 159,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    },
+    {
+      "group": "animation",
+      "id": "mixed",
+      "n": 12,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 30.700000002980232,
+      "costMs": {
+        "samples": 240,
+        "median": 8.5,
+        "p95": 31.80000000447035,
+        "mean": 13.125000000093133,
+        "max": 70.70000000298023
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0.5,
+        "p95": 8.200000002980232,
+        "mean": 1.521666666927437,
+        "max": 24.700000002980232
+      },
+      "cache": {
+        "entries": 67,
+        "bytes": 8848828,
+        "hits": 59418,
+        "misses": 226,
+        "maxBytes": 16777216,
+        "warmPending": 17
+      }
+    },
+    {
+      "group": "animation",
+      "id": "mixed",
+      "n": 56,
+      "advance": {},
+      "isolated": false,
+      "firstDrawMs": 44.399999998509884,
+      "costMs": {
+        "samples": 185,
+        "median": 16.600000001490116,
+        "p95": 40,
+        "mean": 21.695135135102916,
+        "max": 119.60000000149012
+      },
+      "submitMs": {
+        "samples": 185,
+        "median": 1.1000000014901161,
+        "p95": 8,
+        "mean": 2.655135135191518,
+        "max": 24.400000005960464
+      },
+      "cache": {
+        "entries": 127,
+        "bytes": 9548668,
+        "hits": 69596,
+        "misses": 353,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    },
+    {
+      "group": "baseline",
+      "id": "empty-canvas",
+      "n": 0,
+      "isolated": true,
+      "firstDrawMs": 1.1999999955296516,
+      "costMs": {
+        "samples": 240,
+        "median": 0.29999999701976776,
+        "p95": 0.30000000447034836,
+        "mean": 0.2679166666852931,
+        "max": 2
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 0,
+        "p95": 0.09999999403953552,
+        "mean": 0.0070833332526187105,
+        "max": 0.10000000149011612
+      },
+      "cache": {
+        "entries": 127,
+        "bytes": 9548668,
+        "hits": 69596,
+        "misses": 353,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    },
+    {
+      "group": "animation",
+      "id": "serpent:atmosphere",
+      "n": 1,
+      "advance": {},
+      "isolated": true,
+      "firstDrawMs": 27.30000000447035,
+      "costMs": {
+        "samples": 240,
+        "median": 7.100000001490116,
+        "p95": 16.80000000447035,
+        "mean": 7.675000000093132,
+        "max": 28.100000001490116
+      },
+      "submitMs": {
+        "samples": 240,
+        "median": 2.2000000029802322,
+        "p95": 3.5,
+        "mean": 1.4995833333892128,
+        "max": 21.100000001490116
+      },
+      "cache": {
+        "entries": 4,
+        "bytes": 2140048,
+        "hits": 70445,
+        "misses": 357,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    }
+  ],
+  "errors": [],
+  "config": {
+    "dpr": 2,
+    "reduced": false,
+    "sample": 4000,
+    "filter": "^animation/",
+    "raf": false,
+    "dom": false,
+    "animated": true,
+    "capture": true,
+    "boardSeconds": 6,
+    "boardRepeats": 1,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "canvas": [
+      824,
+      1144
+    ],
+    "css": [
+      412,
+      572
+    ],
+    "stageScale": 1,
+    "boardMethod": "Simultaneous lethal production projectile hits; live physics + Canvas/HUD/DOM; native rAF; next board deferred",
+    "method": "Full production render + synchronous 1px readback; simulation frozen; not FPS"
+  },
+  "captures": [
+    {
+      "name": "animation-blizzard-12"
+    },
+    {
+      "name": "animation-blizzard-56"
+    },
+    {
+      "name": "animation-snowburst-12"
+    },
+    {
+      "name": "animation-snowburst-56"
+    },
+    {
+      "name": "animation-starforge-12"
+    },
+    {
+      "name": "animation-starforge-56"
+    },
+    {
+      "name": "animation-mixed-12"
+    },
+    {
+      "name": "animation-mixed-56"
+    },
+    {
+      "name": "baseline-empty-canvas-0"
+    },
+    {
+      "name": "animation-serpent-atmosphere-1"
+    }
+  ],
+  "coverage": {
+    "profiles": 81,
+    "catalog": 81,
+    "missingProfiles": [],
+    "cases": 10,
+    "boardCases": 0
+  },
+  "pageErrors": [],
+  "environment": {
+    "date": "2026-10-02T08:23:00.735Z",
+    "platform": "linux",
+    "cpu": "Intel(R) Xeon(R) CPU E5-2682 v4 @ 2.50GHz",
+    "cpuCount": 4,
+    "chrome": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",
+    "gpu": "disabled (software raster)",
+    "gitHead": "1d2b71b10e939a4a96ceaa6a823b4b4339403f8b",
+    "note": "Current working tree, including uncommitted changes; isolated temporary Chrome profile.",
+    "sourceRoot": "/home/apricityx/workspaces/slingbreak"
+  }
+}

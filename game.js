@@ -36,7 +36,31 @@
   const lightBricks={normal:'#dce2d0',bomb:'#f6a38f',lightning:'#f3e27a',frost:'#a9d8e6',prism:'#cbbbe9',gold:'#e9b85a',void:'#3a2d52',hydra:'#a3dcc4',shard:'#e4d7ff',anchor:'#5d5470',plate:'#6b6258',magma:'#f08a3c',scale:'#58b3bf',star:'#fff1b8',hour:'#e8d7a6'};
   Object.defineProperty(G,'colors',{enumerable:true,get:()=>theme()?.brick||lightBricks});
   G.withArrow=(arrow,fn)=>{const previous=G.activeArrow;G.activeArrow=arrow;try{return fn();}finally{G.activeArrow=previous;}};
-  G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : Math.floor(n).toLocaleString('en-US');
+  // Reuse ICU's formatter instead of rebuilding it for every hit and tally frame.
+  const integerFormat=typeof Intl!=='undefined'&&Intl.NumberFormat?new Intl.NumberFormat('en-US'):null;
+  G.fmtInteger=n=>integerFormat?integerFormat.format(Math.floor(n)):Math.floor(n).toLocaleString('en-US');
+  G.fmt = n => n>=1e9 ? (n/1e9).toFixed(1)+'B' : n>=1e6 ? (n/1e6).toFixed(1)+'M' : n>=10000 ? (n/1000).toFixed(1)+'k' : G.fmtInteger(n);
+  let uiDirty=false,visuals=new Map();
+  G.requestUi=()=>{uiDirty=true;};
+  G.flushUi=()=>{if(uiDirty){uiDirty=false;G.ui();}};
+  // Only presentation is coalesced. Scoring, damage and source ownership stay synchronous.
+  G.deferVisual=(key,paint)=>visuals.set(key,paint);
+  G.flushVisuals=()=>{if(!visuals.size)return;const pending=visuals;visuals=new Map();for(const paint of pending.values())paint();};
+  G.bricksNear=(x,y,r,inclusive=false)=>{
+    const found=[];for(const b of G.bricks){const dx=b.x-x,dy=b.y-y;
+      if(Math.abs(dx)>r||Math.abs(dy)>r)continue;
+      const d=Math.hypot(dx,dy);if(inclusive?d<=r:d<r)found.push(b);
+    }return found;
+  };
+  G.nearestBricks=(x,y,count,accept)=>{
+    const found=[],distances=[];if(count<=0)return found;
+    // Stable top-k: one distance per brick, no full sort or repeated square roots.
+    for(const b of G.bricks){if(accept&&!accept(b))continue;const d=Math.hypot(b.x-x,b.y-y);
+      let i=found.length;while(i>0&&d<distances[i-1])i--;
+      if(i>=count)continue;found.splice(i,0,b);distances.splice(i,0,d);
+      if(found.length>count){found.pop();distances.pop();}
+    }return found;
+  };
    G.balanceVersion=3;
    G.layoutVersion=2;
    G.nextShotAt=0;
@@ -70,7 +94,22 @@
   G.arrowKills = a => a?.kills||0;
   G.rageBonus = kills => Math.min(1.2,Math.floor(kills/3)*.2);
   G.reward = (type,n) => Math.max(1,Math.round(3*Math.pow(state.level,1.1)*G.valueMultiplier()*G.mult(n)*(type==='gold'?3:1)));
-  G.save = () => {
+   const progressFormat='slingbreak-progress';
+   const progressVersion=1;
+   const validProgressState = candidate => {
+     if(!candidate || typeof candidate!=='object')return false;
+     if(!['level','coins','total','best'].every(k=>validNumber(candidate[k])) || candidate.level<1 || !Number.isInteger(candidate.level))return false;
+     if(!candidate.up || !['power','arrow','brick'].every(k=>Number.isInteger(candidate.up[k])&&candidate.up[k]>=0))return false;
+     return (candidate.up.comboCap===undefined||Number.isInteger(candidate.up.comboCap)&&candidate.up.comboCap>=0) &&
+       (candidate.up.slots===undefined||Number.isInteger(candidate.up.slots)&&candidate.up.slots>=0);
+   };
+   G.exportProgress = () => ({format:progressFormat,version:progressVersion,exportedAt:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
+   G.importProgress = payload => {
+     const candidate=payload&&payload.format===progressFormat&&payload.version===progressVersion?payload.state:null;
+     if(!validProgressState(candidate))return false;
+     try { localStorage.setItem(KEY,JSON.stringify(candidate)); return true; } catch { return false; }
+   };
+   G.save = () => {
      state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:state.level,levelMoney:G.levelMoney,initial:G.initial,killed:G.killed,bricks:G.bricks.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,hp:b.hp,max:b.max,type:b.type,frozen:b.frozen})),obstacles:G.obstacles.map(o=>({x:o.x,y:o.y,w:o.w,h:o.h})),core:!!G.core};
     try {localStorage.setItem(KEY,JSON.stringify(state));} catch {document.getElementById('save-status').textContent='存档不可用';}
   };
@@ -91,6 +130,7 @@
     return items;
   };
    G.generate = (restore=false) => {
+     uiDirty=false;visuals.clear();
      G.boardEntrance = null;
      G.nextShotAt=0;
       G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.levelMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
@@ -144,8 +184,13 @@
   G.burst=(x,y,color,count=16,force=1)=>{
     if(G.reduced) count=Math.min(count,5);
     else count=Math.ceil(count*.55);
-    for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,v=(1+Math.random()*5)*force;G.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1,life:.5+Math.random()*.4,max:1,size:2+Math.random()*5,color,rot:Math.random()*6});}
-    if(G.particles.length>300)G.particles.splice(0,G.particles.length-300);
+    const keep=Math.min(count,300),skip=count-keep,reuse=G.particles.splice(0,Math.max(0,G.particles.length+keep-300));
+    for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,v=(1+Math.random()*5)*force,
+      life=.5+Math.random()*.4,size=2+Math.random()*5,rot=Math.random()*6;
+      // Consume the same random sequence even for fragments beyond the capacity.
+      if(i<skip)continue;const p=reuse[i-skip]||{};
+      p.x=x;p.y=y;p.vx=Math.cos(a)*v;p.vy=Math.sin(a)*v-1;p.life=life;p.max=1;p.size=size;p.color=color;p.rot=rot;G.particles.push(p);
+    }
   };
   G.ring=(x,y,color,r=90)=>{
     // Nearby simultaneous detonations read as one brighter shockwave, not a
@@ -167,7 +212,7 @@
     const body=Bodies.rectangle(390,80,47,47,{isStatic:true,label:'core',angle:Math.PI/4});
     G.core={x:390,y:80,body,born:G.time-(quiet?2:0)};Composite.add(engine.world,body);
     if(!quiet){G.coreFlash=1;G.ring(390,80,'#a4d65e',220);G.burst(390,80,'#a4d65e',45,2);G.shake=6;G.sound('core');G.toast?.('核心已显现 · 命中即可清场');}
-    G.ui();
+    G.requestUi();
   };
   G.clear = () => {
     if(G.phase==='clearing')return;
@@ -181,26 +226,26 @@
     G.ui();
   };
   G.hit=(b,damage,depth=0)=>{
-    if(!G.bricks.includes(b)||G.phase==='clearing')return;
+    const index=G.bricks.indexOf(b);if(index<0||G.phase==='clearing')return;
     b.hp-=damage*(b.frozen?2:1);b.flash=.16;
     if(b.hp>0){G.burst(b.x,b.y,G.colors[b.type],4,.5);G.sound('tap',1,b.x);return;}
-    G.bricks.splice(G.bricks.indexOf(b),1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
+    G.bricks.splice(index,1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
     const arrow=G.activeArrow;
     if(arrow){arrow.kills=G.arrowKills(arrow)+1;state.best=Math.max(state.best,arrow.kills);}
     const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.levelMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
     if(b.type!=='normal')G.specialSound(b.type,b.x);
     G.sound('break',G.arrowKills(arrow),b.x);
     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
-    const near=(range)=>G.bricks.filter(t=>Math.hypot(t.x-b.x,t.y-b.y)<range);
+    const near=range=>G.bricksNear(b.x,b.y,range);
     const effect=G.specialConfig?.(b.type)||{};
     if(depth<70){
       if(b.type==='bomb'){const radius=effect.radius||132;G.ring(b.x,b.y,'#ed8b6e',radius+4);G.shake=9;near(radius).forEach(t=>G.hit(t,G.damage()*(effect.damage||2),depth+1));}
-      if(b.type==='lightning'){const targets=[...G.bricks].sort((a,c)=>Math.hypot(a.x-b.x,a.y-b.y)-Math.hypot(c.x-b.x,c.y-b.y)).slice(0,effect.links||5);let prev=b;targets.forEach(t=>{G.bolts.push({x:prev.x,y:prev.y,tx:t.x,ty:t.y,life:.4});prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
+      if(b.type==='lightning'){const targets=G.nearestBricks(b.x,b.y,effect.links||5);let prev=b;targets.forEach(t=>{G.bolts.push({x:prev.x,y:prev.y,tx:t.x,ty:t.y,life:.4});prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
       if(b.type==='frost'){const radius=effect.radius||140;G.ring(b.x,b.y,'#81bece',radius+4);near(radius).forEach(t=>{t.frozen=true;t.flash=.25;G.hit(t,G.damage()*(effect.damage||.5),depth+1);});}
       if(b.type==='prism'){G.ring(b.x,b.y,'#b399d8',55);const count=effect.shards||3;for(let i=0;i<count;i++){const a=-.9+i*1.8/(count-1);G.addArrow(b.x,b.y,Math.sin(a)*18,-Math.cos(a)*18,effect.pierce||2);}}
     }
     G.onBrickDestroyed?.(b,depth);
-    G.ui();
+    G.requestUi();
   };
   G.addArrow=(x,y,vx,vy,pierce=G.penetration())=>{
     if(G.arrows.length>=64)return;

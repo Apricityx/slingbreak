@@ -21,13 +21,13 @@
 .arena.is-slowmo canvas{filter:saturate(1.25) contrast(1.05)}
 
 /* ── Record banner. */
-.record-banner{position:absolute;left:50%;top:64px;z-index:9;translate:-50% 0;display:flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #d9b24a;border-radius:8px;background:#2a2515ee;color:#fff3cf;box-shadow:0 10px 30px #b48a1c55;pointer-events:none;white-space:nowrap}
+.record-banner{position:absolute;left:50%;top:64px;z-index:9;transform:translate(-50%,0);display:flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid #d9b24a;border-radius:8px;background:#2a2515ee;color:#fff3cf;box-shadow:0 10px 30px #b48a1c55;pointer-events:none;white-space:nowrap}
 .record-banner span{font-size:11px;font-weight:700;letter-spacing:1px;color:#f1d26a}
 .record-banner strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:#ffe08a}
 .record-banner small{font-size:10px;color:#c8b98a}
 
 /* ── Level report card under the CLEAR stamp. */
-.level-report{width:min(340px,100%);padding:16px 18px 12px;border:1px solid var(--line-2);border-radius:9px;background:color-mix(in srgb,var(--surface) 95%,transparent);box-shadow:0 18px 50px var(--shadow);color:var(--ink);opacity:0}
+.level-report{width:min(340px,100%);padding:16px 18px 12px;border:1px solid var(--line-2);border-radius:9px;background:var(--mix-surface-95-alpha);box-shadow:0 18px 50px var(--shadow);color:var(--ink);opacity:0}
 .report-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .report-head span{font-size:11px;color:var(--text-3)}
 .report-head strong{font:700 30px/1 "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums;color:var(--accent-ink-strong)}

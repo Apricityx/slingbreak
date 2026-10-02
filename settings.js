@@ -22,7 +22,10 @@
   };
 
   const render = () => {
-    for (const radio of radios) radio.checked = radio.value === theme.mode;
+    for (const radio of radios) {
+      radio.checked = radio.value === theme.mode;
+      radio.closest?.('.theme-option')?.classList.toggle('is-selected', radio.checked);
+    }
     if (hint) hint.textContent = HINTS[theme.mode](theme.resolved);
   };
 
@@ -51,11 +54,15 @@
   }
 
   if (game && volume && volumeValue) {
-    const showVolume = () => { volume.value = String(game.state.volume); volumeValue.textContent = `${game.state.volume}%`; };
+    const showVolume = () => {
+      volume.value = String(game.state.volume);
+      volumeValue.textContent = `${game.state.volume}%`;
+      volume.style?.setProperty('--volume-fill', `${game.state.volume}%`);
+    };
     volume.addEventListener('input', () => {
       game.state.volume = Number(volume.value);
       game.state.sound = game.state.volume > 0;
-      volumeValue.textContent = `${game.state.volume}%`;
+      showVolume();
       game.audio.sync();
       if (game.state.sound) game.audio.unlock();
       game.save();
@@ -151,6 +158,47 @@
       refreshPage.disabled = false;
     }
   });
+
+  const exportProgress = document.getElementById('export-progress');
+  const importProgress = document.getElementById('import-progress');
+  const importFile = document.getElementById('import-progress-file');
+  const progressStatus = document.getElementById('progress-status');
+  if (game && exportProgress && importProgress && importFile && progressStatus) {
+    exportProgress.addEventListener('click', () => {
+      try {
+        // Capture the board currently on screen as well as wallet/upgrades.
+        if (game.phase !== 'clearing') game.save?.();
+        const blob = new Blob([JSON.stringify(game.exportProgress(), null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `slingbreak-progress-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+        progressStatus.textContent = '进度已导出，请妥善保存文件。';
+      } catch (error) {
+        console.warn('导出进度失败', error);
+        progressStatus.textContent = '导出失败，请稍后重试。';
+      }
+    });
+    importProgress.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', async () => {
+      const file = importFile.files && importFile.files[0];
+      importFile.value = '';
+      if (!file) return;
+      try {
+        const payload = JSON.parse(await file.text());
+        if (!game.importProgress(payload)) throw new Error('invalid progress');
+        progressStatus.textContent = '导入成功，正在重新加载…';
+        setTimeout(() => location.reload(), 120);
+      } catch (error) {
+        console.warn('导入进度失败', error);
+        progressStatus.textContent = '文件无效或已损坏，当前进度未改变。';
+      }
+    });
+  }
 
   button.addEventListener('click', () => { render(); dialog.showModal(); });
   close?.addEventListener('click', () => dialog.close());

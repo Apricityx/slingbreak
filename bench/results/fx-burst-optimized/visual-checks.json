@@ -1,0 +1,65 @@
+{
+  "note": "Same-seed instant Canvas PNG hashes; excludes CSS, HUD and DOM animations. Animated captures are reviewed visually, not strict frame-aligned A/B.",
+  "instant": [
+    {
+      "name": "board-burst-chain-special-0-240-instant.png",
+      "before": "d062f512d1fc3dcc1b0ada583e64f35d4fc3bf592a6c40bc46a43ab9869409a3",
+      "after": "d062f512d1fc3dcc1b0ada583e64f35d4fc3bf592a6c40bc46a43ab9869409a3"
+    },
+    {
+      "name": "board-burst-chain-special-0-77-instant.png",
+      "before": "053e9c022ae3d6e4e695a43f02682c7607a85cfb4eb700fd2d485f4c4c344b1a",
+      "after": "053e9c022ae3d6e4e695a43f02682c7607a85cfb4eb700fd2d485f4c4c344b1a"
+    },
+    {
+      "name": "board-burst-chain-special-22-240-instant.png",
+      "before": "eca963e157401721a02f6ed1748f10362126df87b24dd8e5adbd336e8a834d28",
+      "after": "eca963e157401721a02f6ed1748f10362126df87b24dd8e5adbd336e8a834d28"
+    },
+    {
+      "name": "board-burst-chain-special-22-77-instant.png",
+      "before": "f714c50b7720ffabf40154b4bebcb7e881b6bc5d1a8134ddd0c3b938b80c40d8",
+      "after": "f714c50b7720ffabf40154b4bebcb7e881b6bc5d1a8134ddd0c3b938b80c40d8"
+    },
+    {
+      "name": "board-burst-chain-special-50-240-instant.png",
+      "before": "8eabfc6d22ee0c595d46ab82417e768f86a8a188a52d54141748dc9201f43efe",
+      "after": "8eabfc6d22ee0c595d46ab82417e768f86a8a188a52d54141748dc9201f43efe"
+    },
+    {
+      "name": "board-burst-chain-special-50-77-instant.png",
+      "before": "7818f14a3169bd90f26e7cd856addc9a06571c45f5e719ffdd0a7855ae702e00",
+      "after": "7818f14a3169bd90f26e7cd856addc9a06571c45f5e719ffdd0a7855ae702e00"
+    },
+    {
+      "name": "board-burst-plain-special-0-240-instant.png",
+      "before": "d8999899406263da2686da9f74db8984c3ec22f9adfb1196aea0302a5c546fcc",
+      "after": "d8999899406263da2686da9f74db8984c3ec22f9adfb1196aea0302a5c546fcc"
+    },
+    {
+      "name": "board-burst-plain-special-0-77-instant.png",
+      "before": "fedfd7cbd6b5c4fadc3fa0209b2588037c0fc7b84b09ae42ad53ce86927e5f1b",
+      "after": "fedfd7cbd6b5c4fadc3fa0209b2588037c0fc7b84b09ae42ad53ce86927e5f1b"
+    },
+    {
+      "name": "board-burst-plain-special-22-240-instant.png",
+      "before": "6f56ee9fd9d6cd313232408efa8dcdf3f5c3cfd658fce007930f8b681650835a",
+      "after": "6f56ee9fd9d6cd313232408efa8dcdf3f5c3cfd658fce007930f8b681650835a"
+    },
+    {
+      "name": "board-burst-plain-special-22-77-instant.png",
+      "before": "b13ba59fb208440046ad7891bad771de5c45c0a6516fcd3a9b52d3a995402f8c",
+      "after": "b13ba59fb208440046ad7891bad771de5c45c0a6516fcd3a9b52d3a995402f8c"
+    },
+    {
+      "name": "board-burst-plain-special-50-240-instant.png",
+      "before": "efb2b3523a9109d6dbe686abbfa84d6bca3c88fd3f628cc35ebb85706d9b4ee4",
+      "after": "efb2b3523a9109d6dbe686abbfa84d6bca3c88fd3f628cc35ebb85706d9b4ee4"
+    },
+    {
+      "name": "board-burst-plain-special-50-77-instant.png",
+      "before": "08a049176649394eed32c53117a6d52eeb6b115e1c2f860b15dd9c8e85cd7e7d",
+      "after": "08a049176649394eed32c53117a6d52eeb6b115e1c2f860b15dd9c8e85cd7e7d"
+    }
+  ]
+}

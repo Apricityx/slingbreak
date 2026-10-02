@@ -13,7 +13,7 @@
     if(signals.length>96)signals.shift();
   }
   function area(p,r,damage){
-    for(const b of [...G.bricks])if(Math.hypot(b.x-p.x,b.y-p.y)<=r)G.hit(b,damage,1);
+    for(const b of G.bricksNear(p.x,p.y,r,true))G.hit(b,damage,1);
   }
   function child(source,p,angle,damage,pierce){
     return G.withArrow(source,()=>{
@@ -121,7 +121,7 @@
     if(rank('fusepath')){
       const chain=a.fusePoints??=[];
       if(chain.length<4&&!chain.some(t=>t.id===b.body.id)){
-        const previous=chain.at(-1);chain.push({...p,id:b.body.id});
+      const previous=chain[chain.length-1];chain.push({...p,id:b.body.id});
         if(previous){
           signal('fusepath',previous,p,.8);
           later(.25,a,()=>{for(const target of [...G.bricks])if(G.sweep(target.body.bounds,previous,p,12))G.hit(target,G.damage()*1.5,1);fx('fusepath',p,65);G.sound('boom');});
@@ -213,7 +213,7 @@
   const status=G.expandedSkillStatus;
   G.expandedSkillStatus=id=>{
     if(id==='pendulum')return{text:G.state.skillRuntime.shots%2?'下箭：重弩 ×3':'下箭：双翼齐射',progress:1};
-    if(id==='rhythm'){const beats=G.arrows.at(-1)?.beats||0;return{text:`重音 ${beats%3} / 3`,progress:beats%3/3};}
+    if(id==='rhythm'){const beats=G.arrows[G.arrows.length-1]?.beats||0;return{text:`重音 ${beats%3} / 3`,progress:beats%3/3};}
     if(id==='chronicle')return{text:records.length?`正在记录 ${records.length} 支箭的伤痕`:'伤痕重映就绪',progress:records.length?Math.min(1,1-(records[0].until-G.time)):1};
     if(id==='starforge'){const f=fields.find(f=>f.id===id);return{text:f?`熔炉 ${f.stacks} / 16 层`:'吞星熔炉就绪',progress:f?f.stacks/16:1};}
     if(id==='worldfold')return{text:fields.some(f=>f.id===id)?'光墙合拢中':'对折光墙就绪',progress:1};

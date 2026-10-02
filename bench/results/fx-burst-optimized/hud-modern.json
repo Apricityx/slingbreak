@@ -1,0 +1,126 @@
+{
+  "checks": [
+    {
+      "name": "whole-board HUD / achievement / combo coalescing",
+      "before": {
+        "ui": 0,
+        "achievement": 0,
+        "combo": 0
+      },
+      "after": {
+        "ui": 1,
+        "achievement": 1,
+        "combo": 1
+      },
+      "second": {
+        "ui": 1,
+        "achievement": 1,
+        "combo": 1
+      },
+      "outcome": {
+        "destroyed": 77,
+        "remaining": 0,
+        "totalDelta": 77,
+        "coinDelta": 54533,
+        "shotMoney": 54533,
+        "levelMoney": 54533,
+        "directCalls": 60,
+        "recursiveKills": 17,
+        "simulationAdvanced": 0,
+        "coreSpawned": true
+      },
+      "visible": {
+        "kills": "77",
+        "heat": "3",
+        "total": "77",
+        "core": "核心已显现"
+      }
+    },
+    {
+      "name": "64 synchronous damage requests: each boss paints once",
+      "bosses": [
+        {
+          "id": "eye",
+          "before": {
+            "hud": 0,
+            "pulses": 0
+          },
+          "after": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "second": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "damage": 0.4600000000000364,
+          "label": "第 1 相苏醒，总生命 100%，结界 100% · 锁链 2"
+        },
+        {
+          "id": "forge",
+          "before": {
+            "hud": 0,
+            "pulses": 0
+          },
+          "after": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "second": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "damage": 0.599999999999909,
+          "label": "第 1 相点火，总生命 100%，炉温 0%"
+        },
+        {
+          "id": "serpent",
+          "before": {
+            "hud": 0,
+            "pulses": 0
+          },
+          "after": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "second": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "damage": 0.5,
+          "label": "第 1 相游星，总生命 100%，鳞甲 0/5"
+        },
+        {
+          "id": "clock",
+          "before": {
+            "hud": 0,
+            "pulses": 0
+          },
+          "after": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "second": {
+            "hud": 1,
+            "pulses": 1
+          },
+          "damage": 0.5599999999999454,
+          "label": "第 1 相上弦，总生命 100%，发条 100%"
+        }
+      ]
+    },
+    {
+      "name": "ready-only idle atlas prewarm",
+      "cache": {
+        "entries": 17,
+        "bytes": 2277252,
+        "hits": 10,
+        "misses": 35,
+        "maxBytes": 16777216,
+        "warmPending": 0
+      }
+    }
+  ],
+  "errors": [],
+  "version": "Chrome/153.0.8010.12"
+}

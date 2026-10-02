@@ -1,0 +1,70 @@
+[
+  {
+    "id": "before-reduced-recheck",
+    "started": "2026-10-02T08:31:03.407Z",
+    "finished": "2026-10-02T08:33:09.790Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--source-root=agent-tmp/perf-before-source",
+      "--filter=^board-burst/(plain|chain):special-50$",
+      "--board-repeats=5",
+      "--reduced=1",
+      "--out=bench/results/fx-burst-optimized/recheck/before"
+    ],
+    "environment": {}
+  },
+  {
+    "id": "after-reduced-recheck",
+    "started": "2026-10-02T08:33:09.790Z",
+    "finished": "2026-10-02T08:35:13.933Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^board-burst/(plain|chain):special-50$",
+      "--board-repeats=5",
+      "--reduced=1",
+      "--out=bench/results/fx-burst-optimized/recheck/after"
+    ],
+    "environment": {}
+  },
+  {
+    "id": "modern-burst-ui",
+    "started": "2026-10-02T08:35:13.933Z",
+    "finished": "2026-10-02T08:35:18.437Z",
+    "command": [
+      "node",
+      "bench/burst-ui.mjs"
+    ],
+    "environment": {
+      "CHROME_BIN": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
+    }
+  },
+  {
+    "id": "modern-compat",
+    "started": "2026-10-02T08:35:18.437Z",
+    "finished": "2026-10-02T08:35:57.939Z",
+    "command": [
+      "node",
+      "bench/chrome89.mjs",
+      "--compare-modern"
+    ],
+    "environment": {
+      "CHROME_BIN": "/home/apricityx/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
+    }
+  },
+  {
+    "id": "dom-smoke",
+    "started": "2026-10-02T08:35:57.939Z",
+    "finished": "2026-10-02T08:36:16.239Z",
+    "command": [
+      "node",
+      "bench/fx-run.mjs",
+      "--filter=^dom/",
+      "--dom=1",
+      "--sample=1200",
+      "--out=bench/results/fx-burst-optimized/smoke/dom"
+    ],
+    "environment": {}
+  }
+]

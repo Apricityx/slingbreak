@@ -35,12 +35,22 @@
   const scheduleAchievementFrame=()=>{if(!popFrame&&busy()&&!blocked())popFrame=requestAnimationFrame(loop);};
   const title=g=>g.items.length===1?g.items[0].name:`${['','','双重','三重','四重'][g.items.length]||g.items.length+' 重'}成就`;
   const subtitle=g=>g.items.length>1?g.items.map(i=>i.name).join(' · '):'';
-  const replay=(el,cls)=>{if(!el||reduced())return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);};
+  let replayId=0;const replayIds=new WeakMap(),pendingReplay=new WeakMap();
+  const replay=(el,cls)=>{
+    if(!el||reduced())return;
+    let id=replayIds.get(el);if(!id){id=++replayId;replayIds.set(el,id);}
+    let pending=pendingReplay.get(el);if(!pending){pending={classes:new Set(),queued:false};pendingReplay.set(el,pending);}
+    pending.classes.add(cls);if(pending.queued)return;pending.queued=true;
+    const paint=()=>{pending.queued=false;pending.classes.forEach(name=>el.classList.remove(name));void el.offsetWidth;pending.classes.forEach(name=>el.classList.add(name));pending.classes.clear();};
+    // Keep one restart per element/class per frame instead of forcing layout
+    // once for every achievement in a synchronous burst.
+    if(G.deferVisual)G.deferVisual(`achievement-replay:${id}:${cls}`,paint);else paint();
+  };
   const play=(el,frames,options)=>reduced()?null:el.animate(frames,options);
   function markup(g){
     const hero=g.hero;
     hero.classList.toggle('is-major',g.bonus>=1||g.items.length>=3);
-    hero.style.setProperty('--hero-accent',emblems[g.items.at(-1).id].color);
+    window.SlingColors.set(hero,'--hero-accent',emblems[g.items[g.items.length-1].id].color);
     hero.querySelector('.achievement-hero-name').textContent=title(g);
     const sub=hero.querySelector('.achievement-hero-sub');sub.textContent=subtitle(g);sub.hidden=!sub.textContent;
     hero.querySelector('.achievement-hero-bonus').textContent=bonusText(g.bonus);
@@ -48,9 +58,9 @@
   }
   function addMark(g,item){
     const marks=g.hero.querySelector('.achievement-hero-marks'),mark=document.createElement('span');
-    mark.className='achievement-hero-mark';mark.innerHTML=emblemSVG(item.id);mark.style.setProperty('--mark-accent',emblems[item.id].color);
+    mark.className='achievement-hero-mark';mark.innerHTML=emblemSVG(item.id);window.SlingColors.set(mark,'--mark-accent',emblems[item.id].color);
     marks.append(mark);while(marks.children.length>maxMarks)marks.firstElementChild.remove();
-    [...marks.children].forEach((m,i,all)=>m.style.setProperty('--mark-index',all.length-1-i));
+    [...marks.children].forEach((m,i,all)=>{m.style.setProperty('--mark-index',all.length-1-i);m.classList.toggle('is-older-mark',i<all.length-1);});
     g.mark=mark;
   }
   function open(g){
@@ -186,7 +196,7 @@
     cancelAnimationFrame(popFrame);popFrame=0;popLast=0;speed=1;
     return resetGame();
   };
-  const exact=n=>Math.floor(n).toLocaleString('en-US');
+  const exact=n=>G.fmtInteger?G.fmtInteger(n):Math.floor(n).toLocaleString('en-US');
   // Skip unchanged writes: rewriting identical text still replaces the node and dirties layout.
   const setText=(el,value)=>{value=String(value);if(el.textContent!==value)el.textContent=value;};
   const setTitle=(el,value)=>{if(el.title!==value)el.title=value;};
@@ -224,6 +234,7 @@
     const bountyTitle=`当前赏金倍率 ×${compact(s?.bountyMult||1)}`;
     setText($('bounty-mult'),'×'+compact(s?.bountyMult||1));
     setHidden($('bounty-badge'),!(s?.bountyMult>1));
+    $('achievement-badge').parentElement.hidden=!(s?.mult>1||s?.bountyMult>1);
     setTitle($('bounty-badge'),bountyTitle);
     setAttr($('bounty-badge'),'aria-label',bountyTitle);
     setText($('arrow-income'),'+'+G.fmt(s?.paid||0));
@@ -236,7 +247,7 @@
     if(stamp!==library){
        library=stamp;const h=G.state.achievements||{};
        $('achievement-count').textContent=G.achievementCatalog.filter(a=>h[a.id]>0).length+' / '+G.achievementCatalog.length;
-       $('achievement-list').innerHTML=G.achievementCatalog.map(a=>`<div class="achievement-item ${h[a.id]?'earned':''}" style="--achievement-accent:${emblems[a.id].color}"><span class="achievement-item-icon" aria-hidden="true">${emblemSVG(a.id)}</span><b>${a.name}</b><span class="achievement-item-bonus" aria-label="成就倍率增加 ${a.bonus}">${bonusText(a.bonus)}</span><small>${a.description} · ${h[a.id]?'已达成 '+h[a.id]+' 次':'尚未达成'}</small></div>`).join('');
+       $('achievement-list').innerHTML=G.achievementCatalog.map(a=>`<div class="achievement-item ${h[a.id]?'earned':''}" style="${window.SlingColors.style('--achievement-accent',emblems[a.id].color)}"><span class="achievement-item-icon" aria-hidden="true">${emblemSVG(a.id)}</span><b>${a.name}</b><span class="achievement-item-bonus" aria-label="成就倍率增加 ${a.bonus}">${bonusText(a.bonus)}</span><small>${a.description} · ${h[a.id]?'已达成 '+h[a.id]+' 次':'尚未达成'}</small></div>`).join('');
      }
     scheduleAchievementFrame();
   };

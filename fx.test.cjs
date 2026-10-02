@@ -72,6 +72,43 @@ test('cold signature builds have a per-frame budget, while hits remain unlimited
   for(let i=0;i<10;i++)assert.equal(draw(.1),true);assert.equal(paints,2);
   G.fx.beginFrame();assert.equal(draw(.5),true);assert.equal(paints,3);
 });
+test('budget misses reuse only adjacent poses of the same skill, colours, radius and density',()=>{
+  const {G,layers}=boot(),{ctx}=canvas();const paint=()=>{};
+  G.fx.beginFrame();G.fx.signature(ctx,paint,'blizzard',.5,75,'#258eb2','#ffffff','impact');
+  G.fx.signature(ctx,paint,'snowburst',.5,75,'#258eb2','#ffffff','impact');
+  assert.equal(G.fx.signature(ctx,paint,'blizzard',.5625,75,'#258eb2','#ffffff','impact'),true);
+  assert.equal(layers.length,2);
+  assert.equal(G.fx.signature(ctx,paint,'blizzard',.625,75,'#258eb2','#ffffff','impact'),false);
+  assert.equal(G.fx.signature(ctx,paint,'blizzard',.5625,75,'#258eb2','#ff0033','impact'),false);
+  assert.equal(G.fx.signature(ctx,paint,'blizzard',.5625,190,'#258eb2','#ffffff','impact'),false);
+});
+test('signature warmup is idle-only, bounded, optional-API safe and cancelled by cache clear',()=>{
+  for(const idle of [false,true]){
+    const {G,context}=boot(),callbacks=[];G.phase='ready';G.arrows=[];
+    if(idle)context.window.requestIdleCallback=fn=>callbacks.push(fn);
+    else context.window.setTimeout=fn=>callbacks.push(fn);
+    G.fx.prewarm(()=>{},'blizzard','#258eb2','#ffffff');G.fx.prewarm(()=>{},'blizzard','#258eb2','#ffffff');
+    assert.equal(G.fx.stats().warmPending,17);assert.equal(callbacks.length,1);
+    G.phase='flying';callbacks.shift()();assert.equal(G.fx.stats().entries,0);assert.equal(callbacks.length,1);
+    G.phase='ready';callbacks.shift()();assert.equal(G.fx.stats().entries,1);assert.equal(G.fx.stats().warmPending,16);
+    G.fx.clear();callbacks.shift()();assert.equal(G.fx.stats().entries,0);assert.equal(G.fx.stats().warmPending,0);
+    for(let i=0;i<8;i++)G.fx.prewarm(()=>{},'skill'+i,'#258eb2','#ffffff');assert.equal(G.fx.stats().warmPending,72);
+    G.fx.clear();G.reduced=true;G.fx.prewarm(()=>{},'blizzard','#258eb2','#ffffff');assert.equal(G.fx.stats().warmPending,1);
+  }
+});
+test('prewarming yields during pause, dragging, arrows, intro and dialogs and does not spend the draw budget',()=>{
+  const {G,context}=boot(),callbacks=[],{ctx}=canvas();G.phase='ready';G.arrows=[];
+  context.window.setTimeout=fn=>callbacks.push(fn);let modal=false;context.document.querySelector=()=>modal;
+  G.fx.prewarm(()=>{},'blizzard','#258eb2','#ffffff');
+  const busy=[()=>G.paused=true,()=>G.drag={},()=>G.arrows.push({}),()=>context.window.SlingBreakIntro={active:true},()=>modal=true];
+  for(const enter of busy){enter();callbacks.shift()();assert.equal(G.fx.stats().entries,0);assert.equal(callbacks.length,1);
+    G.paused=false;G.drag=null;G.arrows=[];context.window.SlingBreakIntro=null;modal=false;
+  }
+  G.fx.beginFrame();callbacks.shift()();assert.equal(G.fx.stats().entries,1);
+  assert.equal(G.fx.signature(ctx,()=>{},'a',.5,75,'#258eb2','#ffffff','impact'),true);
+  assert.equal(G.fx.signature(ctx,()=>{},'b',.5,75,'#258eb2','#ffffff','impact'),true);
+  assert.equal(G.fx.signature(ctx,()=>{},'c',.5,75,'#258eb2','#ffffff','impact'),false);
+});
 test('shards batch by opacity without transforms and preserve the caller brush',()=>{
   const {G}=boot(),{ctx,calls}=canvas();ctx.globalAlpha=.3;ctx.lineWidth=7;
   const list=Array.from({length:300},(_,i)=>({x:i,y:i,a:i,s:10,born:1}));

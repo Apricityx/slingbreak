@@ -1,0 +1,275 @@
+{
+  "note": "Before is the saved working tree immediately before this CPU/burst optimization, not git HEAD. Shared bench helpers are current.",
+  "files": [
+    {
+      "name": "achievements-fx.css",
+      "before": "94f278e35d565a3dae640bb3130effd1156111a16729b0bcbff31032be071a3a",
+      "after": "94f278e35d565a3dae640bb3130effd1156111a16729b0bcbff31032be071a3a"
+    },
+    {
+      "name": "achievements-ui.js",
+      "before": "29fb8c70795cae41dd3b7b6dabd95586e2a491475997db2e481efbcd2d32b630",
+      "after": "d97ee7bf7100b2bc3897d83d291759c7c521db92b8517900eb21af45a9c5bff1"
+    },
+    {
+      "name": "achievements.css",
+      "before": "d46a1e78688da2701b864c48c7e328e83d674e0fdc8d8c5a4005bf52bdf7cac8",
+      "after": "d46a1e78688da2701b864c48c7e328e83d674e0fdc8d8c5a4005bf52bdf7cac8"
+    },
+    {
+      "name": "achievements.js",
+      "before": "e66bb0f7e03b4d19560ba2457aa3134c6920bd2367be2df585732d896044e8e9",
+      "after": "e66bb0f7e03b4d19560ba2457aa3134c6920bd2367be2df585732d896044e8e9"
+    },
+    {
+      "name": "admin.js",
+      "before": "7418e32dd77a523713789fd1c60e36c8f2bed1d4d59751c209d90800ca3203c8",
+      "after": "7418e32dd77a523713789fd1c60e36c8f2bed1d4d59751c209d90800ca3203c8"
+    },
+    {
+      "name": "audio-diagnostics.js",
+      "before": "2528c2a2797126b8b70d46a4bb8e9d1fef416a670b621a3c58604b079b4ff590",
+      "after": "2528c2a2797126b8b70d46a4bb8e9d1fef416a670b621a3c58604b079b4ff590"
+    },
+    {
+      "name": "audio-native.js",
+      "before": "317f4c2e80d73ad3a53362f9eb559f2f6dfbb07300b732c7aefe4477031d11c2",
+      "after": "317f4c2e80d73ad3a53362f9eb559f2f6dfbb07300b732c7aefe4477031d11c2"
+    },
+    {
+      "name": "audio-recipes.js",
+      "before": "a25aa91d85531d2899286d5b5f82ed9d4c5be47dc96c8470a842a42d1e4730e6",
+      "after": "a25aa91d85531d2899286d5b5f82ed9d4c5be47dc96c8470a842a42d1e4730e6"
+    },
+    {
+      "name": "audio.js",
+      "before": "29cd3c2ffc4fa28b8c31f6bda671d4034bc334a671f61300aa2358764e743315",
+      "after": "29cd3c2ffc4fa28b8c31f6bda671d4034bc334a671f61300aa2358764e743315"
+    },
+    {
+      "name": "bench.html",
+      "before": "01c32c92c48fd56662d02ee75a842e2b2b208a0bc5cf605cf64955ef737b7ad4",
+      "after": "01c32c92c48fd56662d02ee75a842e2b2b208a0bc5cf605cf64955ef737b7ad4"
+    },
+    {
+      "name": "bench.js",
+      "before": "445a9b695a065693f6a0468aacd51c146f6d1bed2dbf759e6eec0b65b8f5b4e4",
+      "after": "445a9b695a065693f6a0468aacd51c146f6d1bed2dbf759e6eec0b65b8f5b4e4"
+    },
+    {
+      "name": "boss-clock.js",
+      "before": "75de0d1c17a0c1844b52d2eeba71008ce5cff0d13652e841f2a66eaa43621560",
+      "after": "75de0d1c17a0c1844b52d2eeba71008ce5cff0d13652e841f2a66eaa43621560"
+    },
+    {
+      "name": "boss-eye.js",
+      "before": "bfafda506983c06971da4c822ec161e13368b4173fb404a7c0633226164db0c2",
+      "after": "bfafda506983c06971da4c822ec161e13368b4173fb404a7c0633226164db0c2"
+    },
+    {
+      "name": "boss-forge.js",
+      "before": "f4b69f25fcd71c7b81408276f3cb8b22dedee6a653b831c1cab5cf3fa89396eb",
+      "after": "f4b69f25fcd71c7b81408276f3cb8b22dedee6a653b831c1cab5cf3fa89396eb"
+    },
+    {
+      "name": "boss-music.js",
+      "before": "8303d5d0cebc55a79f159aa9cc26627eeda58a721412f851d186058bc3187e7f",
+      "after": "8303d5d0cebc55a79f159aa9cc26627eeda58a721412f851d186058bc3187e7f"
+    },
+    {
+      "name": "boss-serpent.js",
+      "before": "2339a1868b79d74eb977247939caa7e38273b8fa959d5697507d99de3a97f8aa",
+      "after": "2339a1868b79d74eb977247939caa7e38273b8fa959d5697507d99de3a97f8aa"
+    },
+    {
+      "name": "color-blends.css",
+      "before": "684bc55979be3c3cc5052ccadfd67c3bd8f45639d1964bc6ed32679b79277262",
+      "after": "684bc55979be3c3cc5052ccadfd67c3bd8f45639d1964bc6ed32679b79277262"
+    },
+    {
+      "name": "colors.js",
+      "before": "d7296e1e4a97d08d10143aa44815ac5359a3486c0f8dd0499a3100f36c787136",
+      "after": "d7296e1e4a97d08d10143aa44815ac5359a3486c0f8dd0499a3100f36c787136"
+    },
+    {
+      "name": "draft.css",
+      "before": "72f64ee157c678fb3d13a41714ad74d1a9ba0514188665c4cdc62100d106bcb1",
+      "after": "72f64ee157c678fb3d13a41714ad74d1a9ba0514188665c4cdc62100d106bcb1"
+    },
+    {
+      "name": "fullscreen.js",
+      "before": "70f1159f65860d6d5fab92e17fd5449990ab108e10f06dabf7c24138b709bc0a",
+      "after": "70f1159f65860d6d5fab92e17fd5449990ab108e10f06dabf7c24138b709bc0a"
+    },
+    {
+      "name": "fx.js",
+      "before": "6c94fb928e97a322203d1bcbfeff36c57eaad58b1b85480af309af33894a434e",
+      "after": "f6e3c954584988c4e11cef73fb2835a798adcfa6ee8bf6a77767a3c96a03d3a1"
+    },
+    {
+      "name": "game.js",
+      "before": "8caa31cb77cf56317a91d9e0885435a88e2dd5710afa1e91e857a6f6e98236a5",
+      "after": "209913a32a9341c24be377a092949cec64cdfb89f6de31806ba1f77a77123b06"
+    },
+    {
+      "name": "home-screen.js",
+      "before": "4bb9118ae86243cec18592d91e9346a3e53f66f7e21ade40ac4782ca97beb77c",
+      "after": "4bb9118ae86243cec18592d91e9346a3e53f66f7e21ade40ac4782ca97beb77c"
+    },
+    {
+      "name": "index.html",
+      "before": "5fe09de962098df9162482fad643e9bfbc538d2c260a9f9251d5b0c218c03279",
+      "after": "5fe09de962098df9162482fad643e9bfbc538d2c260a9f9251d5b0c218c03279"
+    },
+    {
+      "name": "intro.css",
+      "before": "fec7bfe4b95f930ac6e9f0640b7dbff5ac55f243f23a571db7da4748d879c4e8",
+      "after": "fec7bfe4b95f930ac6e9f0640b7dbff5ac55f243f23a571db7da4748d879c4e8"
+    },
+    {
+      "name": "intro.js",
+      "before": "e7ed7988fde541532769cb9d110108167fcdb6bc72c4b7260c71d23239474a01",
+      "after": "e7ed7988fde541532769cb9d110108167fcdb6bc72c4b7260c71d23239474a01"
+    },
+    {
+      "name": "juice.css",
+      "before": "753b6eac90b5178ac88e1910b4934e1630fbcdf4299c543f1f2be09517fcb6c5",
+      "after": "753b6eac90b5178ac88e1910b4934e1630fbcdf4299c543f1f2be09517fcb6c5"
+    },
+    {
+      "name": "juice.js",
+      "before": "8c9c513070c03c892e7ee2642b0aead2a2a4d8b790dbeb738da4fbc8d08d04a3",
+      "after": "a42048b137bce67c939d6ab1c33ead20f1677070739ec3f9fd2a6f8bc2705c10"
+    },
+    {
+      "name": "launcher-mode.css",
+      "before": "886d7b31b54ca30d6e76c297e3a6d42121bd532cad2b531f945ffdffdda1a4ae",
+      "after": "886d7b31b54ca30d6e76c297e3a6d42121bd532cad2b531f945ffdffdda1a4ae"
+    },
+    {
+      "name": "launcher-mode.js",
+      "before": "73c609c3cc7aab96bc551edc5c9129542c88209af0e5971bc0ed5f1b6da4ba4e",
+      "after": "73c609c3cc7aab96bc551edc5c9129542c88209af0e5971bc0ed5f1b6da4ba4e"
+    },
+    {
+      "name": "milestone.css",
+      "before": "c15a9dd31b36bdde9056c619f72f65fdeaaff84001f5e4c735520ea2b4b87e70",
+      "after": "c15a9dd31b36bdde9056c619f72f65fdeaaff84001f5e4c735520ea2b4b87e70"
+    },
+    {
+      "name": "milestone.js",
+      "before": "b9915246eaea98f31ddde857a69b9a118ef9dd68a6431b8ad1e36f77de5ee802",
+      "after": "c5316ed7e49551eb7730c4e127ba8341f1733c6b7dd462c30e3656c7c7e1acaa"
+    },
+    {
+      "name": "mobile.css",
+      "before": "2a3794ef45674d074507f6ae926f97ace3e03f770c5b0042d1ad0badeaa14d08",
+      "after": "2a3794ef45674d074507f6ae926f97ace3e03f770c5b0042d1ad0badeaa14d08"
+    },
+    {
+      "name": "palette.js",
+      "before": "358b6d26b70366195e7bb1c795c8ab119f8ff4766a3b129818b053b7e1cbe1a6",
+      "after": "358b6d26b70366195e7bb1c795c8ab119f8ff4766a3b129818b053b7e1cbe1a6"
+    },
+    {
+      "name": "render.js",
+      "before": "647901707bb53a089c0f7d68923179e1c2b6c0a39cd19b321c1ca7a7ffa45e56",
+      "after": "7075ba4de682c34b9af21c75535472232680cac2426727e2519f6d1c13d1d554"
+    },
+    {
+      "name": "settings.css",
+      "before": "56462e97641bfb836409fa473d57c8bedc41968c3a579e20b8fcbbf3d5dbb712",
+      "after": "56462e97641bfb836409fa473d57c8bedc41968c3a579e20b8fcbbf3d5dbb712"
+    },
+    {
+      "name": "settings.js",
+      "before": "9b32a179e1c9c7597c7d352104d5b15c8d0e93e8a750e64530a462d3f5558a88",
+      "after": "9b32a179e1c9c7597c7d352104d5b15c8d0e93e8a750e64530a462d3f5558a88"
+    },
+    {
+      "name": "shop.css",
+      "before": "8ba9b9d8bf22a2d733e2d11e765fe7f5cd44887e5311b37a0b0e9da59889c948",
+      "after": "8ba9b9d8bf22a2d733e2d11e765fe7f5cd44887e5311b37a0b0e9da59889c948"
+    },
+    {
+      "name": "skill-effects.css",
+      "before": "ae6b867877cf8b297e64118ec011f71e5aee1eddff2b5a510d78cf31fd3d204d",
+      "after": "ae6b867877cf8b297e64118ec011f71e5aee1eddff2b5a510d78cf31fd3d204d"
+    },
+    {
+      "name": "skill-effects.js",
+      "before": "9c432f4c9889fd69ea03d1679c2b1f762cf61022ce31b35b9600ed9690cd4cc8",
+      "after": "03145f614e115336b1d16763993c7bcbb1bc414b33ff2b750de5a6c087654490"
+    },
+    {
+      "name": "skill-expansion.js",
+      "before": "6e54d49e6ce2e982236f99464c80d95367c0f1e01bf1521f4d5184acadcbb395",
+      "after": "5552d1ccdea213d4a77e49879d4f78e1af607f754d6292c98962e62c8056ac0e"
+    },
+    {
+      "name": "skill-overdrive.js",
+      "before": "cbc52432f1803069ec9c109a3fbfdac1f4ccf7cbaf5c4683fc14e0341510fbcf",
+      "after": "cce07025ba48c60719703ed64efc4c91e2788ba38356a65ba14d32492d3f3906"
+    },
+    {
+      "name": "skill-signatures.js",
+      "before": "62ae7b5949ed5d485b53ecfd7875b8aa29f39a51c8aa4cfb9f40044dd7a57ffb",
+      "after": "5865a6c282fab9a4e0a4df67dca6bdb85bc09b2e3661360a42ebbc6280e579a2"
+    },
+    {
+      "name": "skills-ui.js",
+      "before": "9f47a414419524b013a485bc7cc4479ec9b81fc0ca77f7f4593d1ed0f5e2169b",
+      "after": "2f2e35b17a998db90d07190ef11d9687ced9b00c74ba4068311b7a69d60f264c"
+    },
+    {
+      "name": "skills.css",
+      "before": "ab7fe3def37c49e10f3e03215e3ad5087b6628bd92ce9b398819647fd67d3bd1",
+      "after": "ab7fe3def37c49e10f3e03215e3ad5087b6628bd92ce9b398819647fd67d3bd1"
+    },
+    {
+      "name": "skills.js",
+      "before": "32de9077b42eb23bc3d8297e29b0e38acf30bb424901d612dc1b74c263096e32",
+      "after": "09a5b2493a76502ee6847c0568f7e227fe39d2c10b910232eb0caae1498bf7af"
+    },
+    {
+      "name": "stage.js",
+      "before": "97e49a90d1de84c8b5859f1f012dc63580af8be9b68200f805cf2b8aa226c309",
+      "after": "97e49a90d1de84c8b5859f1f012dc63580af8be9b68200f805cf2b8aa226c309"
+    },
+    {
+      "name": "style.css",
+      "before": "26a21141289bd34bc693f5b5e5cc6628bb2d098e36626e7d6ca1bb4d0ebc5901",
+      "after": "26a21141289bd34bc693f5b5e5cc6628bb2d098e36626e7d6ca1bb4d0ebc5901"
+    },
+    {
+      "name": "theme.css",
+      "before": "6eaa902e278f7970286a004a3b6ccd8127c02f7ce0579cd09b2ad9bb27339134",
+      "after": "6eaa902e278f7970286a004a3b6ccd8127c02f7ce0579cd09b2ad9bb27339134"
+    },
+    {
+      "name": "tokens.css",
+      "before": "881a2a9596e108861ae1730558db29ba6337c2d75ac5cb37df53f456b4606e25",
+      "after": "881a2a9596e108861ae1730558db29ba6337c2d75ac5cb37df53f456b4606e25"
+    },
+    {
+      "name": "transitions.css",
+      "before": "dee4433e67a5e4a9bb324ded1665be508eae820572bc02e9ec3f50d74ca5aaf8",
+      "after": "dee4433e67a5e4a9bb324ded1665be508eae820572bc02e9ec3f50d74ca5aaf8"
+    },
+    {
+      "name": "transitions.js",
+      "before": "1c7f202d0575f22a1af93c691183fa12881484f4dc5afa375cdec432d0ed5d86",
+      "after": "1c7f202d0575f22a1af93c691183fa12881484f4dc5afa375cdec432d0ed5d86"
+    },
+    {
+      "name": "ui.js",
+      "before": "368e5583e02942f74baa7427257b5c9d6a0b2116647718314b0cd5c32048357f",
+      "after": "368e5583e02942f74baa7427257b5c9d6a0b2116647718314b0cd5c32048357f"
+    },
+    {
+      "name": "wukong-bicycle.html",
+      "before": "844e40a964dd56dfe9c1e2101945309be2574614bcec86d083b29a9c5b1d7305",
+      "after": "844e40a964dd56dfe9c1e2101945309be2574614bcec86d083b29a9c5b1d7305"
+    }
+  ]
+}
