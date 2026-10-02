@@ -4,3 +4,6 @@
 
 # OpenChamber tooling artifacts (browser screenshots)
 .openchamber/
+
+# Compatibility browsers, profiles and visual test artifacts
+agent-tmp/

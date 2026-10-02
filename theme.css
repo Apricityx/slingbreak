@@ -226,14 +226,14 @@ button:active:not(:disabled) {
 
 /* The draft screen stays visually stable while the pointer moves across it. */
 #skill-draft .skill-card:hover {
-  transform: none !important;
+  transform: none;
   background: var(--surface-2) !important;
   border-color: var(--line-2) !important;
   box-shadow: none !important;
 }
 #skill-draft .skill-card:hover .skill-emblem,
 #skill-draft .skill-card:hover .skill-pick svg {
-  transform: none !important;
+  transform: none;
 }
 #skill-draft .skill-card:focus-visible {
   outline: none !important;

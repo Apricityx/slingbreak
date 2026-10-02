@@ -12,7 +12,9 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <!-- Resolves the colour theme before first paint (no light flash in dark mode). -->
   <script src="palette.js"></script>
+  <script src="colors.js"></script>
   <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="color-blends.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="skills.css">
   <link rel="stylesheet" href="mobile.css">
@@ -114,11 +116,16 @@
       <div><strong>桌面快捷入口</strong><button id="install-app" class="refresh-button" type="button" aria-describedby="install-status">添加到主屏幕</button></div>
       <p id="install-status" class="settings-hint" role="status" aria-live="polite">从主屏幕打开，可获得更沉浸的游戏体验。</p>
     </div>
-    <div class="settings-group refresh-group">
-      <div><strong>页面更新</strong><button id="refresh-page" class="refresh-button" type="button">重新获取最新版本</button></div>
-      <p id="refresh-status" class="settings-hint" role="status" aria-live="polite">重新下载页面资源，不会清除本地存档。</p>
-    </div>
-    <section class="settings-group admin-group" id="admin-group" aria-labelledby="admin-title" hidden>
+     <div class="settings-group refresh-group">
+       <div><strong>页面更新</strong><button id="refresh-page" class="refresh-button" type="button">重新获取最新版本</button></div>
+       <p id="refresh-status" class="settings-hint" role="status" aria-live="polite">重新下载页面资源，不会清除本地存档。</p>
+     </div>
+     <div class="settings-group progress-group">
+       <div><strong>游戏进度</strong><div class="progress-actions"><button id="export-progress" class="refresh-button" type="button">导出进度</button><button id="import-progress" class="refresh-button" type="button">导入进度</button></div></div>
+       <input id="import-progress-file" type="file" accept="application/json,.json" hidden>
+       <p id="progress-status" class="settings-hint" role="status" aria-live="polite">将当前存档保存为文件，或从其他设备恢复存档。</p>
+     </div>
+     <section class="settings-group admin-group" id="admin-group" aria-labelledby="admin-title" hidden>
       <h3 id="admin-title">管理员面板</h3>
       <form id="admin-level-form">
         <label for="admin-level">跳转到关卡</label>

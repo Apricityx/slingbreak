@@ -6,6 +6,7 @@
   const cache=new Map(),MAX_BYTES=16*1024*1024,MAX_ENTRIES=384;
   let bytes=0,hits=0,misses=0;
   let signatureBuilds=0,buildBudget=Infinity;
+  const warmJobs=[],warmKeys=new Set();let warmScheduled=false,warmGeneration=0;
   function sprite(key,w,h,paint){
     let entry=cache.get(key);
     if(entry){hits++;cache.delete(key);cache.set(key,entry);return entry;}
@@ -54,14 +55,52 @@
     const p=G.reduced?.55:Math.round(Math.max(0,Math.min(1,t))*16)/16;
     const radius=r<=24?16:r<=96?64:r<=160?128:192;
     const d=Math.round(density()*2)/2,pad=radius*1.35+5,size=Math.ceil(pad*2*d);
-    const key=`signature:${id}:${stage==='aura'?'aura':'impact'}:${p}:${radius}:${d}:${color}:${accent}:${G.reduced}`;
+    const keyFor=pose=>`signature:${id}:${stage==='aura'?'aura':'impact'}:${pose}:${radius}:${d}:${color}:${accent}:${G.reduced}`;
+    const key=keyFor(p);
     // New effects must not build seven full atlases on their first frame.
     // Spend at most two cache builds per production frame; a miss beyond that
-    // budget paints the original crisp vectors, without delaying the effect.
-    if(!cache.has(key)){if(signatureBuilds>=buildBudget)return false;signatureBuilds++;}
+    // budget reuses an adjacent pose or paints crisp vectors, without delaying feedback.
+    if(ctx&&!cache.has(key)){
+      if(signatureBuilds>=buildBudget){
+        // Reuse an adjacent cached pose for this frame (at most 1/16 lifetime),
+        // not dozens of uncached complex vectors. No different skill/colour/density.
+        if(!G.reduced)for(const pose of [p-1/16,p+1/16]){const adjacent=keyFor(pose),s=cache.get(adjacent);
+          if(!s)continue;hits++;cache.delete(adjacent);cache.set(adjacent,s);
+          const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);return true;
+        }
+        return false;
+      }
+      signatureBuilds++;
+    }
     const s=sprite(key,size,size,g=>{g.translate(size/2,size/2);g.scale(d,d);paint(g,id,p,radius,color,accent,stage);});
     if(!s)return false;
-    const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);return true;
+    if(ctx){const half=pad*r/radius;ctx.drawImage(s.el,-half,-half,half*2,half*2);}return true;
+  }
+  function scheduleWarm(delay=0){
+    if(warmScheduled||!warmJobs.length||typeof window==='undefined')return;
+    const idle=typeof window.requestIdleCallback==='function',timer=typeof window.setTimeout==='function';
+    if(!idle&&!timer)return;warmScheduled=true;const generation=warmGeneration;
+    const run=()=>{
+      if(generation!==warmGeneration)return;warmScheduled=false;
+      // Never prebuild while arrows, dragging, a modal or gameplay needs the CPU.
+      if(G.phase!=='ready'||G.paused||G.drag||G.arrows?.length||window.SlingBreakIntro?.active||
+        typeof document!=='undefined'&&document.querySelector?.('dialog[open]')){scheduleWarm(250);return;}
+      const job=warmJobs.shift();warmKeys.delete(job.key);
+      if(!G.skillRank||G.skillRank(job.id))signature(null,job.paint,job.id,job.t,job.r,job.color,job.accent,job.stage);
+      scheduleWarm();
+    };
+    // One small atlas pose per idle callback; Chrome 89 gets the same bounded
+    // setTimeout fallback when requestIdleCallback is unavailable.
+    if(delay&&timer)window.setTimeout(run,delay);
+    else if(idle)window.requestIdleCallback(run,{timeout:1000});else window.setTimeout(run,32);
+  }
+  function prewarm(paint,id,color,accent){
+    const poses=G.reduced?[.55]:Array.from({length:17},(_,i)=>i/16);
+    for(const t of poses){const key=`${id}:${t}:${color}:${accent}:${G.reduced}`;
+      if(warmKeys.has(key)||warmJobs.length>=72)continue;
+      warmKeys.add(key);warmJobs.push({key,paint,id,t,r:75,color,accent,stage:'impact'});
+    }
+    scheduleWarm();
   }
   function vignette(ctx,w,h,color,opacity){
     const s=sprite(`vignette:${color}:${Math.round(h)}`,256,Math.ceil(h/w*256),(g,sw,sh)=>{
@@ -103,8 +142,9 @@
     }
     ctx.restore();
   }
-  G.fx={sprite,radial,glow,signature,vignette,layer,hole,shade,shards,
+  G.fx={sprite,radial,glow,signature,prewarm,vignette,layer,hole,shade,shards,
     beginFrame:()=>{signatureBuilds=0;buildBudget=2;},
-    clear:()=>{cache.clear();bytes=0;},stats:()=>({entries:cache.size,bytes,hits,misses,maxBytes:MAX_BYTES})};
-  window.SlingTheme?.onChange(()=>G.fx.clear());
+    clear:()=>{cache.clear();bytes=0;warmJobs.length=0;warmKeys.clear();warmGeneration++;warmScheduled=false;},
+    stats:()=>({entries:cache.size,bytes,hits,misses,maxBytes:MAX_BYTES,warmPending:warmJobs.length})};
+  window.SlingTheme?.onChange(()=>{G.fx.clear();G.prepareSkillFx?.();});
 })();

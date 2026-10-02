@@ -59,6 +59,11 @@ test('four slots rotate oldest-first across levels and reloads, with no replacem
   }
   assert.equal(G.skillRank('mint'),0);assert.equal(G.skillRank('ice'),1);
 });
+test('active skill arrays are reused within a shot and replaced when ownership changes',()=>{
+  const {G}=ready(['titan','mint']);const first=G.activeSkills();assert.strictEqual(G.activeSkills(),first);
+  G.state.skills={cascade:1,storm:1};const second=G.activeSkills();assert.notStrictEqual(second,first);assert.deepEqual(Array.from(second,s=>s.id),['cascade','storm']);
+  G.invalidateSkillCache();assert.notStrictEqual(G.activeSkills(),second);
+});
 test('single-level v2 saves preserve current skill, progress and runtime on migration',()=>{
   const {G,read}=ready('decay');G.prepareDraft();G.state.coins=432;G.state.up.arrow=5;G.killed=3;G.state.skillRuntime.shots=7;G.save();
   const saved=read();saved.skillScopeVersion=2;const loaded=boot(saved).G;

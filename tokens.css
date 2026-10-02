@@ -11,13 +11,18 @@
   color-scheme: light;
   --page: #dfe3d9;
   --bg: #f5f6f3;
+  --bg-r:245;--bg-g:246;--bg-b:243;
   --surface: #fafbf7;
+  --surface-r:250;--surface-g:251;--surface-b:247;
   --surface-2: #eff2e9;
   --surface-3: #e6ebdd;
   --line: #e0e3da;
+  --line-r:224;--line-g:227;--line-b:218;
   --line-2: #d3dac8;
+  --line-2-r:211;--line-2-g:218;--line-2-b:200;
 
   --ink: #22271f;
+  --ink-r:34;--ink-g:39;--ink-b:31;
   --ink-2: #44503b;
   --text-2: #5a6453;
   --text-3: #656c5d;
@@ -27,11 +32,13 @@
   --accent-hover: #a5df55;
   --on-accent: #2a3d1c;
   --accent-ink: #48731f;
+  --accent-ink-r:72;--accent-ink-g:115;--accent-ink-b:31;
   --accent-ink-strong: #3b5d1f;
   --accent-soft: #e5f0d6;
   --accent-soft-2: #d9ebc3;
   --accent-line: #b9d596;
   --accent-bar: #8fc24f;
+  --accent-bar-r:143;--accent-bar-g:194;--accent-bar-b:79;
   --focus: #48731f;
   --green: var(--accent);
 
@@ -44,16 +51,23 @@
   --disabled-line: #e1e5d8;
 
   --gold-ink: #85651d;
+  --gold-ink-r:133;--gold-ink-g:101;--gold-ink-b:29;
   --gold-soft: #f7f0d8;
+  --gold-soft-r:247;--gold-soft-g:240;--gold-soft-b:216;
   --gold-line: #e0cd94;
   --warm-ink: #8a622c;
+  --warm-ink-r:138;--warm-ink-g:98;--warm-ink-b:44;
   --warm-soft: #f6eee1;
+  --warm-soft-r:246;--warm-soft-g:238;--warm-soft-b:225;
   --warm-line: #d8b88c;
   --coral: #f67b65;
+  --coral-r:246;--coral-g:123;--coral-b:101;
   --danger: #e0533f;
+  --danger-r:224;--danger-g:83;--danger-b:63;
 
   /* Inverse panels (income strip, shop trigger, level wipe). */
   --panel: #252e20;
+  --panel-r:37;--panel-g:46;--panel-b:32;
   --panel-2: #3d5528;
   --on-panel: #f2f6ea;
   --on-panel-2: #aebda2;
@@ -67,6 +81,7 @@
 
   /* Letterbox around the fixed stage: a soft sage wash, never pure white. */
   --letterbox: #d4d9cc;
+  --letterbox-r:212;--letterbox-g:217;--letterbox-b:204;
   --letterbox-glow: #e6e9df;
   --letterbox-dot: #22271f14;
   --frame-edge: #22271f1f;
@@ -81,7 +96,9 @@
   --legend-bomb-bg: #ffe1d8;  --legend-bomb: #b0492f;
   --legend-lightning-bg: #f6edbd; --legend-lightning: #7f6a10;
   --legend-frost-bg: #dceff5; --legend-frost: #2f7486;
+  --legend-frost-bg-r:220;--legend-frost-bg-g:239;--legend-frost-bg-b:245;--legend-frost-r:47;--legend-frost-g:116;--legend-frost-b:134;
   --legend-prism-bg: #e6dff8; --legend-prism: #6a55a0;
+  --legend-prism-bg-r:230;--legend-prism-bg-g:223;--legend-prism-bg-b:248;--legend-prism-r:106;--legend-prism-g:85;--legend-prism-b:160;
   --legend-gold-bg: #fbe9c4;  --legend-gold: #8a5a0c;
   --legend-metal-bg: #dce1dc; --legend-metal: #586456;
 }
@@ -90,13 +107,18 @@
   color-scheme: dark;
   --page: #0b0d0a;
   --bg: #131711;
+  --bg-r:19;--bg-g:23;--bg-b:17;
   --surface: #1a1f17;
+  --surface-r:26;--surface-g:31;--surface-b:23;
   --surface-2: #20261c;
   --surface-3: #29301f;
   --line: #2c3427;
+  --line-r:44;--line-g:52;--line-b:39;
   --line-2: #3a4432;
+  --line-2-r:58;--line-2-g:68;--line-2-b:50;
 
   --ink: #e6ecde;
+  --ink-r:230;--ink-g:236;--ink-b:222;
   --ink-2: #c3ccb8;
   --text-2: #a3ad98;
   --text-3: #8a947f;
@@ -105,11 +127,13 @@
   --accent-hover: #c4f589;
   --on-accent: #1d2a12;
   --accent-ink: #a3d465;
+  --accent-ink-r:163;--accent-ink-g:212;--accent-ink-b:101;
   --accent-ink-strong: #c4f589;
   --accent-soft: #223020;
   --accent-soft-2: #2b3d24;
   --accent-line: #4a6b2c;
   --accent-bar: #8fc24f;
+  --accent-bar-r:143;--accent-bar-g:194;--accent-bar-b:79;
   --focus: #b6ed66;
 
   --buy: #2f4a1c;
@@ -121,14 +145,20 @@
   --disabled-line: #2a3125;
 
   --gold-ink: #e0bd62;
+  --gold-ink-r:224;--gold-ink-g:189;--gold-ink-b:98;
   --gold-soft: #33291a;
+  --gold-soft-r:51;--gold-soft-g:41;--gold-soft-b:26;
   --gold-line: #6b5526;
   --warm-ink: #e0b27a;
+  --warm-ink-r:224;--warm-ink-g:178;--warm-ink-b:122;
   --warm-soft: #30271c;
+  --warm-soft-r:48;--warm-soft-g:39;--warm-soft-b:28;
   --warm-line: #6b5230;
   --danger: #ff6b55;
+  --danger-r:255;--danger-g:107;--danger-b:85;
 
   --panel: #0e120c;
+  --panel-r:14;--panel-g:18;--panel-b:12;
   --panel-2: #22301a;
   --on-panel: #e6ecde;
   --on-panel-2: #8e9a84;
@@ -142,6 +172,7 @@
 
   /* Letterbox: deep moss slate with a faint lift, never pure black. */
   --letterbox: #1b2019;
+  --letterbox-r:27;--letterbox-g:32;--letterbox-b:25;
   --letterbox-glow: #252b22;
   --letterbox-dot: #e6ecde0d;
   --frame-edge: #e6ecde1f;
@@ -155,7 +186,9 @@
   --legend-bomb-bg: #3a221c;  --legend-bomb: #f6a38f;
   --legend-lightning-bg: #35301a; --legend-lightning: #f3e27a;
   --legend-frost-bg: #1a3139; --legend-frost: #a9d8e6;
+  --legend-frost-bg-r:26;--legend-frost-bg-g:49;--legend-frost-bg-b:57;--legend-frost-r:169;--legend-frost-g:216;--legend-frost-b:230;
   --legend-prism-bg: #2a2438; --legend-prism: #cbbbe9;
+  --legend-prism-bg-r:42;--legend-prism-bg-g:36;--legend-prism-bg-b:56;--legend-prism-r:203;--legend-prism-g:187;--legend-prism-b:233;
   --legend-gold-bg: #3a2a14;  --legend-gold: #e9b85a;
   --legend-metal-bg: #2a2f2a; --legend-metal: #b5bdb3;
 }

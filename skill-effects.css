@@ -16,7 +16,7 @@
 @keyframes skill-detail-in{0%{opacity:0;transform:translateY(14px) scale(.96)}100%{opacity:1;transform:none}}
 .skill-detail-card{display:flex;flex-direction:column;gap:13px;padding:22px}
 .skill-detail-head{display:flex;align-items:center;gap:13px}
-.skill-detail-head .skill-emblem{flex:none;color:var(--skill-detail-color);background:color-mix(in srgb,var(--skill-detail-color) 12%,var(--surface));border-color:color-mix(in srgb,var(--skill-detail-color) 45%,var(--surface))}
+.skill-detail-head .skill-emblem{flex:none;color:var(--skill-detail-color);background:var(--mix-skill-detail-color-12-surface);border-color:var(--mix-skill-detail-color-45-surface)}
 .skill-detail-title{flex:1;min-width:0}
 .skill-detail-title h2{margin:0 0 4px;font-size:21px;letter-spacing:0}
 .skill-detail-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}

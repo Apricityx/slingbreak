@@ -37,7 +37,7 @@
   G.spawnCore=(quiet=false,...rest)=>{
     const absent=!G.core,result=spawnCore(quiet,...rest);
     if(absent&&G.core&&!quiet&&!still()){
-      document.querySelector('.core-gem')?.animate([{scale:'1',filter:'none'},{scale:'1.6',filter:'brightness(1.3)',offset:.3},{scale:'1',filter:'none'}],{duration:640,easing:'ease-out'});
+      document.querySelector('.core-gem')?.animate([{transform:'scale(1) rotate(45deg)',filter:'none'},{transform:'scale(1.6) rotate(45deg)',filter:'brightness(1.3)',offset:.3},{transform:'scale(1) rotate(45deg)',filter:'none'}],{duration:640,easing:'ease-out'});
       $('progress-bar')?.animate([{boxShadow:'0 0 0 0 #9bcc5d00'},{boxShadow:'0 0 14px 3px #9bcc5dcc',offset:.35},{boxShadow:'0 0 0 0 #9bcc5d00'}],{duration:1000});
     }
     return result;
@@ -61,7 +61,7 @@
         {transform:`translate(${ex}px,${ey}px) scale(.45)`,opacity:.9}
       ],{duration:860,delay:320+i*55,easing:'cubic-bezier(.45,0,.35,1)',fill:'both'});
       const clean=()=>{coin.remove();flyingCoins--;};
-      flight.finished.then(()=>{clean();if(i===count-1)target.animate([{scale:'1.14'},{scale:'1'}],{duration:200,easing:'ease-out'});},clean);
+      flight.finished.then(()=>{clean();if(i===count-1)target.animate([{transform:'scale(1.14)'},{transform:'scale(1)'}],{duration:200,easing:'ease-out'});},clean);
     }
   }
   const esc=text=>String(text).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -96,7 +96,7 @@
       scene.remove();return;
     }
     await wait(140);
-    stamp.animate([{opacity:0,scale:'1.7',filter:'blur(8px)'},{opacity:1,scale:'.95',filter:'blur(0)',offset:.55},{opacity:1,scale:'1',filter:'blur(0)'}],{duration:340,easing:'ease-out',fill:'both'});
+    stamp.animate([{opacity:0,transform:'scale(1.7)',filter:'blur(8px)'},{opacity:1,transform:'scale(.95)',filter:'blur(0)',offset:.55},{opacity:1,transform:'scale(1)',filter:'blur(0)'}],{duration:340,easing:'ease-out',fill:'both'});
     const start=performance.now();
     const count=()=>{
       const p=Math.min(1,(performance.now()-start-120)/900),e=1-(1-Math.max(0,p))**3;
@@ -106,13 +106,13 @@
     requestAnimationFrame(count);
     flyCoins(bonus);
     if(card){
-      card.animate([{opacity:0,translate:'0 26px',scale:'.96'},{opacity:1,translate:'0 0',scale:'1'}],{duration:480,delay:380,easing:spring,fill:'both'});
-      [...card.children].forEach((row,i)=>row.animate([{opacity:0,translate:'0 10px'},{opacity:1,translate:'0 0'}],{duration:340,delay:480+i*70,easing:out,fill:'both'}));
-      [...card.querySelectorAll('.report-bar i')].forEach((seg,i)=>seg.animate([{scale:'0 1'},{scale:'1 1'}],{duration:520,delay:620+i*110,easing:out,fill:'both'}));
+      card.animate([{opacity:0,transform:'translate(0,26px) scale(.96)'},{opacity:1,transform:'translate(0,0) scale(1)'}],{duration:480,delay:380,easing:spring,fill:'both'});
+      [...card.children].forEach((row,i)=>row.animate([{opacity:0,transform:'translate(0,10px)'},{opacity:1,transform:'translate(0,0)'}],{duration:340,delay:480+i*70,easing:out,fill:'both'}));
+      [...card.querySelectorAll('.report-bar i')].forEach((seg,i)=>seg.animate([{transform:'scale(0,1)'},{transform:'scale(1,1)'}],{duration:520,delay:620+i*110,easing:out,fill:'both'}));
     }
     // Leave with the curtain (next level) or at once if the run was reset.
     while(G.phase==='clearing'&&scene.isConnected)await wait(50);
-    await settle(scene.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -20px'}],{duration:240,easing:accel,fill:'forwards'}));
+    await settle(scene.animate([{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:'translate(0,-20px)'}],{duration:240,easing:accel,fill:'forwards'}));
     scene.remove();
   }
   const clear=G.clear;
@@ -151,10 +151,10 @@
     const timing={duration:1050,easing:'cubic-bezier(.65,0,.35,1)',fill:'forwards'};
     const accent=el.firstElementChild,panel=el.lastElementChild,digits=[...panel.querySelectorAll('strong b')];
     const runs=[accent.animate(curtain,timing),panel.animate(curtain,{...timing,delay:70})];
-    panel.firstElementChild.animate([{opacity:0,translate:'40px 0'},{opacity:1,translate:'0 0',offset:.4},{opacity:1,translate:'0 0',offset:.7},{opacity:0,translate:'-30px 0'}],{duration:1050,easing:out,fill:'both'});
-    panel.lastElementChild.animate([{opacity:0,translate:'60px 0'},{opacity:0,translate:'60px 0',offset:.2},{opacity:1,translate:'0 0',offset:.5},{opacity:1,translate:'0 0',offset:.7},{opacity:0,translate:'-40px 0'}],{duration:1050,easing:out,fill:'both'});
-    if(digits.length===2)for(const d of digits)d.animate([{translate:'0 0'},{translate:'0 0',offset:.36},{translate:'0 -100%',offset:.56},{translate:'0 -100%'}],{duration:1050,easing:spring,fill:'both'});
-    else digits[0].animate([{opacity:0,scale:'1.3'},{opacity:0,scale:'1.3',offset:.25},{opacity:1,scale:'1',offset:.48},{opacity:1,scale:'1'}],{duration:1050,easing:out,fill:'both'});
+    panel.firstElementChild.animate([{opacity:0,transform:'translate(40px,0)'},{opacity:1,transform:'translate(0,0)',offset:.4},{opacity:1,transform:'translate(0,0)',offset:.7},{opacity:0,transform:'translate(-30px,0)'}],{duration:1050,easing:out,fill:'both'});
+    panel.lastElementChild.animate([{opacity:0,transform:'translate(60px,0)'},{opacity:0,transform:'translate(60px,0)',offset:.2},{opacity:1,transform:'translate(0,0)',offset:.5},{opacity:1,transform:'translate(0,0)',offset:.7},{opacity:0,transform:'translate(-40px,0)'}],{duration:1050,easing:out,fill:'both'});
+    if(digits.length===2)for(const d of digits)d.animate([{transform:'translate(0,0)'},{transform:'translate(0,0)',offset:.36},{transform:'translate(0,-100%)',offset:.56},{transform:'translate(0,-100%)'}],{duration:1050,easing:spring,fill:'both'});
+    else digits[0].animate([{opacity:0,transform:'scale(1.3)'},{opacity:0,transform:'scale(1.3)',offset:.25},{opacity:1,transform:'scale(1)',offset:.48},{opacity:1,transform:'scale(1)'}],{duration:1050,easing:out,fill:'both'});
     await wait(640);
     G.holdDraft=false;
     // Without a pending draft the board ripples in as the curtain peels.
@@ -179,13 +179,13 @@
   G.rewind=async()=>{
     if(still()){G.reset();G.toast('新的开始 · LEVEL 1');return;}
     rewinding=true;G.holdDraft=true;G.lockInput(1800);
-    const shrunk={scale:'.95',filter:'grayscale(1) blur(3px)',opacity:.55};
-    const fold=arena.animate([{scale:'1',filter:'none',opacity:1},shrunk],{duration:360,easing:accel,fill:'forwards'});
+    const shrunk={transform:'scale(.95)',filter:'grayscale(1) blur(3px)',opacity:.55};
+    const fold=arena.animate([{transform:'scale(1)',filter:'none',opacity:1},shrunk],{duration:360,easing:accel,fill:'forwards'});
     try{
       await settle(fold);
       G.reset();
       const curtain=wipe({eyebrow:'RESTART',to:'LEVEL 01',note:'从第一箭重新开始'});
-      arena.animate([shrunk,{scale:'1',filter:'none',opacity:1}],{duration:480,easing:out});
+      arena.animate([shrunk,{transform:'scale(1)',filter:'none',opacity:1}],{duration:480,easing:out});
       fold.cancel();
       await curtain;
     }finally{fold.cancel();rewinding=false;G.holdDraft=false;G.ui();}
@@ -201,24 +201,24 @@
     ghost.className='level-ghost';ghost.textContent=prev;ghost.setAttribute('aria-hidden','true');
     Object.assign(ghost.style,{left:levelEl.offsetLeft+'px',top:levelEl.offsetTop+'px'});
     levelEl.parentElement.append(ghost);
-    ghost.animate([{translate:'0 0',opacity:1},{translate:`0 ${-dir*.9}em`,opacity:0}],{duration:420,easing:'cubic-bezier(.6,0,.3,1)',fill:'forwards'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
-    levelEl.animate([{translate:`0 ${dir*.9}em`,opacity:0},{translate:'0 0',opacity:1}],{duration:520,delay:70,easing:spring,fill:'backwards'});
+    ghost.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(0,${-dir*.9}em)`,opacity:0}],{duration:420,easing:'cubic-bezier(.6,0,.3,1)',fill:'forwards'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
+    levelEl.animate([{transform:`translate(0,${dir*.9}em)`,opacity:0},{transform:'translate(0,0)',opacity:1}],{duration:520,delay:70,easing:spring,fill:'backwards'});
   }).observe(levelEl,{childList:true,characterData:true,subtree:true});
 
   // ── 3. Draft deal: cards flip in from edge-on, rare cards catch a glint.
   const draft=$('skill-draft');
   new MutationObserver(()=>{
     if(!draft.open||still())return;
-    [...draft.querySelectorAll('#draft-loadout .skill-queue-slot')].forEach((slot,i)=>slot.animate([{opacity:0,scale:'.8'},{opacity:1,scale:'1'}],{duration:360,delay:90+i*45,easing:spring,fill:'backwards'}));
+    [...draft.querySelectorAll('#draft-loadout .skill-queue-slot')].forEach((slot,i)=>slot.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'scale(1)'}],{duration:360,delay:90+i*45,easing:spring,fill:'backwards'}));
     [...draft.querySelectorAll('.skill-card')].forEach((card,i)=>{
       const delay=160+i*95,tier=card.querySelector('.skill-rarity')?.dataset.tier;
       card.animate([
-        {opacity:0,translate:'0 70px',rotate:'y 86deg',scale:'.86'},
+        {opacity:0,transform:'translate(0,70px) rotateY(86deg) scale(.86)'},
         {opacity:1,offset:.3},
-        {opacity:1,translate:'0 -8px',rotate:'y -7deg',scale:'1.02',offset:.68},
-        {opacity:1,translate:'0 0',rotate:'y 0deg',scale:'1'}
+        {opacity:1,transform:'translate(0,-8px) rotateY(-7deg) scale(1.02)',offset:.68},
+        {opacity:1,transform:'translate(0,0) rotateY(0deg) scale(1)'}
       ],{duration:700,delay,easing:out,fill:'backwards'});
-      card.querySelector('.skill-emblem')?.animate([{scale:'0',rotate:'-40deg'},{scale:'1',rotate:'0deg'}],{duration:480,delay:delay+260,easing:spring,fill:'backwards'});
+      card.querySelector('.skill-emblem')?.animate([{transform:'rotate(-40deg) scale(0)'},{transform:'rotate(0deg) scale(1)'}],{duration:480,delay:delay+260,easing:spring,fill:'backwards'});
       card.classList.remove('deal-glint');
       if(tier==='gold'||tier==='blue'){void card.offsetWidth;card.style.setProperty('--glint-delay',delay+520+'ms');card.classList.add('deal-glint');}
     });
@@ -245,9 +245,9 @@
     new MutationObserver(()=>{
       if(!dialog.open||closing||stack.includes(dialog))return;
       source=lastTrigger&&!dialog.contains(lastTrigger)?lastTrigger:null;
-      const below=stack.at(-1);stack.push(dialog);
+      const below=stack[stack.length-1];stack.push(dialog);
       if(still())return;
-      if(below)below._cover=below.animate([{scale:'1',filter:'none'},{scale:'.94',filter:'brightness(.92)'}],{duration:320,easing:out,fill:'forwards'});
+      if(below)below._cover=below.animate([{transform:'scale(1)',filter:'none'},{transform:'scale(.94)',filter:'brightness(.92)'}],{duration:320,easing:out,fill:'forwards'});
       dialog.animate([folded(dialog,sourceRect(source)),{opacity:1,offset:.35},{transform:'none',opacity:1}],{duration:460,easing:spring});
       fade=backdrop(dialog,[{opacity:0},{opacity:1}],280);
     }).observe(dialog,{attributes:true,attributeFilter:['open']});
@@ -263,8 +263,8 @@
     dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();});
     dialog.addEventListener('close',()=>{
       const i=stack.indexOf(dialog);if(i>=0)stack.splice(i,1);
-      const below=stack.at(-1),cover=below?._cover;
-      if(cover){below._cover=null;cover.cancel();if(!still())below.animate([{scale:'.94',filter:'brightness(.92)'},{scale:'1',filter:'none'}],{duration:380,easing:spring});}
+      const below=stack[stack.length-1],cover=below?._cover;
+      if(cover){below._cover=null;cover.cancel();if(!still())below.animate([{transform:'scale(.94)',filter:'brightness(.92)'},{transform:'scale(1)',filter:'none'}],{duration:380,easing:spring});}
     });
   }
 })();

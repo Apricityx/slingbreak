@@ -27,11 +27,11 @@
 @keyframes overlay-sink{to{opacity:0;transform:translateY(-10px) scale(.98)}}
 
 /* ── 6. Clear stamp and coin flight. */
-.clear-scene{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;overflow:hidden;cursor:pointer}
+.clear-scene{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .clear-scene.is-static>*{opacity:1}
 .clear-stamp{display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;color:var(--ink-2);text-align:center;opacity:0}
 .clear-stamp span{font:600 12px "Barlow Condensed",var(--font);letter-spacing:3px;color:var(--accent-ink)}
-.clear-stamp strong{font:800 46px/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:var(--accent-ink-strong);text-shadow:0 3px 0 var(--buy),0 10px 30px color-mix(in srgb,var(--accent-bar) 50%,transparent)}
+.clear-stamp strong{font:800 46px/1 "Barlow Condensed",var(--font);letter-spacing:4px;color:var(--accent-ink-strong);text-shadow:0 3px 0 var(--buy),0 10px 30px var(--mix-accent-bar-50-alpha)}
 .clear-stamp b{margin-top:6px;padding:4px 12px;border-radius:5px;background:var(--panel);color:var(--accent-hover);font:600 18px "Barlow Condensed",var(--font);font-variant-numeric:tabular-nums}
 .flying-coin{position:fixed;left:0;top:0;z-index:1000;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6c2,#e8c34a 55%,#b48a1c);box-shadow:0 0 10px #f1d26a90;pointer-events:none;will-change:transform,opacity}
 
@@ -54,9 +54,9 @@
 #skill-draft .draft-options{perspective:1100px}
 #skill-draft .skill-card{animation:none!important;transform-style:preserve-3d;backface-visibility:hidden}
 #skill-draft .skill-card.deal-glint{position:relative;overflow:hidden}
-#skill-draft .skill-card.deal-glint::before{content:"";position:absolute;inset:-20% -60%;pointer-events:none;background:linear-gradient(110deg,transparent 42%,#fff8d8d0 50%,transparent 58%);translate:-70% 0;animation:deal-glint .8s var(--glint-delay,.6s) cubic-bezier(.3,0,.2,1) both}
-#skill-draft .skill-card.deal-glint:has(.skill-rarity[data-tier="blue"])::before{background:linear-gradient(110deg,transparent 42%,#dff0ffc0 50%,transparent 58%)}
-@keyframes deal-glint{to{translate:70% 0}}
+#skill-draft .skill-card.deal-glint::before{content:"";position:absolute;inset:-20% -60%;pointer-events:none;background:linear-gradient(110deg,transparent 42%,#fff8d8d0 50%,transparent 58%);transform:translate(-70%,0);animation:deal-glint .8s var(--glint-delay,.6s) cubic-bezier(.3,0,.2,1) both}
+#skill-draft .skill-card.deal-glint[data-tier="blue"]::before{background:linear-gradient(110deg,transparent 42%,#dff0ffc0 50%,transparent 58%)}
+@keyframes deal-glint{to{transform:translate(70%,0)}}
 
 /* ── 9 / 10. Morph dialogs animate from JS; retire their CSS entrances. */
 dialog.is-morph[open]{animation:none!important}

@@ -9,6 +9,14 @@
   // Tier colours follow the theme (palette.js heat ramp: cool green → amber → red).
   const tierNames=['','连击','势不可挡','满倍率'],tierColor=tier=>(window.SlingTheme?.canvas.heat||['#56703a','#3a7f1c','#a85f0c','#c8431d'])[tier];
   const tierOf=kills=>{const cap=G.comboCapKills();return kills>=cap?3:kills>=Math.max(5,Math.ceil(cap*.66))?2:kills>=4?1:0;};
+  let comboPulse=null;
+  const queueCombo=tier=>{
+    const paint=()=>{
+      const heat=G.phase==='flying'?tier:0;combo.dataset.heat=heat;arena.dataset.heat=heat;
+      if(!still()&&heat){comboPulse?.cancel();comboPulse=combo.animate([{transform:`scale(${1+heat*.06})`},{transform:'scale(1)'}],{duration:180,easing:'ease-out'});}
+    };
+    if(G.deferVisual)G.deferVisual('combo-heat',paint);else paint();
+  };
 
   // ── Time control. Slow motion scales dt; hit-stop skips simulation entirely.
   let scale=1,slowUntil=0,freezeUntil=0,slowCore=null,lastChainStop=0,tickKills=0;
@@ -19,13 +27,13 @@
   function startSlow(){
     scale=.22;slowUntil=performance.now()+620;arena.classList.add('is-slowmo');
     const p=toClient(G.core.x,G.core.y);canvas.style.transformOrigin=`${p.x}px ${p.y}px`;
-    zoom?.cancel();zoom=canvas.animate([{scale:'1'},{scale:'1.05'}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+    zoom?.cancel();zoom=canvas.animate([{transform:'scale(1)'},{transform:'scale(1.05)'}],{duration:260,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
     G.sound('draw',5,G.core.x);
   }
   function endSlow(){
     if(scale===1)return;
     scale=1;slowUntil=0;arena.classList.remove('is-slowmo');
-    zoom?.cancel();zoom=canvas.animate([{scale:'1.05'},{scale:'1'}],{duration:300,easing:'cubic-bezier(.22,1,.36,1)'});
+    zoom?.cancel();zoom=canvas.animate([{transform:'scale(1.05)'},{transform:'scale(1)'}],{duration:300,easing:'cubic-bezier(.22,1,.36,1)'});
   }
   // An arrow about to reach the core stretches the moment before impact.
   function watchCore(){
@@ -46,7 +54,7 @@
       const money=pending;pending=null;
       const a=G.activeArrow,kills=G.arrowKills(a);
       let t=tallies.find(t=>t.arrow===a&&t.life>.35);
-      if(!t&&tallies.length>=8)t=tallies.at(-1);
+      if(!t&&tallies.length>=8)t=tallies[tallies.length-1];
       if(!t){t={arrow:a,x,y:y-26,tx:x,ty:y-26,total:0,count:0,life:0,pop:0,callout:null};tallies.push(t);}
       t.total+=money;t.count++;t.kills=Math.max(kills,t.count);t.tx=x;t.ty=y-26;t.life=1.25;t.pop=1;
       return;
@@ -118,12 +126,12 @@
     banner=document.createElement('div');banner.className='record-banner';banner.setAttribute('role','status');
     banner.innerHTML=`<span>新纪录 · 单箭连击</span><strong>${kills}</strong><small>此前最佳 ${previous}</small>`;
     arena.append(banner);
-    if(!still())banner.animate([{opacity:0,scale:'1.6',filter:'blur(6px)'},{opacity:1,scale:'.94',filter:'blur(0)',offset:.6},{opacity:1,scale:'1',filter:'blur(0)'}],{duration:420,easing:'ease-out'});
+    if(!still())banner.animate([{opacity:0,transform:'scale(1.6) translateX(-50%)',filter:'blur(6px)'},{opacity:1,transform:'scale(.94) translateX(-50%)',filter:'blur(0)',offset:.6},{opacity:1,transform:'scale(1) translateX(-50%)',filter:'blur(0)'}],{duration:420,easing:'ease-out'});
   }
   function hideRecord(){
     const el=banner;banner=null;recordArrow=null;if(!el)return;
     if(still()){el.remove();return;}
-    el.animate([{opacity:1,translate:'-50% 0'},{opacity:0,translate:'-50% -14px'}],{duration:260,easing:'ease-in',fill:'forwards'}).finished.then(()=>el.remove(),()=>el.remove());
+    el.animate([{opacity:1,transform:'translate(-50%,0)'},{opacity:0,transform:'translate(-50%,-14px)'}],{duration:260,easing:'ease-in',fill:'forwards'}).finished.then(()=>el.remove(),()=>el.remove());
   }
 
   // ── Per-level stats for the clear report (read by transitions.js).
@@ -163,8 +171,7 @@
       if(tier>=2){G.ring(b.x,b.y,tierColor(tier),150+tier*40);G.sound('gold',1,b.x);}
       if(tier===3){a.overdrive=true;hitstop(45);if(!still())arena.animate([{boxShadow:'inset 0 0 0 3px #f0a13a'},{boxShadow:'inset 0 0 0 0 #f0a13a00'}],{duration:500,easing:'ease-out'});}
     }
-    combo.dataset.heat=tier;arena.dataset.heat=tier;
-    if(!still()&&tier)combo.animate([{scale:String(1+tier*.06)},{scale:'1'}],{duration:180,easing:'ease-out'});
+    queueCombo(tier);
     if(recordArrow===a&&banner)banner.querySelector('strong').textContent=kills;
     else if(!recordArrow&&kills>baseline&&baseline>=4){const previous=baseline;recordArrow=a;baseline=Infinity;showRecord(kills,previous,b);}
     return result;

@@ -18,6 +18,7 @@ node bench/fx-report.mjs
 - 扩展技能的全部实际信号类型、锯盘、持续场。
 - 四个 Boss 的独立粒子绘制器，以及完整场景/可直接启动的技能。
 - 固定 60 碎片的开场动画。
+- 整板同时击碎：77 / 240 块，0% / 22% / 50% 特殊砖，无技能 / 四槽连锁，真实击碎和后续模拟。
 - 可选：DOM 飞金币、成就火花、收益飞片；另用真实 rAF 测合成调度。
 
 ## 过滤与复核
@@ -28,7 +29,8 @@ node bench/fx-run.mjs '--filter=baseline|overdrive-glow|firewheel|blizzard' --ra
 node bench/fx-run.mjs '--filter=^dom/' --dom=1 --sample=1200
 ```
 
-`--raf=1` 不做同步像素读回，记录真实浏览器绘制调度的帧间隔，但冻结物理模拟。
+`--raf=1` 不做同步像素读回，记录真实浏览器绘制调度的帧间隔；原有静态案例冻结物理模拟，
+`board-burst/` 案例运行真实物理、连锁、HUD、DOM 与退场。
 软件光栅 + 禁用垂直同步的 FPS 不能当作真实手机 FPS。
 
 ## 不侵入生产代码
@@ -91,3 +93,62 @@ node bench/fx-run.mjs --capture=1 '--filter=^hero/blizzard$|^core/firewheel$|^bo
 环储存 48/24、绘制最新 24/12 加最多 3 个旧巨型脉冲；电弧储存 64、绘制 48/24；浮字 48。
 伤害、箭数、收益与实际持续场不因装饰预算削减。比较报告会明确列出「相同输入数量，
 不同装饰实现」的限制，并完整披露显著回退，不只挑改善最大的样本。
+
+## 整板同时击碎极限测试
+
+默认全量测试包含 12 个 `board-burst/` 案例。单独复跑（**串行**）：
+
+```bash
+node bench/fx-run.mjs '--filter=^board-burst/' --board-repeats=3 --capture=1 --out=bench/results/fx-optimized/board-burst
+node bench/fx-run.mjs '--filter=^board-burst/' --board-repeats=3 --reduced=1 --out=bench/results/fx-optimized/board-burst
+node bench/fx-run.mjs '--filter=^board-burst/' --raf=1 --out=bench/results/fx-optimized/board-burst
+node bench/fx-run.mjs '--filter=^board-burst/' --chrome=/absolute/path/to/real/chromium89 --capture=1 --out=bench/results/fx-optimized/board-burst/chrome89
+node bench/fx-board-report.mjs
+```
+
+- 满网格 77 块（7 × 11，无缺口/障碍）与恢复容量极限 240 块（12 × 20，小砖密集布局）。
+  两者均标为合成极限，尤其不能把 240 块当作默认关卡。
+- 特殊砖目标占比 0%（对照）、22%（普通比例渐近上界）、50%（超常压力）；数量向下取整。
+  固定种子，爆破/电弧/冰晶/分裂/金矿均衡分配，实际配额逐案写入 JSON。
+- 两套配装：无技能；四槽 `cascade / storm / blizzard / prism`，只启用合法单级技能。
+- 用真实 `generate(true)` 恢复 Matter 砖，正常 `shoot()` 初始化箭和任务预算，再临时设置
+  主箭伤害为 1e9，调用生产 `projectileHit()` 在同一模拟瞬间击碎全板；真实递归、特殊效果、
+  技能任务、箭容量、计分/成就/HUD 都保留。不会直接清空数组或绕过连锁深度限制。
+- 默认每案一次，可用 `--board-repeats=3` 复测波动，每次独立重置；
+  `--board-seconds=6` 控制最短墙钟观察期（至少 6 秒），还须模拟超过 5.5 秒并清完全部临时对象。
+  按生产步长、累计器和原生 rAF 推进，不会把粒子强行固定在最重年龄。
+- 保留实际核心显现及箭命中核心的清场效果，仅延后下一关生成，避免把新棋盘混入退场测量。
+  DOM 自有 rAF 循环在本测试期间恢复；不解锁音频，不代表真实 WebView/GPU 或音频端到端性能。
+- 分别记录击碎逻辑 `burstMs`、首次绘制 `firstDrawMs`、两者合计 `eventMs`、后续绘制/更新、
+  每 100ms 轨迹、数量峰值、收益与全毁断言；瞬间事件无预热。
+  后续整段绘制中位会被空闲尾段拉低，因此报告单列前 0.2 秒与 0.2–1 秒的 p95 上界。
+- `frameMs` 是事件**之后**的 rAF 间隔，不含整板击碎的同步阻塞；必须同时看 `eventMs`。
+  `--raf=1` 下首绘只计提交、无读回，不能与同步光栅首帧直接比较。
+- `--capture=1` 保存每案第一轮的 before / instant / animated 三张 Canvas 图；截图不计入采样。
+  JSON 另保留每次事件，`fx-board-report.mjs` 单独生成报告与逐轮 CSV，不改原静态对照报告。
+- 本案例不使用 `--sample` 的静态预热/重复绘制逻辑；每次事件都必须真实击碎并退场。
+
+自检：`node --test bench/fx-board.test.mjs bench/fx.test.mjs`。
+
+## 击碎链 CPU 改造对照
+
+本轮结果另存于 `results/fx-burst-optimized/`；不会覆盖上轮图案优化或整板原始数据。
+`--source-root=/absolute/path/to/saved-source` 可让同一个测试驱动测试改造前源码快照
+（须包含 `index.html`、生产 JS/CSS、`vendor/` 等资源），避免把未提交工作区误当成 Git HEAD。
+
+```bash
+node bench/fx-run.mjs --source-root=agent-tmp/perf-before-source '--filter=^board-burst/' --board-repeats=3 --out=bench/results/fx-burst-optimized/before
+node bench/fx-run.mjs '--filter=^board-burst/' --board-repeats=3 --out=bench/results/fx-burst-optimized/after
+# 前后都再加 --reduced=1；after 另跑 --raf=1 和实际 Chromium 89。
+node bench/fx-run.mjs '--filter=^board-burst/chain:special-22$' --cpu-profile=1 --out=agent-tmp/perf-after-profile
+node bench/fx-profile.mjs agent-tmp/perf-after-profile/cpu-profile.cpuprofile
+node bench/fx-burst-compare.mjs
+CHROME89_PUPPETEER=/absolute/path/to/puppeteer node bench/burst-ui.mjs
+```
+
+对照生成器需要 `before/after` 两种同步模式、`after/chrome89`、`animation/before/after`。
+动态复跑使用上文 `--animated=1 '--filter=^animation/' --sample=4000`，分别指定源码快照。
+CPU profile 会放大执行成本，**不要拿采样跑分替代未采样的前后指标**；分析工具单列
+整板 `strike()` 子树的叶节点，不把六秒尾段读回或空闲算成击碎瓶颈。
+浏览器集成检查验证整板 77 次击碎只刷新一次 HUD/收益/连击脉冲，四 Boss 的 64 次同步
+伤害只触发一次血条展示/命中脉冲，并检查真实空闲预热。可用 `CHROME_BIN` 加测现代引擎。

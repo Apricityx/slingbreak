@@ -307,6 +307,7 @@
       ctx.globalAlpha=1;
     }
     function render(){
+    G.flushUi?.();G.flushVisuals?.();
     G.fx?.beginFrame();
     const dpr=canvas.width/cssW;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssW,cssH);
     ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);

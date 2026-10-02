@@ -5,7 +5,7 @@ function boot(){
   const element=()=>({style:{setProperty:noop},dataset:{},classList:{add:noop,remove:noop},before:noop,querySelector:()=>element(),replaceChildren:noop,append:noop,setAttribute:noop,addEventListener:noop});
   const context={window:{Game:G},document:{createElement:element,getElementById:element,documentElement:element()},lucide:{createIcons:noop}};
   vm.createContext(context);
-  for(const file of ['skill-effects.js','boss-serpent.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);
+  for(const file of ['colors.js','skill-effects.js','boss-serpent.js'])vm.runInContext(fs.readFileSync(__dirname+'/'+file,'utf8'),context);
   const def=context.window.SlingBosses[0]({G,Composite:{},Body:{},has:()=>false,rage:()=>false,fight:()=>({data:{regrowth:0}}),dying:()=>null,introAge:()=>Infinity});
   return {G,def};
 }
@@ -37,7 +37,7 @@ test('dense effects retain every hit signature but bound large shockwaves and he
   // Insert private fixtures only into this VM, never expose production state.
   const source=fs.readFileSync(__dirname+'/skill-effects.js','utf8').replace('  refresh();\n})();','  G.testEffects=effects;refresh();\n})();');
   const noop=()=>{},el=()=>({style:{setProperty:noop},dataset:{},classList:{add:noop,remove:noop},before:noop,querySelector:()=>el(),replaceChildren:noop,append:noop,setAttribute:noop,addEventListener:noop});
-  const context={window:{Game:G},document:{createElement:el,getElementById:el,documentElement:el()},lucide:{createIcons:noop}};vm.createContext(context);vm.runInContext(source,context);
+  const context={window:{Game:G},document:{createElement:el,getElementById:el,documentElement:el()},lucide:{createIcons:noop}};vm.createContext(context);vm.runInContext(fs.readFileSync(__dirname+'/colors.js','utf8'),context);vm.runInContext(source,context);
   for(let i=0;i<56;i++)G.testEffects.push({...skill});
   G.drawSkillEffects(canvas().ctx,'field');assert.equal(signatures.length,56);assert.equal(signatures.filter(s=>s.r>24).length,24);assert.equal(lights.length,6);
   signatures.length=0;lights.length=0;G.testEffects.forEach(e=>{e.r=650;e.kind='nova';});

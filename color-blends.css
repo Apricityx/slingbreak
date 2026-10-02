@@ -1,0 +1,111 @@
+/* Chromium 89 sRGB blends. Names retain source / percentage / destination.
+   Resolve dynamic blends on the element owning the colour, not on :root:
+   inherited custom properties are already resolved before a child overrides RGB.
+   Theme switches remain CSS-only; no DOM observers or per-frame colour work. */
+:root {
+  --tier-blue:#439be8;--tier-gold:#e0ad2c;
+  --tier-blue-r:67;--tier-blue-g:155;--tier-blue-b:232;
+  --tier-gold-r:224;--tier-gold-g:173;--tier-gold-b:44;
+  --mix-accent-bar-13-alpha:rgba(var(--accent-bar-r),var(--accent-bar-g),var(--accent-bar-b),0.13);
+  --mix-accent-bar-19-alpha:rgba(var(--accent-bar-r),var(--accent-bar-g),var(--accent-bar-b),0.19);
+  --mix-accent-bar-25-alpha:rgba(var(--accent-bar-r),var(--accent-bar-g),var(--accent-bar-b),0.25);
+  --mix-accent-bar-50-alpha:rgba(var(--accent-bar-r),var(--accent-bar-g),var(--accent-bar-b),0.5);
+  --mix-bg-55-letterbox:rgb(calc(var(--bg-r) * 0.55 + var(--letterbox-r) * 0.45),calc(var(--bg-g) * 0.55 + var(--letterbox-g) * 0.45),calc(var(--bg-b) * 0.55 + var(--letterbox-b) * 0.45));
+  --mix-coral-8-alpha:rgba(var(--coral-r),var(--coral-g),var(--coral-b),0.08);
+  --mix-danger-22-alpha:rgba(var(--danger-r),var(--danger-g),var(--danger-b),0.22);
+  --mix-danger-30-alpha:rgba(var(--danger-r),var(--danger-g),var(--danger-b),0.3);
+  --mix-danger-45-alpha:rgba(var(--danger-r),var(--danger-g),var(--danger-b),0.45);
+  --mix-danger-55-alpha:rgba(var(--danger-r),var(--danger-g),var(--danger-b),0.55);
+  --mix-danger-55-line:rgb(calc(var(--danger-r) * 0.55 + var(--line-r) * 0.45),calc(var(--danger-g) * 0.55 + var(--line-g) * 0.45),calc(var(--danger-b) * 0.55 + var(--line-b) * 0.45));
+  --mix-ink-12-alpha:rgba(var(--ink-r),var(--ink-g),var(--ink-b),0.12);
+  --mix-ink-4-alpha:rgba(var(--ink-r),var(--ink-g),var(--ink-b),0.04);
+  --mix-line-2-50-alpha:rgba(var(--line-2-r),var(--line-2-g),var(--line-2-b),0.5);
+  --mix-panel-93-alpha:rgba(var(--panel-r),var(--panel-g),var(--panel-b),0.93);
+  --mix-surface-50-alpha:rgba(var(--surface-r),var(--surface-g),var(--surface-b),0.5);
+  --mix-surface-90-alpha:rgba(var(--surface-r),var(--surface-g),var(--surface-b),0.9);
+  --mix-surface-92-alpha:rgba(var(--surface-r),var(--surface-g),var(--surface-b),0.92);
+  --mix-surface-95-alpha:rgba(var(--surface-r),var(--surface-g),var(--surface-b),0.95);
+  --mix-surface-96-alpha:rgba(var(--surface-r),var(--surface-g),var(--surface-b),0.96);
+  --mix-tier-blue-22-alpha:rgba(var(--tier-blue-r),var(--tier-blue-g),var(--tier-blue-b),0.22);
+  --mix-tier-blue-45-line-2:rgb(calc(var(--tier-blue-r) * 0.45 + var(--line-2-r) * 0.55),calc(var(--tier-blue-g) * 0.45 + var(--line-2-g) * 0.55),calc(var(--tier-blue-b) * 0.45 + var(--line-2-b) * 0.55));
+  --mix-tier-gold-30-alpha:rgba(var(--tier-gold-r),var(--tier-gold-g),var(--tier-gold-b),0.3);
+  --mix-tier-gold-60-alpha:rgba(var(--tier-gold-r),var(--tier-gold-g),var(--tier-gold-b),0.6);
+  --mix-tier-gold-70-line-2:rgb(calc(var(--tier-gold-r) * 0.7 + var(--line-2-r) * 0.3),calc(var(--tier-gold-g) * 0.7 + var(--line-2-g) * 0.3),calc(var(--tier-gold-b) * 0.7 + var(--line-2-b) * 0.3));
+}
+.skill-card,.skill-queue-slot {
+  --mix-skill-color-10-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.1);
+  --mix-skill-color-16-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.16);
+  --mix-skill-color-18-line:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.18 + var(--line-r) * 0.82),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.18 + var(--line-g) * 0.82),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.18 + var(--line-b) * 0.82));
+  --mix-skill-color-30-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.3);
+  --mix-skill-color-32-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.32);
+  --mix-skill-color-40-line-2:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.4 + var(--line-2-r) * 0.6),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.4 + var(--line-2-g) * 0.6),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.4 + var(--line-2-b) * 0.6));
+  --mix-skill-color-65-line-2:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.65 + var(--line-2-r) * 0.35),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.65 + var(--line-2-g) * 0.35),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.65 + var(--line-2-b) * 0.35));
+  --mix-skill-color-7-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.07);
+  --mix-skill-color-70-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.7);
+  --mix-skill-color-70-ink:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.7 + var(--ink-r) * 0.3),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.7 + var(--ink-g) * 0.3),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.7 + var(--ink-b) * 0.3));
+  --mix-skill-color-72-ink:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.72 + var(--ink-r) * 0.28),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.72 + var(--ink-g) * 0.28),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.72 + var(--ink-b) * 0.28));
+  --mix-skill-color-8-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.08);
+  --mix-skill-color-80-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.8);
+  --mix-skill-color-9-surface:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.09 + var(--surface-r) * 0.91),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.09 + var(--surface-g) * 0.91),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.09 + var(--surface-b) * 0.91));
+}
+.skill-card.is-picked,.skill-flight {
+  --mix-pick-color-22-alpha:rgba(var(--pick-color-r),var(--pick-color-g),var(--pick-color-b),0.22);
+}
+.skill-queue-slot {
+  --mix-preview-color-10-surface:rgb(calc(var(--preview-color-r,var(--accent-ink-r)) * 0.1 + var(--surface-r) * 0.9),calc(var(--preview-color-g,var(--accent-ink-g)) * 0.1 + var(--surface-g) * 0.9),calc(var(--preview-color-b,var(--accent-ink-b)) * 0.1 + var(--surface-b) * 0.9));
+  --mix-preview-color-60-line-2:rgb(calc(var(--preview-color-r,var(--accent-ink-r)) * 0.6 + var(--line-2-r) * 0.4),calc(var(--preview-color-g,var(--accent-ink-g)) * 0.6 + var(--line-2-g) * 0.4),calc(var(--preview-color-b,var(--accent-ink-b)) * 0.6 + var(--line-2-b) * 0.4));
+  --mix-preview-color-70-ink:rgb(calc(var(--preview-color-r,var(--accent-ink-r)) * 0.7 + var(--ink-r) * 0.3),calc(var(--preview-color-g,var(--accent-ink-g)) * 0.7 + var(--ink-g) * 0.3),calc(var(--preview-color-b,var(--accent-ink-b)) * 0.7 + var(--ink-b) * 0.3));
+}
+#skill-detail {
+  --mix-skill-detail-color-12-surface:rgb(calc(var(--skill-detail-color-r) * 0.12 + var(--surface-r) * 0.88),calc(var(--skill-detail-color-g) * 0.12 + var(--surface-g) * 0.88),calc(var(--skill-detail-color-b) * 0.12 + var(--surface-b) * 0.88));
+  --mix-skill-detail-color-45-surface:rgb(calc(var(--skill-detail-color-r) * 0.45 + var(--surface-r) * 0.55),calc(var(--skill-detail-color-g) * 0.45 + var(--surface-g) * 0.55),calc(var(--skill-detail-color-b) * 0.45 + var(--surface-b) * 0.55));
+}
+.achievement-item {
+  --mix-achievement-accent-35-line:rgb(calc(var(--achievement-accent-r) * 0.35 + var(--line-r) * 0.65),calc(var(--achievement-accent-g) * 0.35 + var(--line-g) * 0.65),calc(var(--achievement-accent-b) * 0.35 + var(--line-b) * 0.65));
+  --mix-achievement-accent-62-ink:rgb(calc(var(--achievement-accent-r) * 0.62 + var(--ink-r) * 0.38),calc(var(--achievement-accent-g) * 0.62 + var(--ink-g) * 0.38),calc(var(--achievement-accent-b) * 0.62 + var(--ink-b) * 0.38));
+  --mix-achievement-accent-7-surface:rgb(calc(var(--achievement-accent-r) * 0.07 + var(--surface-r) * 0.93),calc(var(--achievement-accent-g) * 0.07 + var(--surface-g) * 0.93),calc(var(--achievement-accent-b) * 0.07 + var(--surface-b) * 0.93));
+}
+.achievement-hero {
+  --hero-light-r:calc(var(--hero-accent-r) * 0.3 + 234 * 0.7);
+  --hero-light-g:calc(var(--hero-accent-g) * 0.3 + 255 * 0.7);
+  --hero-light-b:calc(var(--hero-accent-b) * 0.3 + 185 * 0.7);
+  --mix-hero-accent-25-283822:rgb(calc(var(--hero-accent-r) * 0.25 + 40 * 0.75),calc(var(--hero-accent-g) * 0.25 + 56 * 0.75),calc(var(--hero-accent-b) * 0.25 + 34 * 0.75));
+  --mix-hero-accent-30-eaffb9:rgb(var(--hero-light-r),var(--hero-light-g),var(--hero-light-b));
+  --mix-hero-accent-42-1b2518:rgb(calc(var(--hero-accent-r) * 0.42 + 27 * 0.58),calc(var(--hero-accent-g) * 0.42 + 37 * 0.58),calc(var(--hero-accent-b) * 0.42 + 24 * 0.58));
+  --mix-hero-light-20-alpha:rgba(var(--hero-light-r),var(--hero-light-g),var(--hero-light-b),0.2);
+  --mix-hero-light-35-alpha:rgba(var(--hero-light-r),var(--hero-light-g),var(--hero-light-b),0.35);
+  --mix-hero-light-60-34452b:rgb(calc(var(--hero-light-r) * 0.6 + 52 * 0.4),calc(var(--hero-light-g) * 0.6 + 69 * 0.4),calc(var(--hero-light-b) * 0.6 + 43 * 0.4));
+  --mix-hero-light-70-alpha:rgba(var(--hero-light-r),var(--hero-light-g),var(--hero-light-b),0.7);
+  --mix-hero-light-70-d8e6cc:rgb(calc(var(--hero-light-r) * 0.7 + 216 * 0.3),calc(var(--hero-light-g) * 0.7 + 230 * 0.3),calc(var(--hero-light-b) * 0.7 + 204 * 0.3));
+  --mix-hero-light-75-alpha:rgba(var(--hero-light-r),var(--hero-light-g),var(--hero-light-b),0.75);
+}
+.achievement-hero-mark {
+  --mix-mark-accent-35-eaffb9:rgb(calc(var(--mark-accent-r) * 0.35 + 234 * 0.65),calc(var(--mark-accent-g) * 0.35 + 255 * 0.65),calc(var(--mark-accent-b) * 0.35 + 185 * 0.65));
+}
+.arena,.boss-bar {
+  --boss-r:var(--legend-prism-r);--boss-g:var(--legend-prism-g);--boss-b:var(--legend-prism-b);
+  --boss-bg-r:var(--legend-prism-bg-r);--boss-bg-g:var(--legend-prism-bg-g);--boss-bg-b:var(--legend-prism-bg-b);
+  --mix-boss-10-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.1);
+  --mix-boss-12-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.12);
+  --mix-boss-26-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.26);
+  --mix-boss-30-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.3);
+  --mix-boss-45-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.45);
+  --mix-boss-50-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.5);
+  --mix-boss-55-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.55);
+  --mix-boss-55-line:rgb(calc(var(--boss-r) * 0.55 + var(--line-r) * 0.45),calc(var(--boss-g) * 0.55 + var(--line-g) * 0.45),calc(var(--boss-b) * 0.55 + var(--line-b) * 0.45));
+  --mix-boss-60-alpha:rgba(var(--boss-r),var(--boss-g),var(--boss-b),0.6);
+  --mix-boss-70-danger:rgb(calc(var(--boss-r) * 0.7 + var(--danger-r) * 0.3),calc(var(--boss-g) * 0.7 + var(--danger-g) * 0.3),calc(var(--boss-b) * 0.7 + var(--danger-b) * 0.3));
+  --mix-danger-70-boss-bg:rgb(calc(var(--danger-r) * 0.7 + var(--boss-bg-r) * 0.3),calc(var(--danger-g) * 0.7 + var(--boss-bg-g) * 0.3),calc(var(--danger-b) * 0.7 + var(--boss-bg-b) * 0.3));
+}
+.arena[data-boss="forge"],.boss-bar[data-boss="forge"] {
+  --boss-r:var(--warm-ink-r);--boss-g:var(--warm-ink-g);--boss-b:var(--warm-ink-b);
+  --boss-bg-r:var(--warm-soft-r);--boss-bg-g:var(--warm-soft-g);--boss-bg-b:var(--warm-soft-b);
+}
+.arena[data-boss="serpent"],.boss-bar[data-boss="serpent"] {
+  --boss-r:var(--legend-frost-r);--boss-g:var(--legend-frost-g);--boss-b:var(--legend-frost-b);
+  --boss-bg-r:var(--legend-frost-bg-r);--boss-bg-g:var(--legend-frost-bg-g);--boss-bg-b:var(--legend-frost-bg-b);
+}
+.arena[data-boss="clock"],.boss-bar[data-boss="clock"] {
+  --boss-r:var(--gold-ink-r);--boss-g:var(--gold-ink-g);--boss-b:var(--gold-ink-b);
+  --boss-bg-r:var(--gold-soft-r);--boss-bg-g:var(--gold-soft-g);--boss-bg-b:var(--gold-soft-b);
+}

@@ -64,6 +64,13 @@ test('performance mode lowers canvas resolution immediately and restores it when
   G.setPerformanceMode(false);
   assert.equal(canvas.width,1560);
 });
+test('a paint flushes queued HUD and feedback once before drawing the frame',()=>{
+  const {G,step}=boot();const order=[];G.ui=()=>order.push('hud');
+  G.requestUi();G.requestUi();G.deferVisual('combo',()=>order.push('feedback'));
+  const back=G.drawBossBackdrop;G.drawBossBackdrop=ctx=>{order.push('canvas');back?.(ctx);};
+  step(16);assert.deepEqual(order.slice(0,3),['hud','feedback','canvas']);
+  step(32);assert.equal(order.filter(n=>n==='hud').length,1);assert.equal(order.filter(n=>n==='feedback').length,1);
+});
 
 // Regression: a hit changes hp and starts a flash in the same frame. The flash
 // frames paint live, and the cached board must still be rebuilt afterwards

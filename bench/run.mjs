@@ -142,7 +142,7 @@ class CDP {
 
 function launchChrome(binary) {
   const child = spawn(binary, [
-    '--headless=new',
+    '--headless', // Chromium 89 and current Chromium both accept this spelling.
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--disable-frame-rate-limit',   // let rAF run as fast as the machine allows

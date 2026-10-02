@@ -39,36 +39,55 @@
         if(G.chooseSkill(id)){draft.close();$('game').focus({preventScroll:true});}
         return;
       }
+      // Capture layout, not the transformed client rect: the latter includes
+      // the commit lift and zoom, and would reflow the cloned text immediately.
+      const layout=getComputedStyle(card),cardWidth=layout.width,cardHeight=layout.height;
+      const textBoxes=[...card.querySelectorAll('.skill-card-body,.skill-card-name,.skill-card-desc,.skill-family,.skill-chance,.skill-card-tier,.skill-pick')].map(el=>{
+        const style=getComputedStyle(el);return{width:style.width,height:style.height};
+      });
       // Beat 1: commit.
-      card.style.setProperty('--pick-color',color);card.classList.add('is-picked');
-      const lift=play(card,[{translate:'0 0',scale:'1'},{translate:'0 -10px',scale:'1.04'}],{duration:300,easing:spring});
-      cards.filter(c=>c!==card).forEach((c,i)=>play(c,[{opacity:1,translate:'0 0',rotate:'0deg',scale:'1'},{opacity:0,translate:'0 34px',rotate:(c.compareDocumentPosition(card)&Node.DOCUMENT_POSITION_FOLLOWING?-4:4)+'deg',scale:'.92'}],{duration:260,delay:40+i*50,easing:'cubic-bezier(.5,0,.75,0)'}));
-      for(const el of [draft.querySelector('.draft-header'),$('draft-loadout')])play(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -8px'}],{duration:220,easing:'ease-in'});
+      window.SlingColors.set(card,'--pick-color',color);card.classList.add('is-picked');
+      const lift=play(card,[{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-10px) scale(1.04)'}],{duration:300,easing:spring});
+      cards.filter(c=>c!==card).forEach((c,i)=>play(c,[{opacity:1,transform:'translate(0,0) rotate(0deg) scale(1)'},{opacity:0,transform:`translate(0,34px) rotate(${c.compareDocumentPosition(card)&Node.DOCUMENT_POSITION_FOLLOWING?-4:4}deg) scale(.92)`}],{duration:260,delay:40+i*50,easing:'cubic-bezier(.5,0,.75,0)'}));
+      for(const el of [draft.querySelector('.draft-header'),$('draft-loadout')])play(el,[{opacity:1,transform:'translate(0,0)'},{opacity:0,transform:'translate(0,-8px)'}],{duration:220,easing:'ease-in'});
       await waitForAnimations([lift],500);
       await new Promise(r=>setTimeout(r,90));
-      // Beat 2: flight. The ghost is a popover so it stays above the modal dialog.
+      // Beat 2: a transparent dialog keeps the flight above the draft's top layer,
+      // including Chrome 89, which has no Popover API. No z-index workaround.
       const from=zoomRect(card.getBoundingClientRect()),owned=G.activeSkills(),full=owned.length===G.skillSlots;
       const queue=hudQueue(),slots=queue?[...queue.children]:[],targetSlot=slots[full?slots.length-1:owned.length];
       let to=targetSlot?.getBoundingClientRect();
       if(!to||!onScreen(to)){const r=zoomRect($('game').getBoundingClientRect());to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
       else to=zoomRect(to);
       const before=new Map(slots.filter(s=>s.dataset.skill).map(s=>[s.dataset.skill,zoomRect(s.getBoundingClientRect())]));
-      ghost=document.createElement('div');ghost.className='skill-flight';ghost.setAttribute('aria-hidden','true');
-      ghost.style.setProperty('--pick-color',color);
-      ghost.innerHTML=`<div class="skill-flight-card skill-card" data-tier="${skill.tier}" style="--skill-color:${G.skillColor(id)};width:${from.width}px;height:${from.height}px">${card.innerHTML.replace(/ id="[^"]*"/g,'')}</div><span class="skill-flight-slot skill-queue-slot"><b><i data-lucide="${skill.icon}"></i>${skill.name}</b></span>`;
+      ghost=document.createElement('dialog');ghost.className='skill-flight';ghost.setAttribute('aria-hidden','true');
+      ghost.addEventListener('cancel',e=>e.preventDefault());
+      window.SlingColors.set(ghost,'--pick-color',color);
+      const flyingCard=card.cloneNode(true);flyingCard.className='skill-flight-card skill-card';
+      for(const el of [flyingCard,...flyingCard.querySelectorAll('[id]')])el.removeAttribute('id');
+      flyingCard.removeAttribute('aria-labelledby');flyingCard.removeAttribute('aria-describedby');
+      Object.assign(flyingCard.style,{width:cardWidth,height:cardHeight});
+      [...flyingCard.querySelectorAll('.skill-card-body,.skill-card-name,.skill-card-desc,.skill-family,.skill-chance,.skill-card-tier,.skill-pick')].forEach((el,i)=>Object.assign(el.style,textBoxes[i]));
+      const flyingSlot=document.createElement('span');flyingSlot.className='skill-flight-slot skill-queue-slot';
+      flyingSlot.innerHTML=`<b><i data-lucide="${skill.icon}"></i>${skill.name}</b>`;
+      // The shell morphs, but both sets of text have a fixed layout box. Only
+      // their transforms/opacity change; neither can wrap again mid-flight.
+      Object.assign(flyingSlot.style,{width:to.width+'px',height:to.height+'px'});
+      ghost.append(flyingCard,flyingSlot);
       Object.assign(ghost.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
       document.body.append(ghost);lucide.createIcons({root:ghost});
-      if(ghost.showPopover){ghost.popover='manual';ghost.showPopover();}
+      ghost.showModal();
       card.style.visibility='hidden';
       draft.classList.add('is-leaving');
-      const fade=play(draft,[{opacity:1,scale:'1'},{opacity:0,scale:'.985'}],{duration:220,easing:'ease-in'});
+      const fade=play(draft,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.985)'}],{duration:220,easing:'ease-in'});
       const dx=to.left-from.left,dy=to.top-from.top,flight=640;
       const path=play(ghost,[
-        {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',borderRadius:'7px',rotate:'0deg'},
-        {left:from.left+dx*.45+'px',top:from.top+Math.min(0,dy)*.45-70+'px',width:from.width*.62+to.width*.38+'px',height:from.height*.5+to.height*.5+'px',borderRadius:'6px',rotate:(dx<0?-5:5)+'deg',offset:.45},
-        {left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',borderRadius:'5px',rotate:'0deg'}
+        {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',borderRadius:'7px',transform:'rotate(0deg)'},
+        {left:from.left+dx*.45+'px',top:from.top+Math.min(0,dy)*.45-70+'px',width:from.width*.62+to.width*.38+'px',height:from.height*.5+to.height*.5+'px',borderRadius:'6px',transform:`rotate(${dx<0?-5:5}deg)`,offset:.45},
+        {left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',borderRadius:'5px',transform:'rotate(0deg)'}
       ],{duration:flight,easing:'cubic-bezier(.45,0,.2,1)'});
-      play(ghost.firstElementChild,[{opacity:1,scale:'1'},{opacity:0,scale:'.55'}],{duration:flight*.45,easing:'ease-in'});
+      const sx=from.width/parseFloat(cardWidth),sy=from.height/parseFloat(cardHeight);
+      play(flyingCard,[{opacity:1,transform:`translate(-50%,-50%) scale(${sx},${sy})`},{opacity:0,transform:`translate(-50%,-50%) scale(${sx*.55},${sy*.55})`}],{duration:flight*.45,easing:'ease-in'});
       play(ghost.lastElementChild,[{opacity:0},{opacity:0,offset:.35},{opacity:1}],{duration:flight*.7,easing:'ease-out'});
       await waitForAnimations([fade],400);
       // Commit mid-flight so the HUD queue shifts while the ghost is still airborne.
@@ -81,22 +100,24 @@
       for(const slot of hudQueue()?.children||[]){
         const old=before.get(slot.dataset.skill);if(!old||slot===landed)continue;
         const now=zoomRect(slot.getBoundingClientRect());
-        slot.animate([{translate:`${old.left-now.left}px ${old.top-now.top}px`},{translate:'0 0'}],{duration:380,easing:spring});
+        slot.animate([{transform:`translate(${old.left-now.left}px,${old.top-now.top}px)`},{transform:'translate(0,0)'}],{duration:380,easing:spring});
       }
       if(full&&owned[0]){
-        const old=before.get(owned[0].id),drop=old&&slots.find(s=>s.dataset.skill===owned[0].id)?.cloneNode(true);
-        if(drop){
-          drop.className+=' skill-flight-drop';drop.removeAttribute('data-skill');
+        const old=before.get(owned[0].id),oldSlot=old&&slots.find(s=>s.dataset.skill===owned[0].id);
+        if(oldSlot){
+          const drop=document.createElement('dialog');drop.className='skill-queue-slot skill-flight-drop';drop.innerHTML=oldSlot.innerHTML;drop.setAttribute('aria-hidden','true');
+          drop.style.cssText=oldSlot.style.cssText;
+          drop.addEventListener('cancel',e=>e.preventDefault());
           Object.assign(drop.style,{left:old.left+'px',top:old.top+'px',width:old.width+'px',height:old.height+'px'});
-          document.body.append(drop);if(drop.showPopover){drop.popover='manual';drop.showPopover();}
-          drop.animate([{opacity:1,translate:'0 0',rotate:'0deg'},{opacity:0,translate:'-10px 36px',rotate:'-8deg'}],{duration:420,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'}).finished.then(()=>drop.remove(),()=>drop.remove());
+          document.body.append(drop);drop.showModal();
+          drop.animate([{opacity:1,transform:'translate(0,0) rotate(0deg)'},{opacity:0,transform:'translate(-10px,36px) rotate(-8deg)'}],{duration:420,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'}).finished.then(()=>drop.remove(),()=>drop.remove());
         }
       }
       await waitForAnimations([path],flight+200);
       // Beat 3: impact.
       if(landed){
         landed.style.visibility='';
-        landed.animate([{scale:'1.14',boxShadow:`0 0 0 0 ${color}aa`},{scale:'.97',offset:.45},{scale:'1',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});
+        landed.animate([{transform:'scale(1.14)',boxShadow:`0 0 0 0 ${color}aa`},{transform:'scale(.97)',offset:.45},{transform:'scale(1)',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});
       }
       if(entrance&&G.boardEntrance===entrance){
         const view=G.view,canvas=zoomRect($('game').getBoundingClientRect());
@@ -109,6 +130,7 @@
       if(entrance&&G.boardEntrance===entrance&&entrance.start===Infinity){entrance.start=G.time;entrance.end=G.time+1.05;}
       if(landed)landed.style.visibility='';
       ghost?.remove();running.forEach(a=>a.cancel());
+      if(G.phase!=='draft')$('game').focus({preventScroll:true});
       if(card){card.style.visibility='';card.classList.remove('is-picked');}
       draft.classList.remove('is-selecting','is-leaving');
       cards.forEach(c=>c.disabled=false);selecting=false;
@@ -140,7 +162,7 @@
            const skill=owned[i],slot=document.createElement('span');
            slot.className='skill-queue-slot'+(!skill?' is-empty':skill===outgoing?' is-outgoing':'');
            slot.innerHTML=`<b>${skill?`<i data-lucide="${skill.icon}" aria-hidden="true"></i>${skill.name}`:'等待加入'}</b><b class="slot-preview" aria-hidden="true"></b>`;
-           if(skill){slot.title=skill.describe(1);slot.style.setProperty('--skill-color',G.skillColor(skill.id));}
+           if(skill){slot.title=skill.describe(1);window.SlingColors.set(slot,'--skill-color',G.skillColor(skill.id));}
            $('draft-loadout').append(slot);
          }
          // The slot this pick lands in: the outgoing one when full, else the first empty.
@@ -148,7 +170,7 @@
          options.forEach((id,i)=>{
            const skill=G.skillCatalog.find(s=>s.id===id),button=document.createElement('button');
            button.className='skill-card';button.dataset.skill=id;button.dataset.tier=skill.tier;
-           button.style.setProperty('--skill-color',G.skillColor(id));
+           window.SlingColors.set(button,'--skill-color',G.skillColor(id));
            button.setAttribute('aria-keyshortcuts',String(i+1));
            button.setAttribute('aria-labelledby',`draft-card-${i}-name draft-card-${i}-tier draft-card-${i}-pick`);
            button.setAttribute('aria-describedby',`draft-card-${i}-desc`);
@@ -157,7 +179,7 @@
              if(!target||selecting&&!on)return;
              target.classList.toggle('is-previewing',on);
              if(on)target.lastElementChild.innerHTML=button.querySelector('.skill-emblem').innerHTML+skill.name;
-             target.style.setProperty('--preview-color',G.skillColor(id));
+             window.SlingColors.set(target,'--preview-color',G.skillColor(id));
            };
            button.onpointerenter=()=>preview(true);button.onpointerleave=()=>preview(false);
            button.onfocus=()=>{if(button.matches(':focus-visible'))preview(true);};button.onblur=()=>preview(false);
@@ -171,17 +193,19 @@
     }
   }
    let uiQueued=false;
-   G.ui=()=>{
+   const flushUi=G.flushUi;
+   const paintUi=()=>{
+     if(!uiQueued)return;uiQueued=false;baseUi();update();G.updateAchievementUI?.();
+     if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
+       G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
+       G.revokedSkills=null;
+     }
+   };
+   G.flushUi=()=>{flushUi?.();paintUi();};
+    G.ui=()=>{
      if(uiQueued)return;
      uiQueued=true;
-      requestAnimationFrame(()=>{
-         uiQueued=false;baseUi();update();G.updateAchievementUI?.();
-         // Report migrated-away skills once the entry screen no longer covers the HUD.
-         if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
-           G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
-           G.revokedSkills=null;
-         }
-       });
+       requestAnimationFrame(paintUi);
    };
   draft.addEventListener('cancel',e=>e.preventDefault());
   draft.addEventListener('keydown',e=>{

@@ -6,10 +6,11 @@
   const state=window.__FX_BENCH__={done:false,results:[],errors:[],config:{...O,
     userAgent:navigator.userAgent,dpr:devicePixelRatio,canvas:[canvas.width,canvas.height],
     css:[canvas.clientWidth,canvas.clientHeight],stageScale:window.SlingStage.k,
+    boardMethod:'Simultaneous lethal production projectile hits; live physics + Canvas/HUD/DOM; native rAF; next board deferred',
     method:O.raf?'Real rAF + production rendering, without readback; simulation frozen':'Full production render + synchronous 1px readback; simulation frozen; not FPS'}};
   const pct=(a,p)=>a[Math.min(a.length-1,Math.floor(a.length*p))];
   function stats(values){const a=[...values].sort((x,y)=>x-y);return {
-    samples:a.length,median:pct(a,.5),p95:pct(a,.95),mean:a.reduce((x,y)=>x+y,0)/a.length,max:a.at(-1)};}
+    samples:a.length,median:pct(a,.5),p95:pct(a,.95),mean:a.reduce((x,y)=>x+y,0)/a.length,max:a[a.length-1]};}
   const yieldFrame=()=>new Promise(resolve=>window.__nativeRAF(resolve));
   const colors=['#785fb0','#53a59b','#d77743','#258eb2','#a99231','#c34d68'];
   const pos=i=>({x:85+(i*97)%610,y:170+(i*71)%580});
@@ -130,8 +131,10 @@
   for(const n of [1,12,64])badd('serpent:eclipse-lights',n,()=>{
     serpent.eclipse();G.arrows=Array.from({length:n},(_,i)=>arrow(i));
   },()=>serpent.drawEclipse(ctx),{limit:64});
-  const filter=c=>!O.filter||new RegExp(O.filter).test(c.group+'/'+c.id);
+   const filter=c=>(!O.filter||new RegExp(O.filter).test(c.group+'/'+c.id))&&
+     (c.group!=='board-burst'||!O.boardCount||c.n===O.boardCount);
   async function measure(c,isolated=false){
+    const D=window.__FXDiagnose;D?.end();D?.reset();
     reset();Object.values(A.bosses).forEach(b=>b.reset());
     await c.setup();
     const paint=isolated?()=>{
@@ -141,6 +144,7 @@
     }:A.render;
     const draw=()=>{c.advance?.();paint();};
     const flush=()=>ctx.getImageData(0,0,1,1);
+    D?.begin(`${c.group}/${c.id}/${c.n}/cold`);
     if(O.raf){
       // Warm up asynchronous painting, then observe actual browser frame cadence.
       let warm=performance.now();while(performance.now()-warm<400){await yieldFrame();draw();}
@@ -149,10 +153,11 @@
       while(performance.now()-begin<O.sample||times.length<12);
       const deltas=times.slice(1).map((t,i)=>t-times[i]);
       const {setup,draw:unused,...meta}=c;
-      state.results.push({...meta,isolated,frameMs:stats(deltas),submitMs:stats(cpu),fps:1000/stats(deltas).mean});
+      state.results.push({...meta,isolated,frameMs:stats(deltas),submitMs:stats(cpu),fps:1000/stats(deltas).mean,diagnosis:D?D.data:undefined});D?.end();
       return;
     }
     const coldStart=performance.now();draw();flush();const firstDrawMs=performance.now()-coldStart;
+    D?.label(`${c.group}/${c.id}/${c.n}/samples`);
     for(let i=0;i<2;i++){draw();flush();}
     const costs=[],submit=[],start=performance.now();
     do{const t=performance.now();draw();const d=performance.now();flush();costs.push(performance.now()-t);submit.push(d-t);}
@@ -170,9 +175,73 @@
       }
       row.updateMs=stats(ticks);
     }
-    state.results.push(row);
+    if(D){row.diagnosis=D.data;D.end();}state.results.push(row);
     if(state.results.length%40===0)console.log('[fx] measured',state.results.length,c.group,c.id,c.n);
     await yieldFrame();
+  }
+  async function measureBoard(c){
+    const B=window.__FXBoard,runs=[],costs=[],submits=[],updates=[],frames=[],burstCosts=[],firstCosts=[],eventCosts=[];
+    const peaks={},phases=Array.from({length:4},()=>[]);
+    const count=()=>({particles:G.particles.length,rings:G.rings.length,bolts:G.bolts.length,texts:G.texts.length,
+      arrows:G.arrows.length,effects:A.skills.effects.length,tallies:A.juice.tallies.length,
+      signals:A.expansion.signals.length+A.overdrive.signals.length,fields:A.overdrive.fields.length,
+      dom:document.querySelectorAll('.achievement-pop,.achievement-spark,.achievement-payout-chip,.record-banner').length});
+    const observe=()=>{const counts=count();for(const [k,n] of Object.entries(counts))peaks[k]=Math.max(peaks[k]||0,n);return counts;};
+    const capture=(suffix)=>{if(O.capture)(state.captures||=[]).push({
+      name:`board-burst-${c.id.replace(/[^\w-]/g,'-')}-${c.n}-${suffix}`,data:canvas.toDataURL('image/png')});};
+    const oldRAF=window.requestAnimationFrame,oldRandom=Math.random;
+    // Only this live test restores production DOM rAF loops. The game's original
+    // frame loop was never queued by bootstrap; tick/render stay under our control.
+    window.requestAnimationFrame=window.__nativeRAF;
+    try{for(let repeat=0;repeat<O.boardRepeats;repeat++){
+      const D=window.__FXDiagnose;D?.end();D?.reset();
+      Math.random=B.random(c.seed);reset();
+      const fixture=B.install(G,c,O.reduced);G.ui();G.resizeCanvas();G.fx?.clear();
+      for(const dialog of document.querySelectorAll('dialog[open]'))HTMLDialogElement.prototype.close.call(dialog);
+      await yieldFrame();A.render();ctx.getImageData(0,0,1,1);await yieldFrame();
+      if(repeat===0)capture('before');
+      if(!G.shoot(0,100))throw Error('Whole-board fixture could not launch a production arrow');
+      const source=G.arrows[0],simStart=G.time;
+      D?.begin(`${c.id}/${c.n}/${repeat}/burst`);
+      const t=performance.now(),outcome=D?D.scope('event/burst',()=>B.strike(G,source)):B.strike(G,source),burstMs=performance.now()-t;
+      D?.label(`${c.id}/${c.n}/${repeat}/first-draw`);
+      const initial=observe(),first=performance.now();A.render();if(!O.raf)ctx.getImageData(0,0,1,1);
+      const firstDrawMs=performance.now()-first;
+      burstCosts.push(burstMs);firstCosts.push(firstDrawMs);eventCosts.push(burstMs+firstDrawMs);
+      // Screenshots/serialization are outside timed frames and cadence samples.
+      if(repeat===0)capture('instant');
+      const timeline=[],start=performance.now();let last=start,acc=0,lastPoint=-100,coreCleared=false,screenshot=false;
+      do{
+        await yieldFrame();const now=performance.now(),gap=now-last;last=now;
+        frames.push(gap);acc+=Math.min(gap/1000,.05);
+        D?.label(`${c.id}/${c.n}/${repeat}/tick/${(G.time-simStart).toFixed(3)}`);
+        const u=performance.now();let steps=0;
+        while(acc>=G.physicsStep&&steps++<4){G.tick(G.physicsStep);acc-=G.physicsStep;
+          // Retain actual core impact/clear effects, only postpone the next board.
+          if(G.phase==='clearing'){G.clearAt=Infinity;coreCleared=true;}}
+        if(steps===4)acc=0;
+        updates.push(performance.now()-u);D?.label(`${c.id}/${c.n}/${repeat}/draw/${(G.time-simStart).toFixed(3)}`);
+        const draw=performance.now();A.render();const submit=performance.now()-draw;
+        if(!O.raf)ctx.getImageData(0,0,1,1);const cost=performance.now()-draw;
+        costs.push(cost);submits.push(submit);
+        const elapsed=now-start,age=G.time-simStart,counts=observe();
+        phases[age<.2?0:age<1?1:age<3?2:3].push(cost);
+        if(elapsed-lastPoint>=100){timeline.push({wallMs:elapsed,gameSeconds:age,updateMs:updates[updates.length-1],drawMs:cost,counts});lastPoint=elapsed;}
+        if(repeat===0&&!screenshot&&age>=.15){capture('animated');screenshot=true;last=performance.now();}
+        if(elapsed>Math.max(15000,O.boardSeconds*3000))throw Error('Whole-board animation did not drain in time');
+      }while(performance.now()-start<O.boardSeconds*1000||G.time-simStart<5.5||G.hasPendingEffects?.()||
+        G.arrows.length||G.particles.length||G.rings.length||G.bolts.length||G.texts.length||A.juice.tallies.length||observe().dom);
+      const tail=observe();
+      // Effects are culled by the production drawer; no manually held-alive arrays.
+      if(Object.values(tail).some(n=>n!==0))throw Error('Whole-board animation left transient objects alive: '+JSON.stringify(tail));
+      const diagnosis=D?D.data:undefined;D?.end();
+      runs.push({repeat,burstMs,firstDrawMs,eventMs:burstMs+firstDrawMs,outcome,diagnosis,fixture:{counts:fixture.counts,actualRate:fixture.actualRate,hp:fixture.bricks[0].max},
+        initial,tail,coreCleared,wallMs:performance.now()-start,gameSeconds:G.time-simStart,timeline,cache:G.fx?.stats()});
+    }}finally{window.requestAnimationFrame=oldRAF;Math.random=oldRandom;}
+    state.results.push({...c,method:O.raf?'Live physics + production Canvas/HUD/DOM rAF; no readback':'Live physics + production Canvas/HUD/DOM + synchronous 1px readback',
+      repeats:O.boardRepeats,burstMs:stats(burstCosts),firstDrawMs:stats(firstCosts),eventMs:stats(eventCosts),costMs:stats(costs),submitMs:stats(submits),updateMs:stats(updates),
+      frameMs:stats(frames),peaks,phases:phases.map((values,i)=>({gameAge:['0–0.2s','0.2–1s','1–3s','3s–end'][i],costMs:values.length?stats(values):null})),runs});
+    console.log('[fx] board-burst',c.id,c.n,'hit',burstCosts.map(n=>n.toFixed(1)).join('/'),'ms');
   }
   try{
     // Forge's field renderer also draws its always-on heart; supply a valid fight.
@@ -180,6 +249,7 @@
     // Keep normal cases on level 1, avoiding boss composition in full renders.
     G.state.level=1;
     for(const c of cases.filter(filter))try{await measure(c);}catch(e){state.errors.push({id:c.id,n:c.n,error:String(e.stack)});}
+    for(const c of window.__FXBoard.cases().filter(filter))try{await measureBoard(c);}catch(e){state.errors.push({group:c.group,id:c.id,n:c.n,error:String(e.stack)});}
     G.state.level=100;
     for(const c of bossCases.filter(filter))try{await measure(c,true);}catch(e){state.errors.push({id:c.id,n:c.n,error:String(e.stack)});}
     // Isolated empty-canvas baseline for boss renderer comparisons.
@@ -230,7 +300,8 @@
       }
     }
     state.coverage={profiles:Object.keys(A.skills.profiles).length,catalog:G.skillCatalog.length,
-      missingProfiles:G.skillCatalog.filter(s=>!A.skills.profiles[s.id]).map(s=>s.id),cases:state.results.length};
+      missingProfiles:G.skillCatalog.filter(s=>!A.skills.profiles[s.id]).map(s=>s.id),cases:state.results.length,
+      boardCases:state.results.filter(r=>r.group==='board-burst').length};
     if(O.dom){
       G.state.level=1;G.state.bossOverride=null;G.state.milestone=null;G.generate(false);reset();G.ui();
       for(const kind of ['baseline','coins','sparks','payout'])for(const n of kind==='baseline'?[0]:[1,4,16]){
