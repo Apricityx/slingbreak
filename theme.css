@@ -96,7 +96,8 @@ button:active:not(:disabled) {
 }
 @media (hover: hover) {
   .skill-card:not(:disabled):hover {
-    transform: translateY(-6px) !important;
+    /* Let the draft's stationary hover rule win without blocking WAAPI lifts. */
+    transform: translateY(-6px);
     box-shadow: 0 12px 28px var(--shadow-soft) !important;
   }
 }

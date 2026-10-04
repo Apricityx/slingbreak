@@ -34,6 +34,7 @@
     const play=(el,frames,options)=>{const a=el.animate(frames,{fill:'forwards',...options});running.push(a);return a;};
     cards.forEach(c=>c.disabled=true);
     draft.classList.add('is-selecting');
+    G.sound('pick',{blue:1,gold:2}[skill?.tier]||0);
     try{
       if(G.reduced||!card){
         if(G.chooseSkill(id)){draft.close();$('game').focus({preventScroll:true});}
@@ -85,6 +86,7 @@
       draft.classList.add('is-leaving');
       const fade=play(draft,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.985)'}],{duration:220,easing:'ease-in'});
       const dx=to.left-from.left,dy=to.top-from.top,flight=640;
+      G.sound('whoosh');
       const path=play(ghost,[
         {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',borderRadius:'7px',transform:'rotate(0deg)'},
         {left:from.left+dx*.45+'px',top:from.top+Math.min(0,dy)*.45-70+'px',width:from.width*.62+to.width*.38+'px',height:from.height*.5+to.height*.5+'px',borderRadius:'6px',transform:`rotate(${dx<0?-5:5}deg)`,offset:.45},
@@ -119,6 +121,7 @@
       }
       await waitForAnimations([path],flight+200);
       // Beat 3: impact.
+      G.sound('slot');
       if(landed){
         landed.style.visibility='';
         landed.animate([{transform:'scale(1.14)',boxShadow:`0 0 0 0 ${color}aa`},{transform:'scale(.97)',offset:.45},{transform:'scale(1)',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});

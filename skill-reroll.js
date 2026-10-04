@@ -157,9 +157,26 @@
       flips.forEach(a=>a.cancel());
       rolling=false;updateBar();
       [...options.children].forEach(c=>c.disabled=false);
-      if(draft.open&&(!draft.contains(document.activeElement)||document.activeElement===document.body))(barButton.disabled?options.firstElementChild:barButton)?.focus({preventScroll:true});
+      refocus(barButton.disabled?options.firstElementChild:barButton);
     }
   }
+  // Disabling the focused card drops focus to <body>: put it back once dealt.
+  function refocus(el){
+    if(draft.open&&(!draft.contains(document.activeElement)||document.activeElement===document.body))el?.focus({preventScroll:true});
+  }
+  // Opening the draft deals the first hand exactly like a refresh: cards flap
+  // in edge-on, emblems reel and lock one after another with their tier cue.
+  async function openDeal(){
+    if(rolling||still()||!options.children.length)return;
+    rolling=true;updateBar();
+    try{cue('deal');await dealDraft();}
+    finally{
+      rolling=false;updateBar();
+      if(!draft.classList.contains('is-selecting'))[...options.children].forEach(c=>c.disabled=false);
+      refocus(options.firstElementChild);
+    }
+  }
+  new MutationObserver(()=>{if(draft.open)openDeal();}).observe(draft,{attributes:true,attributeFilter:['open']});
   function dealDraft(){
     const cards=[...options.children],lands=[];
     cards.forEach((card,i)=>{
@@ -310,9 +327,22 @@
     cue(tierCue(skill.tier));
     if(still()){detail.close();return;}
     row.classList.add('is-chosen');
-    rows.filter(r=>r!==row).forEach((r,i)=>r.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${i?16:-16}px,26px) rotate(${i?4:-4}deg)`,opacity:0}],{duration:300,delay:i*40,easing:accel,fill:'forwards'}));
+    // The others fall away, then fold shut (height, padding and their share of
+    // the flex gap), so the list closes up around the pick instead of leaving
+    // holes. The dialog is centred, so it shrinks from both edges at once.
+    const gap=parseFloat(getComputedStyle(swapOptions).rowGap)||0,folds=[];
+    rows.filter(r=>r!==row).forEach((r,i)=>{
+      r.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${i?16:-16}px,26px) rotate(${i?4:-4}deg)`,opacity:0}],{duration:300,delay:i*40,easing:accel,fill:'forwards'});
+      const box=getComputedStyle(r);
+      folds.push(r.animate([
+        {height:box.height,paddingTop:box.paddingTop,paddingBottom:box.paddingBottom,borderTopWidth:box.borderTopWidth,borderBottomWidth:box.borderBottomWidth,marginBottom:'0px'},
+        {height:'0px',paddingTop:'0px',paddingBottom:'0px',borderTopWidth:'0px',borderBottomWidth:'0px',marginBottom:-gap+'px'}
+      ],{duration:280,delay:200+i*40,easing:out,fill:'forwards'}));
+      r.style.overflow='hidden';
+    });
     row.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-4px) scale(1.03)'}],{duration:220,easing:spring,fill:'forwards'});
-    await wait(160);
+    // The emblem's flight measures the header after the dialog has settled.
+    await settle(folds,700);
     if(token!==pickToken||!detail.open)return;
     await flyEmblem(row.querySelector('.skill-emblem'),detailEmblem,G.skillColor(id));
     if(token!==pickToken||!detail.open)return;

@@ -42,6 +42,18 @@
       // Skill reroll: an airy riffle sweeping up into a bright pair.
       noise(t,.32,.16,900,'bandpass',x,5200);tone(t,180,720,.3,.09,'triangle',x,true);
       [880,1319].forEach((f,i)=>tone(t+.2+i*.05,f,f,.24,.07,'sine',x,true));
+    // Draft pick (skills-ui.js selectSkill): deal riffle, commit, flight, slot lock.
+    }else if(type==='deal'){
+      [0,1,2].forEach(i=>noise(t+i*.07,.06,.07,2600+i*500,'bandpass',x+(i-1)*90));tone(t,320,520,.12,.05,'triangle',x);
+    }else if(type==='pick'){
+      // n: 0 white, 1 blue, 2 gold. Rarer picks add a higher overtone.
+      tone(t,262,523,.14,.13,'triangle',x);noise(t,.05,.1,2400,'highpass',x);
+      [659,784,988].slice(0,n+1).forEach((f,i)=>tone(t+.06+i*.045,f,f,.3,.08,'sine',x,true));
+    }else if(type==='whoosh'){
+      noise(t,.46,.14,500,'bandpass',x,3400);tone(t,140,300,.4,.035,'sine',x,true);
+    }else if(type==='slot'){
+      tone(t,180,62,.2,.24,'triangle',x);noise(t,.03,.16,3600,'highpass',x);
+      [1047,1568].forEach((f,i)=>tone(t+.03+i*.05,f,f,.32,.07,'sine',x,true));
     }else if(type==='upgrade'){
       [440,554,659,880].forEach((f,i)=>tone(t+i*.065,f,f,.25,.12,'triangle',390,true));
     // Abyss rift boss (milestone.js).

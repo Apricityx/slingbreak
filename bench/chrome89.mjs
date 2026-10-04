@@ -119,9 +119,15 @@ try{
   });
   report.checks.push({name:'sRGB colour parity',samples:blends.length});
   // First pick: exercise the real keyboard handler and modal top-layer flight.
+  const cardRect=()=>page.$eval('#draft-options .skill-card',el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};});
+  const beforeHover=await cardRect();
   await page.hover('#draft-options .skill-card');
   await page.waitForTimeout(300);
+  assert.equal(await page.$eval('#draft-options .skill-card',el=>getComputedStyle(el).transform),'none','hover does not move the draft card');
+  assert.deepEqual(await cardRect(),beforeHover,'hover preserves the draft card position and size');
   assert.ok(await page.$eval('#draft-options .skill-emblem',el=>new DOMMatrix(getComputedStyle(el).transform).a>1.04),'hover emblem retains its scale');
+  await capture('draft-hover');
+  report.checks.push({name:'stationary draft hover retains emblem feedback'});
   await page.keyboard.press('1');
   await page.waitForTimeout(140);
   assert.notEqual(await page.$eval('.skill-card.is-picked',el=>getComputedStyle(el).transform),'none','commit lift is not overridden by hover CSS');

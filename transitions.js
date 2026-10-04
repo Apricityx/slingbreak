@@ -205,23 +205,12 @@
     levelEl.animate([{transform:`translate(0,${dir*.9}em)`,opacity:0},{transform:'translate(0,0)',opacity:1}],{duration:520,delay:70,easing:spring,fill:'backwards'});
   }).observe(levelEl,{childList:true,characterData:true,subtree:true});
 
-  // ── 3. Draft deal: cards flip in from edge-on, rare cards catch a glint.
+  // ── 3. Draft deal: the loadout pops in; the cards themselves are dealt by
+  // skill-reroll.js with the same split-flap + reel motion as a refresh.
   const draft=$('skill-draft');
   new MutationObserver(()=>{
     if(!draft.open||still())return;
     [...draft.querySelectorAll('#draft-loadout .skill-queue-slot')].forEach((slot,i)=>slot.animate([{opacity:0,transform:'scale(.8)'},{opacity:1,transform:'scale(1)'}],{duration:360,delay:90+i*45,easing:spring,fill:'backwards'}));
-    [...draft.querySelectorAll('.skill-card')].forEach((card,i)=>{
-      const delay=160+i*95,tier=card.querySelector('.skill-rarity')?.dataset.tier;
-      card.animate([
-        {opacity:0,transform:'translate(0,70px) rotateY(86deg) scale(.86)'},
-        {opacity:1,offset:.3},
-        {opacity:1,transform:'translate(0,-8px) rotateY(-7deg) scale(1.02)',offset:.68},
-        {opacity:1,transform:'translate(0,0) rotateY(0deg) scale(1)'}
-      ],{duration:700,delay,easing:out,fill:'backwards'});
-      card.querySelector('.skill-emblem')?.animate([{transform:'rotate(-40deg) scale(0)'},{transform:'rotate(0deg) scale(1)'}],{duration:480,delay:delay+260,easing:spring,fill:'backwards'});
-      card.classList.remove('deal-glint');
-      if(tier==='gold'||tier==='blue'){void card.offsetWidth;card.style.setProperty('--glint-delay',delay+520+'ms');card.classList.add('deal-glint');}
-    });
   }).observe(draft,{attributes:true,attributeFilter:['open']});
 
   // ── 9 / 10. Dialog morphs: panels grow out of the control that opened them,
