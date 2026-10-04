@@ -7,7 +7,7 @@
   // The history entry retains the test slot after the one-shot boss parameter
   // is consumed, so refreshing the cleaned URL resumes the same save.
   const KEY = query.has('admin') ? 'slingbreak-save-admin-v1' : query.has('boss') || window.history?.state?.slingbreakSaveSlot === 'boss' ? 'slingbreak-save-boss-v1' : 'slingbreak-save-v1';
-   const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0},sound:true,volume:100,performanceMode:false,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,skillRuntime:null,milestone:null,bossOverride:null});
+   const defaults = () => ({level:1,coins:0,total:0,best:0,comboRulesVersion:2,legacyBest:0,up:{power:0,arrow:0,brick:0,comboCap:0,slots:0,rerollCap:0},rerolls:0,rerollGrantLevel:0,sound:true,volume:100,performanceMode:false,board:null,skills:{},skillScopeVersion:3,skillChosenLevel:0,draft:null,swapOffer:null,skillRuntime:null,milestone:null,bossOverride:null});
   let saved;
   try { saved=JSON.parse(localStorage.getItem(KEY)); } catch {}
   const validNumber = n => typeof n==='number' && Number.isFinite(n) && n>=0;
@@ -15,6 +15,7 @@
   const state = valid ? saved : defaults();
   state.up.comboCap??=0;
   state.up.slots??=0;
+  state.up.rerollCap=Number.isInteger(state.up.rerollCap)&&state.up.rerollCap>=0?state.up.rerollCap:0;
   // Old records combined concurrent arrows; retain them separately from single-arrow records.
   if(state.comboRulesVersion!==2){state.legacyBest=state.best;state.best=0;state.comboRulesVersion=2;}
   // One-time migration: sound used to default off; flip existing saves to on.
@@ -80,10 +81,26 @@
    G.skillSlotBought = () => Math.min(G.skillSlotUpgrades,state.up.slots|0);
    const slotPrices=[1e5,1e7,1e9];
    G.skillSlotCost = bought => slotPrices[Math.min(slotPrices.length-1,Math.max(0,bought))];
+   // Skill rerolls: one charge per five cleared levels, banked up to the cap.
+   // The cap starts at one; four shop upgrades raise it to five.
+   G.rerollEvery = 5;
+   G.rerollCapMax = 5;
+   G.rerollCapUpgrades = G.rerollCapMax-1;
+   G.rerollCapBought = () => Math.min(G.rerollCapUpgrades,state.up.rerollCap|0);
+   G.rerollCap = () => 1+G.rerollCapBought();
+   const rerollCapPrices=[2e4,4e5,8e6,1.6e8];
+   G.rerollCapCost = bought => rerollCapPrices[Math.min(rerollCapPrices.length-1,Math.max(0,bought))];
+   G.rerolls = () => Math.max(0,Math.min(G.rerollCap(),state.rerolls|0));
+   // The next level whose clear grants a charge (always ahead of the current one).
+   G.nextRerollLevel = () => Math.ceil(state.level/G.rerollEvery)*G.rerollEvery;
+   state.rerolls=G.rerolls();
+   if(!Number.isInteger(state.rerollGrantLevel)||state.rerollGrantLevel<0)state.rerollGrantLevel=0;
    G.cost = key => key==='comboCap'
       ? Math.ceil(1500*Math.pow(1.65,state.up.comboCap))
      : key==='slots'
       ? Math.ceil(G.skillSlotCost(state.up.slots))
+     : key==='rerollCap'
+      ? Math.ceil(G.rerollCapCost(state.up.rerollCap))
      : Math.ceil(({power:75,arrow:100,brick:120}[key])*Math.pow(({power:1.4,arrow:1.46,brick:1.5}[key]),state.up[key]));
   G.bonus = (level=state.level) => Math.round(240*Math.pow(level,1.15));
   G.comboUpgradeUnlocked = () => state.up.brick>=5||state.up.comboCap>0;
@@ -101,7 +118,8 @@
      if(!['level','coins','total','best'].every(k=>validNumber(candidate[k])) || candidate.level<1 || !Number.isInteger(candidate.level))return false;
      if(!candidate.up || !['power','arrow','brick'].every(k=>Number.isInteger(candidate.up[k])&&candidate.up[k]>=0))return false;
      return (candidate.up.comboCap===undefined||Number.isInteger(candidate.up.comboCap)&&candidate.up.comboCap>=0) &&
-       (candidate.up.slots===undefined||Number.isInteger(candidate.up.slots)&&candidate.up.slots>=0);
+       (candidate.up.slots===undefined||Number.isInteger(candidate.up.slots)&&candidate.up.slots>=0) &&
+       (candidate.up.rerollCap===undefined||Number.isInteger(candidate.up.rerollCap)&&candidate.up.rerollCap>=0);
    };
    G.exportProgress = () => ({format:progressFormat,version:progressVersion,exportedAt:new Date().toISOString(),state:JSON.parse(JSON.stringify(state))});
    G.importProgress = payload => {
@@ -221,6 +239,13 @@
     G.bricks.forEach(b=>G.burst(b.x,b.y,G.colors[b.type],6));
     // Core cleanup is deliberately separate from rewarded destruction and combo counters.
     G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;Composite.clear(engine.world);
+    // Clearing every fifth level banks one reroll charge. The grant level stops
+    // a level from paying twice (e.g. an admin jump back across it).
+    G.rerollGained=false;
+    if(state.level%G.rerollEvery===0&&state.level>state.rerollGrantLevel){
+      state.rerollGrantLevel=state.level;
+      if(G.rerolls()<G.rerollCap()){state.rerolls=G.rerolls()+1;G.rerollGained=true;}
+    }
     state.level++;state.board=null;
     try{localStorage.setItem(KEY,JSON.stringify(state));}catch{}
     G.ui();
@@ -265,9 +290,11 @@
     if(!(key in state.up)||G.phase!=='ready'||G.paused)return false;
     if(key==='comboCap'&&!G.comboUpgradeUnlocked())return false;
     if(key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades)return false;
+    if(key==='rerollCap'&&G.rerollCapBought()>=G.rerollCapUpgrades)return false;
     const cost=G.cost(key);if(state.coins<cost)return false;
     state.coins-=cost;state.up[key]++;
     if(key==='slots')state.up.slots=Math.min(G.skillSlotUpgrades,state.up.slots);
+    if(key==='rerollCap')state.up.rerollCap=Math.min(G.rerollCapUpgrades,state.up.rerollCap);
     G.save();G.ui();G.sound('upgrade');G.toast?.('升级成功');return true;
   };
   // Slab intersection supplies an exact entry order and face normal for swept ricochets.

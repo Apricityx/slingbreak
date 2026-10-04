@@ -26,6 +26,8 @@
   const contracted=b=>rank('contract')&&runtime().contract?.targets.some(p=>p.x===b.x&&p.y===b.y);
   const choose=G.chooseSkill;
   G.chooseSkill=id=>{const result=choose(id);if(result){ensureContract();G.ui();}return result;};
+  const swap=G.swapSkill;
+  G.swapSkill=(...args)=>{const result=swap(...args);if(result){ensureContract();G.ui();}return result;};
   const add=G.addArrow;
   G.addArrow=(...args)=>{
     const a=add(...args);if(!a)return a;

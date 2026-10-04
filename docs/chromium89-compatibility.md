@@ -120,3 +120,18 @@ CHROME_BIN=/absolute/path/to/current/chrome node bench/draft-layout.mjs --compar
 The 309 Node tests, both compatibility gates and all six layout fixtures on each
 of Chromium 89.0.4389.0 and 153.0.8010.12 passed. This change is upstream-only;
 the Android assets/APK have not been rebuilt or installed.
+
+## Draft commit clipping regression (2026-10-04)
+
+The options grid must keep `overflow: hidden` to contain deal-in transforms, but
+its 16 px top padding did not contain the commit's upward lift and 4% scale about
+the card's 85% vertical transform origin. Tall cards lost several pixels of their
+top edge. `skills-ui.js` now reserves temporary, height-dependent commit headroom;
+`draft.css` pairs that extra top padding with an equal negative margin, preserving
+the card positions, dialog dimensions and scroll range. The headroom is cleared
+in selection cleanup, including interrupted animations.
+
+`bench/draft-layout.mjs` also records the commit phase, checks the top edge and
+3 px pick ring against the grid's clipping boundary, asserts unchanged dialog
+geometry and scroll range, and captures commit screenshots alongside flights.
+Use the same real-Chromium-89 and modern comparison commands above.

@@ -21,7 +21,7 @@
       summon:{name:'召唤',desc:'棋盘上展开召唤阵，阵成前击中则失神；否则涌出新砖'},
       tear:{name:'泪滴',desc:'巨眼落下一滴晶泪，落地前击碎则失神；否则碎成砖块'},
       gaze:{name:'凝视',desc:'光束扫过棋盘，逆着光束射入巨眼则失神；否则光束处长出砖块'},
-      mirage:{name:'幻瞳',desc:'巨眼分成三只，射中追着准星的真眼则失神；否则幻眼放出光束'},
+      mirage:{name:'幻瞳',desc:'巨眼分成两只，射中追着准星的真眼则失神；否则幻眼放出光束'},
       doom:{name:'终焉',desc:'巨眼睁开蓄力，蓄满前三击瞳孔则长时间失神；否则锁链重生、结界全满'}
     };
     // Phase one opens with a move whose answer is a visible target.
@@ -193,7 +193,7 @@
       orbit:['CRYSTAL RING','晶环','击碎发光的晶心'],summon:['SUMMON','召唤','阵成前击中法阵'],tear:['TEAR','泪滴','落地前击碎晶泪'],
       gaze:['GAZE','凝视','逆着光束射入巨眼'],mirage:['MIRAGE','幻瞳','射中追着准星的真眼'],doom:['DOOM','终焉','蓄满前三击瞳孔']
     };
-    const MIRAGE=[170,390,610];
+    const MIRAGE=[170,610];
     const orbitAt=slot=>{const a=(G.time-move.start)*(rage()?1.2:.8)+slot/move.count*Math.PI*2;return {x:EYE.x+Math.cos(a)*132,y:EYE.y+14+Math.sin(a)*38};};
     // The tear leaves the eye, drifts toward its lane and falls, swaying.
     const tearPos=()=>{const u=Math.max(0,G.time-move.live),k=Math.min(1,u/.8),y=EYE.y+SHIELD+u*(rage()?300:260)+u*u*20;return {x:EYE.x+(move.x-EYE.x)*k+Math.sin(u*2.4)*26*k,y};};
@@ -526,7 +526,7 @@
       if(is('orbit'))drawOrbit(ctx,P);
       updateLook();
       if(is('mirage')&&G.time>=move.live){
-        // Three identical eyes; only the real pupil follows the aim.
+        // Two identical eyes; only the real pupil follows the aim.
         for(const e of move.eyes){drawEye(ctx,P,e.x,e.y,open,{scale:.8,wander:e.real?null:e.ph});drawWard(ctx,P,e.x,e.y,.8);}
         ctx.globalAlpha=.6;countdown(ctx,P.beam,HOME,EYE.y+SHIELD+30,10,(move.end-G.time)/(move.end-move.live));ctx.globalAlpha=1;
       }else{

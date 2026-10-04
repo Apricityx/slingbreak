@@ -32,7 +32,7 @@
   --mix-tier-gold-60-alpha:rgba(var(--tier-gold-r),var(--tier-gold-g),var(--tier-gold-b),0.6);
   --mix-tier-gold-70-line-2:rgb(calc(var(--tier-gold-r) * 0.7 + var(--line-2-r) * 0.3),calc(var(--tier-gold-g) * 0.7 + var(--line-2-g) * 0.3),calc(var(--tier-gold-b) * 0.7 + var(--line-2-b) * 0.3));
 }
-.skill-card,.skill-queue-slot {
+.skill-card,.skill-queue-slot,.swap-option,.swap-flap,.swap-ghost {
   --mix-skill-color-10-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.1);
   --mix-skill-color-16-alpha:rgba(var(--skill-color-r,var(--accent-ink-r)),var(--skill-color-g,var(--accent-ink-g)),var(--skill-color-b,var(--accent-ink-b)),0.16);
   --mix-skill-color-18-line:rgb(calc(var(--skill-color-r,var(--accent-ink-r)) * 0.18 + var(--line-r) * 0.82),calc(var(--skill-color-g,var(--accent-ink-g)) * 0.18 + var(--line-g) * 0.82),calc(var(--skill-color-b,var(--accent-ink-b)) * 0.18 + var(--line-b) * 0.82));

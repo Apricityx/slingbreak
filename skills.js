@@ -195,8 +195,11 @@
     }
     return pool;
   }
-  G.rollSkills=()=>{
-    const pool=draftPool(),selected=[];
+  // exclude: ids to keep out of this roll (a reroll avoids the offer it replaces)
+  // as long as at least three other skills remain to draw from.
+  G.rollSkills=(exclude=[])=>{
+    const base=draftPool(),avoided=base.filter(s=>!exclude.includes(s.id));
+    const pool=avoided.length>=3?avoided:base.slice(),selected=[];
     while(selected.length<3&&pool.length){
       let roll=Math.random()*pool.reduce((sum,s)=>sum+s.drawWeight,0),index=pool.length-1;
       for(let i=0;i<pool.length;i++){roll-=pool[i].drawWeight;if(roll<0){index=i;break;}}
@@ -241,6 +244,44 @@
     G.boardEntrance=duration?{start:G.time,end:G.time+duration}:null;
     G.phase=duration?'entering':'ready';
     applyLevelPassives();G.save();G.ui();G.sound('upgrade');return true;
+  };
+  // Rerolls spend one banked charge (game.js grants them every fifth clear).
+  // The draft reroll replaces the three cards on offer with three new ones.
+  G.canReroll=()=>G.rerolls()>0;
+  G.rerollDraft=()=>{
+    if(G.phase!=='draft'||G.paused||S.draft?.level!==S.level||S.skillChosenLevel===S.level||!G.canReroll())return false;
+    S.rerolls=G.rerolls()-1;
+    S.draft={level:S.level,options:G.rollSkills(S.draft.options),rerolled:(S.draft.rerolled|0)+1};
+    G.save();G.ui();return true;
+  };
+  // In-run swap: tapping an equipped skill can spend a charge for a three-card
+  // offer to replace it in place. The offer is saved, so closing the dialog
+  // (or reloading) never refunds the charge or re-rolls for free. Swaps wait
+  // for the board to be still: no arrows or delayed effects in flight.
+  G.canSwapSkill=()=>G.phase==='ready'&&S.skillChosenLevel===S.level;
+  const validOffer=target=>{
+    const o=S.swapOffer;
+    return !!o&&o.level===S.level&&o.target===target&&Array.isArray(o.options)&&o.options.length>0&&o.options.every(id=>byId.has(id));
+  };
+  G.swapOffer=target=>{
+    if(!validOffer(target))return null;
+    // Drop anything that became equipped since; the rest stays on offer.
+    const options=S.swapOffer.options.filter(id=>!rank(id));
+    return options.length?{...S.swapOffer,options}:null;
+  };
+  G.offerSwap=target=>{
+    if(!G.canSwapSkill()||!rank(target)||!G.canReroll())return null;
+    const previous=validOffer(target)?S.swapOffer.options:[];
+    S.rerolls=G.rerolls()-1;
+    S.swapOffer={level:S.level,target,options:G.rollSkills(previous),rerolled:previous.length?(S.swapOffer.rerolled|0)+1:0};
+    G.save();G.ui();return S.swapOffer;
+  };
+  G.swapSkill=(target,id)=>{
+    const skill=byId.get(id),offer=G.swapOffer(target);
+    if(!G.canSwapSkill()||!offer||!skill||!offer.options.includes(id)||!rank(target)||rank(id)||S.level<(skill.minLevel||1))return false;
+    // Keep the slot's place in the FIFO queue: only the key changes.
+    S.skills=Object.fromEntries(Object.keys(S.skills).map(key=>[key===target?id:key,1]));S.swapOffer=null;
+    G.invalidateSkillCache();applyLevelPassives();G.save();G.ui();G.sound('upgrade');return true;
   };
   let jobs=[],uses={},effectBudget=0;
   const resetShot=()=>{uses={};effectBudget=120;};
@@ -386,9 +427,9 @@
   };
   G.buy=key=>{
     const result=base.buy(key);
-    // The slot upgrade is a structural unlock, so 神匠赐福 cannot apply to it:
+    // Slot and reroll-cap upgrades are structural unlocks, so 神匠赐福 cannot apply to them:
     // keep its charge for a real upgrade instead of wasting it here.
-    if(result&&key!=='slots'&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
+    if(result&&key!=='slots'&&key!=='rerollCap'&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;S.up[key]+=2;G.save();G.ui();G.toast?.('神匠赐福 · 额外提升 2 级');}
     return result;
   };
   G.generate=restore=>{jobs=[];resetShot();normalize();base.generate(restore);G.prepareDraft();G.save();G.ui();};

@@ -2,10 +2,12 @@
   const G=Game,$=id=>document.getElementById(id);
   let comboStamp='',comboAnimation;
   const compact=n=>Number(n.toFixed(3)).toString();
-  const upgrades={power:{name:'弹弓',icon:'crosshair',desc:()=>`拉力 ${Math.round(G.speed()/24*100)}% · 更远射程`},arrow:{name:'箭矢',icon:'move-up-right',desc:()=>`伤害 ${G.damage().toFixed(2)} · 穿透 ${G.penetration()} 块`},brick:{name:'砖块',icon:'blocks',desc:()=>`价值 +${Math.round((G.valueMultiplier()-1)*100)}% · 特殊率 ${(G.specialRate()*100).toFixed(1)}%`},comboCap:{name:'连击强化',icon:'gauge',desc:()=>`每连增幅 +${compact(G.comboStep())}，${G.comboCapKills()} 连达到 ×${compact(G.comboMultiplierCap())} 上限`},slots:{name:'技能槽位',icon:'layout-grid',desc:()=>`当前 ${G.skillSlots} 个技能槽 · 每关三选一，满槽后自动替换最早的技能`} };
+  const upgrades={power:{name:'弹弓',icon:'crosshair',desc:()=>`拉力 ${Math.round(G.speed()/24*100)}% · 更远射程`},arrow:{name:'箭矢',icon:'move-up-right',desc:()=>`伤害 ${G.damage().toFixed(2)} · 穿透 ${G.penetration()} 块`},brick:{name:'砖块',icon:'blocks',desc:()=>`价值 +${Math.round((G.valueMultiplier()-1)*100)}% · 特殊率 ${(G.specialRate()*100).toFixed(1)}%`},comboCap:{name:'连击强化',icon:'gauge',desc:()=>`每连增幅 +${compact(G.comboStep())}，${G.comboCapKills()} 连达到 ×${compact(G.comboMultiplierCap())} 上限`},slots:{name:'技能槽位',icon:'layout-grid',desc:()=>`当前 ${G.skillSlots} 个技能槽 · 每关三选一，满槽后自动替换最早的技能`},rerollCap:{name:'技能刷新',icon:'refresh-cw',desc:()=>''} };
   for(const [key,u] of Object.entries(upgrades)){
      const el=document.createElement('div');el.className='upgrade';el.innerHTML=`<span class="upgrade-icon"><i data-lucide="${u.icon}"></i></span><div><div class="upgrade-title"><b>${u.name}</b><small id="${key}-level"></small></div><p class="upgrade-desc" id="${key}-desc"></p></div><button class="buy-button" id="buy-${key}" aria-label="升级${u.name}"><i data-lucide="plus"></i><span></span></button>`;$('upgrades').append(el);$('buy-'+key).onclick=()=>G.buy(key);
      if(key==='comboCap'){$(key+'-desc').innerHTML='<span class="combo-upgrade-lock" id="combo-upgrade-lock"><i data-lucide="lock-keyhole" aria-hidden="true"></i>砖块 LV.6</span><span class="combo-upgrade-preview" id="combo-upgrade-preview"><span class="upgrade-metric"><small>增幅</small><b id="combo-step-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="combo-step-next"></em></span><span class="upgrade-metric"><small>上限</small><b id="combo-cap-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="combo-cap-next"></em></span></span>';}
+     // Wordless: the description slot is the charge gauge, with the next cap slot as a ghost.
+     if(key==='rerollCap'){$(key+'-desc').innerHTML='<span class="reroll-gauge shop-reroll" id="rerollCap-gauge" role="img"><span class="reroll-pips" aria-hidden="true"></span></span>';}
      if(key==='slots'){$(key+'-desc').innerHTML='<span class="combo-upgrade-preview" id="slots-upgrade-preview"><span class="upgrade-metric"><small>技能槽</small><b id="slots-current"></b><i data-lucide="arrow-right" aria-hidden="true"></i><em id="slots-next"></em></span></span><span class="slots-upgrade-done" id="slots-upgrade-done" hidden></span><span class="slots-forge-note" id="slots-forge-note" hidden>神匠赐福不可用于该升级</span>';}
   }
   const icons=()=>lucide.createIcons();
@@ -48,10 +50,10 @@
      setText($('play-status'),G.paused?'已暂停':G.phase==='clearing'?'下一关即将开始':G.phase==='entering'?'砖块入场中':G.drag?'蓄力中':G.phase==='flying'?'可继续射击':'就绪');
     if(!G.drag)setText($('power-readout').querySelector('b'),'0%');
      for(const [key,u] of Object.entries(upgrades)){
-       const maxed=key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades;
+       const maxed=key==='slots'&&G.skillSlotBought()>=G.skillSlotUpgrades||key==='rerollCap'&&G.rerollCapBought()>=G.rerollCapUpgrades;
        const locked=key==='comboCap'&&!G.comboUpgradeUnlocked();
-       const forgeReady=key==='slots'&&!!G.skillRank?.('forge')&&!G.state.skillRuntime?.forge;
-       setText($(key+'-level'),key==='comboCap'?'+'+G.state.up[key]:key==='slots'?`${G.skillSlots} / ${G.skillSlotMax}`:'LV. '+(G.state.up[key]+1));
+       const forgeReady=(key==='slots'||key==='rerollCap')&&!!G.skillRank?.('forge')&&!G.state.skillRuntime?.forge;
+       setText($(key+'-level'),key==='comboCap'?'+'+G.state.up[key]:key==='slots'?`${G.skillSlots} / ${G.skillSlotMax}`:key==='rerollCap'?`${G.rerollCap()} / ${G.rerollCapMax}`:'LV. '+(G.state.up[key]+1));
        if(key==='comboCap'){
          setHidden($('combo-upgrade-lock'),!locked);setHidden($('combo-upgrade-preview'),locked);setTitle($(key+'-desc'),u.desc());
          setText($('combo-step-current'),'+'+compact(G.comboStep()));setText($('combo-step-next'),'+'+compact(G.comboStep()+.025));
@@ -65,11 +67,13 @@
            setText($('slots-current'),G.skillSlots);setText($('slots-next'),Math.min(G.skillSlotMax,G.skillSlots+1));
          }
          setTitle($(key+'-desc'),maxed?u.desc():`升级后拥有 ${Math.min(G.skillSlotMax,G.skillSlots+1)} 个技能槽`);
+       }else if(key==='rerollCap'){
+         G.paintRerollGauge?.($('rerollCap-gauge'),{ghost:maxed?0:1});
        }else setText($(key+'-desc'),u.desc());
        const b=$('buy-'+key),cost=G.cost(key),disabled=maxed||locked||G.state.coins<cost||G.phase!=='ready'||G.paused;
        setText(b.querySelector('span'),maxed?'已满级':locked?'—':G.fmt(cost));
        if(b.disabled!==disabled)b.disabled=disabled;
-      setTitle(b,(maxed?'技能槽已全部解锁':locked?'砖块升至 LV.6 后解锁':G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币')+(forgeReady&&!maxed?' · 神匠赐福不可用于该升级':''));
+      setTitle(b,(maxed?key==='rerollCap'?'已满级':'技能槽已全部解锁':locked?'砖块升至 LV.6 后解锁':G.phase!=='ready'?'本轮所有箭与延迟效果结束后可升级':G.state.coins<cost?'还差 '+G.fmt(cost-G.state.coins)+' 金币':'升级'+u.name+' · '+G.fmt(cost)+' 金币')+(forgeReady&&!maxed?' · 神匠赐福不可用于该升级':''));
     }
      setHidden($('shop-trigger'),false);setText($('shop-balance'),G.fmt(G.state.coins));
   };

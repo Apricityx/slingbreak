@@ -124,16 +124,16 @@
     clearArrows
   };
   for(const factory of window.SlingBosses||[]){const d=factory(api);if(d?.id)defs[d.id]=d;}
-  const ids=Object.keys(defs);
+  const ids=Object.keys(defs),randomIds=ids.filter(id=>!defs[id].archived);
   // Keep the replacement through settlement/reloads, but never apply it to
   // an unrelated level or revive it after a reset.
   if(S.bossOverride&&!(Number.isSafeInteger(S.bossOverride.level)&&S.bossOverride.level>=S.level&&S.bossOverride.level<=S.level+1&&override(S.bossOverride.level)))S.bossOverride=null;
 
-  // Boss deck: a shuffled pass over every boss; a fresh pass never opens with
+  // Boss deck: a shuffled pass over every non-archived boss; a fresh pass never opens with
   // the boss that just closed the last one.
   function pick(){
-    let deck=Array.isArray(S.bossDeck)?S.bossDeck.filter(id=>id in defs):[];
-    if(!deck.length){deck=shuffle([...ids]);if(deck.length>1&&deck[0]===S.lastBoss)deck.push(deck.shift());}
+    let deck=Array.isArray(S.bossDeck)?S.bossDeck.filter(id=>randomIds.includes(id)):[];
+    if(!deck.length){deck=shuffle([...randomIds]);if(deck.length>1&&deck[0]===S.lastBoss)deck.push(deck.shift());}
     const id=deck.shift();S.bossDeck=deck;S.lastBoss=id;return id;
   }
   function fresh(id=pick()){

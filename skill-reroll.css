@@ -1,0 +1,179 @@
+/* ── Skill rerolls ──────────────────────────────────────────
+   Owns the draft refresh bar, the swap panel inside #skill-detail, the HUD
+   swap flap and the clear-report charge chip. skill-reroll.js drives the
+   motion with WAAPI; this file holds layout, idle loops and one-shot keyframes.
+   Colors are tokens; --skill-color / --spark-color arrive via SlingColors. */
+
+/* Charge pips: hollow diamonds that fill as charges are earned */
+.reroll-pips{display:inline-flex;align-items:center;gap:var(--pip-gap,6px);flex:none}
+.reroll-pip{position:relative;display:block;width:var(--pip,12px);height:var(--pip,12px)}
+.reroll-pip::before{content:"";position:absolute;inset:2px;border:1.5px solid var(--line-2);border-radius:2px;background:var(--surface);transform:rotate(45deg);transition:background-color .25s,border-color .25s,box-shadow .25s}
+.reroll-pip.is-full::before{border-color:var(--accent-ink);background:var(--accent-bar);box-shadow:0 0 0 3px var(--mix-accent-bar-25-alpha)}
+/* The charging diamond fills bottom-up. The pseudo is rotated 45°, so a 315°
+   local gradient runs straight up on screen: corner to corner of the diamond. */
+.reroll-pip.is-charging::before{border-color:var(--accent-line);background:linear-gradient(315deg,var(--accent-bar) 0,var(--accent-bar) calc(var(--fill,0) * 100%),var(--surface) calc(var(--fill,0) * 100%));transition:border-color .25s}
+/* Ghost: the slot the next shop upgrade adds */
+.reroll-pip.is-ghost::before{border-style:dashed;border-color:var(--text-3);background:transparent;opacity:.6}
+/* Report chip: the charge this clear earned arrives empty, then lights */
+.reroll-pip.is-new::before{animation:pip-gain .8s 1.1s cubic-bezier(.2,1.3,.4,1) both}
+.reroll-pip.is-new::after{animation:pip-ring .8s 1.25s cubic-bezier(.22,1,.36,1) both}
+.reroll-pip::after{content:"";position:absolute;inset:-4px;border:2px solid var(--accent-bar);border-radius:3px;opacity:0;transform:rotate(45deg) scale(.4);pointer-events:none}
+.reroll-pip.is-spending::before{animation:pip-spend .6s cubic-bezier(.22,1,.36,1) both}
+.reroll-pip.is-spending::after{animation:pip-ring .6s cubic-bezier(.22,1,.36,1) both}
+.reroll-pip.is-gaining::before{animation:pip-gain .8s cubic-bezier(.2,1.3,.4,1) both}
+.reroll-pip.is-gaining::after{animation:pip-ring .8s .12s cubic-bezier(.22,1,.36,1) both}
+@keyframes pip-spend{
+  0%{transform:rotate(45deg) scale(1);background:var(--accent-bar)}
+  30%{transform:rotate(135deg) scale(1.55);background:var(--accent-soft-2);border-color:var(--accent-ink)}
+  100%{transform:rotate(225deg) scale(1);background:var(--surface);border-color:var(--line-2);box-shadow:none}
+}
+@keyframes pip-gain{
+  0%{transform:rotate(-135deg) scale(0)}
+  60%{transform:rotate(60deg) scale(1.5)}
+  100%{transform:rotate(45deg) scale(1)}
+}
+@keyframes pip-ring{0%{opacity:1;transform:rotate(45deg) scale(.5)}100%{opacity:0;transform:rotate(45deg) scale(1.9)}}
+
+/* Refresh button: a soft accent pill with a slow sheen while a charge waits */
+.reroll-button{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;flex:none;
+  min-height:38px;padding:0 14px 0 6px;overflow:hidden;border:1px solid var(--accent-line);border-radius:999px;
+  background:var(--accent-soft);color:var(--accent-ink);font:600 13px/1 var(--font);letter-spacing:0;cursor:pointer;
+  transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s,transform .12s cubic-bezier(.2,.8,.2,1.4);
+}
+.reroll-button .reroll-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 1px var(--accent-line)}
+.reroll-button .reroll-icon svg{width:14px;height:14px;stroke-width:2.2}
+.reroll-button::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,var(--mix-surface-90-alpha) 50%,transparent 65%);transform:translate(-110%,0);opacity:0}
+.reroll-button:not(:disabled)::after{opacity:1;animation:reroll-sheen 3.4s 1s ease-in-out infinite}
+@keyframes reroll-sheen{0%,62%{transform:translate(-110%,0)}100%{transform:translate(110%,0)}}
+@media(hover:hover){.reroll-button:not(:disabled):hover{background:var(--accent-soft-2);box-shadow:0 6px 16px -10px var(--accent-ink)}}
+.reroll-button:not(:disabled):focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.reroll-button:disabled{border-color:var(--line-2);background:var(--surface-2);color:var(--text-3);cursor:default}
+.reroll-button:disabled .reroll-icon{box-shadow:0 0 0 1px var(--line-2)}
+/* The draft's [R] cap: inline here, not pinned like the card keys */
+:is(#skill-draft,.skill-flight) .reroll-button .skill-key{position:static;min-width:18px;height:18px;padding:0 4px;font-size:10px;background:var(--surface);color:var(--text-2)}
+
+/* Draft bar, under the cards (beats skills.css' `#skill-draft>div` reset) */
+#skill-draft>.draft-reroll{display:flex;align-items:center;justify-content:center;padding:12px 16px 16px;transition:opacity .18s}
+#skill-draft.is-selecting>.draft-reroll{opacity:0;pointer-events:none}
+
+/* Scan sweep across the cards while they flip out */
+#skill-draft .draft-options{position:relative}
+#skill-draft .draft-options.is-scanning::after{content:"";position:absolute;left:0;right:0;top:0;height:70px;z-index:3;pointer-events:none;background:linear-gradient(180deg,transparent,var(--mix-accent-bar-19-alpha) 45%,var(--mix-accent-bar-50-alpha) 50%,transparent 52%);animation:reroll-scan .8s cubic-bezier(.45,0,.3,1) both}
+@keyframes reroll-scan{0%{opacity:0;transform:translate(0,-70px)}20%{opacity:1}100%{opacity:0;transform:translate(0,520px)}}
+
+/* Charge spark: travels from the spent pip to what it refreshes */
+.reroll-spark{position:absolute;left:0;top:0;z-index:5;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:2px;pointer-events:none;background:var(--spark-color,var(--accent-bar));box-shadow:0 0 0 2px var(--surface),0 0 14px 3px var(--spark-color,var(--accent-bar))}
+
+/* Slot-machine reel inside an emblem */
+.skill-emblem.is-reeling{position:relative;overflow:hidden}
+.skill-emblem.is-reeling>svg{opacity:0}
+.reroll-reel{position:absolute;inset:0;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 28%,#000 72%,transparent);mask-image:linear-gradient(180deg,transparent,#000 28%,#000 72%,transparent)}
+.reroll-reel-strip{display:flex;flex-direction:column;will-change:transform}
+.reroll-reel-cell{display:grid;place-items:center;flex:none;height:var(--reel-cell,46px);opacity:.55}
+.reroll-reel-cell.is-final{opacity:1}
+.reroll-reel-cell svg{width:var(--reel-icon,24px);height:var(--reel-icon,24px);stroke-width:1.6}
+#skill-draft .skill-card .reroll-reel{--reel-cell:46px}
+.swap-option .reroll-reel{--reel-cell:40px;--reel-icon:20px}
+
+/* While reeling, the card's words wait for the emblem to stop */
+#skill-draft .skill-card :is(.skill-card-tier,.skill-card-body,.skill-pick),
+.swap-option .swap-option-body{transition:opacity .26s ease-out,transform .32s cubic-bezier(.2,1.3,.4,1)}
+#skill-draft .skill-card.is-reeling :is(.skill-card-tier,.skill-card-body,.skill-pick),
+.swap-option.is-reeling .swap-option-body{opacity:0;transform:translate(0,6px);transition:none}
+
+/* Landing flash on the art band (draft) or the row (swap) */
+:is(#skill-draft .skill-card,.swap-option){--land-ring:var(--line-2)}
+:is(#skill-draft .skill-card,.swap-option)[data-tier="blue"]{--land-ring:var(--tier-blue)}
+:is(#skill-draft .skill-card,.swap-option)[data-tier="gold"]{--land-ring:var(--tier-gold)}
+#skill-draft .skill-card.is-landed .skill-card-art::after{opacity:1;transition:opacity .7s ease-out}
+#skill-draft .skill-card.is-landed .skill-card-art::before{content:"";position:absolute;left:50%;top:50%;z-index:2;width:46px;height:46px;margin:-23px 0 0 -23px;border:2px solid var(--land-ring);border-radius:14px;pointer-events:none;animation:land-ring .7s cubic-bezier(.22,1,.36,1) both}
+.swap-option.is-landed .skill-emblem::after{content:"";position:absolute;inset:-2px;border:2px solid var(--land-ring);border-radius:12px;pointer-events:none;animation:land-ring .7s cubic-bezier(.22,1,.36,1) both}
+@keyframes land-ring{0%{opacity:1;transform:scale(.9) rotate(0deg)}100%{opacity:0;transform:scale(1.9) rotate(12deg)}}
+
+/* HUD gauge: a tab on the skill bar's top edge, outside the flow */
+.skill-live{position:relative}
+.hud-reroll{position:absolute;top:-9px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 5px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);color:var(--accent-ink);pointer-events:none;--pip:9px;--pip-gap:3px;transition:color .2s}
+.hud-reroll>svg{width:11px;height:11px;stroke-width:2.4}
+.hud-reroll.is-empty{color:var(--text-3)}
+.hud-reroll .reroll-pip.is-full::before{box-shadow:0 0 0 2px var(--mix-accent-bar-25-alpha)}
+
+/* Shop row: the gauge stands where the description would be */
+#shop .shop-reroll{display:inline-flex;align-items:center;margin-top:8px;--pip:13px;--pip-gap:5px}
+
+/* ── Swap panel inside the skill detail dialog ───────────────── */
+.skill-swap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px;padding-top:14px;border-top:1px dashed var(--line-2)}
+.skill-swap[hidden]{display:none}
+.skill-swap .swap-options{align-self:stretch}
+/* Arrows still in flight: the icon dims and the button waits, nothing to read */
+.skill-swap.is-waiting .reroll-icon{opacity:.5}
+.skill-swap.has-offer .reroll-button{order:1}
+.skill-detail-head .skill-emblem{position:relative}
+.skill-detail-head .skill-emblem.is-targeted{animation:swap-target .6s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes swap-target{
+  0%,100%{transform:rotate(0deg) scale(1)}
+  20%{transform:rotate(-9deg) scale(.94)}
+  40%{transform:rotate(7deg) scale(.96)}
+  60%{transform:rotate(-4deg) scale(.98)}
+  80%{transform:rotate(2deg) scale(1)}
+}
+.swap-options{display:flex;flex-direction:column;gap:8px}
+.swap-options[hidden]{display:none}
+
+/* Candidate rows: emblem · name + rarity + text · swap glyph */
+.swap-option{
+  --tier-line:var(--line-2);
+  position:relative;display:grid;grid-template-columns:40px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;
+  padding:10px 12px;border:1px solid var(--tier-line);border-radius:10px;background:var(--mix-skill-color-9-surface);color:var(--ink);
+  font:inherit;text-align:left;cursor:pointer;
+  transition:border-color .18s,background-color .18s,box-shadow .18s,transform .12s cubic-bezier(.2,.8,.2,1.4);
+}
+.swap-option[data-tier="blue"]{--tier-line:var(--mix-tier-blue-45-line-2)}
+.swap-option[data-tier="gold"]{--tier-line:var(--mix-tier-gold-70-line-2);box-shadow:inset 0 1px 0 var(--mix-tier-gold-60-alpha)}
+.swap-option .skill-emblem{position:relative;width:40px;height:40px;border-radius:11px;border-color:var(--mix-skill-color-40-line-2);background:var(--surface);color:var(--mix-skill-color-72-ink);box-shadow:0 0 0 4px var(--mix-skill-color-10-alpha)}
+.swap-option .skill-emblem svg{width:20px;height:20px;stroke-width:1.7}
+.swap-option-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.swap-option-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.swap-option-head strong{font-size:14px;line-height:1.3}
+.swap-option .skill-rarity{font-size:10px}
+.swap-option-desc{font-size:11px;line-height:1.6;color:var(--text-2);overflow-wrap:anywhere}
+.swap-option-go{width:16px;height:16px;color:var(--text-3);transition:color .18s,transform .25s cubic-bezier(.2,1.3,.4,1)}
+@media(hover:hover){
+  .swap-option:not(:disabled):hover{border-color:var(--mix-skill-color-65-line-2);box-shadow:0 8px 18px -12px var(--mix-skill-color-70-alpha)}
+  .swap-option:not(:disabled):hover .swap-option-go{color:var(--mix-skill-color-72-ink);transform:rotate(180deg)}
+}
+.swap-option:not(:disabled):focus-visible{outline:2px solid var(--mix-skill-color-72-ink);outline-offset:2px}
+.swap-option:disabled{cursor:default}
+.swap-option.is-chosen{z-index:1;border-color:var(--mix-skill-color-65-line-2);box-shadow:0 14px 30px -14px var(--mix-skill-color-80-alpha),0 0 0 3px var(--mix-skill-color-16-alpha)}
+
+/* The emblem in flight from the chosen row to the dialog header */
+.swap-ghost{position:absolute;left:0;top:0;z-index:6;margin:0;pointer-events:none;transform-origin:0 0;border-radius:11px;border-color:var(--mix-skill-color-40-line-2);background:var(--surface);color:var(--mix-skill-color-72-ink);box-shadow:0 12px 26px -10px var(--mix-skill-color-70-alpha),0 0 0 4px var(--mix-skill-color-16-alpha)}
+.swap-ghost svg{width:20px;height:20px;stroke-width:1.7}
+.swap-burst{position:absolute;inset:-3px;border:2px solid var(--land-ring,var(--mix-skill-detail-color-45-surface));border-radius:inherit;pointer-events:none}
+.swap-burst[data-tier="white"]{--land-ring:var(--mix-skill-detail-color-45-surface)}
+.swap-burst[data-tier="blue"]{--land-ring:var(--tier-blue)}
+.swap-burst[data-tier="gold"]{--land-ring:var(--tier-gold)}
+
+/* ── HUD slot flipping over to the new skill ─────────────────── */
+.skill-live .skill-queue-slot{position:relative}
+.skill-live .skill-queue-slot.is-swapping{overflow:hidden}
+.swap-flap{position:absolute;inset:0;z-index:1;display:flex;align-items:center;padding:inherit;border-radius:inherit;background:var(--surface-2);color:var(--mix-skill-color-70-ink);transform-origin:50% 100%;pointer-events:none}
+.swap-flap b{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;line-height:1.4}
+.swap-flap svg{width:15px;height:15px;flex:0 0 15px;stroke-width:1.8}
+.skill-live .skill-queue-slot.is-sheen{overflow:hidden}
+.skill-live .skill-queue-slot.is-sheen::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(105deg,transparent 30%,var(--mix-skill-color-30-alpha) 48%,var(--mix-surface-90-alpha) 50%,transparent 66%);animation:slot-sheen .7s ease-out both}
+@keyframes slot-sheen{0%{transform:translate(-100%,0)}100%{transform:translate(100%,0)}}
+
+/* ── Level report: charge earned on this clear ───────────────── */
+.report-reroll{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;padding:7px 10px;border:1px solid var(--accent-line);border-radius:6px;background:var(--accent-soft);color:var(--accent-ink)}
+.report-reroll>svg{width:15px;height:15px;stroke-width:2.2}
+
+/* Idle loops off where motion is unwelcome; one-shot beats go instant */
+html.performance-mode .reroll-button::after{animation:none!important;opacity:0}
+@media(prefers-reduced-motion:reduce){
+  .reroll-button::after{animation:none!important;opacity:0}
+  .reroll-pip::before,.reroll-pip::after,.skill-detail-head .skill-emblem.is-targeted,
+  #skill-draft .draft-options.is-scanning::after,.skill-live .skill-queue-slot.is-sheen::before,
+  #skill-draft .skill-card.is-landed .skill-card-art::before,.swap-option.is-landed .skill-emblem::after{animation:none!important}
+  .reroll-pip::before,.reroll-button,.swap-option,.swap-option-go{transition:none!important}
+}

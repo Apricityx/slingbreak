@@ -46,7 +46,7 @@ try{
         const range=document.createRange();range.selectNodeContents(el);
         return{...box(el),lines:range.getClientRects().length};
       };
-      window.__draftLayout={entry:[],flight:[],source:null,done:false};
+      window.__draftLayout={entry:[],commit:[],flight:[],source:null,done:false};
       const start=performance.now();
       const sample=()=>{
         const probe=window.__draftLayout;
@@ -54,6 +54,14 @@ try{
           width:draft.offsetWidth,height:draft.offsetHeight,clientWidth:draft.clientWidth,clientHeight:draft.clientHeight,
           scrollWidth:draft.scrollWidth,scrollHeight:draft.scrollHeight,scrollTop:draft.scrollTop,
           cards:[...draft.querySelectorAll('.skill-card')].map(box)});
+        const picked=draft.querySelector('.skill-card.is-picked');
+        if(draft.open&&picked&&picked.style.visibility!=='hidden'){
+          const grid=draft.querySelector('.draft-options').getBoundingClientRect(),card=picked.getBoundingClientRect();
+          probe.commit.push({at:performance.now()-start,top:card.top,bottom:card.bottom,left:card.left,right:card.right,
+            gridTop:grid.top,gridBottom:grid.bottom,gridLeft:grid.left,gridRight:grid.right,
+            ring:3*(window.SlingStage?.k||1),scrollHeight:draft.scrollHeight,
+            dialogWidth:draft.offsetWidth,dialogHeight:draft.offsetHeight});
+        }
         const flight=document.querySelector('.skill-flight');
         if(flight){const card=flight.querySelector('.skill-flight-card'),slot=flight.querySelector('.skill-flight-slot');
           probe.flight.push({at:performance.now()-start,outline:getComputedStyle(flight).outlineStyle,card:box(card),body:text(card.querySelector('.skill-card-body')),
@@ -69,7 +77,9 @@ try{
     });
     // Real over-height content must remain reachable even without a gutter.
     const scroll=await page.$eval('#skill-draft',el=>{const height=el.scrollHeight,client=el.clientHeight;el.scrollTop=height;const bottom=el.scrollTop;el.scrollTop=0;return{height,client,bottom};});
-    await page.keyboard.press('1');await page.waitForSelector('.skill-flight[open]');
+    await page.keyboard.press('1');await page.waitForTimeout(180);
+    await page.screenshot({path:path.join(out,`${width}x${height}-${long?'long':'normal'}-commit.png`)});
+    await page.waitForSelector('.skill-flight[open]');
     await page.screenshot({path:path.join(out,`${width}x${height}-${long?'long':'normal'}-flight.png`)});
     await page.waitForFunction(()=>!document.querySelector('.skill-flight')&&Game.phase==='ready');
     const data=await page.evaluate(()=>{window.__draftLayout.done=true;return window.__draftLayout;});
@@ -78,11 +88,20 @@ try{
       dialogWidthChange:span(data.entry,'width'),dialogHeightChange:span(data.entry,'height'),contentWidthChange:span(data.entry,'clientWidth'),
       scrollHeightChange:span(data.entry,'scrollHeight'),scrollWidthChange:span(data.entry,'scrollWidth'),
       bodyWidthChange:span(data.flight.map(f=>f.body),'width'),descLineChange:span(data.flight.map(f=>f.desc),'lines'),
-      slotLineChange:span(data.flight.map(f=>f.slot),'lines'),firstFlight:data.flight[0]};
+      slotLineChange:span(data.flight.map(f=>f.slot),'lines'),firstFlight:data.flight[0],commitFrames:data.commit.length,
+      commitTopClearance:Math.min(...data.commit.map(f=>f.top-f.ring-f.gridTop)),
+      commitScrollHeightChange:span(data.commit,'scrollHeight')};
     report.cases.push(summary);
     fs.writeFileSync(path.join(out,`${width}x${height}-${long?'long':'normal'}-frames.json`),JSON.stringify(data,null,2));
     if(!record){
       assert.ok(data.entry.length>10&&data.flight.length>5,'observed both animation phases');
+      assert.ok(data.commit.length>5,'observed commit lift');
+      assert.ok(summary.commitTopClearance>=-.5,'commit lift and ring stay inside the grid clipping edge');
+      assert.equal(summary.commitScrollHeightChange,0,'commit headroom does not enlarge the scroll range');
+      assert.ok(data.commit.every(f=>f.dialogWidth===data.entry[0].width&&f.dialogHeight===data.entry[0].height),
+        'commit headroom preserves dialog geometry');
+      assert.equal(await page.$eval('#draft-options',el=>el.style.getPropertyValue('--draft-commit-headroom')),'',
+        'temporary commit headroom is cleared after selection');
       assert.equal(summary.dialogWidthChange,0,'dialog width does not jump');
       assert.equal(summary.dialogHeightChange,0,'dialog height does not jump');
       assert.equal(summary.contentWidthChange,0,'no scrollbar gutter changes');

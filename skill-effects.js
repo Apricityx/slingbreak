@@ -103,7 +103,7 @@
     detailName.textContent=skill.name;
     detailFamily.textContent=`${skill.family} · 跨关生效`;
     detailMeta.innerHTML=`<span class="skill-rarity" data-tier="${skill.tier}"><span class="rarity-dot"></span>${G.skillTiers[skill.tier].name}</span>`;
-    detailText.textContent=skill.describe(1);
+    detailText.textContent=skill.describe(1);detail.dataset.skill=skill.id;
     lucide.createIcons({root:detail});
     detailPaused=G.paused;G.paused=true;G.drag=null;G.audio.sync();
     if(!detail.open)detail.showModal();
@@ -158,6 +158,14 @@
     const result=choose(id);if(!result)return result;
     refresh();
     if(id==='decay'){const p=profiles[id];G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});}
+    return result;
+  };
+  const swap=G.swapSkill;
+  G.swapSkill=(target,id)=>{
+    const result=swap(target,id);if(!result)return result;
+    refresh();
+    const p=profiles[id];
+    if(id==='decay')G.bricks.forEach((b,i)=>{if(i%3===0)emit('poison',b.x,b.y,p.color,35,{id,accent:p.accent,duration:1});});
     return result;
   };
   const add=G.addArrow;

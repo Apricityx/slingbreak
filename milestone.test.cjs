@@ -219,14 +219,14 @@ test('eye: during the gaze an arrow along the beam slips through the notch; unan
   const miss=fight().G;remove(miss,b=>b.type==='anchor');miss.boss().data.ward=20;miss.bossDefs.eye.start('gaze');const n=miss.bricks.length;run(miss,5.8);
   assert.equal(ers(miss).move,null);const made=miss.bricks.length-n;assert.ok(made>=1&&made<=4,`gaze made ${made}`);assert.ok(ers(miss).ward>=50);
 });
-test('eye: of three mirage eyes only the real one dazes; a fake just bursts; unanswered, fakes beam in bricks',()=>{
+test('eye: of two mirage eyes only the real one dazes; a fake just bursts; unanswered, the fake beams in bricks',()=>{
   const {G}=fight();clearAll(G);
-  G.bossDefs.eye.start('mirage');run(G,1);assert.equal(ers(G).eyes.length,3);
-  const fake=ers(G).eyes.find(e=>!e.real);shot(G,fake.x,fake.y+80,0,-14);assert.equal(ers(G).eyes.length,2);assert.ok(!ers(G).dazed);
+  G.bossDefs.eye.start('mirage');run(G,1);assert.equal(ers(G).eyes.length,2);
+  const fake=ers(G).eyes.find(e=>!e.real);shot(G,fake.x,fake.y+80,0,-14);assert.equal(ers(G).eyes.length,1);assert.ok(!ers(G).dazed);
   const real=ers(G).eyes.find(e=>e.real);assert.equal(G.riftEye.x,real.x,'the real eye carries the collider');
   run(G,.2);shot(G,real.x,real.y+80,0,-14);assert.ok(ers(G).dazed,'seen through');
   const miss=fight().G;clearAll(miss);miss.bossDefs.eye.start('mirage');run(miss,7.4);
-  assert.equal(ers(miss).move,null);assert.ok(miss.bricks.length>=4,'two fakes beam in bricks');
+  assert.equal(ers(miss).move,null);assert.ok(miss.bricks.length>=2,'the fake beams in bricks');
 });
 test('eye: three pupil hits while doom charges daze it for longer; unanswered, the chains regrow and the ward fills',()=>{
   const {G}=fight();clearAll(G);
@@ -377,7 +377,7 @@ test('direct boss entry clears phase locks, effects and gravity but refuses acti
 
 // ── Boss deck and the other bosses.
 function bossFight(id,abilities){
-  const session=boot(save(100,id)),{G}=session;
+  const session=boot({...save(100,id),bossOverride:{level:100,boss:id}}),{G}=session;
   if(abilities){G.boss().abilities=abilities;G.state.board=null;G.generate();}
   run(G,.6);assert.ok(G.boss().intro);assert.equal(G.boss().boss,id);return session;
 }
@@ -385,7 +385,7 @@ const killAll=G=>[...G.bricks].forEach(b=>G.hit(b,1e9));
 function finishPhase(G){const m=G.boss();m.hp=0;run(G,.05);}
 
 for(const id of ['eye','forge','serpent','clock'])for(const reduced of [true,false])test(`${id}: the ${reduced?'reduced-motion':'animated'} intro has no heavy roar or explosion, but phase shifts keep their effects`,()=>{
-  const {G}=boot(save(100,id),{reduced}),sounds=[];
+  const {G}=boot({...save(100,id),bossOverride:{level:100,boss:id}},{reduced}),sounds=[];
   G.sound=(type)=>sounds.push(type);G.bossApi.freeze=()=>{};
   run(G,3);
   assert.ok(G.boss().intro);assert.ok(!sounds.includes(G.bossDefs[id].roar),'no opening roar');assert.ok(!sounds.includes('boom'),'no opening explosion');
@@ -393,14 +393,36 @@ for(const id of ['eye','forge','serpent','clock'])for(const reduced of [true,fal
   assert.ok(sounds.includes('boom'));assert.ok(sounds.includes(G.bossDefs[id].roar),'combat and phase transition effects are not globally muted');
 });
 
-test('every hundredth level deals the next boss from a shuffled deck; all four appear before any repeats',()=>{
+test('every hundredth level deals the next boss from a shuffled deck; all three active bosses appear before any repeats',()=>{
   const {G}=boot({...save(99),bossDeck:undefined}),seen=[];
-  for(let i=0;i<8;i++){
+  for(let i=0;i<12;i++){
     G.state.level=(i+1)*100;G.state.milestone=null;G.state.board=null;G.generate();seen.push(G.boss().boss);
   }
-  assert.deepEqual([...new Set(seen.slice(0,4))].sort(),['clock','eye','forge','serpent'].filter(id=>G.bossDefs[id]).sort());
-  assert.deepEqual([...new Set(seen.slice(4,8))].sort(),[...new Set(seen.slice(0,4))].sort());
-  assert.notEqual(seen[3],seen[4],'a new pass never opens with the boss that closed the last one');
+  assert.ok(!seen.includes('forge'),'archived forge is never dealt');
+  for(let i=0;i<seen.length;i+=3){
+    assert.deepEqual([...new Set(seen.slice(i,i+3))].sort(),['clock','eye','serpent']);
+    if(i)assert.notEqual(seen[i-1],seen[i],'a new pass never opens with the boss that closed the last one');
+  }
+});
+
+test('old boss decks skip archived forge while keeping the remaining order',()=>{
+  const {G}=boot({...save(100),bossDeck:['forge','serpent','forge','clock','missing']});
+  assert.equal(G.bossDefs.forge.archived,true);
+  assert.equal(G.boss().boss,'serpent');
+  assert.deepEqual(Array.from(G.state.bossDeck),['clock']);
+  const next=boot(save(100,'forge')).G;
+  assert.notEqual(next.boss().boss,'forge','a deck containing only forge refills from active bosses');
+  assert.ok(!next.state.bossDeck.includes('forge'));
+});
+
+test('an archived forge fight already in progress still resumes without a manual override',()=>{
+  const {G:first,read}=bossFight('forge');
+  first.boss().hp-=1;first.save();
+  const saved=read();saved.bossOverride=null;
+  const {G}=boot(saved);
+  assert.equal(G.boss().boss,'forge');
+  assert.equal(G.boss().hp,first.boss().hp);
+  assert.equal(G.boss().intro,true);
 });
 
 test('an old single-boss save migrates to the eye',()=>{

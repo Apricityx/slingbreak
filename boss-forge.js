@@ -293,8 +293,9 @@
         const g=ctx.createRadialGradient(HEART.x,HEART.y,5,HEART.x,HEART.y,120+k*500);g.addColorStop(0,P.core);g.addColorStop(.4,P.molten);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,780,G.H);
       }ctx.globalAlpha=1;
     }
+    // Archived concept: keep manual entry and saved fights, but never deal it randomly.
     return {
-      id:'forge',name:'熔炉巨像',title:'FORGE COLOSSUS',tagline:'',
+      id:'forge',name:'熔炉巨像',title:'FORGE COLOSSUS',tagline:'',archived:true,
       kicker:'WARNING · FORGE',note:'',rageNote:'炉心暴走',hitLabel:'熔心命中',roar:'forge',
       seal:['FORGE EXTINGUISHED','熔炉巨像 · 熄灭',''],
       phaseNames:['点火','熔铸','暴走'],abilities,

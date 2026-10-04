@@ -27,7 +27,7 @@
     if(selecting||G.phase!=='draft'||G.paused)return;
     selecting=true;
     G.audio.unlock();
-    const cards=[...$('draft-options').children],card=cards.find(c=>c.dataset.skill===id);
+    const options=$('draft-options'),cards=[...options.children],card=cards.find(c=>c.dataset.skill===id);
     const skill=G.skillCatalog.find(s=>s.id===id),color=tierColor[skill?.tier]||tierColor.white;
     const running=[];let ghost=null,landed=null,entrance=null;
     // Tracked animations are cancelled on exit; the landing pop and queue slide outlive it.
@@ -46,6 +46,10 @@
         const style=getComputedStyle(el);return{width:style.width,height:style.height};
       });
       // Beat 1: commit.
+      // The grid still contains deal-in overflow, but its 16px top padding is
+      // too small for the lift + 4% growth around the card's low transform origin.
+      // Include spring overshoot and the pick ring, also for tall descriptions.
+      options.style.setProperty('--draft-commit-headroom',Math.ceil(16+parseFloat(cardHeight)*.04)+'px');
       window.SlingColors.set(card,'--pick-color',color);card.classList.add('is-picked');
       const lift=play(card,[{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-10px) scale(1.04)'}],{duration:300,easing:spring});
       cards.filter(c=>c!==card).forEach((c,i)=>play(c,[{opacity:1,transform:'translate(0,0) rotate(0deg) scale(1)'},{opacity:0,transform:`translate(0,34px) rotate(${c.compareDocumentPosition(card)&Node.DOCUMENT_POSITION_FOLLOWING?-4:4}deg) scale(.92)`}],{duration:260,delay:40+i*50,easing:'cubic-bezier(.5,0,.75,0)'}));
@@ -130,6 +134,7 @@
       if(entrance&&G.boardEntrance===entrance&&entrance.start===Infinity){entrance.start=G.time;entrance.end=G.time+1.05;}
       if(landed)landed.style.visibility='';
       ghost?.remove();running.forEach(a=>a.cancel());
+      options.style.removeProperty('--draft-commit-headroom');
       if(G.phase!=='draft')$('game').focus({preventScroll:true});
       if(card){card.style.visibility='';card.classList.remove('is-picked');}
       draft.classList.remove('is-selecting','is-leaving');
@@ -195,7 +200,7 @@
    let uiQueued=false;
    const flushUi=G.flushUi;
    const paintUi=()=>{
-     if(!uiQueued)return;uiQueued=false;baseUi();update();G.updateAchievementUI?.();
+     if(!uiQueued)return;uiQueued=false;baseUi();update();G.updateAchievementUI?.();G.updateRerollUI?.();
      if(G.revokedSkills?.length&&!window.SlingBreakIntro?.active){
        G.toast(`已收回未解锁技能：${G.revokedSkills.map(s=>`${s.name}（需第 ${s.minLevel} 关）`).join('、')}`);
        G.revokedSkills=null;

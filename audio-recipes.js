@@ -38,6 +38,10 @@
     }else if(type==='win'){
       tone(t,160,28,.9,.6);noise(t,.75,.55,2300,'lowpass',390,120);
       [523,659,784,1047,1319].forEach((f,i)=>{tone(t+.13+i*.08,f,f,.65,.13,'sine',390,true);tone(t+.13+i*.08,f/2,f/2,.45,.07,'triangle');});
+    }else if(type==='reroll'){
+      // Skill reroll: an airy riffle sweeping up into a bright pair.
+      noise(t,.32,.16,900,'bandpass',x,5200);tone(t,180,720,.3,.09,'triangle',x,true);
+      [880,1319].forEach((f,i)=>tone(t+.2+i*.05,f,f,.24,.07,'sine',x,true));
     }else if(type==='upgrade'){
       [440,554,659,880].forEach((f,i)=>tone(t+i*.065,f,f,.25,.12,'triangle',390,true));
     // Abyss rift boss (milestone.js).
