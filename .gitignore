@@ -7,3 +7,6 @@
 
 # Compatibility browsers, profiles and visual test artifacts
 agent-tmp/
+
+# Generated benchmark reports, data and screenshots
+/bench/results/
