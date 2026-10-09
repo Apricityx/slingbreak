@@ -1,0 +1,6 @@
+# Copy to signing.properties (ignored); keep the keystore and passwords private.
+# Alternatively supply the four SLINGBREAK_* environment variables in CI.
+STORE_FILE=keystore/slingbreak-release.jks
+STORE_PASSWORD=replace-me
+KEY_ALIAS=slingbreak
+KEY_PASSWORD=replace-me

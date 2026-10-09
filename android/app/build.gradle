@@ -1,0 +1,154 @@
+plugins { id 'com.android.application' }
+
+def signing = new Properties()
+def signingFile = rootProject.file('signing.properties')
+if (signingFile.exists()) signingFile.withInputStream { signing.load(it) }
+def secret = { name -> System.getenv('SLINGBREAK_' + name) ?: signing.getProperty(name) }
+def hasSigning = ['STORE_FILE', 'STORE_PASSWORD', 'KEY_ALIAS', 'KEY_PASSWORD'].every { secret(it) }
+if (!(project.property('appVersionName') ==~ /\d+\.\d+\.\d+(?:(?:-dev\d+)|(?:-RC\d+)|(?:-hotfix\d+))?/)) {
+    throw new GradleException('appVersionName must use the documented Release version format')
+}
+
+android {
+    namespace 'io.github.apricityx.slingbreak'
+    compileSdk { version = release(37) { minorApiLevel = 1 } }
+    defaultConfig {
+        applicationId 'io.github.apricityx.slingbreak'
+        minSdk 28
+        targetSdk 36
+        versionCode Integer.parseInt(project.property('appVersionCode'))
+        versionName project.property('appVersionName')
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'int', 'X5_CORE_VERSION', '46285'
+    }
+    signingConfigs {
+        if (hasSigning) {
+            release {
+                storeFile rootProject.file(secret('STORE_FILE'))
+                storePassword secret('STORE_PASSWORD')
+                keyAlias secret('KEY_ALIAS')
+                keyPassword secret('KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug { applicationIdSuffix '.debug'; versionNameSuffix '-dev0' }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            testProguardFiles 'proguard-test-rules.pro'
+            if (hasSigning) signingConfig signingConfigs.release
+        }
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a'
+            universalApk false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    buildFeatures { buildConfig true }
+    testBuildType 'release'
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/game-assets').get().asFile
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/x5-assets').get().asFile
+    sourceSets.main.jniLibs.srcDir layout.buildDirectory.dir('generated/x5-jni').get().asFile
+    packaging.jniLibs.keepDebugSymbols += ['**/liblinuxtoolsfortbssdk_jni.so']
+}
+
+// Preserve the game folder entry and its relative script/style order. Never
+// copy benchmark results, temporary files, tests, Git data or signing secrets.
+def syncGameAssets = tasks.register('syncGameAssets', Sync) {
+    from(rootProject.file('../game')) {
+        include 'index.html', 'manifest.json', 'src/**/*.js', 'styles/*.css', 'icons/**'
+        include 'vendor/matter.min.js', 'vendor/lucide-subset.js'
+    }
+    into layout.buildDirectory.dir('generated/game-assets/game')
+}
+tasks.named('preBuild') { dependsOn syncGameAssets }
+
+// Vendor input is local, pinned and ignored. Build the tested DEX patch without
+// modifying the original core archive or depending on agent-tmp/.
+configurations { x5DexTools }
+def x5Work = layout.buildDirectory.dir('x5-patch')
+def x5Assets = layout.buildDirectory.dir('generated/x5-assets')
+def x5Core = rootProject.file('engine/tbs_core_release.tbs.apk')
+def x5Script = rootProject.file('tools/prepare-x5.py')
+tasks.register('extractX5', Exec) {
+    inputs.files(x5Core, x5Script)
+    outputs.files(x5Work.map { it.file('original.jar') }, x5Work.map { it.file('original.dex') })
+    commandLine 'python3', x5Script, 'extract', x5Core, x5Work.get().asFile
+}
+tasks.register('disassembleX5', JavaExec) {
+    dependsOn 'extractX5'
+    classpath = configurations.x5DexTools
+    mainClass = 'org.jf.baksmali.Main'
+    args 'disassemble', x5Work.get().file('original.dex').asFile, '-o', x5Work.get().dir('smali').asFile
+}
+tasks.register('patchX5', Exec) {
+    dependsOn 'disassembleX5'
+    commandLine 'python3', x5Script, 'patch', x5Core, x5Work.get().asFile
+}
+tasks.register('assembleX5', JavaExec) {
+    dependsOn 'patchX5'
+    classpath = configurations.x5DexTools
+    mainClass = 'org.jf.smali.Main'
+    args 'assemble', x5Work.get().dir('smali').asFile, '-j', '1', '-o', x5Work.get().file('api36.dex').asFile
+}
+tasks.register('bundleX5', Exec) {
+    dependsOn 'assembleX5'
+    commandLine 'python3', x5Script, 'bundle', x5Core, x5Work.get().asFile, x5Assets.get().asFile
+}
+tasks.named('preBuild') { dependsOn 'bundleX5' }
+
+dependencies {
+    implementation 'com.tencent.tbs:tbssdk:44286'
+    x5DexTools 'org.smali:baksmali:2.5.2'
+    x5DexTools 'org.smali:smali:2.5.2'
+    implementation 'androidx.core:core:1.17.0'
+    implementation 'com.android.tools.build:apksig:9.4.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}
+
+tasks.register('requireReleaseSigning') {
+    doLast {
+        if (!hasSigning) throw new GradleException('Release signing missing; see android/README.md. No debug-key release fallback.')
+    }
+}
+tasks.configureEach {
+    if (name == 'assembleRelease' || name == 'bundleRelease') dependsOn 'requireReleaseSigning'
+}
+
+tasks.register('distributeRelease') {
+    group = 'distribution'
+    description = 'Create release-named APKs and SHA-256 files without uploading them.'
+    dependsOn 'assembleRelease'
+    doLast {
+        def out = layout.buildDirectory.dir('outputs/distribution').get().asFile
+        out.mkdirs()
+        def version = project.property('appVersionName')
+        ['arm64-v8a'].each { abi ->
+            def original = layout.buildDirectory.file("outputs/apk/release/app-${abi}-release.apk").get().asFile
+            if (!original.isFile()) throw new GradleException("Missing APK: ${original}")
+            def target = new File(out, "slingbreak-${version}-${abi}.apk")
+            java.nio.file.Files.copy(original.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            def digest = java.security.MessageDigest.getInstance('SHA-256')
+            target.withInputStream { input ->
+                byte[] bytes = new byte[65536]
+                int count
+                while ((count = input.read(bytes)) != -1) digest.update(bytes, 0, count)
+            }
+            def hash = digest.digest().collect { String.format('%02x', it & 255) }.join()
+            new File(out, target.name + '.sha256').text = "${hash}  ${target.name}\n"
+            logger.lifecycle("Release artifact: ${target}")
+        }
+    }
+}
