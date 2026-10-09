@@ -5,11 +5,11 @@ import vm from 'node:vm';
 import {diagnoseSource} from './fx-diagnose.mjs';
 import {instrument} from './fx-instrument.mjs';
 test('diagnostic lexical probes remain test-only, parse and compose with the existing private hooks',()=>{
-  for(const name of ['game.js','skills.js','achievements.js','render.js','fx.js','audio.js','ui.js','skills-ui.js',
-    'skill-signatures.js','skill-effects.js','skill-expansion.js','skill-overdrive.js','achievements-ui.js','juice.js','transitions.js','milestone.js']){
-    const original=fs.readFileSync(name,'utf8'),probe=diagnoseSource(name,original);
+  for(const name of ['game/src/core/game.js','game/src/skills/skills.js','game/src/core/achievements.js','game/src/render/render.js','game/src/effects/fx.js','game/src/audio/audio.js','game/src/ui/ui.js','game/src/ui/skills-ui.js',
+    'game/src/effects/skill-signatures.js','game/src/effects/skill-effects.js','game/src/skills/skill-expansion.js','game/src/skills/skill-overdrive.js','game/src/ui/achievements-ui.js','game/src/effects/juice.js','game/src/effects/transitions.js','game/src/bosses/milestone.js']){
+    const original=fs.readFileSync(new URL('../'+name,import.meta.url),'utf8'),probe=diagnoseSource(name,original);
     assert.notEqual(probe,original,name);assert.doesNotThrow(()=>new vm.Script(instrument(name,probe)),name);
-    assert.equal(fs.readFileSync(name,'utf8'),original);
+    assert.equal(fs.readFileSync(new URL('../'+name,import.meta.url),'utf8'),original);
   }
   assert.equal(diagnoseSource('palette.js','const x=1;'),'const x=1;');
 });
@@ -20,7 +20,7 @@ test('diagnostic timing preserves return values, this, nesting, exceptions and d
   class CanvasRenderingContext2D{}
   let now=0;const win={};
   const c=vm.createContext({window:win,performance:{now:()=>now,mark(){}},Storage,Element,HTMLElement,CanvasRenderingContext2D,JSON:Object.create(JSON)});
-  vm.runInContext(fs.readFileSync('bench/fx-diagnose.js','utf8'),c);const D=win.__FXDiagnose;
+  vm.runInContext(fs.readFileSync(new URL('./fx-diagnose.js',import.meta.url),'utf8'),c);const D=win.__FXDiagnose;
   const self={v:3},leaf=D.wrap('leaf',function(n){now+=10;return this.v+n;});
   const root=D.wrap('root',function(n){now+=2;const v=leaf.call(this,n);now+=3;return v;});
   assert.equal(root.call(self,4),7);assert.equal(D.data.totals.length,0);

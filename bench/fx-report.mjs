@@ -8,7 +8,7 @@ const reduced=fs.existsSync(reducedPath)?JSON.parse(fs.readFileSync(reducedPath)
 const f=n=>Number(n).toFixed(2),key=r=>`${r.group}/${r.id}/${r.n}`;
 const base=normal.results.find(r=>r.id==='board').costMs.median;
 const rmap=new Map((reduced?.results||[]).map(r=>[key(r),r]));
-const names=Object.fromEntries([...fs.readFileSync('skills.js','utf8').matchAll(/entry\('([^']+)','([^']+)'/g)].map(m=>[m[1],m[2]]));
+const names=Object.fromEntries([...fs.readFileSync(new URL('../game/src/skills/skills.js',import.meta.url),'utf8').matchAll(/entry\('([^']+)','([^']+)'/g)].map(m=>[m[1],m[2]]));
 const name=id=>names[id]?`${names[id]} (${id})`:id;
 const sorted=rows=>[...rows].sort((a,b)=>b.costMs.median-a.costMs.median);
 const skills=normal.results.filter(r=>['impact','hero','trail'].includes(r.group));

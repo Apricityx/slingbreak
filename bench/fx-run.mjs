@@ -65,7 +65,7 @@ try{
   await cdp.send('Runtime.enable',{},sessionId);await cdp.send('Page.enable',{},sessionId);
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:412,height:915,deviceScaleFactor:options.dpr,mobile:false},sessionId);
    await cdp.send('Page.addScriptToEvaluateOnNewDocument',{source:bootstrap+(options.diagnose?'\n'+fs.readFileSync(path.join(ROOT,'bench/fx-diagnose.js'),'utf8'):'')},sessionId);
-  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/index.html`},sessionId);
+  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/game/index.html`},sessionId);
   const evalJS=async expression=>{const r=await cdp.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true},sessionId);
     if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;};
   for(let i=0;i<100;i++){if(await evalJS('!!window.Game?.__audit?.bosses?.serpent'))break;await sleep(100);}

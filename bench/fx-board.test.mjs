@@ -3,18 +3,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url),Matter=require('../vendor/matter.min.js');
+const require=createRequire(import.meta.url),Matter=require('../game/vendor/matter.min.js');
 const read=name=>fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
 function boot(){
   const context=vm.createContext({Matter,console,window:{},URLSearchParams,location:{search:''},
     matchMedia:()=>({matches:false,addEventListener:()=>{}}),localStorage:{getItem:()=>null,setItem:()=>{}},
     document:{documentElement:{classList:{toggle:()=>{}}},getElementById:()=>({})}});
-  for(const name of ['game.js','skills.js','achievements.js','bench/fx-board.js'])vm.runInContext(read(name),context,{filename:name});
+  for(const name of ['game/src/core/game.js','game/src/skills/skills.js','game/src/core/achievements.js','bench/fx-board.js'])vm.runInContext(read(name),context,{filename:name});
   return {G:context.window.Game,B:context.window.__FXBoard};
 }
 test('the browser helper stays test-only and parses without a build step',()=>{
   assert.doesNotThrow(()=>new vm.Script(read('bench/fx-board.js')));
-  assert.doesNotMatch(read('index.html'),/fx-board\.js/);
+  assert.doesNotMatch(read('game/index.html'),/fx-board\.js/);
 });
 test('whole-board fixtures are deterministic, bounded, non-overlapping and include all five special types',()=>{
   const {B}=boot();

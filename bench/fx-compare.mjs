@@ -10,7 +10,7 @@ const key=r=>`${r.group}/${r.id}/${r.n}`,f=n=>n==null?'—':Number(n).toFixed(2)
 const modes=['normal','reduced'];
 const pairs=modes.map(mode=>{const name=`fx-dpr2-${mode}.json`,before=load(beforeDir,name),after=load(dir,name);return {mode,before,after,map:new Map(before.results.map(r=>[key(r),r]))};});
 const normal=pairs[0],lookup=(mode,group,id,n)=>pairs[mode].after.results.find(r=>r.group===group&&r.id===id&&r.n===n);
-const names=Object.fromEntries([...fs.readFileSync('skills.js','utf8').matchAll(/entry\('([^']+)','([^']+)'/g)].map(m=>[m[1],m[2]]));
+const names=Object.fromEntries([...fs.readFileSync(new URL('../game/src/skills/skills.js',import.meta.url),'utf8').matchAll(/entry\('([^']+)','([^']+)'/g)].map(m=>[m[1],m[2]]));
 const title=id=>names[id]?`${names[id]} (${id})`:id;
 const improvement=(a,b)=>a?`${((1-b/a)*100).toFixed(0)}%`:'—';
 const table=rows=>['| 场景 / 数量 | 优化前 ms | 优化后 ms | 降幅 | 优化后 p95 ms |','|---|---:|---:|---:|---:|',...rows.map(r=>{
@@ -35,7 +35,7 @@ const lines=['# 粒子特效优化结果','',`生成于 ${new Date().toISOString
   '- **缓存**：LRU 上限 16 MiB（RGBA 像素预算）/ 384 张，实际浏览器对象和 GPU 内存可能更高；按实际舞台缩放、DPR、性能模式选择密度，主题变更清理缓存。每帧最多新建 2 张技能贴图，超额直接画矢量而不是延迟命中反馈。中等图案采用 64px 基准半径，四技能混合不再挤满缓存；无 Canvas 时回退原矢量实现。',
   '', '## 覆盖与回归','',
   ...pairs.map(p=>`- ${p.mode}：${p.after.coverage.cases} 个案例，${p.after.coverage.profiles}/${p.after.coverage.catalog} 个技能，缺失 ${p.after.coverage.missingProfiles.length}，测试错误 ${p.after.errors.length}，页面异常 ${p.after.pageErrors.length}。`),
-  '- Node 回归：`node --test *.test.cjs bench/fx.test.mjs`；结果见 `validation.txt`。未提交 / 推送 Git，未重置用户原有修改。',
+  '- Node 回归：`node --test tests/*.test.cjs bench/fx.test.mjs`；结果见 `validation.txt`。未提交 / 推送 Git，未重置用户原有修改。',
   '', '## 每个技能（正常模式）','',
   '| 技能 | 普通命中 ×12 前→后 ms | 主特效 ×12 前→后 ms | 拖尾 ×64 前→后 ms | 主特效 ×24 后 ms | 性能模式主特效 ×12 后 ms |','|---|---:|---:|---:|---:|---:|'];
 for(const id of Object.keys(names)){

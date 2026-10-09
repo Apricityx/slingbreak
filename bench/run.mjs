@@ -3,7 +3,7 @@
  * Headless runner for the SlingBreak particle/FPS benchmark.
  *
  * Serves this folder over HTTP, launches a local Chrome for Testing / Chrome /
- * Chromium, opens bench.html and reads back window.__BENCH__. No npm packages
+ * Chromium, opens bench/particles.html and reads back window.__BENCH__. No npm packages
  * are required: the DevTools Protocol is spoken over Node's global WebSocket.
  *
  * Usage:
@@ -94,7 +94,7 @@ function startServer() {
   const server = http.createServer((req, res) => {
     let pathname;
     try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); } catch { pathname = '/'; }
-    if (pathname === '/') pathname = '/bench.html';
+    if (pathname === '/') pathname = '/bench/particles.html';
     const file = path.resolve(ROOT, '.' + pathname);
     if (file !== ROOT && !file.startsWith(ROOT + path.sep)) { res.writeHead(403); res.end('forbidden'); return; }
     fs.readFile(file, (err, data) => {
@@ -258,7 +258,7 @@ function markdown(bench) {
     }
   }
   lines.push('');
-  lines.push('> 绝对 FPS 只在同一台机器内可比。要得到设备真实数据，请在目标 WebView/浏览器直接打开 `bench.html`。');
+  lines.push('> 绝对 FPS 只在同一台机器内可比。要得到设备真实数据，请在目标 WebView/浏览器直接打开 `bench/particles.html`。');
   return lines.join('\n');
 }
 
@@ -270,7 +270,7 @@ async function main() {
     counts: opts.counts, sample: String(opts.sample), warmup: String(opts.warmup),
     sim: String(opts.sim), simTicks: String(opts.simTicks), seed: String(opts.seed),
   });
-  const url = `http://127.0.0.1:${port}/bench.html?${qs}`;
+  const url = `http://127.0.0.1:${port}/bench/particles.html?${qs}`;
   console.log(`[bench] chrome: ${binary}`);
   console.log(`[bench] url:    ${url}`);
 

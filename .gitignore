@@ -10,3 +10,15 @@ agent-tmp/
 
 # Generated benchmark reports, data and screenshots
 /bench/results/
+
+# Android build output and private release-signing material
+/android/.gradle/
+/android/**/build/
+/android/local.properties
+/android/signing.properties
+/android/keystore/
+*.jks
+*.keystore
+
+# Vendor X5 runtime input; not redistributed without permission.
+/android/engine/*.apk

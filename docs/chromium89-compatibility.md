@@ -2,15 +2,16 @@
 
 Chrome/Chromium 89 is the minimum runtime, including the legacy X5 WebView used
 by the Android launcher. The source is shipped directly: there is no transpilation
-or CSS build step. Development requirements live in the root `agent.md`, linked
-from `AGENTS.md` so coding agents discover the same requirement.
+or CSS build step. Development requirements live in the root `AGENTS.md`.
+Browser source is grouped under `game/src/`, styles under `game/styles/`, and Node
+tests under `tests/`; `game/index.html` keeps their explicit loading order.
 
 ## Changes
 
 | Incompatibility | Compatible implementation | Visual behaviour |
 | --- | --- | --- |
 | `Array.at()` | Explicit last-item indexing in skills, serpent, achievements, transitions and browser FX driver | No change to gameplay or drawing |
-| CSS sRGB colour mixing | `colors.js` supplies dynamic RGB channels; `tokens.css` supplies theme channels; `color-blends.css` uses RGB/RGBA and `calc()` | Original interpolation weights, alpha, gradients and shadows retained; at most 8-bit channel rounding |
+| CSS sRGB colour mixing | `game/src/theme/colors.js` supplies dynamic RGB channels; `game/styles/tokens.css` supplies theme channels; `game/styles/color-blends.css` uses RGB/RGBA and `calc()` | Original interpolation weights, alpha, gradients and shadows retained; at most 8-bit channel rounding |
 | Relational selectors | Explicit selected-theme / older-emblem classes, hidden badge group and existing card tier attributes | Same selection, stacking and glint states |
 | Individual transform properties in CSS / WAAPI | Composed `transform` functions | Timings and easing retained; includes diamond rotation, centred cards/banners and emblems' resting stack transform |
 | Popover top layer | Transparent modal `dialog` for flight and outgoing token | Still above the draft modal; transparent, unblurred backdrop; Escape cannot interrupt selection; final focus returns to canvas |
@@ -32,7 +33,7 @@ prototype polyfills or transpiler dependencies are added. Benchmarks launch usin
 Run the existing suite plus static compatibility / colour channel tests:
 
 ```sh
-node --test *.test.cjs bench/*.test.mjs
+node --test tests/*.test.cjs bench/*.test.mjs
 ```
 
 Install the test-only old browser tooling **under the ignored `agent-tmp/`**.
@@ -93,11 +94,11 @@ upstream-only change.
 
 ## Draft layout regression (2026-10-02)
 
-- `draft.css`: contain deal-in transforms inside the options grid. Paint-only
+- `game/styles/draft.css`: contain deal-in transforms inside the options grid. Paint-only
   clipping previously let those transforms enlarge the dialog's scroll range by
   58–62 px, temporarily showing a scrollbar. Hide its gutter without disabling
   touch, wheel or keyboard scrolling for genuinely long drafts.
-- `skills-ui.js` / `skills.css`: clone the original card with its untransformed
+- `game/src/ui/skills-ui.js` / `game/styles/skills.css`: clone the original card with its untransformed
   layout dimensions, transparent border and fixed text boxes. Preserve those
   dimensions through flight using centred transforms rather than reflow. Give
   the incoming slot label its final fixed box throughout the shell morph too.
@@ -126,8 +127,8 @@ the Android assets/APK have not been rebuilt or installed.
 The options grid must keep `overflow: hidden` to contain deal-in transforms, but
 its 16 px top padding did not contain the commit's upward lift and 4% scale about
 the card's 85% vertical transform origin. Tall cards lost several pixels of their
-top edge. `skills-ui.js` now reserves temporary, height-dependent commit headroom;
-`draft.css` pairs that extra top padding with an equal negative margin, preserving
+top edge. `game/src/ui/skills-ui.js` now reserves temporary, height-dependent commit headroom;
+`game/styles/draft.css` pairs that extra top padding with an equal negative margin, preserving
 the card positions, dialog dimensions and scroll range. The headroom is cleared
 in selection cleanup, including interrupted animations.
 
@@ -135,3 +136,48 @@ in selection cleanup, including interrupted animations.
 3 px pick ring against the grid's clipping boundary, asserts unchanged dialog
 geometry and scroll range, and captures commit screenshots alongside flights.
 Use the same real-Chromium-89 and modern comparison commands above.
+
+## Project layout regression (2026-10-06)
+
+- Game scripts are grouped under `src/`; all game styles are under `styles/`;
+  Node regressions are under `tests/`. The particle benchmark entry moved to
+  `bench/particles.html` and now loads its required theme dependency.
+- SHA-256 checks confirmed that all 52 moved game scripts/styles are byte-identical
+  to the original working tree, including its uncommitted edits. Script and
+  stylesheet loading order in `index.html` is unchanged.
+- `node --test tests/*.test.cjs bench/*.test.mjs`: 345 tests passed, no failures
+  or skips. New directory regressions cover resource paths, nested deployment,
+  complete source/style loading and wrapper ordering.
+- Real Chromium 89.0.4389.0 gate: all 18 checks passed, including local-file
+  loading, real Web Audio, four bosses, launcher and viewport fits. Reviewed
+  opening/draft/board/Boss screenshots; runtime styles and rendering were not
+  redesigned.
+- The relocated particle runner completed its 0/300-particle smoke check on 89.
+  The full FX smoke rerun completed 1,120 cases, all 81 profiles and 12 board
+  cases, with zero benchmark or page errors.
+- The first FX smoke run had one animation-drain timeout in the 240-brick
+  `plain:special-0` case, with no page exceptions. Isolated before/after snapshot
+  checks both passed, followed by the complete successful rerun. The initial
+  failure is retained in `agent-tmp/project-layout-fx/`, not silently overwritten;
+  this does not establish the cause or prove the timeout cannot recur.
+- Logs, source hashes and screenshots remain in ignored `agent-tmp/` under
+  `project-layout-*` and `chrome89-compat/`. These are compatibility smoke checks,
+  not an Android X5 performance claim. No Android assets/APK were rebuilt.
+
+## Game folder consolidation (2026-10-08)
+
+- All browser runtime resources moved into `game/`: `index.html`, `manifest.json`,
+  `src/`, `styles/`, `vendor/` and `icons/`. The project root now only holds
+  tooling, tests, docs, `android/` and `game/`. Paths inside `game/` stayed
+  folder-relative, so no script/style/icon reference inside `game/index.html`
+  changed; the PWA now starts at `/game/index.html`.
+- Node tests, benchmark drivers and the Android `syncGameAssets` whitelist were
+  updated to the `game/` prefix; the Android asset origin (`assets/game/index.html`)
+  is unchanged, so installed saves keep their origin.
+- `node --test tests/*.test.cjs bench/*.test.mjs`: 365 tests passed, no failures.
+- Real Chromium 89.0.4389.0 gate: all checks passed, zero page errors, including
+  the moved entry, local-file entry, launcher, client settings and four bosses.
+- `bench/draft-layout.mjs`: all six fixtures passed on 89. FX smoke rerun
+  completed 1,120 cases across all 81 profiles with zero benchmark/page errors.
+- These are compatibility smoke checks, not an Android X5 performance claim.
+  No Android APK was rebuilt or installed for this layout change.

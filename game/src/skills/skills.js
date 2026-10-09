@@ -1,0 +1,438 @@
+(() => {
+  'use strict';
+  const G=window.Game,S=G.state,{Body}=Matter;
+  // minLevel keeps late-game skills out of the draft until the run is deep enough.
+  const entry=(id,name,family,icon,max,describe,minLevel=1)=>({id,name,family,icon,max:1,describe,minLevel});
+  const catalog=G.skillCatalog=[
+    entry('trident','三叉齐射','箭术','git-fork',3,r=>`每次射击额外发射 5 支扇形箭，继承全部伤害与穿透。`),
+    entry('echo','回响齐射','箭术','copy',2,r=>`松弦后自动重放 ${r} 次齐射，完整复制主箭与扇形箭。`),
+    entry('titan','泰坦之力','力量','biceps-flexed',1,()=>`所有箭矢与伤害型被动的基础伤害提高 100%。`),
+    entry('piercer','贯星长矛','箭术','move-up-right',4,r=>`主箭与齐射箭额外穿透 ${r*4} 块砖，突破普通升级的穿透上限。`),
+    entry('meteor','流星雨','元素','cloud-lightning',3,r=>`每次射击召唤 6 支自上而下的流星箭，造成 2 倍伤害。`),
+    entry('hunters','追猎蜂群','箭术','crosshair',3,r=>`每次射击额外释放 4 支追踪箭，自动转向附近砖块。`),
+    entry('seeking','必中引导','箭术','scan-line',2,r=>`所有箭矢自动追踪前方 ${180+r*70} 范围内的砖块，优先锁定特殊块。`),
+    entry('ricochet','动能回收','箭术','corner-up-right',1,()=>`反弹恢复 2 次穿透，并增加初始箭伤的 15%；每支箭最多触发 4 次。`),
+    entry('blast','爆裂箭头','元素','bomb',3,r=>`每次直接击碎都引发爆炸，对附近砖块造成 1.5 倍伤害。`),
+    entry('lightning','连锁电容','元素','zap',3,r=>`每次命中额外电击最近 3 块砖，造成 1.2 倍伤害。`),
+    entry('ice','永冻箭簇','元素','snowflake',1,()=>`每次命中冻结周围 95 范围内的砖块；冰冻使后续伤害变为 2 倍，不再额外叠乘。`),
+    entry('shatter','碎冰风暴','元素','sparkles',3,r=>`冻结砖块碎裂后爆发冰震，对邻近砖块造成 1.5 倍伤害，每箭最多 ${r*6} 次。`),
+    entry('critical','致命准星','力量','focus',1,()=>`箭矢有 50% 概率暴击，造成 3 倍伤害。`),
+    entry('execute','斩灭法则','力量','scissors',1,()=>`箭命中后剩余生命不高于 25% 的砖块立即被处决。`),
+    entry('rage','连击狂热','力量','flame',1,()=>`每支箭每击碎 3 块砖，该箭后续直接命中伤害提高 20%，最多提高 120%；各箭独立累计。`),
+    entry('sweep','横扫千军','力量','arrow-left-right',2,r=>`每箭前 ${r} 次命中横扫目标所在整行，造成 2 倍伤害。`),
+    entry('lance','天际贯穿','力量','arrow-up-down',2,r=>`每箭前 ${r} 次命中贯穿目标所在整列，造成 2 倍伤害。`),
+    entry('pulse','末日脉冲','元素','radio',1,()=>`每射出 3 箭，对场上所有可破坏砖块造成 1.2 倍基础伤害。`),
+    entry('aftershock','地裂余震','元素','waves',2,r=>`爆破砖碎裂后追加 ${r} 次大范围余震，每次造成 2 倍伤害。`),
+    entry('storm','雷神降临','元素','zap-off',3,r=>`电弧砖改为跃击 ${4+r*3} 个目标，每次造成 2 倍伤害。`),
+    entry('blizzard','绝对零度','元素','wind',2,r=>`冰晶砖冻结范围扩大至 ${160+r*30}，并对范围内砖块造成 ${r} 倍伤害，享受易碎加成。`),
+    entry('prism','万华棱镜','箭术','split',3,r=>`分裂砖改为生成 ${4+r*2} 支箭，每支可穿透 ${2+r} 块砖。`),
+    entry('alchemist','点石成金','财富','coins',2,r=>`金矿砖的金币倍率从 3 倍提高到 ${3+r*5} 倍，与其他收益被动相乘。`),
+    entry('mint','黄金时代','财富','badge-dollar-sign',Infinity,r=>`所有砖块掉落的金币变为 ${r+1} 倍，核心奖金独立计算。`),
+    entry('treasury','核心宝库','财富','gem',Infinity,r=>`核心通关奖金变为 ${1+r*2} 倍，不计入普通连击收益。`),
+    entry('bargain','超频工坊','财富','percent',2,r=>`所有装备升级（含连击强化）只需原价的 ${Math.round(100*.6**r)}%。`),
+    entry('forge','神匠赐福','财富','hammer',1,()=>`每关第一次购买升级，额外免费提升同一项目 2 级。`),
+    entry('resonance','核心共振','核心','diamond',2,r=>`核心解锁门槛从 60% 降至 ${60-r*15}% 的砖块。`),
+    entry('corehunter','终焉引力','核心','orbit',1,()=>`核心出现后，箭矢额外获得 4 次穿透，并在靠近核心时自动转向它。`),
+    entry('legion','万箭归宗','箭术','layers',1,()=>`每第 3 次射击追加 6 支扇形箭。`),
+    entry('decay','衰弱领域','力量','heart-crack',1,()=>`进入关卡时，全场砖块生命削减 35%；获得此技能时也立即生效。`),
+    entry('rapid','疾风快弦','箭术','timer',1,()=>`射击间隔缩短至 0.18 秒，所有箭矢伤害提高 35%。`),
+    entry('heavy','破城重弩','力量','anvil',1,()=>`箭矢伤害提高 80%，额外穿透 2 块砖。`),
+    entry('growing','越战越勇','力量','trending-up',1,()=>`每次射击增加 20% 基础伤害，第 10 箭起达到 3 倍伤害；本关持续生效。`),
+    entry('doubletap','延迟引爆','元素','alarm-clock',1,()=>`每次命中埋下炸弹，0.2 秒后对周围 115 范围造成 2 倍基础伤害。`),
+    entry('poison','蚀骨剧毒','元素','flask-conical',1,()=>`命中后追加 3 次毒伤，每次为基础伤害的 80%，间隔 0.15 秒。`),
+    entry('nova','碎星新生','箭术','asterisk',1,()=>`每轮前 8 次击碎各释放 3 支追踪箭，造成 1.5 倍伤害，穿透 3 块砖。`),
+    entry('crossfire','十字审判','力量','plus',1,()=>`每支箭第一次命中，对目标所在整行和整列追加 3 倍基础伤害。`),
+    entry('jackpot','幸运暴富','财富','dices',1,()=>`每块砖有 25% 概率掉落 10 倍金币，其余也有 1.5 倍；核心奖金不变。`),
+    entry('snowburst','冰河冲击','元素','snowflake',1,()=>`每次射击冻结随机 5 块砖，随即各造成 1.5 倍基础伤害，冰冻再翻倍。`),
+    entry('supernova','超新星爆发','元素','sun',1,()=>`每第 4 次射击轰击全场，造成 5 倍基础伤害；平时箭矢伤害提高 50%。`),
+    entry('swarmqueen','蜂群女王','箭术','bug',1,()=>`每次射击释放 8 支追踪箭，各造成 1.5 倍伤害，穿透 3 块砖。`),
+    entry('railgun','歼星轨道炮','力量','rocket',1,()=>`所有箭矢造成 4 倍伤害，额外穿透 12 块砖。`),
+    entry('ambush','破阵先锋','力量','swords',1,()=>`箭矢命中满血砖块时造成 3 倍伤害，开路一箭更凶猛。`),
+    entry('siphon','饮血长箭','箭术','pipette',1,()=>`箭矢直接击碎砖块时返还 1 次穿透，并提高初始箭伤的 25%；每支箭最多触发 8 次。`),
+    entry('opportunist','穷追猛打','力量','target',1,()=>`箭矢命中受伤砖块时造成 3 倍伤害，并额外穿透 2 块砖。`),
+    entry('sharpshooter','满弓狙击','箭术','telescope',1,()=>`蓄力达到 95% 时，主箭造成 3 倍伤害并额外穿透 6 块砖。`),
+    entry('bounty','连杀赏金','财富','wallet',1,()=>`每支箭从第 2 块起，每多击碎一块，赏金倍率增加 25%，第 9 块起为 3 倍；与连击、成就相乘，不追补。`),
+    entry('bankshot','弹射工厂','箭术','shuffle',1,()=>`每支箭前 3 次反弹，各释放 2 支追踪箭，造成 2 倍伤害、穿透 2 块砖；追踪箭不再分裂。`),
+    entry('minefield','脉冲雷区','元素','disc',1,()=>`每支箭首次命中布下雷区，连续爆炸 3 次，每次对 135 范围造成 2 倍基础伤害。`),
+    entry('frostfire','冰火连爆','元素','thermometer-snowflake',1,()=>`每次命中冻结周围 100 范围，随后引爆，造成 1.5 倍基础伤害，冰冻再翻倍。`),
+    entry('thunderlottery','雷霆骰子','元素','dice-5',1,()=>`每次命中有 35% 概率释放大闪电，跃击最近 6 块砖，各造成 3 倍基础伤害。`),
+    entry('mirror','镜像夹击','箭术','columns-2',1,()=>`每次射击从战场左右两侧各发射 2 支追踪箭，造成 1.5 倍伤害、穿透 3 块砖。`),
+    entry('specialist','异能收割','财富','badge-plus',1,()=>`箭矢对特殊砖块造成 4 倍伤害，特殊砖块金币再乘 3 倍。`),
+    entry('reaper','死神点名','力量','skull',1,()=>`每第 3 次射击，直接处决剩余生命最低的 4 块砖；平时箭矢伤害提高 60%。`),
+    entry('cascade','连环殉爆','元素','bomb',1,()=>`每轮飞行前 16 块被击碎的砖各引爆 145 范围，造成 2.5 倍基础伤害；爆炸击碎也能续爆。`),
+    entry('orbital','轨道轰炸','元素','satellite',1,()=>`每次射击锁定砖块最密集的位置，连续轰炸 3 次，每次对 160 范围造成 3 倍基础伤害。`),
+    entry('roulette','命运轮盘','核心','disc-3',1,()=>`每箭随机获得一种力量：5 倍伤害并多穿透 10 块；追加 8 支双倍伤害追踪箭；全场受到 2.5 倍基础伤害。`),
+    entry('stormfront','天幕裁决','元素','cloud-rain',1,()=>`每次射击随机选中 3 行砖块，逐行轰击，每块受到 3 倍基础伤害。`),
+    entry('boomerang','回旋天轮','箭术','undo-2',1,()=>`箭矢额外穿透 6 块；飞行 0.55 秒后反向折返，伤害变为 3 倍，再获得 6 次穿透，沿途二次收割。`,50),
+    entry('wormhole','折跃猎手','箭术','waypoints',1,()=>`每箭前 3 次命中后，传送至远处另一块砖旁并重新瞄准；每次折跃箭伤提高初始值的 50%，返还 2 次穿透。`),
+    entry('buzzsaw','行刑锯盘','力量','disc-3',1,()=>`每次射击在最密集的一行放出巨型锯盘，横切整个战场；每块砖最多被锯 3 次，每次受到 1.5 倍基础伤害。`),
+    entry('siegebreaker','城墙粉碎机','力量','pickaxe',1,()=>`箭矢伤害翻倍。命中合金障碍可直接撞碎并继续前进，碎片冲击周围 155 范围，造成 4 倍基础伤害。`),
+    entry('spectral','幽界漫游','箭术','scan',1,()=>`箭矢无视所有合金障碍，伤害翻倍，额外穿透 6 块砖；每穿过一面障碍，再为该箭增加 50% 初始伤害。`),
+    entry('transmute','万物炼成','元素','flask-round',1,()=>`每次射击将 4 块普通砖炼成爆破、电弧、冰晶或分裂砖，并削去一半当前生命。把普通砖阵变成连锁机关。`),
+    entry('threadweaver','缝天之线','力量','spline',1,()=>`每支箭前 5 个不同命中点依次连成切割线；每条线对沿线砖块追加 3 倍基础伤害，可以穿过障碍。`),
+    entry('infection','寄生花园','元素','sprout',1,()=>`每箭首次命中种下寄生花。0.3 秒后花朵绽放，造成 3 倍基础伤害，并向最近 2 块砖传播；每箭最多感染 15 块。`),
+    entry('contract','猎金契约','财富','scroll-text',1,()=>`场上标记 3 个悬赏目标，对它们的直接伤害翻倍。全部击碎领取当前核心奖金的 40%，并给场上箭矢补充 4 次穿透；每关最多完成 3 轮。`),
+    entry('timeslip','弦上时停','箭术','hourglass',1,()=>`拉弓时所有箭矢与重力进入 20% 速度，松弦恢复。射击间隔缩短至 0.25 秒，箭矢伤害翻倍，可在空中布下连续攻势。`),
+    entry('nailburst','破壳礼炮','箭术','party-popper',1,()=>`每支主箭首次命中，沿前进方向炸出 3 支碎钉箭，各造成 90% 基础伤害、穿透 2 块；碎钉不再分裂。`),
+    entry('fusepath','燃线速递','元素','route',1,()=>`箭矢额外穿透 3 块；前 4 个命中点连成导火线，0.25 秒后逐段烧穿沿线砖块，造成 1.5 倍基础伤害。`),
+    entry('rhythm','三拍重音','力量','music-2',1,()=>`箭矢额外穿透 3 块；每支箭每第 3 次命中造成 4 倍箭伤，返还 2 次穿透，并震伤周围 100 范围，造成 1 倍基础伤害。`),
+    entry('reboundaim','撞墙开窍','箭术','corner-up-right',1,()=>`每支箭前 3 次反弹后自动瞄准最近的未命中砖块，返还 1 次穿透，箭伤增加初始值的 50%。`),
+    entry('overkill','余力借条','力量','ticket',1,()=>`直接击碎后，溢出伤害加 50% 基础伤害存入箭矢，下次命中释放，最多储存 4 倍基础伤害；并保底再穿透 1 块。`),
+    entry('pendulum','左右开弓','箭术','chevrons-left-right',1,()=>`奇数次射击追加左右两支侧翼箭，各造成 1.2 倍伤害、穿透 2 块；偶数次射击主箭造成 3 倍伤害、额外穿透 3 块。`),
+    entry('teslanet','三角禁区','元素','triangle',1,()=>`每次射击在前方 3 块砖间架设三角电网，连续通电 3 次；边线及内部砖块每次受到 1.5 倍基础伤害。`),
+    entry('undertow','潮汐回卷','元素','waves',1,()=>`每箭首次命中掀起半径 240 的回卷浪潮，三道波环由外向内依次碾压，每块砖受到 2 倍基础伤害；最后中心 110 范围再爆发 3 倍伤害。`),
+    entry('chronicle','伤痕重映','力量','history',1,()=>`每支主箭记录发射后 1 秒内造成的伤害；随后对仍存活的受伤砖块重演一次，每块最多追加 4 倍基础伤害。`),
+    entry('firewheel','日轮护航','元素','sun',1,()=>`每支主箭携带半径 90 的双焰日轮，持续灼烧环带上的砖块，每 0.18 秒造成 1 倍基础伤害；每块每箭最多灼烧 4 次。`),
+    entry('worldfold','天地对折','力量','fold-horizontal',1,()=>`每次射击召唤两面光墙，从战场两侧向瞄准列合拢，扫过的砖块各受 3 倍基础伤害；合拢后沿该列释放宽 150 的终结光刃，造成 6 倍伤害。`),
+    entry('starforge','吞星熔炉','元素','eclipse',1,()=>`每次射击在砖阵中点燃熔炉，1.2 秒内每块被击碎的砖都为它充能；随后爆发 4 倍基础伤害，每层再加 40% 伤害和 12 范围，最多 16 层，基础范围 170。`)
+  ];
+  G.skillTiers={white:{name:'普通',level:1},blue:{name:'稀有',level:2},gold:{name:'传说',level:3}};
+  // Keep tier and draw weight together. Explicit weights avoid changing other
+  // skills' weights (especially treasury) whenever one skill moves tiers.
+  const tiers={
+    white:[
+      ['echo',140],['piercer',138],['seeking',136],['ricochet',134],['shatter',132],['execute',130],
+      ['rage',128],['aftershock',126],['storm',124],['blizzard',122],['prism',120],['alchemist',118],
+      ['treasury',116],['bargain',114],['resonance',110],['corehunter',108],['legion',106],['nailburst',105],
+      ['poison',104],['fusepath',103],['ambush',102],['siphon',100],['reboundaim',99],['opportunist',98],
+      ['overkill',97],['pendulum',95],['bounty',94]
+    ],
+    blue:[
+      ['titan',65],['blast',64],['ice',63],['boomerang',62.5],['critical',62],['sweep',61],
+      ['lightning',60.5],['lance',60],['transmute',59.5],['pulse',59],['forge',58.5],['mint',58],
+      ['siegebreaker',57.5],['decay',57],['contract',56.5],['heavy',55],['sharpshooter',54.5],['growing',54],
+      ['doubletap',52.5],['snowburst',52],['bankshot',51],['chronicle',51],['rhythm',50.5],['minefield',50],
+      ['firewheel',49],['mirror',47],['specialist',46]
+    ],
+    gold:[
+      ['trident',18],['meteor',17],['hunters',16],['thunderlottery',14.5],['frostfire',13.5],['nova',13],
+      ['wormhole',12.5],['jackpot',12.25],['crossfire',12],['buzzsaw',11.5],['rapid',11.25],['supernova',11],
+      ['undertow',10.25],['swarmqueen',10],['worldfold',10],['spectral',9.5],['timeslip',9.25],['railgun',9],
+      ['starforge',9],['threadweaver',8.5],['teslanet',8.25],['reaper',8],['infection',7.5],['cascade',7],
+      ['orbital',6],['roulette',5],['stormfront',4]
+    ]
+  };
+  for(const [tier,entries] of Object.entries(tiers))for(const [id,weight] of entries)Object.assign(catalog.find(s=>s.id===id),{tier,weight});
+  const byId=new Map(catalog.map(s=>[s.id,s]));
+  // One slot is free; the shop upgrade adds up to three more (game.js owns the tiers).
+  Object.defineProperty(G,'skillSlots',{configurable:true,get:()=>1+G.skillSlotBought()});
+  // Bumped when a skill gains a level gate, so older saves are migrated once.
+  G.skillGateVersion=1;
+  const rank=G.skillRank=id=>S.skillScopeVersion===3&&byId.has(id)&&S.skills?.[id]===1?1:0;
+  // Skill IDs are non-numeric keys: insertion order survives JSON save/reload
+  // and is the FIFO queue, oldest first. Never sort this map by the catalog.
+  let activeCacheSkills=null,activeCacheScope=-1,activeCacheList=[];
+  G.invalidateSkillCache=()=>{activeCacheSkills=null;activeCacheScope=-1;activeCacheList=[];};
+  G.activeSkills=()=>{
+    // Hit effects ask this repeatedly in one synchronous chain. Ownership is
+    // immutable during a shot, so reuse the same short array by object identity.
+    if(activeCacheSkills===S.skills&&activeCacheScope===S.skillScopeVersion)return activeCacheList;
+    activeCacheSkills=S.skills;activeCacheScope=S.skillScopeVersion;
+    activeCacheList=Object.keys(S.skills).filter(id=>rank(id)).map(id=>byId.get(id));
+    return activeCacheList;
+  };
+  G.outgoingSkill=()=>G.activeSkills().length===G.skillSlots?G.activeSkills()[0]:null;
+  // Explicit child-arrow damage must retain global projectile multipliers.
+  G.setArrowDamage=(a,damage)=>{a.damage=damage*(a.skillDamageScale||1);a.expansionBase=a.overdriveBase=a.damage;};
+  function normalize(){
+    G.invalidateSkillCache();
+    if(S.skillScopeVersion!==3){
+      if(S.skillScopeVersion===2){
+        // Preserve the currently equipped single-level skill in older saves.
+        if(S.skillChosenLevel!==S.level)S.skills={};
+      }else{
+        if(S.skillRuntime?.decay)G.bricks.forEach(b=>{b.hp=Math.min(b.max,b.hp/.65);});
+        S.skills={};S.skillChosenLevel=0;S.skillRuntime=null;
+      }
+      S.skillScopeVersion=3;
+    }
+    const entries=S.skills&&typeof S.skills==='object'&&!Array.isArray(S.skills)?Object.entries(S.skills):[];
+    S.skills=Object.fromEntries(entries.filter(([id,value])=>byId.has(id)&&value===1).slice(-G.skillSlots));
+    // Migration: a gated skill must not stay equipped in a save that predates the
+    // gate, so revoke any the run has not reached yet and let it be drawn again.
+    if(S.skillGateVersion!==G.skillGateVersion){
+      S.skillGateVersion=G.skillGateVersion;
+      for(const id of Object.keys(S.skills)){
+        const skill=byId.get(id);
+        if(skill&&S.level<(skill.minLevel||1)){
+          delete S.skills[id];
+          (G.revokedSkills??=[]).push(skill);
+        }
+      }
+    }
+    if(!Number.isInteger(S.skillChosenLevel)||S.skillChosenLevel<0||S.skillChosenLevel>S.level||!Object.keys(S.skills).length)S.skillChosenLevel=0;
+    if(!S.skillRuntime||S.skillRuntime.level!==S.level)S.skillRuntime={level:S.level,shots:0,forge:false,decay:false};
+  }
+  normalize();
+  let chanceKey=null;
+  // Rarity pressure: the rarer the equipped skills, the more often the next
+  // drafts push back by thinning out the rarer end of the pool. Ordinary skills
+  // add nothing; each equipped rare adds 1 and each legendary adds 2, so a full
+  // legendary loadout reaches 8. drawWeight then scales the base weight down as
+  // the tier rises, keeping every tier's relative ordering intact.
+  const raritySlowdown={white:0,blue:.2,gold:.4};
+  G.skillRarityPressure=()=>G.activeSkills().reduce((sum,skill)=>sum+G.skillTiers[skill.tier].level-1,0);
+  function draftPool(){
+    // Skills with a minLevel stay out of the draw until the run reaches them.
+    const pool=catalog.filter(s=>!rank(s.id)&&S.level>=(s.minLevel||1)),key=Object.keys(S.skills).join(',')+'@'+S.level;
+    if(key!==chanceKey){
+      chanceKey=key;catalog.forEach(s=>{s.chance=0;s.drawWeight=s.weight;});
+      const pressure=G.skillRarityPressure();
+      for(const s of pool)s.drawWeight=s.weight/(1+raritySlowdown[s.tier]*pressure);
+      const total=pool.reduce((sum,s)=>sum+s.drawWeight,0);
+      // Add the probability of selection in each of the three draw positions.
+      // Accumulating the remaining-weight factor keeps this quadratic.
+      for(const s of pool)s.chance=s.drawWeight/total;
+      for(const a of pool){
+        const first=a.drawWeight/total,remaining=total-a.drawWeight;
+        let thirdFactor=0;
+        for(const b of pool)if(b!==a)thirdFactor+=b.drawWeight/remaining/(remaining-b.drawWeight);
+        for(const s of pool)if(s!==a){
+          s.chance+=first*s.drawWeight/remaining;
+          s.chance+=first*s.drawWeight*(thirdFactor-s.drawWeight/remaining/(remaining-s.drawWeight));
+        }
+      }
+    }
+    return pool;
+  }
+  // exclude: ids to keep out of this roll (a reroll avoids the offer it replaces)
+  // as long as at least three other skills remain to draw from.
+  G.rollSkills=(exclude=[])=>{
+    const base=draftPool(),avoided=base.filter(s=>!exclude.includes(s.id));
+    const pool=avoided.length>=3?avoided:base.slice(),selected=[];
+    while(selected.length<3&&pool.length){
+      let roll=Math.random()*pool.reduce((sum,s)=>sum+s.drawWeight,0),index=pool.length-1;
+      for(let i=0;i<pool.length;i++){roll-=pool[i].drawWeight;if(roll<0){index=i;break;}}
+      selected.push(pool.splice(index,1)[0].id);
+    }
+    return selected;
+  };
+  const base={damage:G.damage,penetration:G.penetration,reward:G.reward,cost:G.cost,bonus:G.bonus,generate:G.generate,shoot:G.shoot,buy:G.buy,tick:G.tick,clear:G.clear};
+  G.damage=()=>base.damage()*(1+rank('titan')+.35*rank('rapid')+.8*rank('heavy')+.5*rank('supernova')+.6*rank('reaper')+3*rank('railgun')+Math.min(10,S.skillRuntime.shots)*.2*rank('growing'));
+  G.penetration=()=>base.penetration()+4*rank('piercer')+2*rank('heavy')+12*rank('railgun')+2*rank('opportunist');
+  G.bountyMultiplier=n=>1+rank('bounty')*Math.min(8,Math.max(0,n-1))*.25;
+  G.reward=(type,n)=>Math.round(base.reward(type,n)*(1+rank('mint'))*(type==='gold'?(3+rank('alchemist')*5)/3:1)*(rank('jackpot')?(Math.random()<.25?10:1.5):1)*G.bountyMultiplier(n)*(type!=='normal'&&rank('specialist')?3:1));
+  G.cost=key=>Math.max(1,Math.ceil(base.cost(key)*.6**rank('bargain')));
+  G.bonus=level=>Math.round(base.bonus(level)*(1+2*rank('treasury')));
+  G.specialConfig=type=>type==='lightning'&&rank('storm')?{links:4+3*rank('storm'),damage:2}:type==='frost'&&rank('blizzard')?{radius:160+30*rank('blizzard'),damage:rank('blizzard')}:type==='prism'&&rank('prism')?{shards:4+2*rank('prism'),pierce:2+rank('prism')}:{};
+  const shuffled=list=>{const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  function applyLevelPassives(){
+    G.threshold=Math.ceil(G.initial*(.6-.15*rank('resonance')));
+    if(rank('decay')&&!S.skillRuntime.decay){G.bricks.forEach(b=>{b.hp*=.65;b.flash=.2;});S.skillRuntime.decay=true;G.ring(390,320,'#b39a80',340);}
+    if(G.killed>=G.threshold&&!G.core)G.spawnCore();
+  }
+  G.prepareDraft=()=>{
+    normalize();
+    // A debug boss entry keeps the current build and bypasses the level draft.
+    if(G.directBossEntry)S.skillChosenLevel=S.level;
+    // Apply entry effects only after the new queue is settled: an outgoing
+    // decay/resonance must not benefit the board on which it is replaced.
+    if(S.skillChosenLevel===S.level){applyLevelPassives();S.draft=null;G.save();return;}
+    const eligible=draftPool(),old=S.draft;
+    if(!(old?.level===S.level&&Array.isArray(old.options)&&old.options.length===3&&new Set(old.options).size===3&&old.options.every(id=>eligible.some(s=>s.id===id)))){
+      S.draft={level:S.level,options:G.rollSkills()};
+    }
+    G.phase='draft';G.drag=null;G.save();G.ui();
+  };
+  G.chooseSkill=id=>{
+    const skill=byId.get(id);
+    if(G.phase!=='draft'||G.paused||!skill||S.draft?.level!==S.level||!S.draft.options.includes(id)||S.skillChosenLevel===S.level||rank(id)>=skill.max||S.level<(skill.minLevel||1))return false;
+    const queue=G.activeSkills().map(s=>s.id);
+    if(queue.length===G.skillSlots)queue.shift();
+    queue.push(id);S.skills=Object.fromEntries(queue.map(skillId=>[skillId,1]));S.skillChosenLevel=S.level;S.draft=null;
+    const duration=G.reduced?0:.85;
+    G.boardEntrance=duration?{start:G.time,end:G.time+duration}:null;
+    G.phase=duration?'entering':'ready';
+    applyLevelPassives();G.save();G.ui();G.sound('upgrade');return true;
+  };
+  // Rerolls spend one banked charge (game.js grants them every fifth clear).
+  // The draft reroll replaces the three cards on offer with three new ones.
+  G.canReroll=()=>G.rerolls()>0;
+  G.rerollDraft=()=>{
+    if(G.phase!=='draft'||G.paused||S.draft?.level!==S.level||S.skillChosenLevel===S.level||!G.canReroll())return false;
+    S.rerolls=G.rerolls()-1;
+    S.draft={level:S.level,options:G.rollSkills(S.draft.options),rerolled:(S.draft.rerolled|0)+1};
+    G.save();G.ui();return true;
+  };
+  // In-run swap: tapping an equipped skill can spend a charge for a three-card
+  // offer to replace it in place. The offer is saved, so closing the dialog
+  // (or reloading) never refunds the charge or re-rolls for free. Swaps wait
+  // for the board to be still: no arrows or delayed effects in flight.
+  G.canSwapSkill=()=>G.phase==='ready'&&S.skillChosenLevel===S.level;
+  const validOffer=target=>{
+    const o=S.swapOffer;
+    return !!o&&o.level===S.level&&o.target===target&&Array.isArray(o.options)&&o.options.length>0&&o.options.every(id=>byId.has(id));
+  };
+  G.swapOffer=target=>{
+    if(!validOffer(target))return null;
+    // Drop anything that became equipped since; the rest stays on offer.
+    const options=S.swapOffer.options.filter(id=>!rank(id));
+    return options.length?{...S.swapOffer,options}:null;
+  };
+  G.offerSwap=target=>{
+    if(!G.canSwapSkill()||!rank(target)||!G.canReroll())return null;
+    const previous=validOffer(target)?S.swapOffer.options:[];
+    S.rerolls=G.rerolls()-1;
+    S.swapOffer={level:S.level,target,options:G.rollSkills(previous),rerolled:previous.length?(S.swapOffer.rerolled|0)+1:0};
+    G.save();G.ui();return S.swapOffer;
+  };
+  G.swapSkill=(target,id)=>{
+    const skill=byId.get(id),offer=G.swapOffer(target);
+    if(!G.canSwapSkill()||!offer||!skill||!offer.options.includes(id)||!rank(target)||rank(id)||S.level<(skill.minLevel||1))return false;
+    // Keep the slot's place in the FIFO queue: only the key changes.
+    S.skills=Object.fromEntries(Object.keys(S.skills).map(key=>[key===target?id:key,1]));S.swapOffer=null;
+    G.invalidateSkillCache();applyLevelPassives();G.save();G.ui();G.sound('upgrade');return true;
+  };
+  let jobs=[],uses={},effectBudget=0;
+  const resetShot=()=>{uses={};effectBudget=120;};
+  const take=(id,limit,counts=uses)=>{if((counts[id]||0)>=limit)return false;counts[id]=(counts[id]||0)+1;return true;};
+  // Per-arrow quotas follow the source through delayed effects, even after it
+  // leaves the board. Round-wide quotas still apply to nova and cascade.
+  const takeArrow=(a,id,limit)=>!!a&&take(id,limit,a.skillUses??={});
+  function enqueue(delay,fn){if(effectBudget--<=0)return;jobs.push({at:G.time+delay,level:S.level,arrow:G.activeArrow,fn});}
+  const nearby=(x,y,r)=>G.bricksNear(x,y,r);
+  function area(x,y,r,damage,color='#e8a475',skillId){
+    if(G.phase!=='flying')return;G.ring(x,y,color,r);G.sound('boom',1,x);
+    if(skillId)G.skillFX?.(skillId,x,y,{r,force:true});
+    nearby(x,y,r).forEach(b=>G.hit(b,damage,1));
+  }
+  function arc(x,y,count,damage,skillId){
+    const targets=G.nearestBricks(x,y,count);
+    let from={x,y};targets.forEach(b=>{G.bolts.push({x:from.x,y:from.y,tx:b.x,ty:b.y,life:.35});from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
+    if(skillId)G.skillFX?.(skillId,x,y,{kind:'electric',r:115});
+  }
+  function launch(x,y,angle,speed,damage=G.damage(),pierce=G.penetration(),homing=false){
+    const a=G.addArrow(x,y,Math.sin(angle)*speed,-Math.cos(angle)*speed,pierce);if(a){G.setArrowDamage(a,damage);a.homing=homing;}return a;
+  }
+  function fan(angle,speed,extras){
+    for(let i=0;i<extras;i++){const side=i%2?-1:1,offset=(Math.floor(i/2)+1)*.1*side;launch(G.origin.x,G.origin.y,angle+offset,speed);}
+  }
+  G.shoot=(dx,dy)=>{
+     if(!['ready','flying'].includes(G.phase)||G.paused||G.arrows.length>=64||G.time<G.nextShotAt||Math.hypot(dx,dy)<10||dy<5)return false;
+     if(G.phase==='ready')resetShot();
+     S.skillRuntime.shots++;
+     const result=base.shoot(dx,dy);if(!result){S.skillRuntime.shots--;return false;}
+     effectBudget=120;
+     const main=G.arrows[G.arrows.length-1],v=main.body.velocity,speed=Math.hypot(v.x,v.y),angle=Math.atan2(v.x,-v.y);
+     return G.withArrow(main,()=>{
+    fan(angle,speed,rank('trident')*5);
+    if(rank('rapid'))G.nextShotAt=Math.min(G.nextShotAt,G.time+.18);
+    if(rank('swarmqueen'))for(let i=0;i<8;i++)launch(G.origin.x,G.origin.y,angle+(i-3.5)*.12,speed,G.damage()*1.5,3,true);
+    if(rank('snowburst'))shuffled(G.bricks).slice(0,5).forEach((b,i)=>enqueue(.06*i,()=>{if(!G.bricks.includes(b))return;b.frozen=true;G.ring(b.x,b.y,'#9fc9d9',45);G.hit(b,G.damage()*1.5,1);}));
+    if(rank('supernova')&&S.skillRuntime.shots%4===0)enqueue(.18,()=>{G.ring(390,440,'#dfbb53',650);G.skillFX?.('supernova',390,440,{kind:'nova',r:650,duration:1.1,force:true});G.sound('core');[...G.bricks].forEach(b=>G.hit(b,G.damage()*5,1));});
+    if(rank('sharpshooter')&&Math.hypot(dx,dy)>=95){main.damage*=3;main.pierce+=6;main.color='#d4af47';G.float(G.origin.x,G.origin.y-45,'满弓狙击','#9b7629',16);G.skillFX?.('sharpshooter',G.origin.x,G.origin.y,{kind:'power',r:180});}
+    if(rank('mirror'))for(const x of [36,744])for(let i=0;i<2;i++)launch(x,G.origin.y-150-i*90,x<390?.65:-.65,speed,G.damage()*1.5,3,true);
+    if(rank('reaper')&&S.skillRuntime.shots%3===0)enqueue(.15,()=>{
+      [...G.bricks].sort((a,b)=>a.hp-b.hp).slice(0,4).forEach(b=>{G.bolts.push({x:b.x,y:100,tx:b.x,ty:b.y,life:.4});G.float(b.x,b.y-20,'处决','#a56b80',15);G.hit(b,b.hp,1);});G.sound('lightning');
+    });
+    if(rank('orbital')&&G.bricks.length){
+      const target=G.bricks.reduce((best,b)=>{const count=nearby(b.x,b.y,160).length;return count>best.count?{x:b.x,y:b.y,count}:best;},{count:-1});
+      G.ring(target.x,target.y,'#d4af47',160);
+      G.skillFX?.('orbital',target.x,target.y,{kind:'mark',r:160,duration:.8});
+      for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(target.x,target.y,160,G.damage()*3,'#d4af47','orbital'));
+    }
+    if(rank('roulette')){
+      const mode=Math.floor(Math.random()*3);main.rouletteMode=mode;
+      G.float(G.origin.x,G.origin.y-45,['命运 · 贯星','命运 · 群猎','命运 · 天罚'][mode],'#ac852f',18);
+      if(mode===0){main.damage*=5;main.pierce+=10;main.color='#d4af47';}
+      if(mode===1)for(let i=0;i<8;i++)launch(G.origin.x,G.origin.y,angle+(i-3.5)*.14,speed,G.damage()*2,3,true);
+      if(mode===2)enqueue(.16,()=>{G.ring(390,440,'#d4af47',650);G.skillFX?.('roulette',390,440,{kind:'nova',r:650,duration:1,force:true});G.sound('core');[...G.bricks].forEach(b=>G.hit(b,G.damage()*2.5,1));});
+    }
+    if(rank('stormfront'))shuffled([...new Set(G.bricks.map(b=>b.y))]).slice(0,3).forEach((y,i)=>enqueue(.1+i*.14,()=>{
+      G.skillFX?.('stormfront',390,y,{kind:'beam',force:true});
+      G.bolts.push({x:35,y,tx:745,ty:y,life:.4});G.bricks.filter(b=>b.y===y).forEach(b=>G.hit(b,G.damage()*3,1));G.sound('lightning');
+    }));
+    for(let i=0;i<rank('echo');i++)enqueue(.24*(i+1),()=>{launch(G.origin.x,G.origin.y,angle,speed);fan(angle,speed,rank('trident')*5);G.sound('shoot');G.skillFX?.('echo',G.origin.x,G.origin.y,{r:110});});
+    const meteorTargets=shuffled(G.bricks).slice(0,rank('meteor')*6);
+    meteorTargets.forEach((b,i)=>enqueue(.04*i,()=>{const a=G.addArrow(b.x,142,(Math.random()*2-1)*9,18,2);if(a){G.setArrowDamage(a,G.damage()*2);a.color='#d38b63';}}));
+    for(let i=0;i<rank('hunters')*4;i++)launch(G.origin.x+(i%2?36:-36),G.origin.y,angle+(i%2?.25:-.25),speed,G.damage(),G.penetration(),true);
+    if(rank('legion')&&S.skillRuntime.shots%3===0){fan(angle,speed,6);G.skillFX?.('legion',G.origin.x,G.origin.y,{kind:'split',r:190});}
+    if(rank('pulse')&&S.skillRuntime.shots%3===0)enqueue(.18,()=>{G.ring(390,320,'#adc76e',500);G.skillFX?.('pulse',390,320,{kind:'nova',r:550,duration:.9,force:true});G.sound('core');[...G.bricks].forEach(b=>G.hit(b,G.damage()*1.2,1));});
+     G.save();return true;
+     });
+  };
+  G.projectileHit=(b,a)=>{
+    if(!G.bricks.includes(b))return;
+    for(const visual of G.activeSkills())if(!['critical','execute','ambush','opportunist','specialist','siphon','sharpshooter','bargain','forge','treasury','alchemist','mint','jackpot','bounty','reaper','orbital','stormfront','storm','blizzard','prism','aftershock','pulse','supernova','legion','resonance','sweep','lance','crossfire'].includes(visual.id)){
+      G.skillFX?.(visual.id,b.x,b.y,{kind:['doubletap','minefield'].includes(visual.id)?'mark':undefined,r:visual.id==='ice'?95:70});
+    }
+    if(rank('poison'))b.skillMarkUntil=G.time+.55;
+    if(rank('ice'))nearby(b.x,b.y,55+rank('ice')*40).forEach(t=>{t.frozen=true;t.flash=.18;});
+    let damage=a.damage*(1+G.rageBonus(G.arrowKills(a))*rank('rage'));
+    if(rank('ambush')&&b.hp>=b.max){damage*=3;G.skillFX?.('ambush',b.x,b.y,{r:80});}
+    if(rank('opportunist')&&b.hp<b.max){damage*=3;G.skillFX?.('opportunist',b.x,b.y,{r:80});}
+    if(rank('specialist')&&b.type!=='normal'){damage*=4;G.skillFX?.('specialist',b.x,b.y,{r:85});}
+    if(rank('critical')&&Math.random()<.5){damage*=3;G.float(b.x,b.y-13,'暴击','#ce805c',13);G.skillFX?.('critical',b.x,b.y,{r:100});}
+    if(rank('execute')&&b.hp-damage*(b.frozen?2:1)<=b.max*.25){damage=Math.max(damage,b.hp);G.skillFX?.('execute',b.x,b.y,{r:95});}
+    const position={x:b.x,y:b.y};G.hit(b,damage);
+    if(rank('siphon')&&!G.bricks.includes(b)&&(a.siphonKills||0)<8){a.siphonBase??=a.damage;a.siphonKills=(a.siphonKills||0)+1;a.pierce++;a.damage+=a.siphonBase*.25;G.skillFX?.('siphon',b.x,b.y,{r:75});}
+    if(rank('minefield')&&!a.minefield){a.minefield=true;for(let i=0;i<3;i++)enqueue(.12+i*.18,()=>area(position.x,position.y,135,G.damage()*2,'#d3b468','minefield'));}
+    if(rank('frostfire')){nearby(position.x,position.y,100).forEach(t=>{t.frozen=true;t.flash=.2;});enqueue(.09,()=>area(position.x,position.y,100,G.damage()*1.5,'#e89a79','frostfire'));}
+    if(rank('thunderlottery')&&Math.random()<.35){G.float(position.x,position.y-22,'雷霆大奖','#b59a39',15);enqueue(.07,()=>arc(position.x,position.y,6,G.damage()*3,'thunderlottery'));}
+    if(rank('poison'))for(let i=1;i<=3;i++)enqueue(.15*i,()=>{if(G.bricks.includes(b)){G.ring(b.x,b.y,'#91b646',25);G.hit(b,G.damage()*.8,1);}});
+    if(rank('doubletap'))enqueue(.2,()=>area(position.x,position.y,115,G.damage()*2,'#e8a475','doubletap'));
+    if(rank('crossfire')&&!a.crossfire){a.crossfire=true;enqueue(.08,()=>{
+      G.skillFX?.('crossfire',position.x,position.y,{kind:'beam',force:true});
+      G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4},{x:position.x,y:145,tx:position.x,ty:820,life:.4});
+      G.bricks.filter(t=>Math.abs(t.y-position.y)<12||Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*3,1));G.sound('lightning');
+    });}
+    if(!G.bricks.includes(b)&&rank('blast'))enqueue(.055,()=>area(position.x,position.y,125,G.damage()*1.5,'#e8a475','blast'));
+    if(rank('lightning'))enqueue(.065,()=>arc(position.x,position.y,3,G.damage()*1.2,'lightning'));
+    if(rank('sweep')&&takeArrow(a,'sweep',rank('sweep')))enqueue(.08,()=>{G.skillFX?.('sweep',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4});G.bricks.filter(t=>Math.abs(t.y-position.y)<12).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+    if(rank('lance')&&takeArrow(a,'lance',rank('lance')))enqueue(.08,()=>{G.skillFX?.('lance',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:position.x,y:145,tx:position.x,ty:G.origin.y-120,life:.4});G.bricks.filter(t=>Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+  };
+  G.onBrickDestroyed=b=>{
+    if(rank('cascade')&&take('cascade',16))enqueue(.09,()=>area(b.x,b.y,145,G.damage()*2.5,'#e89a79','cascade'));
+    if(rank('nova')&&take('nova',8))enqueue(.08,()=>{for(let i=0;i<3;i++)launch(b.x,b.y,(i-1)*.8,22,G.damage()*1.5,3,true);});
+    if(b.frozen&&rank('shatter')&&takeArrow(G.activeArrow,'shatter',rank('shatter')*6))enqueue(.09,()=>area(b.x,b.y,65,G.damage()*1.5,'#9fc9d9','shatter'));
+    if(b.type==='bomb'&&rank('aftershock'))for(let i=0;i<rank('aftershock');i++)enqueue(.16+i*.12,()=>area(b.x,b.y,112,G.damage()*2,'#e8a475','aftershock'));
+  };
+  G.onRicochet=a=>{
+    if(rank('bankshot')&&!a.bankEcho&&(a.bankshots||0)<3){
+      a.bankshots=(a.bankshots||0)+1;
+      G.withArrow(a,()=>{const p=a.body.position;for(const offset of [-.5,.5]){const child=launch(p.x,p.y,offset,24,G.damage()*2,2,true);if(child)child.bankEcho=true;}});
+    }
+    if(!rank('ricochet')||(a.rebounds||0)>=4)return;
+    a.reboundBase??=a.damage;a.rebounds=(a.rebounds||0)+1;a.pierce+=2;a.damage+=a.reboundBase*.15;
+  };
+  G.guideArrows=(dt,arrows)=>{
+    for(const a of arrows){
+      const p=a.body.position,v=a.body.velocity;
+      if(G.core&&rank('corehunter')&&!a.coreBoost){a.pierce+=4;a.coreBoost=true;}
+      const reach=a.homing?350:180+rank('seeking')*70;
+      const guiding=rank('corehunter')||a.homing||rank('seeking');
+      const toCore=G.core&&guiding&&Math.hypot(p.x-G.core.x,p.y-G.core.y)<(rank('corehunter')?320:reach);
+      if(!toCore&&!a.homing&&!rank('seeking'))continue;
+       let target=toCore?G.core:null,best=Infinity;
+       if(!target)for(const b of G.bricks){
+         if(a.hit.has(b.body.id)||(b.x-p.x)*v.x+(b.y-p.y)*v.y<=0)continue;
+         const distance=Math.hypot(b.x-p.x,b.y-p.y);if(distance>=reach)continue;
+         const score=distance*(b.type==='normal'?1:.7);if(score<best){best=score;target=b;}
+       }
+      if(!target)continue;
+      const angle=Math.atan2(v.y,v.x),desired=Math.atan2(target.y-p.y,target.x-p.x),delta=Math.atan2(Math.sin(desired-angle),Math.cos(desired-angle));
+      const turn=Math.max(-dt*4,Math.min(dt*4,delta)),speed=Math.hypot(v.x,v.y);
+      Body.setVelocity(a.body,{x:Math.cos(angle+turn)*speed,y:Math.sin(angle+turn)*speed});a.color=toCore?'#91b646':'#8873b1';
+    }
+  };
+  G.hasPendingEffects=()=>jobs.length>0;
+  G.beforePhysics=dt=>G.guideArrows(dt,G.arrows);
+  G.tick=dt=>{
+    if(G.paused||G.phase==='draft')return;
+    if(G.phase==='flying'){
+      const due=jobs.filter(j=>j.at<=G.time);jobs=jobs.filter(j=>j.at>G.time);
+      for(const job of due)if(job.level===S.level&&G.phase==='flying')G.withArrow(job.arrow,job.fn);
+    }
+    base.tick(dt);
+  };
+  G.buy=key=>{
+    const result=base.buy(key);
+    // Slot and reroll-cap upgrades are structural unlocks, so 神匠赐福 cannot apply to them:
+    // keep its charge for a real upgrade instead of wasting it here.
+    if(result&&key!=='slots'&&key!=='rerollCap'&&rank('forge')&&!S.skillRuntime.forge){S.skillRuntime.forge=true;const extra=key==='draw'?Math.min(2,G.drawMax-S.up[key]):2;S.up[key]+=extra;G.save();G.ui();G.toast?.(`神匠赐福 · 额外提升 ${extra} 级`);}
+    return result;
+  };
+  G.generate=restore=>{jobs=[];resetShot();normalize();base.generate(restore);G.prepareDraft();G.save();G.ui();};
+  G.clear=()=>{if(G.phase==='clearing')return;jobs=[];G.settledBonus=G.bonus();base.clear();G.ui();};
+  G.prepareDraft();
+})();

@@ -1,5 +1,6 @@
 // Test-server-only lexical and module boundary timing hooks.
 export function diagnoseSource(name,source){
+  name=name.replace(/^.*[\\/]/,'');
   const methods={
     'game.js':['tick','clear','save','hit','shoot','addArrow','flushUi','flushVisuals'],
     'skills.js':['tick','clear','save','hit','shoot','activeSkills'],

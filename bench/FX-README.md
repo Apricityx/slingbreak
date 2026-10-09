@@ -10,6 +10,9 @@ node bench/fx-report.mjs
 `bench/results/fx-audit/`。无 npm 依赖，要求 Node 22+ 和 Chrome/Chromium；可用
 `CHROME_PATH` 指定浏览器。
 
+游戏源码现在按职责位于 `game/src/`，样式位于 `game/styles/`；驱动仍从 `game/index.html`
+加载完整游戏。测试插桩支持新的相对路径，结果目录保持不变且不加入 Git。
+
 ## 覆盖
 
 - 81 个技能的普通命中图案、hero 发光图案、14 点箭矢拖尾。
@@ -134,7 +137,7 @@ node bench/fx-board-report.mjs
 
 本轮结果另存于 `results/fx-burst-optimized/`；不会覆盖上轮图案优化或整板原始数据。
 `--source-root=/absolute/path/to/saved-source` 可让同一个测试驱动测试改造前源码快照
-（须包含 `index.html`、生产 JS/CSS、`vendor/` 等资源），避免把未提交工作区误当成 Git HEAD。
+（须包含 `game/index.html`、生产 JS/CSS、`game/vendor/` 等资源），避免把未提交工作区误当成 Git HEAD。
 
 ```bash
 node bench/fx-run.mjs --source-root=agent-tmp/perf-before-source '--filter=^board-burst/' --board-repeats=3 --out=bench/results/fx-burst-optimized/before

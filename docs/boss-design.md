@@ -34,7 +34,7 @@
 
 ## 4. 节奏：动态减伤
 
-所有 boss 共用宿主 `milestone.js` 中 `hurt()` 的动态减伤，防止战斗结束过快：
+所有 boss 共用宿主 `game/src/bosses/milestone.js` 中 `hurt()` 的动态减伤，防止战斗结束过快：
 
 - **节奏限制**：按阶段有效战斗时长（`m.clock`，只统计非演出时间，随存档保存）限制掉血速度，打得比节奏快时伤害按比例下降。
 - **爆发上限**：短时间窗口内的伤害超过上限后，超出部分只按保底系数结算。
@@ -57,7 +57,7 @@
 
 ## 7. 视觉
 
-- 画布代码只使用调色板令牌（`palette.js` 的 `SlingTheme`），不要写死颜色；唯一例外是镜像浅色调色板的兜底对象。浅色和深色主题都要定义相同的键。
+- 画布代码只使用调色板令牌（`game/src/theme/palette.js` 的 `SlingTheme`），不要写死颜色；唯一例外是镜像浅色调色板的兜底对象。浅色和深色主题都要定义相同的键。
 - 特效要有层次：柔光（flare）、冲击环（wave）、光线（streak）、粒子（burst）组合使用，避免单一的廉价圆圈。
 - 画在砖块上的装饰要克制，不要出现遮挡血量数字或看起来像 bug 的形状（例如巨蟒鳞片上曾出现的对称「翅膀」）。
 - 临时视觉元素（星门、残影、光晕）的生命周期必须绑定到它的来源，来源结束就关闭，并设置最长存在时间。切换阶段时清空，不能残留在场上。
@@ -69,23 +69,23 @@
 
 - 每个 boss 有自己的吼叫（`def.roar`），在登场、转阶段和击败时播放。
 - **避免快速下行的音阶**：它在游戏语境里会被听成「失败」。boss 的高频反馈（被击中、转阶段、击碎）应使用上行或齐响和弦，保持紧张但正向的情绪。
-- 高频音效要在 `audio.js` 的 `intervals` 中限流。
-- 可以为 boss 编写自适应配乐（`def.score` + `def.music()`，由 `boss-music.js` 播放），根据战况切换情绪（战斗、倒地、吞噬、星蚀、濒死）。
+- 高频音效要在 `game/src/audio/audio.js` 的 `intervals` 中限流。
+- 可以为 boss 编写自适应配乐（`def.score` + `def.music()`，由 `game/src/bosses/boss-music.js` 播放），根据战况切换情绪（战斗、倒地、吞噬、星蚀、濒死）。
 
 ## 9. 实现约定
 
-- 每个 boss 是一个独立的 `boss-*.js` 插件，通过 `(window.SlingBosses||=[]).push(api=>def)` 注册，并在 `index.html` 中先于 `milestone.js` 加载。宿主负责流程，boss 只描述自己。
+- 每个 boss 是一个独立的 `game/src/bosses/boss-*.js` 插件，通过 `(window.SlingBosses||=[]).push(api=>def)` 注册，并在 `game/index.html` 中先于 `game/src/bosses/milestone.js` 加载。宿主负责流程，boss 只描述自己。
 - 宿主提供 `api`：`phases/resist/rage/busy/ready/freeze/later/pop/openSlots/removeBrick/bounceCircle/bounceCapsule/canStrike/strike/pay/hurt/banner/flash/shakeArena/introAge/dying` 等。定时技能要检查 `api.ready()`，演出、转阶段和死亡期间不出招。
 - 存档：boss 运行时状态放在 `m.data`，通过 `persist`/`hydrate` 读写，并在 `validate` 中严格校验（数量上限、数值有限且为正）。重新加载后不能重复生成砖块。
 - 生命周期钩子：`decorate`（布置本阶段）、`hydrate`（从存档重建）、`pre`/`post`（每帧逻辑）、`contact`（箭矢接触）、`destroyed`（砖块被毁）、`calm`/`reset`（清理）、`charging`/`exploded`（死亡演出）。
 
 ## 10. 测试
 
-- 每个新机制都要在 `milestone.test.cjs` 中有测试，覆盖「触发 → 应对 → 结果」的完整闭环，以及存档重载。
+- 每个新机制都要在 `tests/milestone.test.cjs` 中有测试，覆盖「触发 → 应对 → 结果」的完整闭环，以及存档重载。
 - 测试环境使用固定随机种子并默认开启 `G.reduced`。会干扰其他测试的常驻机制要提供开关（如 `bossDefs.serpent.regen=false`）。
 - 需要验证具体数值的测试可以关闭减伤（`resist={grace:1e9,burst:1e9}`）。
 - 招式调度器要提供测试入口（如 `start(id)` 直接触发某招），并在 `debug()` 里暴露量表、当前招式、破绽计时等状态，测试不依赖随机等待。
-- 运行：`node --test`。
+- 运行：`node --test tests/*.test.cjs bench/*.test.mjs`。
 
 ## 星渊巨蟒：断尾与星门再生
 

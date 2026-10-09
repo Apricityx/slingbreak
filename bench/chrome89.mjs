@@ -16,7 +16,7 @@ const out=path.join(root,'agent-tmp',modern?'modern-compat':'chrome89-compat');
 fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{
   const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-  const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
+  const file=path.resolve(root,'.'+(pathname==='/'?'/game/index.html':pathname));
   if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
   try{
     res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.woff2':'font/woff2','.json':'application/json'})[path.extname(file)]||'application/octet-stream');
@@ -65,9 +65,9 @@ try{
     report.checks.push({name,paints:probe.paints});
   };
   // Parse all shipped scripts, including optional browser benchmark drivers.
-  await page.goto(base,{waitUntil:'load'});
-  const scripts=fs.readdirSync(root).filter(name=>name.endsWith('.js'));
-  scripts.push('bench/fx-page.js','vendor/matter.min.js','vendor/lucide-subset.js');
+  await page.goto(base+'/game/index.html',{waitUntil:'load'});
+  const scripts=[...fs.readFileSync(path.join(root,'game','index.html'),'utf8').matchAll(/<script src="([^"]+)"/g)].map(match=>'game/'+match[1]);
+  scripts.push('bench/particles.js','bench/fx-page.js','bench/fx-board.js');
   for(const file of scripts)await page.evaluate(text=>{new Function(text);},fs.readFileSync(path.join(root,file),'utf8'));
   report.checks.push({name:'all shipped JavaScript parses'});
   await page.waitForSelector('#game-intro[open]');
@@ -144,6 +144,7 @@ try{
   // Theme classes and custom checkbox / volume fill replace :has + accent-color.
   await page.click('#settings-toggle');
   await page.waitForTimeout(600);
+  assert.equal(await page.$eval('#refresh-page',el=>el.textContent),'重新获取最新版本');
   await page.$eval('input[name="theme"][value="dark"]',el=>el.click());
   await page.waitForTimeout(500);
   assert.equal(await page.$eval('.theme-option.is-selected input',el=>el.value),'dark');
@@ -161,6 +162,59 @@ try{
   const audio=await page.evaluate(()=>{Game.sound('break',1,390);return Game.audio.diagnosticSnapshot();});
   assert.equal(audio.backend,'web-audio');assert.ok(audio.activeSources>0);
   report.checks.push({name:'Web Audio schedules real sources',sampleRate:audio.sampleRate});
+  // Single-skill redraw uses the same deal/tick/tier sounds as the draft,
+  // but the detail dialog pauses gameplay. Its UI bus must stay audible.
+  await page.evaluate(()=>{
+    Game.state.up.slots=3;Game.state.up.rerollCap=1;Game.state.rerolls=2;
+    Game.state.skills={titan:1,trident:1,ice:1};Game.state.swapOffer=null;Game.ui();Game.flushUi();
+    window.__swapAudio={events:[],roll:Game.rollSkills,cue:Game.audio.cue};
+    Game.rollSkills=exclude=>['white','blue','gold'].map(tier=>Game.skillCatalog.find(s=>
+      s.tier===tier&&!Game.skillRank(s.id)&&s.minLevel<=Game.state.level&&!(exclude||[]).includes(s.id)).id);
+    Game.audio.cue=function(type,n=1,x=390){
+      window.__swapAudio.events.push({type,n,paused:Game.paused});
+      return window.__swapAudio.cue.call(this,type,n,x);
+    };
+  });
+  await page.click('.skill-live .skill-queue-slot[data-skill="titan"]');
+  await page.waitForSelector('#skill-detail[open]');await page.waitForTimeout(500);
+  const pausedTime=await page.evaluate(()=>Game.time);
+  await page.click('#swap-reroll');await page.waitForTimeout(210);
+  const pausedAudio=await page.evaluate(()=>Game.audio.diagnosticSnapshot());
+  assert.equal(pausedAudio.paused,true);assert.equal(pausedAudio.masterGain,0);
+  assert.ok(pausedAudio.activeSources>0,'paused dialog cues keep their full envelopes');
+  await page.waitForFunction(()=>document.querySelectorAll('#swap-options .swap-option:not(:disabled)').length===3);
+  await capture('swap-audio-offer');
+  const firstOffer=await page.$$eval('#swap-options .swap-option',rows=>rows.map(row=>row.dataset.skill));
+  await page.click('#swap-reroll');
+  await page.waitForFunction(()=>document.querySelectorAll('#swap-options .swap-option:not(:disabled)').length===3);
+  const redraw=await page.evaluate(()=>({events:window.__swapAudio.events,time:Game.time,charges:Game.rerolls(),
+    options:[...document.querySelectorAll('#swap-options .swap-option')].map(row=>row.dataset.skill)}));
+  assert.equal(redraw.time,pausedTime,'redrawing never advances the paused simulation');
+  assert.equal(redraw.charges,0);assert.notDeepEqual(redraw.options,firstOffer);
+  assert.ok(redraw.events.every(event=>event.paused),'no cue temporarily unpauses the game');
+  for(const type of ['reroll','deal','tick','tap','chime','gold'])assert.ok(redraw.events.some(event=>event.type===type),type+' cue is dispatched');
+  const beforeEmpty=redraw.events.length;
+  await page.$eval('#swap-reroll',button=>button.click());
+  assert.equal(await page.evaluate(()=>window.__swapAudio.events.length),beforeEmpty,'empty charges produce no redraw cues');
+  await page.click('#swap-options .swap-option[data-tier="gold"]');
+  await page.waitForTimeout(900);await capture('swap-audio-pick');
+  await page.waitForFunction(()=>!document.getElementById('skill-detail').open);
+  const pickAudio=await page.evaluate(()=>window.__swapAudio.events.slice().filter(event=>['pick','whoosh','slot'].includes(event.type)));
+  assert.deepEqual(pickAudio.map(event=>event.type),['pick','whoosh','slot']);assert.equal(pickAudio[0].n,2);
+  assert.ok(pickAudio.every(event=>event.paused));
+  await check('single-skill redraw, rarity locks and replacement audio while paused');
+  // Reduced motion skips reels/flights, not the charge/deal/confirmation cues.
+  await page.evaluate(()=>{Game.reduced=true;Game.state.rerolls=1;window.__swapAudio.events=[];Game.ui();Game.flushUi();});
+  await page.click('.skill-live .skill-queue-slot[data-skill="trident"]');
+  await page.waitForSelector('#skill-detail[open]');await page.click('#swap-reroll');
+  await page.waitForSelector('#swap-options .swap-option:not(:disabled)');
+  await page.click('#swap-options .swap-option[data-tier="white"]');
+  await page.waitForFunction(()=>!document.getElementById('skill-detail').open);
+  await page.waitForTimeout(100);
+  assert.deepEqual(await page.evaluate(()=>window.__swapAudio.events.map(event=>event.type)),['reroll','deal','pick']);
+  // Reduced slot feedback is dispatched after close through ordinary game audio.
+  await page.evaluate(()=>{Game.reduced=false;Game.rollSkills=window.__swapAudio.roll;Game.audio.cue=window.__swapAudio.cue;});
+  await check('reduced-motion single-skill redraw retains audio feedback');
   // A full queue pick must drop the outgoing token without hanging the top layer.
   await page.evaluate(()=>{
     Game.state.volume=0;Game.audio.sync();Game.state.up.slots=3;
@@ -178,7 +232,7 @@ try{
   await check('full queue replacement');
   // All four boss scripts, overlays and roundRect fallback execute on Chrome 89.
   for(const boss of ['eye','forge','serpent','clock']){
-    await page.goto(base+'/?boss='+boss,{waitUntil:'load'});
+    await page.goto(base+'/game/index.html?boss='+boss,{waitUntil:'load'});
     await page.waitForFunction(id=>Game.boss?.()?.boss===id,{},boss);
     if(await page.$('#skill-draft[open]')){
       await page.waitForTimeout(1500);await page.keyboard.press('1');
@@ -188,19 +242,19 @@ try{
     await capture('boss-'+boss);
     await check('boss '+boss);
   }
-  await page.goto(base+'/?launcher=1',{waitUntil:'load'});
+  await page.goto(base+'/game/index.html?launcher=1',{waitUntil:'load'});
   await page.waitForTimeout(1500);
   await capture('launcher');
   await check('launcher mode');
   // Local Android assets use file:// rather than an HTTP origin.
   if(!modern){
-    await page.goto('file://'+path.join(root,'index.html')+'?launcher=1',{waitUntil:'load'});
+    await page.goto('file://'+path.join(root,'game','index.html')+'?launcher=1',{waitUntil:'load'});
     await page.waitForTimeout(1500);
     await check('file asset entry');
   }
   // Reduced motion must keep immediate selection and repaint, not run flights.
   await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);
-  await page.goto(base+'/?admin=1',{waitUntil:'load'});
+  await page.goto(base+'/game/index.html?admin=1',{waitUntil:'load'});
   await page.waitForSelector('#skill-draft[open]');
   await page.keyboard.press('3');
   await page.waitForFunction(()=>Game.phase==='ready');
@@ -215,6 +269,36 @@ try{
     await capture('layout-'+width+'x'+height);
   }
   report.checks.push({name:'mobile, tablet and desktop stage fits'});
+  // Client mode is independent of the launcher's native-game loading header.
+  // On desktop it must explain the missing host, not try to reload assets or
+  // hand a custom protocol to an external application.
+  await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'no-preference'}]);
+  await page.setViewport({width:412,height:915,deviceScaleFactor:1});
+  await page.goto(base+'/game/index.html?client=1&admin=1',{waitUntil:'load'});
+  await page.waitForSelector('#game-intro[open]');
+  await page.click('#intro-skip');
+  // The reduced-motion check already chose the admin fixture's first skill.
+  await page.waitForFunction(()=>Game.phase==='ready');
+  await page.waitForFunction(()=>!document.getElementById('game-intro').open);
+  assert.equal(await page.$eval('#launcher-progress',el=>el.hidden),true);
+  assert.equal(await page.evaluate(()=>SlingStage.framed),false);
+  assert.equal(await page.$eval('#home-link',el=>el.getAttribute('href')),'./index.html?client=1');
+  await page.click('#settings-toggle');
+  await page.waitForSelector('#settings[open]');
+  assert.equal(await page.$eval('#refresh-page',el=>el.textContent),'检查更新');
+  assert.equal(await page.$eval('#client-options',el=>el.hidden),false);
+  const clientUrl=page.url();
+  await page.click('#refresh-page');
+  assert.equal(page.url(),clientUrl);
+  assert.equal(await page.$eval('#refresh-page',el=>el.disabled),false);
+  assert.match(await page.$eval('#refresh-status',el=>el.textContent),/Android 客户端/);
+  for(const mode of ['light','dark']){
+    await page.$eval(`input[name="theme"][value="${mode}"]`,el=>el.click());
+    await page.waitForTimeout(500);
+    await capture('client-settings-'+mode);
+  }
+  await page.click('#close-settings');
+  await check('client settings, separate from launcher and browser refresh');
   report.passed=true;
 }catch(error){report.passed=false;report.failure=String(error);throw error;}
 finally{

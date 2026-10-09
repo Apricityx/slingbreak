@@ -1,13 +1,13 @@
 # SlingBreak 性能测试 · 粒子数量 vs FPS
 
-> 当前完整游戏的逐特效审计见 [FX-README.md](FX-README.md)，结果见
-> [results/fx-audit/REPORT.md](results/fx-audit/REPORT.md)。下面是较早的普通方块碎屑基准，
-> 不覆盖技能拖尾、发光和 Boss 特效；当前渲染器还依赖 `palette.js`，旧 `bench.html`
-> 未加载这个依赖，不能直接用于验证当前完整游戏。
+> 当前完整游戏的逐特效审计见 [FX-README.md](FX-README.md)。结果生成在 Git 忽略的
+> `bench/results/`，不是仓库自带的数据。下面的普通方块碎屑基准位于
+> `/bench/particles.html`，已加载当前调色板依赖；不覆盖技能拖尾、发光和 Boss 特效，
+> 不能替代完整游戏验收。
 
 衡量「屏幕上同时存在多少个粒子」与「帧率」之间的关系，并验证粒子渲染优化的效果。
 
-基准页不是重写一份粒子系统，而是**直接加载游戏真实的 `game.js` 与 `render.js`**，
+基准页不是重写一份粒子系统，而是**直接加载游戏真实的 `game/src/core/game.js` 与 `game/src/render/render.js`**，
 因此测到的就是发行版循环本身 —— Matter.js 物理、`Game.tick()` 里的粒子积分、
 以及 `render.js` 里画粒子的那一段全部照常运行。
 
@@ -15,8 +15,8 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| `bench.html` | 基准页。只提供 `render.js` 需要的最小 DOM（`#game` canvas、`#power-readout`），然后按顺序加载 `vendor/matter.min.js` → `game.js` → `render.js` → `bench.js`。 |
-| `bench.js` | 测试驱动。冻结棋盘，只控制 `Game.particles` 数量，用 `requestAnimationFrame` 采样帧间隔，并额外跑一个「只看 `Game.tick`」的 CPU 微基准。 |
+| `bench/particles.html` | 基准页。只提供渲染器需要的最小 DOM（`#game` canvas、`#power-readout`），按顺序加载 Matter → `game/src/theme/palette.js` → `game/src/core/game.js` → `game/src/render/render.js` → `bench/particles.js`。 |
+| `bench/particles.js` | 测试驱动。冻结棋盘，只控制 `Game.particles` 数量，用 `requestAnimationFrame` 采样帧间隔，并额外跑一个「只看 `Game.tick`」的 CPU 微基准。 |
 | `bench/run.mjs` | 无头运行器。起一个本地静态服务器 + 本地 Chrome，通过 DevTools Protocol 读取结果，落盘 JSON / Markdown。不依赖任何 npm 包。 |
 | `bench/compare.mjs` | 对比两个结果目录，按中位帧时间输出 A/B 表。 |
 | `bench/results/` | 每次运行产出的 `bench-*.json` / `bench-*.md`，以及 `COMPARISON.md`。 |
@@ -41,13 +41,13 @@ node bench/compare.mjs bench/results/baseline bench/results/optimized
 
 ## 在真实设备 / WebView 上测
 
-绝对 FPS 只在同一台机器内可比，最有价值的是把 `bench.html` 直接开在目标设备上。
+绝对 FPS 只在同一台机器内可比，最有价值的是把 `bench/particles.html` 直接开在目标设备上。
 `localStorage` 需要 http(s) 源，用任意静态服务器即可：
 
 ```bash
 npx http-server . -p 8080        # 或 python3 -m http.server 8080
-# http://<设备IP>:8080/bench.html
-# http://<设备IP>:8080/bench.html?counts=0,300,1000,3000&sample=2000&dpr=1
+# http://<设备IP>:8080/bench/particles.html
+# http://<设备IP>:8080/bench/particles.html?counts=0,300,1000,3000&sample=2000&dpr=1
 ```
 
 结果表会打印在页面上，原始数据可通过 `window.__BENCH__` 取回。
@@ -150,6 +150,6 @@ const drawParticles = () => {
 ## 注意事项
 
 - 无头模式默认软件光栅，和手机 GPU 合成的绝对值不同；请用趋势与「µs/粒子」判断。
-- `bench.html` 需要 http(s)（`localStorage` 约束），不要用 `file://` 直接打开。
+- `bench/particles.html` 需要 http(s)（`localStorage` 约束），不要用 `file://` 直接打开。
 - 结果 JSON 每条记录都带 `frames`、`spanMs`，可用于判断采样是否足够。
 - A/B 对比用**中位帧时间**而非均值，长期调度抖动会污染均值。

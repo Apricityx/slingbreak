@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="弓引力">
+  <title>弓引力 · SLING / BREAK</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- Resolves the colour theme before first paint (no light flash in dark mode). -->
+  <script src="src/theme/palette.js"></script>
+  <script src="src/theme/colors.js"></script>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/color-blends.css">
+  <link rel="stylesheet" href="styles/style.css">
+  <link rel="stylesheet" href="styles/skills.css">
+  <link rel="stylesheet" href="styles/mobile.css">
+  <link rel="stylesheet" href="styles/achievements.css">
+  <link rel="stylesheet" href="styles/skill-effects.css">
+  <link rel="stylesheet" href="styles/shop.css">
+  <link rel="stylesheet" href="styles/launcher-mode.css">
+  <link rel="stylesheet" href="styles/intro.css">
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/transitions.css">
+  <link rel="stylesheet" href="styles/juice.css">
+  <link rel="stylesheet" href="styles/settings.css">
+  <link rel="stylesheet" href="styles/achievements-fx.css">
+  <link rel="stylesheet" href="styles/draft.css">
+  <link rel="stylesheet" href="styles/skill-reroll.css">
+  <link rel="stylesheet" href="styles/milestone.css">
+  <script>window.SlingBreakIntro = {active: true}; document.documentElement.classList.add('intro-pending'); if (new URLSearchParams(location.search).get('launcher') === '1') document.documentElement.classList.add('launcher-mode-pending');</script>
+</head>
+<body>
+  <dialog id="game-intro" aria-labelledby="intro-title">
+    <div class="intro-stage">
+      <div class="intro-title"><span>SLING / BREAK</span><h2 id="intro-title">弓引力<span>.</span></h2></div>
+      <canvas id="intro-canvas" width="640" height="460" aria-hidden="true"></canvas>
+      <p id="intro-audio-status" class="audio-loading-status" role="status" hidden></p>
+      <button id="intro-skip" type="button" autofocus>跳过<span aria-hidden="true"> →</span></button>
+    </div>
+  </dialog>
+  <div id="stage">
+  <header class="site-header">
+    <a class="brand" id="home-link" href="./index.html" aria-label="弓引力首页"><span class="brand-mark"><i data-lucide="move-up-right"></i></span><strong>弓引力</strong><span class="wordmark">SLING / BREAK</span></a>
+    <section class="launcher-progress" id="launcher-progress" hidden aria-label="游戏加载状态">
+      <div class="launcher-kicker"><span class="launcher-signal" aria-hidden="true"></span><span id="launcher-phase">正在加载</span></div>
+      <div class="launcher-progress-top"><span id="launcher-progress-label" role="status">正在准备游戏</span><b id="launcher-progress-percent">0<span>%</span></b></div>
+      <div class="launcher-progress-track" id="launcher-progress-track" role="progressbar" aria-label="游戏加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="launcher-progress-bar"></span></div>
+      <div class="launcher-action"><span class="launcher-waiting" id="launcher-waiting"><span class="launcher-loader" aria-hidden="true"></span>加载中<span class="launcher-waiting-dots" aria-hidden="true">···</span></span><button class="launcher-ready-button" id="launcher-ready-button" type="button" hidden><i data-lucide="play" aria-hidden="true"></i><span>启动游戏</span><i data-lucide="arrow-up-right" aria-hidden="true"></i></button></div>
+    </section>
+    <div class="header-right"><button class="icon-button settings-toggle" id="settings-toggle" type="button" aria-label="设置" title="设置" aria-haspopup="dialog" aria-controls="settings"><i data-lucide="settings" aria-hidden="true"></i></button><button class="icon-button fullscreen-toggle" id="fullscreen-toggle" type="button" aria-label="进入全屏" title="进入全屏" aria-pressed="false"><i data-lucide="maximize" aria-hidden="true"></i></button><span class="wallet-readout" aria-label="钱包余额"><i data-lucide="wallet" aria-hidden="true"></i><b id="live-wallet">0</b></span><span class="save-status" id="save-status"><span></span>本地存档</span></div>
+  </header>
+  <main class="workspace">
+    <section class="arena-section" aria-label="游戏区域">
+      <div class="arena-heading"><div><span class="eyebrow">ENDLESS PLAYGROUND</span><h1>一箭，打破局面<span class="green-dot">.</span></h1></div><span class="level-tag">LEVEL <b id="level">01</b><i data-lucide="infinity"></i></span><div class="notice-dock" id="notice-dock"><div class="toast" id="toast" role="status" aria-live="polite"></div></div></div>
+      <div class="earnings-top" id="earnings-top" aria-label="单箭收益与核心进度">
+        <div class="hud-row">
+          <div class="arrow-receipt is-idle" id="arrow-receipt" aria-label="等待得分"><div class="receipt-heading"><span>单箭收益</span><span class="arrow-tag" id="score-tag"><i data-lucide="move-up-right" aria-hidden="true"></i><span id="score-source">—</span></span></div><div class="arrow-receipt-top"><b id="arrow-income">+0</b><div class="bonus-badges"><span class="bonus-badge" id="achievement-badge" hidden><i data-lucide="sparkles" aria-hidden="true"></i><b id="achievement-mult">×1</b></span><span class="bonus-badge bounty-badge" id="bounty-badge" hidden><i data-lucide="coins" aria-hidden="true"></i><b id="bounty-mult">×1</b></span></div></div></div>
+          <div class="combo" id="combo" role="img" aria-label="连击"><div class="combo-heading"><span>连击</span><span class="combo-arrow"><i data-lucide="move-up-right" aria-hidden="true"></i><span id="combo-source">—</span></span><svg class="combo-meter" viewBox="0 0 100 3" preserveAspectRatio="none" aria-hidden="true"><path class="combo-track" d="M0 1.5H100"/><path class="combo-progress" id="combo-progress" d="M0 1.5H100" pathLength="100"/></svg></div><div class="combo-values"><strong id="combo-count">0</strong><span class="combo-mult" id="combo-mult">×1</span><span class="combo-spark" aria-hidden="true">✦</span></div></div>
+        </div>
+        <div class="core-progress" id="core-progress" data-state="locked" role="progressbar" aria-labelledby="core-label" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0"><span class="core-gem" aria-hidden="true"></span><span id="core-label">核心解锁</span><div class="progress-track"><span id="progress-bar"></span></div><b id="progress-label">0 / 20</b></div>
+      </div>
+        <section class="earnings" id="earnings" aria-label="实时收益">
+        <div class="earnings-main"><div class="earnings-summary"><div class="earnings-total"><span class="earnings-label">本关收益</span><div class="money-readout"><strong id="shot-money">+ 0</strong><span id="money-burst"></span></div></div></div></div>
+        <div class="achievement-ticker" id="achievement-ticker" role="status" aria-live="polite"></div>
+      </section>
+      <div class="arena" id="arena">
+        <canvas id="game" width="780" height="760" aria-label="拖动下方弹弓向下蓄力，松开射箭。也可用左右方向键瞄准、上下方向键调节力度、空格射击。" tabindex="0"></canvas>
+        <button id="shop-trigger" class="shop-trigger" type="button" aria-label="打开升级商店" title="可升级"><i data-lucide="store"></i><span>升级</span></button>
+        <div class="arena-bottom"><span><i data-lucide="mouse-pointer-2"></i><span id="play-status">就绪</span></span><span id="power-readout">POWER <b>0%</b></span></div>
+        <div class="overlay" id="overlay" hidden><span class="eyebrow" id="overlay-eyebrow">TAKE A BREATH</span><h2 id="overlay-title">暂停一下</h2><p id="overlay-text">这一箭，等你回来。</p><button class="primary-button" id="resume"><i data-lucide="play"></i>继续游戏</button></div>
+      </div>
+      <div class="arena-caption"><span><span class="status-dot"></span>无尽关卡 · 自由节奏</span><span>瞄准。释放。连锁。</span></div>
+    </section>
+    <dialog id="equipment" aria-label="装备与技能">
+    <div class="equipment-heading"><h2>装备与技能</h2><button id="close-equipment" class="icon-button" aria-label="返回游戏"><i data-lucide="x"></i></button></div>
+    <aside class="sidebar">
+      <section class="wallet-section"><span class="eyebrow">YOUR BALANCE</span><div class="balance"><span class="coin-symbol">¥</span><strong id="balance">0</strong></div><div class="wallet-meta"><span>累计击碎 <b id="total-destroyed">0</b></span><span>单箭最佳 <b id="best-combo">0</b></span></div></section>
+      <section class="skill-summary"><button id="open-skills" class="skill-library-button"><span><i data-lucide="sparkles"></i> 我的构筑</span><b id="skill-count">0 / 4</b><i data-lucide="chevron-right"></i></button><div id="owned-skills" class="owned-skills">技能跨关保留，满槽后自动替换最早获得的技能</div></section>
+      <details class="achievement-library"><summary>精彩操作图鉴 <b id="achievement-count">0 / 12</b></summary><p>击碎才计连击，每支箭独立从 0 计数，不因命中间隔断连。分裂箭、齐射箭分别判定；连锁与延迟伤害归属触发箭。单箭最佳与连击狂热也使用这一计数。</p><p id="combo-rules">第 1 块连击倍率 ×1，此后每块增加 0.25，第 9 块达到 ×3 上限。砖块 LV.6 解锁连击强化，每级让每连增幅 +0.025、倍率上限 +0.5。</p><p>砖块收入 = 各块价值 × 各自连击倍率 × 财富技能，再按本箭成就倍率结算。连击与赏金不追补；成就从 ×1 开始，各项加成相加，每箭每项一次，新成就会补发本箭此前收入的差额。4 / 8 / 12 / 20 连分别奖励 +0.25 / +0.5 / +1 / +1.5 成就倍率。</p><p>面板标注最近得分箭：连击倍率用于该箭刚击碎的砖，成就倍率作用于整箭；箭号切换不代表断连。本轮累计合计所有箭与独立奖金，核心清场不增加连击。</p><div id="achievement-list"></div></details>
+      <section class="core-section"><div class="section-heading"><h2><span class="mini-core"></span>一击终结</h2><span class="tiny-label">THE CORE</span></div><p>击碎 <b id="core-required">98</b> 块后，顶部核心出现。<br>命中核心，清空本关。</p><div class="core-reward"><span>独立通关奖金</span><strong id="core-bonus">+ 240</strong></div></section>
+      <section class="legend-section"><div class="section-heading"><h2>不止是方块</h2><span class="tiny-label">SPECIALS / 06</span></div><div class="legend"><div><span class="legend-icon bomb"><i data-lucide="asterisk"></i></span><span><b>爆破</b><small>引爆周围方块</small></span></div><div><span class="legend-icon lightning"><i data-lucide="zap"></i></span><span><b>电弧</b><small>跃击最近的 5 块</small></span></div><div><span class="legend-icon frost"><i data-lucide="snowflake"></i></span><span><b>冰晶</b><small>无视穿透 · 命中不消耗次数</small></span></div><div><span class="legend-icon prism"><i data-lucide="split"></i></span><span><b>分裂</b><small>分出三支箭</small></span></div><div><span class="legend-icon gold"><i data-lucide="coins"></i></span><span><b>金矿</b><small>本块金币 ×3</small></span></div><div><span class="legend-icon metal"><i data-lucide="shield-minus"></i></span><span><b>合金障碍</b><small>无法击碎 · 箭矢反弹</small></span></div></div></section>
+      <div class="sidebar-footer"><span>每一关，都是新的可能。</span><button class="icon-button" id="reset" title="重新开始" aria-label="重新开始"><i data-lucide="rotate-ccw"></i></button></div>
+    </aside>
+    </dialog>
+  </main>
+  </div>
+  <!-- Scale the fixed design stage before first paint. -->
+  <script src="src/ui/stage.js"></script>
+  <dialog id="shop" aria-labelledby="shop-title"><div class="shop-panel"><div class="shop-heading"><div><span class="eyebrow">UPGRADE SHOP</span><h2 id="shop-title">整装，再出发</h2></div><button id="close-shop" class="icon-button" type="button" aria-label="关闭升级商店"><i data-lucide="x"></i></button></div><p class="shop-intro">花费本轮金币，强化下一支箭的能力。</p><div class="shop-balance"><span>可用金币</span><strong>¥ <b id="shop-balance">0</b></strong></div><section class="upgrades-section"><div class="upgrade-list" id="upgrades"></div></section></div></dialog>
+  <dialog id="reset-dialog"><h2>从第一箭重新开始？</h2><p>当前关卡、金币与升级将被清空。</p><div><button class="secondary-button" id="cancel-reset">取消</button><button class="primary-button" id="confirm-reset">重新开始</button></div></dialog>
+   <dialog id="skill-draft" aria-labelledby="draft-title"><div class="draft-header"><div class="draft-heading"><span id="draft-kicker" class="draft-kicker"></span><h2 id="draft-title">加入下一块拼图</h2></div><span id="draft-count" class="draft-level">0 / 4</span></div><div id="draft-loadout" class="skill-queue" aria-label="当前技能，按获得顺序排列"></div><div id="draft-options" class="draft-options"></div><div class="draft-reroll" id="draft-reroll"><button id="reroll-draft" class="reroll-button reroll-gauge" type="button" aria-keyshortcuts="R"><span class="reroll-icon" aria-hidden="true"><i data-lucide="refresh-cw"></i></span><span class="reroll-pips" id="draft-reroll-pips" aria-hidden="true"></span><kbd class="skill-key" aria-hidden="true">R</kbd></button></div></dialog>
+   <dialog id="skill-library" aria-labelledby="library-title"><div class="draft-header"><h2 id="library-title">我的构筑</h2><button id="close-skills" class="icon-button" type="button" aria-label="关闭技能详情"><i data-lucide="x"></i></button></div><p class="draft-intro">按获得顺序排列 · 跨关生效 · 满槽时自动替换最早的技能</p><div id="library-grid" class="library-grid"></div></dialog>
+   <dialog id="skill-detail" aria-labelledby="skill-detail-name"><div class="skill-detail-card"><div class="skill-detail-head"><span class="skill-emblem" id="skill-detail-emblem"></span><div class="skill-detail-title"><h2 id="skill-detail-name"></h2><span class="skill-family" id="skill-detail-family"></span></div><button id="close-skill-detail" class="icon-button" type="button" aria-label="关闭技能说明"><i data-lucide="x"></i></button></div><div class="skill-detail-meta" id="skill-detail-meta"></div><p class="skill-detail-text" id="skill-detail-text"></p><section class="skill-swap" id="skill-swap" aria-label="技能刷新"><button id="swap-reroll" class="reroll-button reroll-gauge" type="button"><span class="reroll-icon" aria-hidden="true"><i data-lucide="refresh-cw"></i></span><span class="reroll-pips" id="swap-pips" aria-hidden="true"></span></button><div class="swap-options" id="swap-options" role="group" aria-label="替换候选，三选一" hidden></div></section></div></dialog>
+  <dialog id="settings" aria-labelledby="settings-title"><div class="settings-panel">
+    <div class="settings-heading"><div><span class="eyebrow">SETTINGS</span><h2 id="settings-title">设置</h2></div><button id="close-settings" class="icon-button" type="button" aria-label="关闭设置"><i data-lucide="x" aria-hidden="true"></i></button></div>
+    <fieldset class="settings-group" aria-describedby="theme-hint">
+      <legend>外观</legend>
+      <div class="theme-options">
+        <label class="theme-option"><input type="radio" name="theme" value="system"><span class="theme-swatch is-system" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="monitor" aria-hidden="true"></i>跟随系统</span></label>
+        <label class="theme-option"><input type="radio" name="theme" value="light"><span class="theme-swatch is-light" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="sun" aria-hidden="true"></i>亮色</span></label>
+        <label class="theme-option"><input type="radio" name="theme" value="dark"><span class="theme-swatch is-dark" aria-hidden="true"><i></i><i></i></span><span class="theme-name"><i data-lucide="moon" aria-hidden="true"></i>深色</span></label>
+      </div>
+      <p class="settings-hint" id="theme-hint" role="status"></p>
+    </fieldset>
+    <div class="settings-group performance-group">
+      <label class="performance-option" for="performance-mode"><input id="performance-mode" type="checkbox"><span><strong>性能模式</strong><small>减少动画和特效，适配低性能设备</small></span></label>
+    </div>
+    <div class="settings-group sound-group">
+      <div class="sound-heading"><label for="sound-volume">声音大小</label><output id="sound-volume-value" for="sound-volume">100%</output></div>
+      <input id="sound-volume" type="range" min="0" max="100" step="1" value="100">
+       <div class="sound-scale" aria-hidden="true"><span>静音</span><span>最大</span></div>
+       <p id="sound-cache-status" class="settings-hint" role="status" hidden></p>
+    </div>
+    <div class="settings-group install-group">
+      <div><strong>桌面快捷入口</strong><button id="install-app" class="refresh-button" type="button" aria-describedby="install-status">添加到主屏幕</button></div>
+      <p id="install-status" class="settings-hint" role="status" aria-live="polite">从主屏幕打开，可获得更沉浸的游戏体验。</p>
+    </div>
+     <div class="settings-group refresh-group">
+       <div><strong>页面更新</strong><div class="progress-actions"><button id="client-options" class="refresh-button" type="button" hidden>客户端选项</button><button id="refresh-page" class="refresh-button" type="button">重新获取最新版本</button></div></div>
+       <p id="refresh-status" class="settings-hint" role="status" aria-live="polite">重新下载页面资源，不会清除本地存档。</p>
+     </div>
+     <div class="settings-group progress-group">
+       <div><strong>游戏进度</strong><div class="progress-actions"><button id="export-progress" class="refresh-button" type="button">导出进度</button><button id="import-progress" class="refresh-button" type="button">导入进度</button></div></div>
+       <input id="import-progress-file" type="file" accept="application/json,.json" hidden>
+       <p id="progress-status" class="settings-hint" role="status" aria-live="polite">将当前存档保存为文件，或从其他设备恢复存档。</p>
+     </div>
+     <section class="settings-group admin-group" id="admin-group" aria-labelledby="admin-title" hidden>
+      <h3 id="admin-title">管理员面板</h3>
+      <form id="admin-level-form">
+        <label for="admin-level">跳转到关卡</label>
+        <div class="admin-level-controls"><input id="admin-level" type="number" min="1" max="100000" step="1" inputmode="numeric" required><button class="refresh-button" type="submit">应用</button></div>
+      </form>
+      <form id="admin-boss-form">
+        <label for="admin-boss">下一关替换为 Boss 战</label>
+        <div class="admin-level-controls"><select id="admin-boss" required></select><button class="refresh-button" type="submit">结算并进入</button></div>
+        <p class="settings-hint">结算当前关，下一关替换为指定 Boss，保留当前构筑；也可用 ?boss=&lt;id&gt; 触发（独立测试存档）。</p>
+      </form>
+      <p id="admin-status" class="settings-hint" role="status" aria-live="polite">重建目标关卡并保存；保留金币和升级，不发放通关奖励。</p>
+    </section>
+  </div></dialog>
+  <dialog id="home-screen-guide" aria-labelledby="home-screen-title" aria-describedby="home-screen-description"><div class="home-screen-panel">
+    <div class="home-screen-heading"><div><span class="eyebrow">HOME SCREEN</span><h2 id="home-screen-title">添加到主屏幕</h2></div><button id="close-home-screen-guide" class="icon-button" type="button" aria-label="关闭主屏幕引导"><i data-lucide="x" aria-hidden="true"></i></button></div>
+    <p id="home-screen-description">iPhone 无法由网页按钮开启整页全屏。添加后从主屏幕打开，可隐藏浏览器工具栏；这不等同于原生全屏，系统状态栏等仍可能保留。</p>
+    <ol class="home-screen-steps"><li id="home-screen-step-open"></li><li id="home-screen-step-add"></li><li id="home-screen-step-launch"></li></ol>
+    <label for="home-screen-url">当前游戏链接</label>
+    <div class="home-screen-link"><input id="home-screen-url" type="url" readonly spellcheck="false"><button id="copy-home-screen-url" class="refresh-button" type="button">复制链接</button></div>
+    <p id="home-screen-status" class="settings-hint" role="status" aria-live="polite"></p>
+    <p class="settings-hint">添加图标不会自动迁移存档；首次从主屏幕打开后，请确认游戏进度。添加到主屏幕也不代表支持离线游玩。</p>
+  </div></dialog>
+  <!-- Register the native loading bridge before any optional bundle can fail. -->
+  <script src="src/ui/launcher-mode.js"></script>
+  <script src="vendor/matter.min.js"></script>
+  <script src="vendor/lucide-subset.js"></script>
+  <script src="src/core/game.js"></script>
+  <script src="src/effects/fx.js"></script>
+  <script src="src/audio/audio-diagnostics.js"></script>
+  <script src="src/audio/audio-recipes.js"></script>
+  <script src="src/audio/audio-music.js"></script>
+  <script src="src/audio/audio-native.js"></script>
+  <script src="src/audio/audio.js"></script>
+  <script src="src/skills/skills.js"></script>
+  <script src="src/core/achievements.js"></script>
+  <script src="src/effects/skill-signatures.js"></script>
+  <script src="src/skills/skill-expansion.js"></script>
+  <script src="src/skills/skill-overdrive.js"></script>
+  <script src="src/effects/skill-effects.js"></script>
+  <script src="src/render/render.js"></script>
+  <script src="src/ui/ui.js"></script>
+  <script src="src/ui/skills-ui.js"></script>
+  <script src="src/ui/achievements-ui.js"></script>
+  <script src="src/effects/intro.js"></script>
+  <script src="src/effects/transitions.js"></script>
+  <script src="src/effects/juice.js"></script>
+  <script src="src/ui/skill-reroll.js"></script>
+  <script src="src/bosses/boss-eye.js"></script>
+  <script src="src/bosses/boss-forge.js"></script>
+  <script src="src/bosses/boss-serpent.js"></script>
+  <script src="src/bosses/boss-clock.js"></script>
+  <script src="src/bosses/milestone.js"></script>
+  <script src="src/bosses/boss-music.js"></script>
+  <script src="src/ui/home-screen.js"></script>
+  <script src="src/ui/fullscreen.js"></script>
+  <script src="src/ui/settings.js"></script>
+  <script src="src/ui/admin.js"></script>
+  <script src="src/ui/audio-loading.js"></script>
+  <script>window.SlingBreakLauncher?.pageReady?.();</script>
+</body>
+</html>

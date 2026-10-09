@@ -1,5 +1,6 @@
 // Test-server-only hooks. Shipping files on disk are never rewritten.
 export function instrument(name, source) {
+  name = name.replace(/^.*[\\/]/, '');
   const append = code => {
     const at = source.lastIndexOf('})();');
     if (at < 0) throw new Error(`Missing closure in ${name}`);

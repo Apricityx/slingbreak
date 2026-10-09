@@ -14,7 +14,7 @@ const out=path.join(root,'agent-tmp','draft-layout',`${modern?'modern':'chrome89
 fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{
   const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-  const file=path.resolve(root,'.'+(name==='/'?'/index.html':name));
+  const file=path.resolve(root,'.'+(name==='/'?'/game/index.html':name));
   if(!file.startsWith(root+path.sep)){res.writeHead(403);res.end();return;}
   try{res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream');res.end(fs.readFileSync(file));}
   catch{res.writeHead(404);res.end();}
@@ -33,7 +33,7 @@ try{
       let n=987654321;Math.random=()=>{n=(1664525*n+1013904223)>>>0;return n/4294967296;};
       localStorage.clear();localStorage.setItem('slingbreak-theme','light');
     });
-    await page.goto(`http://127.0.0.1:${server.address().port}/?admin=1`,{waitUntil:'load'});
+    await page.goto(`http://127.0.0.1:${server.address().port}/game/index.html?admin=1`,{waitUntil:'load'});
     await page.click('#intro-skip');await page.waitForSelector('#skill-draft[open]');await page.waitForTimeout(1300);
     await page.evaluate(long=>{
       const draft=document.getElementById('skill-draft');HTMLDialogElement.prototype.close.call(draft);

@@ -28,7 +28,7 @@ try{
   const page=await browser.newPage();await page.setViewport({width:412,height:915,deviceScaleFactor:2});
   page.on('pageerror',e=>report.errors.push(String(e)));
   await page.evaluateOnNewDocument(bootstrap);
-  await page.goto(`http://127.0.0.1:${server.address().port}/index.html`,{waitUntil:'load'});
+  await page.goto(`http://127.0.0.1:${server.address().port}/game/index.html`,{waitUntil:'load'});
   await page.addScriptTag({content:fs.readFileSync(path.join(root,'bench/fx-board.js'),'utf8')});
   const burst=await page.evaluate(()=>{
     const G=Game,B=window.__FXBoard;G.__audit.intro.finish();window.SlingBreakIntro.active=false;
