@@ -1,0 +1,74 @@
+[
+  {
+    "id": "double",
+    "name": "一箭四雕",
+    "bonus": 0.25,
+    "description": "同一支箭击碎 4 块砖"
+  },
+  {
+    "id": "five",
+    "name": "势如破竹",
+    "bonus": 0.5,
+    "description": "同一支箭击碎 8 块砖"
+  },
+  {
+    "id": "ten",
+    "name": "连破重围",
+    "bonus": 1,
+    "description": "同一支箭击碎 12 块砖"
+  },
+  {
+    "id": "twenty",
+    "name": "一箭封神",
+    "bonus": 1.5,
+    "description": "同一支箭击碎 20 块砖"
+  },
+  {
+    "id": "bank",
+    "name": "借壁杀招",
+    "bonus": 0.5,
+    "description": "反弹后击碎一块砖"
+  },
+  {
+    "id": "trick",
+    "name": "几何大师",
+    "bonus": 0.75,
+    "description": "累计反弹 3 次后击碎砖块"
+  },
+  {
+    "id": "chain",
+    "name": "连锁导演",
+    "bonus": 0.5,
+    "description": "同一支箭的连锁伤害击碎 3 块砖"
+  },
+  {
+    "id": "ice",
+    "name": "冰点粉碎",
+    "bonus": 0.5,
+    "description": "同一支箭击碎 2 块冻结砖"
+  },
+  {
+    "id": "mix",
+    "name": "元素交响",
+    "bonus": 1,
+    "description": "同一支箭击碎 3 种特殊砖"
+  },
+  {
+    "id": "gold",
+    "name": "淘金高手",
+    "bonus": 0.5,
+    "description": "同一支箭击碎 2 块金矿砖"
+  },
+  {
+    "id": "air",
+    "name": "超长滞空",
+    "bonus": 0.5,
+    "description": "飞行 2 秒后仍能击碎砖块"
+  },
+  {
+    "id": "core",
+    "name": "终结艺术",
+    "bonus": 1,
+    "description": "击碎至少 3 块砖后命中核心"
+  }
+]

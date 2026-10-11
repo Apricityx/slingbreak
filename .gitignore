@@ -22,3 +22,8 @@ agent-tmp/
 
 # Vendor X5 runtime input; not redistributed without permission.
 /android/engine/*.apk
+
+# Godot imports and local build output
+/godot/.godot/
+/godot/tools/__pycache__/
+!/godot/assets/fonts/*LICENSE*.txt
