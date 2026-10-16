@@ -181,3 +181,22 @@ Use the same real-Chromium-89 and modern comparison commands above.
   completed 1,120 cases across all 81 profiles with zero benchmark/page errors.
 - These are compatibility smoke checks, not an Android X5 performance claim.
   No Android APK was rebuilt or installed for this layout change.
+
+## Skill acquisition flight (2026-10-09)
+
+The flight now uses a transparent, fixed-size dialog as a motion anchor. Its
+card and slot surfaces keep their layout dimensions throughout the flight;
+only composed `transform` and `opacity` keyframes move, resize and crossfade
+them. No animated `left`, `top`, `width` or `height` can trigger text reflow or
+change the clipping box between frames.
+
+The skill is committed before takeoff so the destination comes from the actual
+equipped HUD slot. The flight copies that slot's label, padding and surface
+styles, and the landing pulse starts at scale 1. The draft stays open until its
+fade completes; focus returns to the canvas after the decorative dialogs leave.
+Commit lift, flight duration, queue replacement and board entrance remain.
+
+`bench/draft-layout.mjs` covers normal descriptions, long descriptions and full
+queue replacement at three viewport sizes. It checks fixed text layout, flight
+keyframes and the geometry at both takeoff and landing, alongside the existing
+scrolling and commit-clipping checks. Use the real-Chromium-89 command above.

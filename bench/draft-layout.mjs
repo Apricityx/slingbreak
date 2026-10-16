@@ -26,8 +26,10 @@ try{
   browser=await puppeteer.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,
     userDataDir:fs.mkdtempSync(path.join(out,'profile-')),args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
   report.version=await browser.version();if(!modern)assert.match(report.version,/Chrome\/89\./);
-  for(const [width,height] of [[412,915],[360,800],[768,1024]])for(const long of [false,true]){
-    const page=await browser.newPage();page.on('pageerror',error=>report.errors.push(String(error)));
+   for(const [width,height] of [[412,915],[360,800],[768,1024]])for(const fixture of ['normal','long','full']){
+     const long=fixture==='long',full=fixture==='full';
+     const page=await browser.newPage();page.on('pageerror',error=>report.errors.push(String(error)));
+     page.on('console',message=>{if(message.type()==='error')report.errors.push(message.text());});
     await page.setViewport({width,height,deviceScaleFactor:1});
     await page.evaluateOnNewDocument(()=>{
       let n=987654321;Math.random=()=>{n=(1664525*n+1013904223)>>>0;return n/4294967296;};
@@ -35,9 +37,10 @@ try{
     });
     await page.goto(`http://127.0.0.1:${server.address().port}/game/index.html?admin=1`,{waitUntil:'load'});
     await page.click('#intro-skip');await page.waitForSelector('#skill-draft[open]');await page.waitForTimeout(1300);
-    await page.evaluate(long=>{
+     await page.evaluate(({long,full})=>{
       const draft=document.getElementById('skill-draft');HTMLDialogElement.prototype.close.call(draft);
-      Game.state.volume=0;Game.audio.sync();Game.state.level=60;
+       Game.state.volume=0;Game.audio.sync();Game.state.level=60;
+       if(full){Game.state.up.slots=3;Game.state.skills={titan:1,trident:1,ice:1,echo:1};}
       const choices=Game.skillCatalog.filter(s=>!Game.skillRank(s.id)).sort((a,b)=>b.describe(1).length-a.describe(1).length).slice(0,3);
       if(long)for(const s of choices){const description=s.describe(1);s.describe=()=>description+' · 保留原技能效果，在较长的说明中仍能滚动查看，不因动画缩窄而重新换行。'.repeat(3);}
       Game.state.draft={level:60,options:choices.map(s=>s.id)};Game.state.skillChosenLevel=0;Game.phase='draft';Game.ui();
@@ -46,7 +49,37 @@ try{
         const range=document.createRange();range.selectNodeContents(el);
         return{...box(el),lines:range.getClientRects().length};
       };
-      window.__draftLayout={entry:[],commit:[],flight:[],source:null,done:false};
+       window.__draftLayout={entry:[],commit:[],flight:[],source:null,done:false,handoff:null,flightKeyframes:[]};
+       const rect=el=>{
+         let factor=1;
+         if(draft.contains(el)){
+           const probe=document.createElement('span');probe.style.cssText='position:fixed;width:100px;height:0;padding:0;border:0';draft.append(probe);
+           factor=100*(window.SlingStage?.k||1)/probe.getBoundingClientRect().width;probe.remove();
+         }
+         const r=el.getBoundingClientRect();return{left:r.left*factor,top:r.top*factor,width:r.width*factor,height:r.height*factor};
+       };
+       const animate=Element.prototype.animate;
+       Element.prototype.animate=function(frames,timing){
+         const result=animate.call(this,frames,timing);
+         if(this.matches('.skill-flight,.skill-flight-card,.skill-flight-slot')){
+           window.__draftLayout.flightKeyframes.push({className:this.className,frames});
+           if(this.matches('.skill-flight-card')){
+             const source=rect(draft.querySelector('.is-picked'));
+             requestAnimationFrame(()=>{window.__draftLayout.takeoff={source,flight:rect(this)};});
+           }
+           if(this.matches('.skill-flight-slot')){
+             const host=this.parentElement,nativeRemove=host.remove;
+             host.remove=function(){
+               const target=document.querySelector('.skill-live [data-skill="'+host.firstElementChild.dataset.skill+'"]');
+               window.__draftLayout.handoff={flight:rect(host.lastElementChild),target:rect(target),
+                 flightText:text(host.lastElementChild.querySelector('b')),targetText:text(target.querySelector('b')),
+                 focus:document.activeElement.id};
+               return nativeRemove.call(host);
+             };
+           }
+         }
+         return result;
+       };
       const start=performance.now();
       const sample=()=>{
         const probe=window.__draftLayout;
@@ -68,7 +101,7 @@ try{
             desc:text(card.querySelector('.skill-card-desc')),slot:text(slot.querySelector('b'))});}
         if(!probe.done)requestAnimationFrame(sample);
       };requestAnimationFrame(sample);
-    },long);
+     },{long,full});
     await page.waitForSelector('#skill-draft[open]');await page.waitForTimeout(1300);
     const source=await page.$eval('#draft-options .skill-card',card=>{
       const box=el=>{const s=getComputedStyle(el);return{width:parseFloat(s.width),height:parseFloat(s.height)};};
@@ -78,13 +111,13 @@ try{
     // Real over-height content must remain reachable even without a gutter.
     const scroll=await page.$eval('#skill-draft',el=>{const height=el.scrollHeight,client=el.clientHeight;el.scrollTop=height;const bottom=el.scrollTop;el.scrollTop=0;return{height,client,bottom};});
     await page.keyboard.press('1');await page.waitForTimeout(180);
-    await page.screenshot({path:path.join(out,`${width}x${height}-${long?'long':'normal'}-commit.png`)});
+     await page.screenshot({path:path.join(out,`${width}x${height}-${fixture}-commit.png`)});
     await page.waitForSelector('.skill-flight[open]');
-    await page.screenshot({path:path.join(out,`${width}x${height}-${long?'long':'normal'}-flight.png`)});
+     await page.screenshot({path:path.join(out,`${width}x${height}-${fixture}-flight.png`)});
     await page.waitForFunction(()=>!document.querySelector('.skill-flight')&&Game.phase==='ready');
     const data=await page.evaluate(()=>{window.__draftLayout.done=true;return window.__draftLayout;});
     const span=(rows,key)=>Math.max(...rows.map(row=>row[key]))-Math.min(...rows.map(row=>row[key]));
-    const summary={width,height,long,source,scroll,entryFrames:data.entry.length,flightFrames:data.flight.length,
+     const summary={width,height,long,full,source,scroll,handoff:data.handoff,entryFrames:data.entry.length,flightFrames:data.flight.length,
       dialogWidthChange:span(data.entry,'width'),dialogHeightChange:span(data.entry,'height'),contentWidthChange:span(data.entry,'clientWidth'),
       scrollHeightChange:span(data.entry,'scrollHeight'),scrollWidthChange:span(data.entry,'scrollWidth'),
       bodyWidthChange:span(data.flight.map(f=>f.body),'width'),descLineChange:span(data.flight.map(f=>f.desc),'lines'),
@@ -92,7 +125,7 @@ try{
       commitTopClearance:Math.min(...data.commit.map(f=>f.top-f.ring-f.gridTop)),
       commitScrollHeightChange:span(data.commit,'scrollHeight')};
     report.cases.push(summary);
-    fs.writeFileSync(path.join(out,`${width}x${height}-${long?'long':'normal'}-frames.json`),JSON.stringify(data,null,2));
+     fs.writeFileSync(path.join(out,`${width}x${height}-${fixture}-frames.json`),JSON.stringify(data,null,2));
     if(!record){
       assert.ok(data.entry.length>10&&data.flight.length>5,'observed both animation phases');
       assert.ok(data.commit.length>5,'observed commit lift');
@@ -112,7 +145,18 @@ try{
       assert.equal(summary.slotLineChange,0,'incoming slot line count stays fixed');
       assert.ok(data.flight.every(f=>f.outline==='none'),'decorative flight dialog never gains a native focus outline');
       assert.ok(Math.abs(summary.firstFlight.body.width-source.body.width)<.1,'ghost uses original untransformed text width');
-      assert.equal(summary.firstFlight.desc.lines,source.desc.lines,'ghost retains original line breaks');
+       assert.equal(summary.firstFlight.desc.lines,source.desc.lines,'ghost retains original line breaks');
+       assert.equal(data.flightKeyframes.length,3,'one path and two fixed-layout surfaces');
+       for(const animation of data.flightKeyframes)for(const frame of animation.frames)
+         assert.ok(Object.keys(frame).every(key=>['transform','opacity','offset'].includes(key)),
+           'flight never animates layout properties');
+       assert.ok(data.handoff,'observed the final flight-to-HUD handoff');
+       assert.ok(data.takeoff,'observed the original-card-to-flight handoff');
+       for(const key of ['left','top','width','height'])assert.ok(Math.abs(data.takeoff.flight[key]-data.takeoff.source[key])<.5,
+         `flight and original card ${key} match at takeoff`);
+       for(const key of ['left','top','width','height'])assert.ok(Math.abs(data.handoff.flight[key]-data.handoff.target[key])<.5,
+         `flight and real slot ${key} match at handoff`);
+       assert.equal(data.handoff.flightText.lines,data.handoff.targetText.lines,'landing retains the HUD line breaks');
       if(long){assert.ok(scroll.height>scroll.client,'fixture requires real scrolling');assert.ok(scroll.bottom>0,'all long cards remain scrollable');}
     }
     await page.close();

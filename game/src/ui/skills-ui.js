@@ -13,14 +13,23 @@
   const spring='cubic-bezier(.2,1.3,.4,1)';
   const hudQueue=()=>document.querySelector('.skill-live .skill-queue');
   const onScreen=r=>r.width>0&&r.bottom>0&&r.top<innerHeight&&r.right>0&&r.left<innerWidth;
-  // The flight ghost lives on <body>, zoomed by the stage scale, and slots sit
-  // inside the scaled stage: both take client px ÷ k.
+  // HUD layout and board coordinates are expressed in stage pixels.
   const zk=()=>window.SlingStage?.k||1;
   const zoomRect=r=>{const k=zk();return{left:r.left/k,top:r.top/k,width:r.width/k,height:r.height/k};};
+  // Older Chromium returns pre-zoom client rects inside a zoomed dialog. A
+  // fixed-width probe distinguishes that behaviour from viewport-pixel rects.
+  const draftRect=el=>{
+    const probe=document.createElement('span');
+    probe.style.cssText='position:fixed;left:0;top:0;width:100px;height:0;padding:0;border:0;visibility:hidden;pointer-events:none';
+    draft.append(probe);
+    const factor=100*zk()/probe.getBoundingClientRect().width,r=el.getBoundingClientRect();
+    probe.remove();
+    return{left:r.left*factor,top:r.top*factor,width:r.width*factor,height:r.height*factor};
+  };
   // Draft → board, in three beats:
   // 1. commit  – the pick lifts and shines while the other two cards fall away;
-  // 2. flight  – a ghost leaves the dialog and arcs into its HUD slot, morphing
-  //              from a card into a slot while the queue slides to make room;
+  // 2. flight  – two fixed-layout surfaces crossfade along one transform-only
+  //              path into the real HUD slot while the queue makes room;
   // 3. impact  – the slot pops, the arena rings, and bricks ripple in from the
   //              landing point (render.js reads boardEntrance.origin).
   async function selectSkill(id){
@@ -59,12 +68,20 @@
       await new Promise(r=>setTimeout(r,90));
       // Beat 2: a transparent dialog keeps the flight above the draft's top layer,
       // including Chrome 89, which has no Popover API. No z-index workaround.
-      const from=zoomRect(card.getBoundingClientRect()),owned=G.activeSkills(),full=owned.length===G.skillSlots;
-      const queue=hudQueue(),slots=queue?[...queue.children]:[],targetSlot=slots[full?slots.length-1:owned.length];
-      let to=targetSlot?.getBoundingClientRect();
-      if(!to||!onScreen(to)){const r=zoomRect($('game').getBoundingClientRect());to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
-      else to=zoomRect(to);
+      // The flight anchor has zoom:1 and uses viewport pixels throughout.
+      const from=draftRect(card),owned=G.activeSkills(),full=owned.length===G.skillSlots;
+      const queue=hudQueue(),slots=queue?[...queue.children]:[];
       const before=new Map(slots.filter(s=>s.dataset.skill).map(s=>[s.dataset.skill,zoomRect(s.getBoundingClientRect())]));
+      const emblemTransform=getComputedStyle(card.querySelector('.skill-emblem')).transform;
+      // Resolve the actual destination before taking off. Predicting an empty
+      // slot's box can disagree with the equipped HUD after its synchronous refresh.
+      if(!G.chooseSkill(id))return;
+      entrance=G.boardEntrance;
+      if(entrance){entrance.start=entrance.end=Infinity;}
+      landed=hudQueue()?.querySelector(`[data-skill="${id}"]`);
+      let to=landed?.getBoundingClientRect();
+      if(!to||!onScreen(to)){const r=$('game').getBoundingClientRect();to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
+      if(landed)landed.style.visibility='hidden';
       ghost=document.createElement('dialog');ghost.className='skill-flight';ghost.setAttribute('aria-hidden','true');
       ghost.addEventListener('cancel',e=>e.preventDefault());
       window.SlingColors.set(ghost,'--pick-color',color);
@@ -73,36 +90,46 @@
       flyingCard.removeAttribute('aria-labelledby');flyingCard.removeAttribute('aria-describedby');
       Object.assign(flyingCard.style,{width:cardWidth,height:cardHeight});
       [...flyingCard.querySelectorAll('.skill-card-body,.skill-card-name,.skill-card-desc,.skill-family,.skill-chance,.skill-card-tier,.skill-pick')].forEach((el,i)=>Object.assign(el.style,textBoxes[i]));
+      flyingCard.querySelector('.skill-emblem').style.transform=emblemTransform;
       const flyingSlot=document.createElement('span');flyingSlot.className='skill-flight-slot skill-queue-slot';
-      flyingSlot.innerHTML=`<b><i data-lucide="${skill.icon}"></i>${skill.name}</b>`;
-      // The shell morphs, but both sets of text have a fixed layout box. Only
-      // their transforms/opacity change; neither can wrap again mid-flight.
-      Object.assign(flyingSlot.style,{width:to.width+'px',height:to.height+'px'});
+      flyingSlot.innerHTML=landed?landed.innerHTML:`<b><i data-lucide="${skill.icon}"></i>${skill.name}</b>`;
+      // Use the HUD's own surface and padding: the flight and landing then have
+      // identical text wrapping, borders and colours at the handoff.
+      if(landed){
+        flyingSlot.style.cssText=landed.style.cssText;
+        const style=getComputedStyle(landed);
+        for(const key of ['paddingTop','paddingRight','paddingBottom','paddingLeft','backgroundColor','borderColor','borderStyle','borderWidth','borderRadius','color'])flyingSlot.style[key]=style[key];
+      }
+      flyingSlot.style.visibility='';
+      const slotWidth=to.width/zk(),slotHeight=to.height/zk();
+      Object.assign(flyingSlot.style,{width:slotWidth+'px',height:slotHeight+'px'});
       ghost.append(flyingCard,flyingSlot);
-      Object.assign(ghost.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px'});
+      Object.assign(ghost.style,{left:from.left+from.width/2+'px',top:from.top+from.height/2+'px'});
       document.body.append(ghost);lucide.createIcons({root:ghost});
       ghost.showModal();
       card.style.visibility='hidden';
       draft.classList.add('is-leaving');
       const fade=play(draft,[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.985)'}],{duration:220,easing:'ease-in'});
-      const dx=to.left-from.left,dy=to.top-from.top,flight=640;
+      const dx=to.left+to.width/2-from.left-from.width/2,dy=to.top+to.height/2-from.top-from.height/2,flight=640;
       G.sound('whoosh');
       const path=play(ghost,[
-        {left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',borderRadius:'7px',transform:'rotate(0deg)'},
-        {left:from.left+dx*.45+'px',top:from.top+Math.min(0,dy)*.45-70+'px',width:from.width*.62+to.width*.38+'px',height:from.height*.5+to.height*.5+'px',borderRadius:'6px',transform:`rotate(${dx<0?-5:5}deg)`,offset:.45},
-        {left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',borderRadius:'5px',transform:'rotate(0deg)'}
+        {transform:'translate3d(0,0,0) rotate(0deg)'},
+        {transform:`translate3d(${dx*.45}px,${Math.min(0,dy)*.45-70}px,0) rotate(${dx<0?-5:5}deg)`,offset:.45},
+        {transform:`translate3d(${dx}px,${dy}px,0) rotate(0deg)`}
       ],{duration:flight,easing:'cubic-bezier(.45,0,.2,1)'});
-      const sx=from.width/parseFloat(cardWidth),sy=from.height/parseFloat(cardHeight);
-      play(flyingCard,[{opacity:1,transform:`translate(-50%,-50%) scale(${sx},${sy})`},{opacity:0,transform:`translate(-50%,-50%) scale(${sx*.55},${sy*.55})`}],{duration:flight*.45,easing:'ease-in'});
-      play(ghost.lastElementChild,[{opacity:0},{opacity:0,offset:.35},{opacity:1}],{duration:flight*.7,easing:'ease-out'});
-      await waitForAnimations([fade],400);
-      // Commit mid-flight so the HUD queue shifts while the ghost is still airborne.
-      if(!G.chooseSkill(id))return;
-      entrance=G.boardEntrance;
-      if(entrance){entrance.start=entrance.end=Infinity;}
-      draft.close();$('game').focus({preventScroll:true});
-      landed=hudQueue()?.querySelector(`[data-skill="${id}"]`);
-      if(landed)landed.style.visibility='hidden';
+      const cw=parseFloat(cardWidth),ch=parseFloat(cardHeight);
+      const size=(w,h)=>`translate(-50%,-50%) scale(${w},${h})`;
+      const mid={width:from.width*.62+to.width*.38,height:from.height*.5+to.height*.5};
+      play(flyingCard,[
+        {transform:size(from.width/cw,from.height/ch),opacity:1},
+        {transform:size(mid.width/cw,mid.height/ch),opacity:0,offset:.45},
+        {transform:size(to.width/cw,to.height/ch),opacity:0}
+      ],{duration:flight,easing:'cubic-bezier(.45,0,.2,1)'});
+      play(flyingSlot,[
+        {transform:size(from.width/slotWidth,from.height/slotHeight),opacity:0},
+        {transform:size(mid.width/slotWidth,mid.height/slotHeight),opacity:.35,offset:.45},
+        {transform:size(to.width/slotWidth,to.height/slotHeight),opacity:1}
+      ],{duration:flight,easing:'cubic-bezier(.45,0,.2,1)'});
       for(const slot of hudQueue()?.children||[]){
         const old=before.get(slot.dataset.skill);if(!old||slot===landed)continue;
         const now=zoomRect(slot.getBoundingClientRect());
@@ -119,16 +146,18 @@
           drop.animate([{opacity:1,transform:'translate(0,0) rotate(0deg)'},{opacity:0,transform:'translate(-10px,36px) rotate(-8deg)'}],{duration:420,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'}).finished.then(()=>drop.remove(),()=>drop.remove());
         }
       }
+      await waitForAnimations([fade],400);
+      draft.close();
       await waitForAnimations([path],flight+200);
       // Beat 3: impact.
       G.sound('slot');
       if(landed){
         landed.style.visibility='';
-        landed.animate([{transform:'scale(1.14)',boxShadow:`0 0 0 0 ${color}aa`},{transform:'scale(.97)',offset:.45},{transform:'scale(1)',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});
+        landed.animate([{transform:'scale(1)',boxShadow:`0 0 0 0 ${color}aa`},{transform:'scale(1.14)',offset:.25},{transform:'scale(.97)',offset:.65},{transform:'scale(1)',boxShadow:`0 0 0 10px ${color}00`}],{duration:460,easing:'ease-out'});
       }
       if(entrance&&G.boardEntrance===entrance){
-        const view=G.view,canvas=zoomRect($('game').getBoundingClientRect());
-        const x=((to.left+to.width/2)-canvas.left-(view?.offsetX||0))/(view?.scale||1),y=((to.top+to.height/2)-canvas.top-(view?.offsetY||0))/(view?.scale||1);
+        const view=G.view,canvas=zoomRect($('game').getBoundingClientRect()),landing=zoomRect(to);
+        const x=((landing.left+landing.width/2)-canvas.left-(view?.offsetX||0))/(view?.scale||1),y=((landing.top+landing.height/2)-canvas.top-(view?.offsetY||0))/(view?.scale||1);
         entrance.origin={x:Math.max(40,Math.min(G.W-40,x)),y:Math.max(-120,Math.min(160,y))};
         G.ring(entrance.origin.x,Math.max(60,entrance.origin.y),color,420);G.shake=Math.max(G.shake,6);
       }
@@ -138,7 +167,7 @@
       if(landed)landed.style.visibility='';
       ghost?.remove();running.forEach(a=>a.cancel());
       options.style.removeProperty('--draft-commit-headroom');
-      if(G.phase!=='draft')$('game').focus({preventScroll:true});
+      if(G.phase!=='draft'){if(draft.open)draft.close();$('game').focus({preventScroll:true});}
       if(card){card.style.visibility='';card.classList.remove('is-picked');}
       draft.classList.remove('is-selecting','is-leaving');
       cards.forEach(c=>c.disabled=false);selecting=false;
@@ -197,7 +226,7 @@
       }
       if(!G.holdDraft&&!draft.open&&!window.SlingBreakIntro?.active&&!document.querySelector('dialog[open]'))draft.showModal();
     }else{
-      if(draft.open)draft.close();
+      if(draft.open&&!selecting)draft.close();
     }
   }
    let uiQueued=false;

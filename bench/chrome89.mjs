@@ -133,7 +133,7 @@ try{
   assert.notEqual(await page.$eval('.skill-card.is-picked',el=>getComputedStyle(el).transform),'none','commit lift is not overridden by hover CSS');
   await page.waitForSelector('dialog.skill-flight[open]');
   const flight=await page.$eval('.skill-flight',el=>({tag:el.tagName,backdrop:getComputedStyle(el,'::backdrop').backgroundColor,
-    rect:{width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height},transform:getComputedStyle(el.firstElementChild).transform}));
+    rect:{width:el.firstElementChild.getBoundingClientRect().width,height:el.firstElementChild.getBoundingClientRect().height},transform:getComputedStyle(el.firstElementChild).transform}));
   assert.equal(flight.tag,'DIALOG');assert.equal(flight.backdrop,'rgba(0, 0, 0, 0)');
   assert.ok(flight.rect.width>0&&flight.rect.height>0);assert.notEqual(flight.transform,'none');
   await capture('pick-flight');
