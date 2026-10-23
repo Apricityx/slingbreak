@@ -22,6 +22,23 @@ test('all shipping styles use Chromium 89 selectors, colours and composed transf
   }
 });
 
+test('viewport-pixel skill flight is excluded from stage-zoomed dialogs',()=>{
+  const css=source('game/styles/mobile.css').replace(/\/\*[\s\S]*?\*\//g,'');
+  assert.match(css,/dialog:not\(#game-intro\):not\(\.skill-flight\)/);
+  for(const rule of css.matchAll(/([^{}]+)\{([^{}]+)\}/g)){
+    if(!/zoom:\s*var\(--stage-k\)/.test(rule[2]))continue;
+    for(const selector of rule[1].split(',')){
+      assert.notEqual(selector.trim(),'.skill-flight','flight must not be stage-zoomed');
+      if(/\bdialog\b/.test(selector))assert.match(selector,/:not\(\.skill-flight\)/);
+    }
+  }
+  const ui=source('game/src/ui/skills-ui.js');
+  const commit=ui.indexOf('if(!G.chooseSkill(id))return;');
+  const flush=ui.indexOf('G.flushUi();',commit);
+  assert.ok(flush>commit&&flush<ui.indexOf('landed=hudQueue()',commit),
+    'flush queued layout writes before resolving the real destination');
+});
+
 test('every sRGB companion channel matches its static theme token',()=>{
   const css=source('game/styles/tokens.css');let checked=0;
   for(const block of css.matchAll(/\{([^{}]+)\}/g)){

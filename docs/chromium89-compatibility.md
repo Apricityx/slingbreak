@@ -200,3 +200,29 @@ Commit lift, flight duration, queue replacement and board entrance remain.
 queue replacement at three viewport sizes. It checks fixed text layout, flight
 keyframes and the geometry at both takeoff and landing, alongside the existing
 scrolling and commit-clipping checks. Use the real-Chromium-89 command above.
+
+## Skill flight coordinate contract (2026-10-23)
+
+The `.skill-flight` anchor and its path use viewport pixels, not stage pixels.
+`mobile.css` must exclude it from the stage-zoomed dialog rule: the ID inside
+`dialog:not(#game-intro)` gives that selector higher specificity than
+`dialog.skill-flight { zoom:1 }`. Previously it applied the stage scale a second
+time on modern Chromium, producing a wrong landing followed by a snap to the HUD.
+Chromium 89's old dialog zoom behaviour masked this conflict in geometry checks.
+Ordinary dialogs and the outgoing drop still use stage zoom.
+
+After choosing a skill, flush queued UI writes before measuring the actual HUD
+slot. Do not replace that measurement with a predicted empty-slot position.
+
+Prevention gates:
+- Node compatibility tests guard the zoom exclusion and flush-before-measure order.
+- `bench/draft-layout.mjs` asserts the anchor's computed zoom is 1, plus takeoff
+  and landing bounds within 0.5 viewport pixels. Run on **both** real Chromium 89
+  and a modern engine; either engine alone can miss a coordinate-system regression.
+- Fixtures cover 412×915, 360×800, 768×1024 and 1440×1024 with normal/long text and
+  full-queue replacement. Keep non-unit scales and letterboxing in this matrix.
+
+Verified: 386 Node tests, the real Chromium 89 compatibility gate, and all 12
+layout fixtures on each of Chromium 89.0.4389.0 and 156.0.8078.4 passed. Reviewed
+commit/flight screenshots. No Android assets/APK were rebuilt or installed; these
+checks do not establish device-specific Tencent X5 behaviour.

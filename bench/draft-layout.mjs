@@ -26,7 +26,7 @@ try{
   browser=await puppeteer.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined,
     userDataDir:fs.mkdtempSync(path.join(out,'profile-')),args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
   report.version=await browser.version();if(!modern)assert.match(report.version,/Chrome\/89\./);
-   for(const [width,height] of [[412,915],[360,800],[768,1024]])for(const fixture of ['normal','long','full']){
+   for(const [width,height] of [[412,915],[360,800],[768,1024],[1440,1024]])for(const fixture of ['normal','long','full']){
      const long=fixture==='long',full=fixture==='full';
      const page=await browser.newPage();page.on('pageerror',error=>report.errors.push(String(error)));
      page.on('console',message=>{if(message.type()==='error')report.errors.push(message.text());});
@@ -63,6 +63,7 @@ try{
          const result=animate.call(this,frames,timing);
          if(this.matches('.skill-flight,.skill-flight-card,.skill-flight-slot')){
            window.__draftLayout.flightKeyframes.push({className:this.className,frames});
+           if(this.matches('.skill-flight'))window.__draftLayout.anchorZoom=Number(getComputedStyle(this).zoom);
            if(this.matches('.skill-flight-card')){
              const source=rect(draft.querySelector('.is-picked'));
              requestAnimationFrame(()=>{window.__draftLayout.takeoff={source,flight:rect(this)};});
@@ -147,6 +148,7 @@ try{
       assert.ok(Math.abs(summary.firstFlight.body.width-source.body.width)<.1,'ghost uses original untransformed text width');
        assert.equal(summary.firstFlight.desc.lines,source.desc.lines,'ghost retains original line breaks');
        assert.equal(data.flightKeyframes.length,3,'one path and two fixed-layout surfaces');
+       assert.equal(data.anchorZoom,1,'viewport-pixel flight anchor must not inherit stage zoom');
        for(const animation of data.flightKeyframes)for(const frame of animation.frames)
          assert.ok(Object.keys(frame).every(key=>['transform','opacity','offset'].includes(key)),
            'flight never animates layout properties');

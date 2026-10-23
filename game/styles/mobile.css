@@ -19,8 +19,10 @@ body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--letterbox-
     0 0 0 calc(5 * var(--px)) var(--mix-bg-55-letterbox),
     0 0 0 calc(6 * var(--px)) var(--frame-edge),
     0 calc(10 * var(--px)) calc(40 * var(--px)) var(--frame-shadow)}
-/* Top-layer and body-level layers sit outside the stage transform, so they take the same scale via zoom. */
-dialog:not(#game-intro),.skill-flight,.skill-flight-drop,.flying-coin,.achievement-spark,.achievement-payout-chip{zoom:var(--stage-k)}
+/* Most body/top-layer surfaces use stage pixels. The skill-flight anchor instead
+   uses viewport pixels (including its transform path); never zoom it again.
+   Exclude it here: :not(#game-intro) outranks dialog.skill-flight's zoom:1. */
+dialog:not(#game-intro):not(.skill-flight),.skill-flight-drop,.flying-coin,.achievement-spark,.achievement-payout-chip{zoom:var(--stage-k)}
 .site-header{width:100%;height:58px;min-height:58px;padding:0 12px;gap:8px}
 .brand{gap:8px}.brand strong{font-size:18px}.brand-mark{width:29px;height:29px}.brand-mark svg{width:22px;height:22px}.wordmark,.save-status{display:none}
 .header-right{gap:2px}.icon-button,.header-right .icon-button{width:44px;height:44px;min-width:44px;border:none}

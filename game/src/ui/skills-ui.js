@@ -78,6 +78,9 @@
       if(!G.chooseSkill(id))return;
       entrance=G.boardEntrance;
       if(entrance){entrance.start=entrance.end=Infinity;}
+      // chooseSkill queues UI writes. Flush before measuring so wrapper/layout
+      // changes cannot leave us aiming at the previous frame's HUD geometry.
+      G.flushUi();
       landed=hudQueue()?.querySelector(`[data-skill="${id}"]`);
       let to=landed?.getBoundingClientRect();
       if(!to||!onScreen(to)){const r=$('game').getBoundingClientRect();to={left:r.left+r.width/2-60,top:r.top+24,width:120,height:34};}
