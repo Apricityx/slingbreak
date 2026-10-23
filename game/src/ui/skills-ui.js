@@ -252,13 +252,9 @@
     if(e.key==='Escape'){e.stopPropagation();return;}
     if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
     const cards=[...$('draft-options').children];
-    // 1/2/3 pick directly; arrows walk the row (grid is a column on mobile).
+    // 1/2/3 pick directly; arrow keys do not switch card focus.
     const n=Number(e.key);
     if(n>=1&&n<=cards.length){e.preventDefault();cards[n-1].click();return;}
-    const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key];
-    if(!step)return;
-    const at=cards.indexOf(document.activeElement),next=at<0?(step>0?0:cards.length-1):(at+step+cards.length)%cards.length;
-    e.preventDefault();cards[next]?.focus();
   });
   $('open-skills').onclick=()=>{
     libraryPaused=G.paused;G.paused=true;G.drag=null;G.audio.sync();$('library-grid').replaceChildren();

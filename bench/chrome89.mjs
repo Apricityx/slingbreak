@@ -119,6 +119,15 @@ try{
   });
   report.checks.push({name:'sRGB colour parity',samples:blends.length});
   // First pick: exercise the real keyboard handler and modal top-layer flight.
+  assert.equal(await page.$eval('#draft-options .skill-card',el=>getComputedStyle(el).outlineStyle),'none','draft card has no outer focus frame');
+  for(const key of ['ArrowDown','ArrowUp','ArrowRight','ArrowLeft']){
+    await page.evaluate(()=>{window.__draftFocusBeforeArrow=document.activeElement;});
+    await page.keyboard.press(key);
+    assert.ok(await page.evaluate(()=>document.activeElement===window.__draftFocusBeforeArrow),'arrow keys do not switch card focus');
+  }
+  report.checks.push({name:'draft has no outer focus frame or arrow-key card navigation'});
+  await page.focus('#draft-options .skill-card');
+  assert.equal(await page.$eval('#draft-options .skill-card',el=>getComputedStyle(el).outlineStyle),'none','focused draft card has no native outer frame');
   const cardRect=()=>page.$eval('#draft-options .skill-card',el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};});
   const beforeHover=await cardRect();
   await page.hover('#draft-options .skill-card');
