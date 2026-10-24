@@ -12,8 +12,11 @@ const args=Object.fromEntries(process.argv.slice(2).map(a=>a.replace(/^--/,'').s
 const SOURCE_ROOT=path.resolve(args['source-root']||ROOT);
 const options={dpr:Number(args.dpr||2),reduced:args.reduced==='1',sample:Number(args.sample||100),filter:args.filter||'',raf:args.raf==='1',dom:args.dom==='1',animated:args.animated==='1',capture:args.capture==='1',
    boardSeconds:Number(args['board-seconds']||6),boardRepeats:Number(args['board-repeats']||1),
-   diagnose:args.diagnose==='1',boardCount:args['board-count']?Number(args['board-count']):null};
+   diagnose:args.diagnose==='1',boardCount:args['board-count']?Number(args['board-count']):null,
+   skillBurst:args['skill-burst']==='1',
+   skillRate:args['skill-rate']===undefined ? .22 : Number(args['skill-rate'])};
 if(options.boardCount!==null&&![77,240].includes(options.boardCount))throw Error('board-count must be 77 or 240');
+if(![0,.22,.5].includes(options.skillRate))throw Error('skill-rate must be 0, 0.22 or 0.5');
 if(!Number.isFinite(options.boardSeconds)||options.boardSeconds<6||!Number.isInteger(options.boardRepeats)||options.boardRepeats<1)throw Error('board-seconds must be >= 6; board-repeats must be a positive integer');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 class CDP{
@@ -51,7 +54,7 @@ try{
    child=spawn(binary,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-frame-rate-limit','--disable-gpu-vsync',
     '--disable-background-timer-throttling','--disable-renderer-backgrounding','--mute-audio','--no-first-run',
     '--disable-gpu',`--user-data-dir=${profile}`,'--remote-debugging-port=0','about:blank'],{stdio:['ignore','ignore','pipe']});
-  const url=await new Promise((resolve,reject)=>{let s='';const t=setTimeout(()=>reject(Error('Chrome startup timeout')),20000);
+  const url=await new Promise((resolve,reject)=>{let s='';const t=setTimeout(()=>reject(Error('Chrome startup timeout')),60000);
     child.stderr.on('data',d=>{s+=d;const m=s.match(/DevTools listening on (ws:\/\/\S+)/);if(m){clearTimeout(t);resolve(m[1]);}});
     child.on('exit',c=>{clearTimeout(t);reject(Error('Chrome exit '+c));});});
   cdp=new CDP(url);await cdp.ready();

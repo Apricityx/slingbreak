@@ -133,6 +133,40 @@ node bench/fx-board-report.mjs
 
 自检：`node --test bench/fx-board.test.mjs bench/fx.test.mjs`。
 
+## 全技能整板击碎性能测试
+
+单独测「每个技能独立装备时，整板 240 块砖在同一瞬间被击碎」的成本，用于找出
+哪个技能的击碎逻辑或爆发后绘制明显高于同板无技能基线。与上面的 12 个
+`board-burst` 案例分开，默认全量 FX 审计不会自动跑这 83 个案例。
+
+```bash
+node bench/skill-burst.mjs
+node bench/skill-burst.mjs --board-repeats=3 --out=bench/results/skill-burst-3x
+node bench/skill-burst.mjs --skill-rate=0 --out=bench/results/skill-burst-plain
+node bench/skill-burst.mjs --board-count=77 --out=bench/results/skill-burst-77
+node bench/skill-burst-compare.mjs bench/results/skill-burst bench/results/skill-burst-after
+```
+
+- 81 个技能 + 1 个无技能基线 + 1 个不参与排名的预热案例；每个案例只装备一个技能，第 50 关（所有技能均已解锁），
+  240 块恢复上限密集棋盘、22% 特殊砖、固定种子 843427。
+- 通过生产 `generate(true)`、`shoot()` 和逐块 `projectileHit()` 在同一模拟瞬间击碎整板；
+  保留真实递归、特殊砖、技能任务、箭上限、计分与 HUD/DOM。主箭伤害只在同步击碎期间
+  临时设为 1e9，并在 `finally` 中恢复。
+- 结果写入 `bench/results/skill-burst/`（Git 忽略）。`REPORT.md` 按相对基线的
+  `eventMs` 增量排名，并列出 `burstMs`（同步击碎逻辑）、`firstDrawMs`（冷首帧）、
+  `earlyP95`（爆发后 0–1s 绘制 p95 上界）、事件最大值和峰值对象数；`skills.csv`
+  供进一步分析。
+- 无技能基线同样会承受特殊砖递归。必须看同板差值，不能把 22% 特殊砖的连锁成本
+  算到单个技能头上；240 块也是合成容量极限，不是自然关卡。
+- 每案至少 6 秒墙钟 / 5.5 秒模拟，83 个案例单次约需十余分钟。**所有 Chrome 压测串行**，
+  不要并行启动两个 runner。
+- `--board-count=77` 换成满网格 7×11；`--skill-rate=0` 去掉特殊砖连锁，
+  只保留技能自身开销（依赖特殊砖的 `aftershock` 等会因此不触发）。
+- 自检：`node --test bench/skill-burst.test.mjs`。测试会校验 81 个技能全覆盖、
+  每个技能都能击碎整板，以及报告排名/校验规则。
+- Chromium 89.0.4389.0 冒烟（warmup/none/mint/overkill）通过，0 页面/基准错误；
+  单次样本只验证兼容性，不作为性能结论。
+
 ## 击碎链 CPU 改造对照
 
 本轮结果另存于 `results/fx-burst-optimized/`；不会覆盖上轮图案优化或整板原始数据。

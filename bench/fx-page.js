@@ -132,7 +132,7 @@
     serpent.eclipse();G.arrows=Array.from({length:n},(_,i)=>arrow(i));
   },()=>serpent.drawEclipse(ctx),{limit:64});
    const filter=c=>(!O.filter||new RegExp(O.filter).test(c.group+'/'+c.id))&&
-     (c.group!=='board-burst'||!O.boardCount||c.n===O.boardCount);
+     (!['board-burst','skill-burst'].includes(c.group)||!O.boardCount||c.n===O.boardCount);
   async function measure(c,isolated=false){
     const D=window.__FXDiagnose;D?.end();D?.reset();
     reset();Object.values(A.bosses).forEach(b=>b.reset());
@@ -250,6 +250,7 @@
     G.state.level=1;
     for(const c of cases.filter(filter))try{await measure(c);}catch(e){state.errors.push({id:c.id,n:c.n,error:String(e.stack)});}
     for(const c of window.__FXBoard.cases().filter(filter))try{await measureBoard(c);}catch(e){state.errors.push({group:c.group,id:c.id,n:c.n,error:String(e.stack)});}
+    if(O.skillBurst)for(const c of window.__FXBoard.skillCases().filter(c=>c.warmup||filter(c)))try{await measureBoard(c);}catch(e){state.errors.push({group:c.group,id:c.id,n:c.n,error:String(e.stack)});}
     G.state.level=100;
     for(const c of bossCases.filter(filter))try{await measure(c,true);}catch(e){state.errors.push({id:c.id,n:c.n,error:String(e.stack)});}
     // Isolated empty-canvas baseline for boss renderer comparisons.
@@ -301,7 +302,8 @@
     }
     state.coverage={profiles:Object.keys(A.skills.profiles).length,catalog:G.skillCatalog.length,
       missingProfiles:G.skillCatalog.filter(s=>!A.skills.profiles[s.id]).map(s=>s.id),cases:state.results.length,
-      boardCases:state.results.filter(r=>r.group==='board-burst').length};
+      boardCases:state.results.filter(r=>r.group==='board-burst').length,
+      skillBurstCases:state.results.filter(r=>r.group==='skill-burst').length};
     if(O.dom){
       G.state.level=1;G.state.bossOverride=null;G.state.milestone=null;G.generate(false);reset();G.ui();
       for(const kind of ['baseline','coins','sparks','payout'])for(const n of kind==='baseline'?[0]:[1,4,16]){
