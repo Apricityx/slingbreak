@@ -226,3 +226,28 @@ Verified: 386 Node tests, the real Chromium 89 compatibility gate, and all 12
 layout fixtures on each of Chromium 89.0.4389.0 and 156.0.8078.4 passed. Reviewed
 commit/flight screenshots. No Android assets/APK were rebuilt or installed; these
 checks do not establish device-specific Tencent X5 behaviour.
+
+## Skill burst performance fix (2026-10-24)
+
+`game/src/effects/skill-effects.js` now updates the private `lastPulse` after the
+economy earnings animation, so the existing 0.35s throttle actually engages
+instead of forcing a synchronous layout for every destroyed brick. It also caps
+budgeted `force:true` impacts at 24 per simulation instant while flying; when
+full, the oldest budgeted impact is replaced so the visible distribution still
+follows the latest kills. The normal 56-effect pool, non-forced effects, and
+UI/core/shop forced effects are unchanged.
+
+The visual difference is limited to extreme synchronous chains: the drawer still
+renders its full 24 large effects; only the additional older small sparks are
+dropped. The earnings animation is restarted at most once per 0.35s (previously
+it restarted per brick). Animated screenshots before/after were reviewed, and the
+skill-burst Chrome 89 smoke completed with zero page or harness errors.
+
+Verification: 393 Node tests passed, including
+`tests/skill-effects-budget.test.cjs` (one layout per 0.35s, 24-latest ring,
+phase and generation resets). The real Chromium 89.0.4389.0 compatibility gate
+passed with zero errors. The full 84-case skill-burst benchmark completed with
+zero harness errors; because it shared the host with unrelated CPU load, the
+before/after conclusion uses baseline-normalized results and controlled A/B
+subsets, not absolute wall-clock milliseconds. This is not an Android X5 or
+device-FPS claim.

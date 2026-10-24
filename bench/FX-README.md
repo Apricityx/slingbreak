@@ -164,8 +164,32 @@ node bench/skill-burst-compare.mjs bench/results/skill-burst bench/results/skill
   只保留技能自身开销（依赖特殊砖的 `aftershock` 等会因此不触发）。
 - 自检：`node --test bench/skill-burst.test.mjs`。测试会校验 81 个技能全覆盖、
   每个技能都能击碎整板，以及报告排名/校验规则。
+- 修复回归：`node --test tests/skill-effects-budget.test.cjs` 校验收益闪动节流和
+  飞行中的强制特效预算。
 - Chromium 89.0.4389.0 冒烟（warmup/none/mint/overkill）通过，0 页面/基准错误；
   单次样本只验证兼容性，不作为性能结论。
+
+首轮结果暴露了两类热点，本轮做了最小视觉变更的修复：
+
+- `alchemist / mint / treasury / bargain / forge / jackpot / bounty / specialist / contract`
+  同属 `coin` 展示组。`skill-effects.js` 的 `G.awardBrick` 读取 `lastPulse` 限制收益闪动，
+  但此前从未更新该变量，导致每击碎一块砖都执行 `animate()` 的强制布局读取；现在闪动分支
+  写入 `lastPulse`，同一同步爆发只布局一次，跨砖仍按 0.35s 节流。
+- `overkill / rhythm` 等通过 `force:true` 绕过特效冷却。现在飞行中每个模拟瞬间最多保留
+  24 个强制特效，正好是绘制器本来就会完整绘制的数量；满额时淘汰最旧的一个，保留最近 24 个，
+  因此绘制分布仍跟随击碎链。普通冷却特效仍遵守原来的 56 个池上限，UI、核心和商店的强制特效
+  不受影响。`doubletap / blast / frostfire` 同样受此预算保护。
+
+复测（同机串行、基线归一）：9 个 coin 技能的相对基线事件成本从约 +5~+13ms 降到
+约 −1~+3ms；强制特效峰值 56→26；Chrome 89 冒烟中 mint 击碎由 68.4ms 降到 35.9ms
+（同次基线 34.2ms）。首轮全量复跑在共享负载机上，未改技能也有 ±5ms 波动，结论以基线
+归一和受控 A/B 子集为准。
+
+复测对比：
+```bash
+node bench/skill-burst.mjs --board-repeats=3 --out=bench/results/skill-burst-after
+node bench/skill-burst-compare.mjs bench/results/skill-burst bench/results/skill-burst-after
+```
 
 ## 击碎链 CPU 改造对照
 

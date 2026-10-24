@@ -118,15 +118,34 @@
     effects.push({kind,x,y,color,r,born:G.time,duration:.65,...extra});
     if(effects.length>56){const disposable=effects.findIndex(e=>!e.hero);effects.splice(disposable<0?0:disposable,1);}
   }
+  // Forced impacts intentionally bypass the 85ms per-kind cooldown, but a
+  // synchronous 240-brick chain must not queue an unbounded decoration burst.
+  // The drawer shows at most 24 full effects anyway; keep one full draw's
+  // worth per instant so a simultaneous chain cannot keep the whole 56-effect
+  // pool alive. The 32 older small sparks are the only decoration lost.
+  const FORCED_FX_BUDGET=24;
+  let forcedFxAt=-1,forcedFxCount=0;
   G.skillFX=(id,x,y,options={})=>{
     if(!G.skillRank(id))return;
     const p=profiles[id];if(!p)return;
+    const budgeted=options.force&&G.phase==='flying';
+    if(budgeted){
+      if(G.time!==forcedFxAt){forcedFxAt=G.time;forcedFxCount=0;}
+      if(forcedFxCount>=FORCED_FX_BUDGET){
+        // Keep the latest impacts so the visible distribution still follows
+        // the destruction chain; drop the oldest budgeted sigil instead of
+        // refusing every later hit.
+        const index=effects.findIndex(e=>e.budgeted);
+        if(index<0)return;
+        effects.splice(index,1);
+      }else forcedFxCount++;
+    }
     const key=id+':'+(options.kind||p.kind);
     if(!options.force&&G.time-(cooldowns.get(key)??-10)<.085)return;
     cooldowns.set(key,G.time);
     const extra=Object.fromEntries(Object.entries(options).filter(([,value])=>value!==undefined));
     const source=G.activeArrow,v=source?.body.velocity;
-    emit(options.kind||p.kind,x,y,p.color,options.r||75,{id,accent:p.accent,duration:p.duration,hero:!!options.force,angle:v?Math.atan2(v.y,v.x)+Math.PI/2:0,axis:id==='sweep'||id==='stormfront'?'row':id==='lance'?'column':'both',...extra});
+    emit(options.kind||p.kind,x,y,p.color,options.r||75,{id,accent:p.accent,duration:p.duration,hero:!!options.force,budgeted,angle:v?Math.atan2(v.y,v.x)+Math.PI/2:0,axis:id==='sweep'||id==='stormfront'?'row':id==='lance'?'column':'both',...extra});
     if(!G.reduced&&effects.length<35)G.burst(x,y,p.accent,options.kind==='mark'?2:4,.55);
   };
   function refresh(){
@@ -195,13 +214,13 @@
   const buy=G.buy;
    G.buy=key=>{const result=buy(key);if(result){for(const s of G.activeSkills())if(['forge','bargain'].includes(s.id))G.skillFX(s.id,G.origin.x,G.origin.y,{kind:'coin',r:110,force:true});refresh();}return result;};
   const award=G.awardBrick;
-  G.awardBrick=(...args)=>{const value=award(...args);if(G.activeSkills().some(s=>profiles[s.id].kind==='coin')&&G.time-lastPulse>.35)animate(document.getElementById('earnings'),'skill-economy-flash');return value;};
+  G.awardBrick=(...args)=>{const value=award(...args);if(G.activeSkills().some(s=>profiles[s.id].kind==='coin')&&G.time-lastPulse>.35){lastPulse=G.time;animate(document.getElementById('earnings'),'skill-economy-flash');}return value;};
   const spawn=G.spawnCore;
   G.spawnCore=(...args)=>{const absent=!G.core,result=spawn(...args);if(absent&&G.core)for(const s of G.activeSkills())if(['resonance','corehunter','treasury'].includes(s.id))G.skillFX(s.id,G.core.x,G.core.y,{r:150,force:true});return result;};
   const clear=G.clear;
-  G.clear=()=>{if(G.skillRank('treasury')&&G.phase!=='clearing'){emit('coin',390,110,profiles.treasury.color,220,{id:'treasury',accent:profiles.treasury.accent,duration:1.5,hero:true});animate(document.getElementById('earnings'),'skill-economy-flash');}return clear();};
+  G.clear=()=>{if(G.skillRank('treasury')&&G.phase!=='clearing'){emit('coin',390,110,profiles.treasury.color,220,{id:'treasury',accent:profiles.treasury.accent,duration:1.5,hero:true});lastPulse=G.time;animate(document.getElementById('earnings'),'skill-economy-flash');}return clear();};
   const generate=G.generate;
-  G.generate=(...args)=>{effects.length=0;cooldowns.clear();return generate(...args);};
+  G.generate=(...args)=>{effects.length=0;cooldowns.clear();forcedFxAt=-1;forcedFxCount=0;return generate(...args);};
   const stroke=(ctx,x,y,tx,ty)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();};
   const ring=(ctx,x,y,r)=>{ctx.beginPath();ctx.arc(x,y,Math.max(0,r),0,TAU);ctx.stroke();};
   function drawEffect(ctx,e,light=true){
