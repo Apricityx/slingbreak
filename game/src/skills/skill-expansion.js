@@ -20,8 +20,14 @@
     if(!rank('contract')||G.state.skillChosenLevel!==G.state.level)return;
     const c=runtime().contract??={rounds:0,targets:[],size:0};
     if(c.rounds>=3||c.targets.length||!G.bricks.length)return;
-    c.targets=[...G.bricks].sort((a,b)=>b.y-a.y||a.hp-b.hp).slice(0,3).map(b=>({x:b.x,y:b.y}));
-    c.size=c.targets.length;G.save();
+    // Bounty targets are random each round: shuffle by splicing a private copy
+    // so the same brick cannot be marked twice and no board layout is assumed.
+    const pool=[...G.bricks],targets=[];
+    for(let i=0;i<3&&pool.length;i++){
+      const pick=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+      targets.push({x:pick.x,y:pick.y});
+    }
+    c.targets=targets;c.size=c.targets.length;G.save();
   }
   const contracted=b=>rank('contract')&&runtime().contract?.targets.some(p=>p.x===b.x&&p.y===b.y);
   const choose=G.chooseSkill;
@@ -106,9 +112,11 @@
     if(contracted(b)){
       const c=runtime().contract;c.targets=c.targets.filter(p=>p.x!==b.x||p.y!==b.y);
       fx('contract',b.x,b.y,{r:75,force:true});
+      G.ring(b.x,b.y,'#e0c46a',74);G.burst(b.x,b.y,'#f0d98a',10,1.4);
       if(!c.targets.length){
         c.rounds++;const bounty=Math.round(G.bonus()*.4);G.state.coins+=bounty;G.shotMoney+=bounty;G.levelMoney+=bounty;
         G.arrows.forEach(a=>a.pierce+=4);G.float(390,G.origin.y-110,'契约完成 +'+G.fmt(bounty),colors.contract,24);G.sound('upgrade');
+        G.ring(390,G.origin.y-130,'#e0c46a',190);G.burst(390,G.origin.y-130,'#f0d98a',20,2);
         fx('contract',390,G.origin.y-130,{r:145,force:true});
         // Rearm next tick, after the current destruction chain has finished.
         if(c.rounds<3)later(.12,G.activeArrow,ensureContract);
@@ -188,6 +196,60 @@
     return null;
   };
   const line=(ctx,a,b)=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();};
+  // Bounty marker: a gold target diamond, a top ribbon with a minted coin seal
+  // and a brief sheen. The seal sits on the brick's top edge, inside the 16px
+  // row gap, so it never covers the row above. Only cached glow draws and short
+  // paths; three simultaneous targets stay cheap on the Chromium 89 baseline.
+  function drawBountyMarker(ctx,b,index){
+    const time=G.reduced?0:G.time,pulse=.5+.5*Math.sin(time*3.2+index*2.1);
+    const cx=b.x,cy=b.y,hw=b.w/2,hh=b.h/2,left=cx-hw,top=cy-hh,right=cx+hw,bottom=cy+hh;
+    const gold='#d8b85a',light='#f6e6ae';
+    ctx.save();
+    ctx.globalAlpha=1;
+    if(G.fx?.glow)G.fx.glow(ctx,cx,cy,b.w*.95,gold,.19+pulse*.12);
+    // Warm wash keeps the brick readable while making it feel minted.
+    ctx.globalAlpha=.06+pulse*.05;ctx.fillStyle=light;ctx.fillRect(left,top,b.w,b.h);
+    // Diamond target outside the brick, leaving the number clear. A dark gold
+    // underlay keeps the cord readable on pale bricks as well as tinted ones.
+    const out=7+pulse*2;
+    ctx.lineJoin='round';
+    ctx.globalAlpha=.38;ctx.strokeStyle='#806020';ctx.lineWidth=3.4;
+    ctx.beginPath();ctx.moveTo(cx,top-out);ctx.lineTo(right+out,cy);ctx.lineTo(cx,bottom+out);ctx.lineTo(left-out,cy);ctx.closePath();ctx.stroke();
+    ctx.globalAlpha=.95;ctx.strokeStyle=gold;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(cx,top-out);ctx.lineTo(right+out,cy);ctx.lineTo(cx,bottom+out);ctx.lineTo(left-out,cy);ctx.closePath();ctx.stroke();
+    ctx.fillStyle=light;ctx.globalAlpha=.8;
+    for(const [x,y] of [[left-out,cy],[right+out,cy],[cx,bottom+out]]){
+      ctx.beginPath();ctx.moveTo(x,y-2.6);ctx.lineTo(x+1.6,y);ctx.lineTo(x,y+2.6);ctx.lineTo(x-1.6,y);ctx.closePath();ctx.fill();
+    }
+    // A short sheen passes over the brick.
+    ctx.save();ctx.beginPath();ctx.rect(left,top,b.w,b.h);ctx.clip();
+    const sweep=(time*.52+index*.31)%1,sx=left+sweep*b.w;
+    ctx.globalAlpha=.18+pulse*.08;ctx.strokeStyle=light;ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(sx,top-4);ctx.lineTo(sx+13,bottom+4);ctx.stroke();ctx.restore();
+    // Ribbon pinned to the top edge; the seal stays in the row gap.
+    const by=top+2.5,half=24;
+    ctx.globalAlpha=.94;ctx.fillStyle='#b6913c';ctx.strokeStyle=light;ctx.lineWidth=1.1;
+    ctx.beginPath();
+    ctx.moveTo(cx-half,by-5);ctx.lineTo(cx+half,by-5);ctx.lineTo(cx+half-4.5,by);ctx.lineTo(cx+half,by+5);
+    ctx.lineTo(cx-half,by+5);ctx.lineTo(cx-half+4.5,by);ctx.closePath();ctx.fill();ctx.stroke();
+    // Minted coin seal with a tiny bob.
+    const coinY=top-2.5+(G.reduced?0:Math.sin(time*2.4+index*1.7)*1.2),r=8.5+pulse*.6;
+    if(G.fx?.glow)G.fx.glow(ctx,cx,coinY,22,'#f0d98a',.38);
+    ctx.globalAlpha=1;ctx.fillStyle='#e8c766';ctx.strokeStyle='#fff3c9';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(cx,coinY,r,0,TAU);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#98742f';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(cx,coinY,r*.68,0,TAU);ctx.stroke();
+    // Four-point glint cast into the coin.
+    const g=r*.62;ctx.fillStyle='#8a6829';
+    ctx.beginPath();ctx.moveTo(cx,coinY-g);ctx.lineTo(cx+g*.24,coinY-g*.24);ctx.lineTo(cx+g,coinY);ctx.lineTo(cx+g*.24,coinY+g*.24);
+    ctx.lineTo(cx,coinY+g);ctx.lineTo(cx-g*.24,coinY+g*.24);ctx.lineTo(cx-g,coinY);ctx.lineTo(cx-g*.24,coinY-g*.24);ctx.closePath();ctx.fill();
+    // One twinkle at the seal's shoulder, still inside the row gap.
+    const tw=2.5+pulse*2,tx=cx+r+5,ty=coinY-r*.9;
+    ctx.globalAlpha=.55+pulse*.35;ctx.fillStyle=light;
+    ctx.beginPath();ctx.moveTo(tx,ty-tw);ctx.lineTo(tx+tw*.3,ty-tw*.3);ctx.lineTo(tx+tw,ty);ctx.lineTo(tx+tw*.3,ty+tw*.3);
+    ctx.lineTo(tx,ty+tw);ctx.lineTo(tx-tw*.3,ty+tw*.3);ctx.lineTo(tx-tw,ty);ctx.lineTo(tx-tw*.3,ty-tw*.3);ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
   G.drawSkillMechanics=ctx=>{
     ctx.save();ctx.lineCap='round';
     for(let si=Math.max(0,signals.length-(G.reduced?16:32));si<signals.length;si++){const s=signals[si];
@@ -209,10 +271,9 @@
       ctx.fillStyle=window.SlingTheme?.canvas.sawDisc||'#f4f2e9';ctx.beginPath();ctx.arc(0,0,38,0,TAU);ctx.fill();
       G.paintSkillSignature?.(ctx,'buzzsaw',.6,53,colors.buzzsaw,'#d4bb79');ctx.restore();
     }
-    if(rank('contract'))for(const p of runtime().contract?.targets||[]){
-      const b=G.bricks.find(b=>b.x===p.x&&b.y===p.y);if(!b)continue;
-      ctx.globalAlpha=.85;ctx.strokeStyle=colors.contract;ctx.lineWidth=2;ctx.strokeRect(b.x-b.w/2-4,b.y-b.h/2-4,b.w+8,b.h+8);
-      ctx.save();ctx.translate(b.x,b.y-b.h/2-10);G.paintSkillSignature?.(ctx,'contract',.5,13,colors.contract,'#a6b575','aura');ctx.restore();
+    if(rank('contract'))for(let i=0;i<(runtime().contract?.targets||[]).length;i++){
+      const p=runtime().contract.targets[i],b=G.bricks.find(b=>b.x===p.x&&b.y===p.y);
+      if(b)drawBountyMarker(ctx,b,i);
     }
     if(rank('spectral'))for(const o of G.obstacles){ctx.globalAlpha=.7;ctx.strokeStyle=colors.spectral;ctx.setLineDash([4,6]);ctx.strokeRect(o.x-o.w/2-3,o.y-o.h/2-3,o.w+6,o.h+6);ctx.setLineDash([]);}
     if(rank('timeslip')&&G.drag?.dy>5){
