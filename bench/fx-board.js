@@ -21,16 +21,35 @@
       scope:n===77?'Full 7 × 11 grid without normal gaps/barriers':'240-brick restore ceiling, dense 12 × 20 grid'
     });return list;
   }
+  // One isolated skill per case so a slow result can be attributed to a single
+  // skill instead of a four-slot mix. Every case uses the same fixed dense board
+  // and special-brick quota; the no-skill case is the comparison baseline.
+  function skillCases(){
+    const catalog=window.Game?.skillCatalog||[];
+    const n=window.__FX_OPTIONS__?.boardCount||240;
+    const rate=window.__FX_OPTIONS__?.skillRate??.22;
+    const list=[{id:'warmup',name:'预热',tier:'none',family:'none',warmup:true,skills:[]},
+      {id:'none',name:'无技能',tier:'none',family:'none',skills:[]}];
+    for(const skill of catalog)list.push({id:skill.id,name:skill.name,tier:skill.tier,
+      family:skill.family,skills:[skill.id]});
+    return list.map(c=>({group:'skill-burst',id:c.id,name:c.name,tier:c.tier,family:c.family,
+      n,rate,loadout:'single',seed:843427,level:50,shotPhase:11,warmup:!!c.warmup,skills:c.skills,synthetic:true,
+      scope:n===77?'77-brick full grid; one isolated skill':'240-brick restore ceiling, dense 12 × 20 grid; one isolated skill'}));
+  }
   function install(G,c,reduced){
     // Reset through production wrappers, including skill jobs and achievement UI.
-    G.reset();G.time=100;G.state.level=9;G.state.bossOverride=null;G.state.milestone=null;
+    const level=c.level||9;
+    G.reset();G.time=100;G.state.level=level;G.state.bossOverride=null;G.state.milestone=null;
     G.state.up.slots=3;G.state.skills=Object.fromEntries(c.skills.map(id=>[id,1]));
-    G.state.skillScopeVersion=3;G.state.skillGateVersion=G.skillGateVersion;G.state.skillChosenLevel=9;
+    G.state.skillScopeVersion=3;G.state.skillGateVersion=G.skillGateVersion;G.state.skillChosenLevel=level;
     G.state.skillRuntime=null;G.state.draft=null;G.state.performanceMode=reduced;G.reduced=reduced;
     const f=fixture(c.n,c.rate,c.seed,G.baseHp());
-    G.state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level:9,initial:c.n,
+    G.state.board={layoutVersion:G.layoutVersion,balanceVersion:G.balanceVersion,level,initial:c.n,
       killed:0,levelMoney:0,bricks:f.bricks,obstacles:[],core:false};
     G.generate(true);G.phase='ready';G.paused=false;G.boardEntrance=null;G.holdDraft=false;
+    // Make every-third/every-fourth-shot effects reachable with the single shot
+    // this fixture fires. The 12th shot satisfies all current periodic skills.
+    if(c.shotPhase&&G.state.skillRuntime)G.state.skillRuntime.shots=c.shotPhase;
     if(G.bricks.length!==c.n)throw Error('Production board restore rejected fixture');
     return f;
   }
@@ -52,5 +71,5 @@
       throw Error('Whole-board rewards were lost or counted twice');
     return outcome;
   }
-  window.__FXBoard={fixture,cases,install,strike,random};
+  window.__FXBoard={fixture,cases,skillCases,install,strike,random};
 })();

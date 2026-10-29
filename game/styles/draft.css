@@ -94,7 +94,8 @@
 
 /* Hover / focus: the card stays put (theme.css keeps the draft stable) and
    answers with light instead — border, glow, emblem and arrow. These override
-   theme.css's !important hover reset, and restore a visible focus ring. */
+   theme.css's !important hover reset. Keyboard focus uses the emblem and key
+   feedback below, without an outer frame. */
 #skill-draft .skill-card[data-tier]:hover{border-color:var(--tier-line)!important;background:var(--surface-2)!important}
 @media(hover:hover){
   #skill-draft .skill-card[data-tier]:not(:disabled):hover{
@@ -106,7 +107,7 @@
   #skill-draft .skill-card:not(:disabled):hover .skill-pick{background:var(--mix-skill-color-8-alpha)}
   #skill-draft .skill-card:not(:disabled):hover .skill-pick svg{transform:translate(3px,-3px)}
 }
-#skill-draft .skill-card:focus-visible{outline:2px solid var(--ink)!important;outline-offset:3px}
+#skill-draft .skill-card{outline:none!important}
 #skill-draft .skill-card:not(:disabled):focus-visible .skill-card-art::after{opacity:1}
 #skill-draft .skill-card:not(:disabled):focus-visible .skill-emblem{transform:scale(1.08)}
 #skill-draft .skill-card:not(:disabled):focus-visible .skill-key{background:var(--ink);border-color:var(--ink);color:var(--surface)}

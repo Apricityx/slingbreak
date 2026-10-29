@@ -181,3 +181,73 @@ Use the same real-Chromium-89 and modern comparison commands above.
   completed 1,120 cases across all 81 profiles with zero benchmark/page errors.
 - These are compatibility smoke checks, not an Android X5 performance claim.
   No Android APK was rebuilt or installed for this layout change.
+
+## Skill acquisition flight (2026-10-09)
+
+The flight now uses a transparent, fixed-size dialog as a motion anchor. Its
+card and slot surfaces keep their layout dimensions throughout the flight;
+only composed `transform` and `opacity` keyframes move, resize and crossfade
+them. No animated `left`, `top`, `width` or `height` can trigger text reflow or
+change the clipping box between frames.
+
+The skill is committed before takeoff so the destination comes from the actual
+equipped HUD slot. The flight copies that slot's label, padding and surface
+styles, and the landing pulse starts at scale 1. The draft stays open until its
+fade completes; focus returns to the canvas after the decorative dialogs leave.
+Commit lift, flight duration, queue replacement and board entrance remain.
+
+`bench/draft-layout.mjs` covers normal descriptions, long descriptions and full
+queue replacement at three viewport sizes. It checks fixed text layout, flight
+keyframes and the geometry at both takeoff and landing, alongside the existing
+scrolling and commit-clipping checks. Use the real-Chromium-89 command above.
+
+## Skill flight coordinate contract (2026-10-23)
+
+The `.skill-flight` anchor and its path use viewport pixels, not stage pixels.
+`mobile.css` must exclude it from the stage-zoomed dialog rule: the ID inside
+`dialog:not(#game-intro)` gives that selector higher specificity than
+`dialog.skill-flight { zoom:1 }`. Previously it applied the stage scale a second
+time on modern Chromium, producing a wrong landing followed by a snap to the HUD.
+Chromium 89's old dialog zoom behaviour masked this conflict in geometry checks.
+Ordinary dialogs and the outgoing drop still use stage zoom.
+
+After choosing a skill, flush queued UI writes before measuring the actual HUD
+slot. Do not replace that measurement with a predicted empty-slot position.
+
+Prevention gates:
+- Node compatibility tests guard the zoom exclusion and flush-before-measure order.
+- `bench/draft-layout.mjs` asserts the anchor's computed zoom is 1, plus takeoff
+  and landing bounds within 0.5 viewport pixels. Run on **both** real Chromium 89
+  and a modern engine; either engine alone can miss a coordinate-system regression.
+- Fixtures cover 412×915, 360×800, 768×1024 and 1440×1024 with normal/long text and
+  full-queue replacement. Keep non-unit scales and letterboxing in this matrix.
+
+Verified: 386 Node tests, the real Chromium 89 compatibility gate, and all 12
+layout fixtures on each of Chromium 89.0.4389.0 and 156.0.8078.4 passed. Reviewed
+commit/flight screenshots. No Android assets/APK were rebuilt or installed; these
+checks do not establish device-specific Tencent X5 behaviour.
+
+## Skill burst performance fix (2026-10-24)
+
+`game/src/effects/skill-effects.js` now updates the private `lastPulse` after the
+economy earnings animation, so the existing 0.35s throttle actually engages
+instead of forcing a synchronous layout for every destroyed brick. It also caps
+budgeted `force:true` impacts at 24 per simulation instant while flying; when
+full, the oldest budgeted impact is replaced so the visible distribution still
+follows the latest kills. The normal 56-effect pool, non-forced effects, and
+UI/core/shop forced effects are unchanged.
+
+The visual difference is limited to extreme synchronous chains: the drawer still
+renders its full 24 large effects; only the additional older small sparks are
+dropped. The earnings animation is restarted at most once per 0.35s (previously
+it restarted per brick). Animated screenshots before/after were reviewed, and the
+skill-burst Chrome 89 smoke completed with zero page or harness errors.
+
+Verification: 393 Node tests passed, including
+`tests/skill-effects-budget.test.cjs` (one layout per 0.35s, 24-latest ring,
+phase and generation resets). The real Chromium 89.0.4389.0 compatibility gate
+passed with zero errors. The full 84-case skill-burst benchmark completed with
+zero harness errors; because it shared the host with unrelated CPU load, the
+before/after conclusion uses baseline-normalized results and controlled A/B
+subsets, not absolute wall-clock milliseconds. This is not an Android X5 or
+device-FPS claim.

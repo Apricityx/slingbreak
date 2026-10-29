@@ -108,6 +108,38 @@ test('retained contract and periodic shot counters restart on each new board',()
   assert.equal(G.state.skillRuntime.contract.rounds,0);assert.equal(G.state.skillRuntime.contract.targets.length,3);
 });
 
+test('contract marks three distinct random bricks and rerolls them on a new board',()=>{
+  const G=boot(['contract']),seen=new Set();
+  const key=c=>c.targets.map(p=>`${p.x},${p.y}`).sort().join('|');
+  for(let i=0;i<8;i++){
+    if(i){G.state.skillRuntime.contract={rounds:0,targets:[],size:0};G.generate();}
+    const c=G.state.skillRuntime.contract,keys=c.targets.map(p=>`${p.x},${p.y}`);
+    assert.equal(c.targets.length,3);
+    assert.equal(new Set(keys).size,3,'bounty targets must be distinct');
+    for(const p of c.targets)assert.ok(G.bricks.some(b=>b.x===p.x&&b.y===p.y),'target must be a live brick');
+    seen.add(key(c));
+  }
+  assert.ok(seen.size>1,'targets must be random, not a fixed top-three selection');
+});
+
+test('contract re-arms with three live targets after a completed round',()=>{
+  const G=boot(['contract']),c0=G.state.skillRuntime.contract;
+  for(const p of c0.targets.slice()){
+    const b=G.bricks.find(b=>b.x===p.x&&b.y===p.y);
+    assert.ok(b,'marked bounty brick must exist');
+    G.hit(b,1e9);
+  }
+  const completed=G.state.skillRuntime.contract;
+  assert.equal(completed.rounds,1);
+  assert.equal(completed.targets.length,0,'targets stay cleared until the short re-arm delay');
+  G.phase='flying';for(let i=0;i<9;i++)G.tick(.016);
+  const c=G.state.skillRuntime.contract,keys=c.targets.map(p=>`${p.x},${p.y}`);
+  assert.equal(c.rounds,1);
+  assert.equal(c.targets.length,3);
+  assert.equal(new Set(keys).size,3);
+  for(const p of c.targets)assert.ok(G.bricks.some(b=>b.x===p.x&&b.y===p.y),'re-armed target must be a live brick');
+});
+
 test('four-skill builds remain bounded, settle and preserve the build through clear',()=>{
   const builds=[
     ['trident','echo','nova','bankshot'],['ice','shatter','nova','prism'],
