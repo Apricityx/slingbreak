@@ -59,6 +59,13 @@ func run() -> void:
 	check(not board.masonry.visible,"draft hides retained battlefield")
 	g.phase="ready";await settle()
 	check(board.masonry.visible,"returning to play restores retained battlefield")
+	# Bounty markers paint in the dynamic pass, so selecting targets must not
+	# disturb any brick's retained vector display list.
+	g.state.skills={"contract":1};g.state.skillChosenLevel=g.state.level
+	g.skills.ensure_contract()
+	var marker_draws:int=draws[0];await settle()
+	check(draws[0]==marker_draws,"bounty markers stay out of retained brick lists")
+	g.state.skills={};g.state.skillRuntime.erase("contract")
 	g.bricks.erase(brick);await settle()
 	check(not board.retained.has(brick) and not is_instance_valid(node),"destroyed brick removes its retained node")
 	var previous:Array=board.retained.values()

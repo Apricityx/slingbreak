@@ -108,7 +108,7 @@ func _sync_retained() -> void:
 	for brick in g.bricks:
 		if brick.type=="scale":continue
 		var key:Array=[g.theme,brick.bounds,brick.type,brick.hp,brick.max_hp,brick.flash,brick.frozen,entrance,entrance_start,
-			brick.flags.get("markUntil",0)>g.time,brick.flags.get("ward",false),g.skills.contracted(brick),
+			brick.flags.get("markUntil",0)>g.time,brick.flags.get("ward",false),
 			brick.type=="hour" and g.bosses.boss_id=="clock" and g.bosses.model.lit(brick),
 			brick.type!="normal" and signatures.meshes.has(GLYPHS.get(brick.type,"pulse"))]
 		_retain(brick,false,key,wanted,order);order+=1
@@ -145,6 +145,7 @@ func _draw() -> void:
 	if g.phase!="draft" and g.phase!="clearing":
 		_core()
 		_fields()
+		_bounty_markers()
 	for ring in g.fx.rings:
 		var t:float=ring.life/ring.max
 		var energy:float=ring.display_energy
@@ -238,7 +239,6 @@ func _brick(brick: RefCounted) -> void:
 	if brick.flags.get("markUntil",0)>simulation.time:draw_on.draw_arc(point,brick.w*0.42,0,TAU,32,alpha(Color("#91b646"),0.6),1.5,true)
 	if brick.flags.get("ward",false):draw_on.draw_rect(rect.grow(3),color("clock","ward"),false,2)
 	if brick.type=="hour" and simulation.bosses.boss_id=="clock" and simulation.bosses.model.lit(brick):draw_on.draw_rect(rect.grow(3),color("clock","gem"),false,2)
-	if simulation.skills.contracted(brick):draw_on.draw_rect(Rect2(point-Vector2(brick.w/2+4,brick.h/2+4),Vector2(brick.w+8,brick.h+8)),Color("#b69a48"),false,2)
 	if simulation.board_entrance!=null:draw_on.draw_set_transform(Vector2.ZERO)
 
 func _glyph(type: String,point: Vector2,color_value: Color) -> void:
@@ -448,6 +448,98 @@ func _fields() -> void:
 			"starforge":
 				draw_arc(field.position,170+field.stacks*12,0,TAU,64,alpha(ink_color,0.12),2,true)
 				signatures.paint(self,field.id,field.position,t,47+field.stacks*2,ink_color,Color("#71aaa2"));_text(str(field.stacks),field.position+Vector2(0,6),16,ink_color)
+
+func _bounty_markers() -> void:
+	var g=simulation
+	if not g.rank("contract") or not g.state.skillRuntime.has("contract"):return
+	var targets:Array=g.state.skillRuntime.contract.get("targets",[])
+	for index in range(targets.size()):
+		var point:Dictionary=targets[index]
+		var brick:RefCounted=null
+		for candidate in g.bricks:
+			if candidate.x==point.get("x") and candidate.y==point.get("y"):brick=candidate;break
+		if brick!=null:_bounty_marker(brick,index)
+
+func _bounty_marker(brick: RefCounted,index: int) -> void:
+	# Gold target diamond, top ribbon with a minted coin seal and a short sheen.
+	# The seal sits inside the 16 px row gap so it never covers the row above.
+	# Bounded paths only: three simultaneous targets stay cheap on the 89-era
+	# renderer, and the marker repaints every frame instead of the brick.
+	var g=simulation
+	var time:float=0.0 if g.reduced else g.time
+	var pulse:float=0.5+0.5*sin(time*3.2+index*2.1)
+	var gold:=Color("#d8b85a")
+	var light:=Color("#f6e6ae")
+	var center:Vector2=brick.position
+	var left:float=center.x-brick.w*0.5
+	var top:float=center.y-brick.h*0.5
+	var right:float=center.x+brick.w*0.5
+	var bottom:float=center.y+brick.h*0.5
+	_bounty_glow(center,brick.w*0.95,gold,0.19+pulse*0.12)
+	# Warm wash keeps the brick readable while making it feel minted.
+	draw_rect(Rect2(left,top,brick.w,brick.h),alpha(light,0.06+pulse*0.05))
+	var out:float=7+pulse*2
+	var diamond:=PackedVector2Array([Vector2(center.x,top-out),Vector2(right+out,center.y),Vector2(center.x,bottom+out),Vector2(left-out,center.y)])
+	var loop:=diamond.duplicate()
+	loop.append(diamond[0])
+	# A dark gold underlay keeps the cord readable on pale bricks as well.
+	draw_polyline(loop,alpha(Color("#806020"),0.38),3.4,true)
+	draw_polyline(loop,alpha(gold,0.95),1.8,true)
+	for point in [Vector2(left-out,center.y),Vector2(right+out,center.y),Vector2(center.x,bottom+out)]:
+		draw_colored_polygon(PackedVector2Array([point+Vector2(0,-2.6),point+Vector2(1.6,0),point+Vector2(0,2.6),point+Vector2(-1.6,0)]),alpha(light,0.8))
+	# A short sheen passes over the brick, clipped to its rectangle without a
+	# canvas clip item.
+	var sweep:=fposmod(time*0.52+index*0.31,1.0)
+	var sx:float=left+sweep*brick.w
+	var sheen:=_clip_segment(Vector2(sx,top-4),Vector2(sx+13,bottom+4),Rect2(left,top,brick.w,brick.h))
+	if sheen.size()==2:draw_line(sheen[0],sheen[1],alpha(light,0.18+pulse*0.08),3,true)
+	# Ribbon pinned to the top edge; the seal stays in the row gap.
+	var by:float=top+2.5
+	var half:float=24
+	var ribbon:=PackedVector2Array([Vector2(center.x-half,by-5),Vector2(center.x+half,by-5),Vector2(center.x+half-4.5,by),Vector2(center.x+half,by+5),Vector2(center.x-half,by+5),Vector2(center.x-half+4.5,by)])
+	draw_colored_polygon(ribbon,alpha(Color("#b6913c"),0.94))
+	var ribbon_edge:=ribbon.duplicate()
+	ribbon_edge.append(ribbon[0])
+	draw_polyline(ribbon_edge,alpha(light,0.94),1.1,true)
+	# Minted coin seal with a tiny bob.
+	var coin:=Vector2(center.x,top-2.5+(0.0 if g.reduced else sin(time*2.4+index*1.7)*1.2))
+	var radius:float=8.5+pulse*0.6
+	_bounty_glow(coin,22,Color("#f0d98a"),0.38)
+	draw_circle(coin,radius,Color("#e8c766"))
+	draw_arc(coin,radius,0,TAU,32,Color("#fff3c9"),1.2,true)
+	draw_arc(coin,radius*0.68,0,TAU,32,Color("#98742f"),1.0,true)
+	_star(coin,radius*0.62,0.24,Color("#8a6829"))
+	# One twinkle at the seal's shoulder, still inside the row gap.
+	_star(Vector2(center.x+radius+5,coin.y-radius*0.9),2.5+pulse*2,0.24,light,0.55+pulse*0.35)
+
+func _star(center: Vector2,radius: float,inner: float,ink: Color,opacity: float=1.0) -> void:
+	var points:=PackedVector2Array()
+	for index in range(8):
+		points.append(center+Vector2.from_angle(-PI/2+index*PI/4)*radius*(1.0 if index%2==0 else inner))
+	draw_colored_polygon(points,alpha(ink,opacity))
+
+func _bounty_glow(center: Vector2,radius: float,ink: Color,opacity: float) -> void:
+	# Six bounded circles approximate the browser's cached radial glow; no
+	# gradient texture is allocated per target or per frame.
+	for step in range(6,0,-1):
+		draw_circle(center,radius*step/6.0,alpha(ink,opacity*(1.0-step/7.0)*0.33))
+
+func _clip_segment(start: Vector2,finish: Vector2,rect: Rect2) -> PackedVector2Array:
+	# Liang-Barsky clip, so the sheen never spills over the brick's rectangle.
+	var delta:=finish-start
+	var directions:=[-delta.x,delta.x,-delta.y,delta.y]
+	var distances:=[start.x-rect.position.x,rect.end.x-start.x,start.y-rect.position.y,rect.end.y-start.y]
+	var low:=0.0
+	var high:=1.0
+	for index in range(4):
+		if absf(directions[index])<0.000001:
+			if distances[index]<0:return PackedVector2Array()
+		else:
+			var ratio:float=distances[index]/directions[index]
+			if directions[index]<0:low=maxf(low,ratio)
+			else:high=minf(high,ratio)
+	if low>high:return PackedVector2Array()
+	return PackedVector2Array([start+delta*low,start+delta*high])
 
 func _draw_boss(front: bool) -> void:
 	boss_art.paint(self,front)

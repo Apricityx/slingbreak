@@ -136,9 +136,11 @@ atlas rather than regenerating it for every intermediate node scale; board text
 retains its fixed world-scale oversampling.
 
 Bricks and obstacles retain native CanvasItem vector display lists. HP, flash,
-freeze, expiry/ward/contract states, moving bounds, entrance time and palette changes
+freeze, expiry/ward states, moving bounds, entrance time and palette changes
 invalidate only the affected item; removal, generation and draw order are handled
-explicitly. The battlefield still submits arrows, effects, core and Boss motion
+explicitly. Bounty targets are redrawn each round at random and paint a pulsing
+gold marker in the dynamic pass, so choosing or clearing them never invalidates a
+retained brick. The battlefield still submits arrows, effects, core and Boss motion
 each rendered frame. No raster cache, resolution reduction, prediction sampling
 change or performance-mode switch is used.
 

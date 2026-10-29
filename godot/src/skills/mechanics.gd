@@ -300,12 +300,14 @@ func destroyed(brick: RefCounted, _depth: int) -> void:
 		var contract=g.state.skillRuntime.contract
 		contract.targets=contract.targets.filter(func(p):return p.x!=brick.x or p.y!=brick.y)
 		effect("contract",point,75)
+		g.fx.ring(point,Color("#e0c46a"),74);g.fx.burst(point,Color("#f0d98a"),10,1.4)
 		if contract.targets.is_empty():
 			contract.rounds+=1
 			var money=round(g.bonus()*0.4)
 			g.state.coins+=money;g.level_money+=money;g.shot_money+=money
 			for arrow in g.arrows:arrow.pierce+=4
 			g.fx.floating(Vector2(390,860),"契约完成 +%d" % int(money),Color("#b69a48"),24);g.cue("upgrade")
+			g.fx.ring(Vector2(390,840),Color("#e0c46a"),190);g.fx.burst(Vector2(390,840),Color("#f0d98a"),20,2)
 			later(0.12,source,ensure_contract)
 
 func take_round(id: String, limit: int) -> bool:
@@ -318,8 +320,16 @@ func ensure_contract() -> void:
 	if not g.state.skillRuntime.has("contract"):g.state.skillRuntime.contract={"rounds":0,"targets":[],"size":0}
 	var contract=g.state.skillRuntime.contract
 	if contract.rounds>=3 or not contract.targets.is_empty() or g.bricks.is_empty():return
-	var selected=g.bricks.duplicate();selected.sort_custom(func(a,b):return a.y>b.y or a.y==b.y and a.hp<b.hp)
-	contract.targets=selected.slice(0,3).map(func(b):return {"x":b.x,"y":b.y});contract.size=contract.targets.size()
+	# Random each round: draw from a private pool so no brick is marked twice
+	# and no board layout or HP ordering is assumed.
+	var pool:=g.bricks.duplicate()
+	var targets:Array=[]
+	while targets.size()<3 and not pool.is_empty():
+		var index:=g.rng.randi_range(0,pool.size()-1)
+		var brick:RefCounted=pool[index]
+		pool.remove_at(index)
+		targets.append({"x":brick.x,"y":brick.y})
+	contract.targets=targets;contract.size=targets.size()
 
 func contracted(brick: RefCounted) -> bool:
 	if not rank("contract") or not g.state.skillRuntime.has("contract"):return false

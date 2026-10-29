@@ -89,6 +89,37 @@ func _run() -> void:
 		for step in range(200):sim.update(1.0/60)
 		check(sim.skills.jobs.size()<=512 and sim.arrows.size()<=64 and sim.fx.particles.size()<=300,"bounded work "+item.id)
 		for arrow in sim.arrows:check(arrow.position.is_finite() and arrow.velocity.is_finite(),"finite projectile "+item.id)
+	# Bounty rounds draw three live bricks at random, never twice, and pay out.
+	var contract_sets:Array=[]
+	for contract_seed in [11,29,47,73]:
+		sim=fresh(["contract"],contract_seed);sim.phase="flying"
+		sim.state.skillRuntime.contract={"rounds":0,"targets":[],"size":0}
+		sim.skills.ensure_contract()
+		var contract_targets:Array=sim.state.skillRuntime.contract.targets
+		check(contract_targets.size()==3 and int(sim.state.skillRuntime.contract.size)==3,"contract marks three bounty targets")
+		var contract_points:Dictionary={}
+		var contract_live:=true
+		for contract_point in contract_targets:
+			contract_points["%s:%s" % [contract_point.x,contract_point.y]]=true
+			var contract_found:=false
+			for contract_brick in sim.bricks:
+				if contract_brick.x==contract_point.x and contract_brick.y==contract_point.y:contract_found=true;break
+			contract_live=contract_live and contract_found
+		check(contract_points.size()==3 and contract_live,"bounty targets are distinct live bricks")
+		contract_sets.append(contract_points.keys())
+		var contract_coins:int=sim.state.coins
+		sim.fx.rings.clear()
+		var contract_target:Dictionary=contract_targets[0]
+		for contract_brick in sim.bricks.duplicate():
+			if contract_brick.x!=contract_target.x or contract_brick.y!=contract_target.y:continue
+			sim.hit(contract_brick,1000000)
+			check(sim.fx.rings.any(func(ring):return is_equal_approx(ring.radius,74)),"bounty hit emits its target ring")
+			break
+		for contract_brick in sim.bricks.duplicate():
+			if sim.skills.contracted(contract_brick):sim.hit(contract_brick,1000000)
+		check(sim.state.coins>contract_coins and int(sim.state.skillRuntime.contract.rounds)==1,"bounty completion pays and advances the round")
+		check(sim.fx.rings.any(func(ring):return is_equal_approx(ring.radius,190)),"bounty completion pulses the core with a wide ring")
+	check(contract_sets[0]!=contract_sets[1] or contract_sets[2]!=contract_sets[3],"bounty targets vary with the board seed")
 	sim=fresh(["lightning"]);sim.phase="flying";sim.bricks.clear();sim.obstacles.clear();sim.initial=100
 	var target:RefCounted=sim.make_brick({"x":100,"y":200,"hp":1,"max":1})
 	var neighbour:RefCounted=sim.make_brick({"x":196,"y":200,"hp":1,"max":1})
