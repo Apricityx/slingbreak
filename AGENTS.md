@@ -20,3 +20,9 @@
 - Set dynamic colour tokens and their RGB channels through `SlingColors.set` / `SlingColors.style`; keep channel definitions beside static colour tokens. Colour interpolation must remain in sRGB, with transparent mixes preserving hue and changing alpha.
 - Run `node --test tests/*.test.cjs bench/*.test.mjs`. Changes to browser-facing APIs/CSS also require the Chrome 89 browser compatibility test and visual checks; a modern-browser test with an old User-Agent is not sufficient.
 - See [docs/chromium89-compatibility.md](docs/chromium89-compatibility.md) for the real-browser gate and FX smoke-test commands.
+
+## Test server
+
+- Godot Web 预览: 监听 `0.0.0.0`，端口 `8081`，即 <http://0.0.0.0:8081>（`http://<host-ip>:8081/index.html`）。
+- 启动: `python3 godot/tools/serve_web.py --host 0.0.0.0 --port 8081`；服务目录 `agent-tmp/godot/web-native/`。
+- 导出: `python3 godot/tools/build_web.py --godot /absolute/path/to/godot`（生成上述目录，需先构建 Chromium 89 模板）；当前目录由内置 4.7.2 模板导出，仅适用于新浏览器。日志 `agent-tmp/godot/web-server.log`。
