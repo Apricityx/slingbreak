@@ -16,7 +16,7 @@ func _run() -> void:
 	_check(ui.panel.position.x==16 and ui.panel.size.x==380,"reference dialog width: "+str(ui.panel.size))
 	_check(ui.panel.position.y>=8 and ui.panel.position.y+ui.panel.size.y<=907,"dialog fits stage")
 	_check(ui.panel.size.y<=ui.modal_content.get_combined_minimum_size().y+35,"draft hugs its content")
-	_check(ui.hud_nodes.progress.size.y<=4,"core progress bar stays four pixels high")
+	_check(ui.hud_nodes.progress.size.y==5,"core progress track matches the browser's five-pixel height")
 	if DisplayServer.get_name()!="headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://../agent-tmp/godot/native/draft-ui.png")

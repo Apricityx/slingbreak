@@ -1,5 +1,7 @@
 extends RefCounted
 ## Settlement information, arranged from transitions.js reportMarkup + juice.css.
+const Motion=preload("res://src/ui/motion.gd")
+const Slot=preload("res://src/ui/motion_slot.gd")
 var v: RefCounted
 
 func build(layer: Control,report: Dictionary,bonus: float) -> void:
@@ -21,7 +23,8 @@ func build(layer: Control,report: Dictionary,bonus: float) -> void:
 	var total:=0.0
 	for part in report.parts:total+=part.value
 	for part in report.parts:
-		var segment:=ColorRect.new();segment.color=Color(part.color);segment.mouse_filter=Control.MOUSE_FILTER_IGNORE;segment.custom_minimum_size.y=8;segment.size_flags_horizontal=Control.SIZE_EXPAND_FILL;segment.size_flags_stretch_ratio=maxf(.001,float(part.value)/maxf(1,total));bar.add_child(segment)
+		var holder:=Slot.new();holder.size_flags_horizontal=Control.SIZE_EXPAND_FILL;holder.size_flags_stretch_ratio=maxf(.001,float(part.value)/maxf(1,total));holder.mouse_filter=Control.MOUSE_FILTER_IGNORE;bar.add_child(holder)
+		var segment:=ColorRect.new();segment.color=Color(part.color);segment.mouse_filter=Control.MOUSE_FILTER_IGNORE;segment.custom_minimum_size.y=8;holder.adopt(segment)
 	v.space(content,8)
 	var legend:=GridContainer.new();legend.name="Legend";legend.columns=2;legend.add_theme_constant_override("h_separation",14);legend.add_theme_constant_override("v_separation",4);content.add_child(legend)
 	for part in report.parts:
@@ -59,35 +62,46 @@ func build(layer: Control,report: Dictionary,bonus: float) -> void:
 		var gauge:=preload("res://src/ui/charges.gd").new();gauge.visuals=v;gauge.count=report.reroll.count;gauge.capacity=report.reroll.capacity;charge_row.add_child(gauge)
 		v.space(content,10)
 	var hint:Label=v.text(content,"点击继续",10,"text-3");hint.name="Continue";hint.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-	card.minimum_size_changed.connect(func():layout(layer))
+	card.minimum_size_changed.connect(func():layout.call_deferred(layer))
 	layout.call_deferred(layer)
 
 func animate(layer:Control,report:Dictionary) -> void:
 	if not is_instance_valid(layer):return
+	if layer.get_meta("retiring",false):return
+	if layer.get_meta("animated",false):return
+	layer.set_meta("animated",true)
 	layout(layer)
-	var motion=preload("res://src/ui/motion.gd")
-	motion.enter(layer.get_node("Stamp"),.16)
-	var card:Control=layer.get_node("ReportCard");motion.enter(card,.48)
+	Motion.enter(layer.get_node("Stamp"),.16)
+	var card:Control=layer.get_node("ReportCard");Motion.enter(card,.48)
 	var amount:Label=card.find_child("Total",true,false);amount.text="0"
-	var tween:=amount.create_tween();tween.tween_method(func(value:float):amount.text=_fmt(value),0.0,float(report.total),.9).set_delay(.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var tween:=Motion.claim(amount,["text"]);tween.tween_method(func(value:float):amount.text=_fmt(value),0.0,float(report.total),.9).set_delay(.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var bar:Control=card.find_child("IncomeBar",true,false)
-	for segment in bar.get_children():
+	for holder in bar.get_children():
+		var segment:Control=holder.get("content")
 		segment.scale.x=0
-		segment.create_tween().tween_property(segment,"scale:x",1.0,.75).set_delay(.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		Motion.claim(segment,["scale"]).tween_property(segment,"scale:x",1.0,.75).set_delay(.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var legend:Control=card.find_child("Legend",true,false)
 	for row in legend.get_children():
 		var number:Label=row.get_child(2);var value:float=number.get_meta("amount");number.text="0"
-		number.create_tween().tween_method(func(n:float):number.text=_fmt(n),0.0,value,.8).set_delay(.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		Motion.claim(number,["text"]).tween_method(func(n:float):number.text=_fmt(n),0.0,value,.8).set_delay(.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var hint:Label=card.find_child("Continue",true,false)
-	var blink:=hint.create_tween().set_loops();blink.tween_property(hint,"modulate:a",.35,.8).set_trans(Tween.TRANS_SINE);blink.tween_property(hint,"modulate:a",1.0,.8).set_trans(Tween.TRANS_SINE)
+	var blink:=Motion.claim(hint,["alpha"]);blink.tween_interval(1.4)
+	blink.tween_callback(func():
+		if not is_instance_valid(hint):return
+		var loop:=hint.create_tween().set_loops();hint.set_meta("motion_alpha",loop)
+		loop.tween_property(hint,"modulate:a",.35,.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		loop.tween_property(hint,"modulate:a",1.0,.8).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	)
 
 func layout(layer: Control) -> void:
 	if not is_instance_valid(layer):return
+	if layer.get_meta("retiring",false):return
 	var card:PanelContainer=layer.get_node("ReportCard");card.reset_size();card.size.x=340
 	var stamp:VBoxContainer=layer.get_node("Stamp");stamp.reset_size();stamp.size.x=340
 	var height:=stamp.size.y+8+card.size.y
 	stamp.position.y=maxf(10,(572-height)/2)
 	card.position.y=stamp.position.y+stamp.size.y+8
+	Motion.pivot(stamp);Motion.pivot(card)
 
 func _fmt(value: float) -> String:
 	var digits:=str(int(value));var result:=""

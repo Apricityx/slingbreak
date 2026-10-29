@@ -47,6 +47,8 @@ func advance(delta: float) -> void:
 		content.scale=Vector2.ONE*(1+.08*zoom)
 		content.position.y=-915*.06*zoom
 		content.modulate.a=1-zoom
+		# The illustration continues its own trajectory while the sheet closes.
+		_paint()
 		if age-leaving_at>=.64:finish()
 	if age>=2.6:finish()
 

@@ -9,5 +9,5 @@ void fragment() {
 	float diagonal = UV.x + (UV.y - 0.5) * 0.32;
 	float center = mix(-0.45, 1.45, progress);
 	float sheen = max(0.0, 1.0 - abs(diagonal - center) / 0.2);
-	COLOR = vec4(tint.rgb, tint.a * sheen);
+	COLOR = vec4(tint.rgb, tint.a * sheen * COLOR.a);
 }

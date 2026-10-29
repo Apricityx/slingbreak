@@ -19,6 +19,13 @@ OUTPUT = ROOT.parent / "agent-tmp/godot"
 
 
 def verify_assets():
+    strokes = json.loads((ROOT / "assets/strokes/manifest.json").read_text())
+    ids = {item["id"] for item in json.loads((ROOT / "assets/skills.json").read_text())}
+    if strokes.get("version") != 1 or set(strokes["meshes"]) != ids or strokes["contourSha256"] != hashlib.sha256((ROOT / "assets/signatures.json").read_bytes()).hexdigest():
+        raise SystemExit("Baked stroke manifest does not match contours")
+    for key, digest in strokes["meshes"].items():
+        if hashlib.sha256((ROOT / f"assets/strokes/{key}.res").read_bytes()).hexdigest() != digest:
+            raise SystemExit(f"Baked stroke fingerprint mismatch: {key}")
     for category, count in [("audio", 180), ("music", 903)]:
         manifest = json.loads((ROOT / f"assets/{category}/manifest.json").read_text())
         if len(manifest["samples"]) != count or manifest.get("codec") != "vorbis":
@@ -44,7 +51,7 @@ def stage_project(stage):
     # visible to Godot so the JSON manifest and raw files enter the export;
     # the runtime never depends on the alternate imported font copies.
     for path in (ROOT / "assets").rglob("*"):
-        if not path.is_file() or path.suffix not in [".json", ".bin", ".vorbis", ".png", ".svg"] and "LICENSE" not in path.name:
+        if not path.is_file() or path.suffix not in [".json", ".bin", ".vorbis", ".png", ".svg", ".res"] and "LICENSE" not in path.name:
             continue
         target = stage / path.relative_to(ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)

@@ -7,6 +7,15 @@ var root: VBoxContainer
 const Charges=preload("res://src/ui/charges.gd")
 const Art=preload("res://src/ui/skill_art.gd")
 const Preview=preload("res://src/ui/theme_preview.gd")
+const Motion=preload("res://src/ui/motion.gd")
+const Slot=preload("res://src/ui/motion_slot.gd")
+
+func _motion_slot(node:Control) -> void:
+	var parent:Node=node.get_parent();var index:=node.get_index()
+	parent.remove_child(node)
+	var slot:=Slot.new();slot.size_flags_horizontal=node.size_flags_horizontal;slot.size_flags_vertical=node.size_flags_vertical;slot.size_flags_stretch_ratio=node.size_flags_stretch_ratio
+	slot.mouse_filter=Control.MOUSE_FILTER_IGNORE if node.mouse_filter==Control.MOUSE_FILTER_IGNORE else Control.MOUSE_FILTER_PASS
+	parent.add_child(slot);parent.move_child(slot,index);slot.adopt(node)
 
 func setup(owner: Control) -> void:
 	ui=owner;v=ui.visuals;f=ui.frame;root=ui.modal_content if is_instance_valid(ui.modal_content) else null
@@ -37,7 +46,7 @@ func rarity(parent: Control,item: Dictionary,ribbon: bool=false) -> Control:
 	var dot:=Panel.new();dot.custom_minimum_size=Vector2(8,8);dot.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	dot.add_theme_stylebox_override("panel",v.box(Color("#edbf42" if item.tier=="gold" else "#439be8" if item.tier=="blue" else "#f4f6f0"),Color("#ac801c" if item.tier=="gold" else "#2875b9" if item.tier=="blue" else "#9aa294"),4));row.add_child(dot)
 	v.text(row,{"white":"普通","blue":"稀有","gold":"传说"}[item.tier],10,"gold-ink" if item.tier=="gold" else "text-2",ribbon)
-	return host
+	return host if ribbon else row
 
 func tier_edge(item: Dictionary) -> Color:
 	return v.mix(Color("#439be8"),v.color("line-2"),.45) if item.tier=="blue" else v.mix(Color("#e0ad2c"),v.color("line-2"),.7) if item.tier=="gold" else v.color("line-2")
@@ -49,10 +58,14 @@ func emblem(parent: Control,item: Dictionary,dimension: int=46,icon_size: int=24
 	if dimension==46:style.shadow_color=Color(ink.r,ink.g,ink.b,.18);style.shadow_size=5
 	mark.add_theme_stylebox_override("panel",style);parent.add_child(mark)
 	var center:=CenterContainer.new();mark.add_child(center);v.image(center,item.icon,v.mix(ink,v.color("ink"),.72),Vector2(icon_size,icon_size))
+	_motion_slot(mark)
 	return mark
 
-func charges(parent: Control,ghost: int=0,pip: int=12) -> Control:
-	var gauge:=Charges.new();gauge.visuals=v;gauge.count=int(f.rerolls);gauge.capacity=int(f.rerollCap);gauge.ghost=ghost;gauge.pip=pip;gauge.progress=f.get("rerollProgress",0.0);parent.add_child(gauge);return gauge
+func charges(parent: Control,ghost: int=0,pip: int=12,gap: int=6) -> Control:
+	var gauge:=Charges.new();gauge.visuals=v;gauge.count=int(f.rerolls);gauge.capacity=int(f.rerollCap);gauge.ghost=ghost;gauge.pip=pip;gauge.gap=gap;gauge.progress=f.get("rerollProgress",0.0);gauge.reduced=f.reduced;parent.add_child(gauge)
+	if ui.panel!=null and ui.panel.is_ancestor_of(gauge):
+		var gauges:Array=ui.panel.get_meta("gauges",[]);gauges.append(gauge);ui.panel.set_meta("gauges",gauges)
+	return gauge
 
 func reroll(parent: Control,callback: Callable,disabled: bool) -> Button:
 	var center:=CenterContainer.new();parent.add_child(center)
@@ -63,12 +76,13 @@ func reroll(parent: Control,callback: Callable,disabled: bool) -> Button:
 	var row:HBoxContainer=v.row(margin,10);row.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	var circle:=PanelContainer.new();circle.custom_minimum_size=Vector2(24,24);circle.add_theme_stylebox_override("panel",v.box(v.color("surface"),v.color("line-2" if disabled else "accent-line"),12));row.add_child(circle)
 	var icon_center:=CenterContainer.new();circle.add_child(icon_center);v.image(icon_center,"refresh-cw",v.color("text-3" if disabled else "accent-ink"),Vector2(14,14));charges(row)
+	button.set_meta("charge_icon",circle);button.set_meta("charge_gauge",row.get_child(row.get_child_count()-1))
 	margin.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	button.custom_minimum_size.x=44+int(f.rerollCap)*18
 	return button
 
 func draft() -> void:
-	var header:HBoxContainer=v.row(root,8);header.alignment=BoxContainer.ALIGNMENT_END
+	var header:HBoxContainer=v.row(root,8);header.name="DraftHeader";header.alignment=BoxContainer.ALIGNMENT_END
 	var words:VBoxContainer=v.column(header,6);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.text(words,"第 %d 关 · 三选一" % f.level,11,"accent-ink",true)
 	v.text(words,"加入下一块拼图",22,"ink",true)
@@ -85,15 +99,17 @@ func draft() -> void:
 		if id!="":v.image(line,ui.catalog[id].icon,v.mix(Color(ui.catalog[id].color),v.color("ink"),.7),Vector2(15,15))
 		v.text(line,ui.catalog[id].name if id!="" else "等待加入",11,"warm-ink" if outgoing else "text-3" if id=="" else "ink",true,true)
 		if outgoing:slot.tooltip_text="最早 · 将替换"
+		_motion_slot(slot)
 	v.space(root,16)
-	var options:VBoxContainer=v.column(root,10);options.name="DraftOptions"
+	var options:VBoxContainer=v.column(root,0);options.name="DraftOptions"
 	for id in f.draft.options:skill_card(options,id,func():ui._select(id))
 	v.space(root,28)
 	reroll(root,func():ui._reroll(),f.rerolls<=0)
 
 func skill_card(parent: Control,id: String,callback: Callable) -> Button:
 	var item:Dictionary=ui.catalog[id]
-	var card:Button=v.button(parent,"",callback);card.name="Skill_"+id;card.size_flags_horizontal=Control.SIZE_EXPAND_FILL;card.clip_contents=true
+	var slot:=Slot.new();slot.size_flags_horizontal=Control.SIZE_EXPAND_FILL;slot.gap=10;parent.add_child(slot)
+	var card:=Button.new();card.pressed.connect(callback);slot.adopt(card);card.name="Skill_"+id;card.size_flags_horizontal=Control.SIZE_EXPAND_FILL;card.clip_contents=true
 	card.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),tier_edge(item),11))
 	card.add_theme_stylebox_override("hover",v.box(v.color("surface-2"),v.mix(Color(item.color),v.color("line-2"),.65),11))
 	card.add_theme_stylebox_override("pressed",v.box(v.color("surface-2"),Color(item.color),11))
@@ -103,55 +119,129 @@ func skill_card(parent: Control,id: String,callback: Callable) -> Button:
 	var content:VBoxContainer=v.column(layout);content.size_flags_horizontal=Control.SIZE_EXPAND_FILL;content.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	var inset:MarginContainer=v.margin(content,14,12,14,0)
 	var words:VBoxContainer=v.column(inset);words.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var ribbon:=HBoxContainer.new();words.add_child(ribbon);rarity(ribbon,item,true)
+	var ribbon:=HBoxContainer.new();words.add_child(ribbon)
+	var badge:Control=rarity(ribbon,item,true);badge.name="CardRarity";_motion_slot(badge)
 	v.space(words,6);v.text(words,item.name,17,"ink",true);v.space(words,4);v.text(words,item.family+" · 跨关生效",10,"text-3")
 	v.space(words,8)
 	var desc:Label=v.text(words,item.description,11,"text-2",false,true);desc.custom_minimum_size.x=238;desc.add_theme_constant_override("line_spacing",5)
+	words.name="CardWords"
 	v.space(words,8);v.text(words,"本轮出现率 %.2f%%" % (f.chances.get(id,0)*100),10,"text-3");v.space(words,10)
 	v.rule(content)
 	var footer:MarginContainer=v.margin(content,14,9,14,9);var pick:HBoxContainer=v.row(footer,8)
+	footer.name="CardFooter"
 	var outgoing:bool=f.skills.size()>=f.slots
 	var text:Label=v.text(pick,"替换「%s」" % ui.catalog[f.skills[0]].name if outgoing else "加入技能槽",12,"warm-ink" if outgoing else "accent-ink",true);text.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.image(pick,"arrow-left-right" if outgoing else "arrow-up-right",v.color("warm-ink" if outgoing else "accent-ink"),Vector2(15,15))
 	card.custom_minimum_size=Vector2(344,190)
 	content.minimum_size_changed.connect(func():card.custom_minimum_size.y=content.get_combined_minimum_size().y+2)
 	v.pointer_through(layout)
+	_motion_slot(words);_motion_slot(footer)
 	card.mouse_entered.connect(func():ui._preview_skill(id))
 	card.focus_entered.connect(func():ui._preview_skill(id))
 	card.mouse_exited.connect(func():ui._preview_skill(""))
 	card.focus_exited.connect(func():ui._preview_skill(""))
+	if not f.reduced:
+		Motion.prepare_deal(card);words.modulate.a=0;footer.modulate.a=0
 	return card
+
+func update_draft() -> void:
+	var options:Control=root.find_child("DraftOptions",true,false)
+	if options==null:return
+	ui.panel.set_meta("deal_generation",int(ui.panel.get_meta("deal_generation",0))+1)
+	if not f.reduced:
+		for card in Motion.cards(options):ui._retire_copy(card,.22)
+	for child in options.get_children():options.remove_child(child);child.queue_free()
+	if options.has_meta("dealt"):options.remove_meta("dealt")
+	for id in f.draft.options:skill_card(options,id,func():ui._select(id))
+	var slot:Control=root.find_child("Slot%d" % (0 if f.skills.size()>=f.slots else f.skills.size()),true,false)
+	if slot!=null:ui._preview_skill("",true)
+	update_reroll(root.find_child("Reroll",true,false),true)
+
+func update_reroll(button:Button,draft:bool=false) -> void:
+	if button==null:return
+	button.disabled=ui.choosing or ui.rolling or bool(ui.panel.get_meta("rolling",false)) or f.rerolls<=0 or not draft and not f.get("canSwap",false)
+	button.tooltip_text="刷新技能 %d / %d" % [f.rerolls,f.rerollCap]
+	var circle:Control=button.get_meta("charge_icon") if button.has_meta("charge_icon") else null
+	if circle!=null:
+		if f.reduced:circle.modulate.a=.5 if button.disabled else 1.0
+		elif not circle.has_meta("waiting") or circle.get_meta("waiting")!=button.disabled:
+			circle.set_meta("waiting",button.disabled);Motion.fade(circle,.5 if button.disabled else 1.0,.2)
 
 func shop() -> void:
 	heading("整装，再出发","UPGRADE SHOP",23)
 	v.space(root,12);v.text(root,"花费本轮金币，强化下一支箭的能力。",12,"text-2");v.space(root,20);v.rule(root)
 	var balance:MarginContainer=v.margin(root,0,14,0,14);var wallet:HBoxContainer=v.row(balance)
 	var label:Label=v.text(wallet,"可用金币",12,"text-2");label.size_flags_horizontal=Control.SIZE_EXPAND_FILL;label.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	v.text(wallet,"¥ "+fmt(f.coins),23,"ink-2",true);v.rule(root);v.space(root,6)
+	var balance_value:Label=v.text(wallet,"¥ "+fmt(f.coins),23,"ink-2",true);balance_value.name="ShopBalance";v.rule(root);v.space(root,6)
 	for i in range(f.shop.size()):
 		var item:Dictionary=f.shop[i]
 		var pad:MarginContainer=v.margin(root,0,18,0,0 if i==f.shop.size()-1 else 18)
-		var row:HBoxContainer=v.row(pad,12);row.name="Upgrade_"+item.key
+		var slot:=Slot.new();slot.size_flags_horizontal=Control.SIZE_EXPAND_FILL;pad.add_child(slot)
+		var row:=HBoxContainer.new();row.add_theme_constant_override("separation",12);slot.adopt(row);row.name="Upgrade_"+item.key
 		var icon_center:=CenterContainer.new();icon_center.custom_minimum_size=Vector2(36,44);row.add_child(icon_center);v.image(icon_center,item.icon,v.color("text-2"),Vector2(24,24))
 		var words:VBoxContainer=v.column(row,5);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;words.custom_minimum_size.x=168
 		var title:HBoxContainer=v.row(words,8);v.text(title,item.name,14,"ink",true)
-		v.text(title,item.get("levelLabel","LV. %d" % (item.level+1)),10,"text-3").size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		match item.key:
-			"comboCap":
-				if item.locked:
-					var lock:HBoxContainer=v.row(words,5);v.image(lock,"lock-keyhole",v.color("text-3"),Vector2(11,11));v.text(lock,"砖块 LV.6",10,"text-3")
-				else:
-					metric(words,"增幅","+"+ui._compact(f.preview.comboStep),"+"+ui._compact(f.preview.comboStep+.025));metric(words,"上限","×"+ui._compact(f.preview.comboCap),"×"+ui._compact(f.preview.comboCap+.5))
-			"slots":
-				if item.maxed:v.text(words,"已解锁全部 %d 个技能槽。" % f.get("slotMax",4),10,"accent-ink",false,true)
-				else:metric(words,"技能槽",str(int(f.slots)),str(int(f.slots)+1))
-			"rerollCap":charges(words,0 if item.maxed else 1,13)
-			_:v.text(words,item.description,11,"text-3",false,true).add_theme_constant_override("line_spacing",3)
-		var buy:Button=v.button(row,"已满级" if item.maxed else "—" if item.locked else fmt(item.cost),func():ui.action.emit("buy",{"key":item.key});ui._shop(),"plus",44)
-		buy.name="Buy_"+item.key;buy.custom_minimum_size.x=100;buy.size_flags_vertical=Control.SIZE_SHRINK_CENTER;buy.disabled=item.maxed or item.locked or not item.affordable or f.phase!="ready" or f.paused
+		var level_label:Label=v.text(title,item.get("levelLabel","LV. %d" % (item.level+1)),10,"text-3");level_label.size_flags_vertical=Control.SIZE_SHRINK_CENTER;level_label.name="UpgradeLevel"
+		var details:VBoxContainer=v.column(words,5);details.name="UpgradeDetails"
+		_shop_details(details,item)
+		row.set_meta("detail_key",JSON.stringify([item.level,item.locked,item.maxed,item.description,f.rerollCap,f.slots]))
+		var buy:Button=v.button(row,"",func():ui.action.emit("buy",{"key":item.key}),"plus",44)
+		buy.name="Buy_"+item.key;buy.custom_minimum_size.x=100;buy.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 		buy.add_theme_stylebox_override("normal",v.box(v.color("buy"),v.color("buy-line"),6,8));buy.add_theme_stylebox_override("hover",v.box(v.color("buy-hover"),v.color("buy-line"),6,8));buy.add_theme_color_override("font_color",v.color("on-buy"))
-		buy.icon=null;buy.text="＋  "+buy.text
+		buy.add_theme_stylebox_override("pressed",v.box(v.color("buy-hover"),v.color("buy-line"),6,8))
+		for state in ["font_hover_color","font_pressed_color","font_hover_pressed_color"]:buy.add_theme_color_override(state,v.color("on-buy"))
+		buy.icon=null;_shop_button(buy,item)
 		if i<f.shop.size()-1:v.rule(root)
+
+func _shop_details(words:Control,item:Dictionary) -> void:
+	match item.key:
+		"comboCap":
+			if item.locked:
+				var lock:HBoxContainer=v.row(words,5);v.image(lock,"lock-keyhole",v.color("text-3"),Vector2(11,11));v.text(lock,"砖块 LV.6",10,"text-3")
+			else:
+				metric(words,"增幅","+"+ui._compact(f.preview.comboStep),"+"+ui._compact(f.preview.comboStep+.025));metric(words,"上限","×"+ui._compact(f.preview.comboCap),"×"+ui._compact(f.preview.comboCap+.5))
+		"slots":
+			if item.maxed:v.text(words,"已解锁全部 %d 个技能槽。" % f.get("slotMax",4),10,"accent-ink",false,true)
+			else:metric(words,"技能槽",str(int(f.slots)),str(int(f.slots)+1))
+		"rerollCap":charges(words,0 if item.maxed else 1,13)
+		_:v.text(words,item.description,11,"text-3",false,true).add_theme_constant_override("line_spacing",3)
+
+func _shop_button(buy:Button,item:Dictionary) -> void:
+	buy.text="＋  "+("已满级" if item.maxed else "—" if item.locked else fmt(item.cost))
+	buy.disabled=item.maxed or item.locked or not item.affordable or f.phase!="ready" or f.paused
+
+func update_shop() -> void:
+	# Coins and affordability change during a volley. Update the existing
+	# controls so their scroll, focus and in-progress motion remain intact.
+	var balance:Label=root.find_child("ShopBalance",true,false)
+	if balance!=null:balance.text="¥ "+fmt(f.coins)
+	var poses:Dictionary={}
+	var changed:=false
+	for item in f.shop:
+		var row:Control=root.find_child("Upgrade_"+item.key,true,false)
+		if row!=null:poses[row]=Motion.pose_in(ui.motion_layer,row)
+	for item in f.shop:
+		var row:Control=root.find_child("Upgrade_"+item.key,true,false)
+		if row==null:continue
+		var key:=JSON.stringify([item.level,item.locked,item.maxed,item.description,f.rerollCap,f.slots])
+		if row.get_meta("detail_key","")!=key:
+			changed=true
+			row.set_meta("detail_key",key)
+			var level_label:Label=row.find_child("UpgradeLevel",true,false)
+			level_label.text=item.levelLabel
+			var details:Control=row.find_child("UpgradeDetails",true,false)
+			if not f.reduced:ui._retire_copy(details,.2)
+			for child in details.get_children():details.remove_child(child);child.queue_free()
+			_shop_details(details,item)
+			if not f.reduced:
+				details.modulate.a=0;Motion.fade(details,1.0,.24);Motion.pulse(level_label,1.12)
+		var buy:Button=row.find_child("Buy_"+item.key,true,false)
+		_shop_button(buy,item)
+		if item.key=="rerollCap":
+			var details:Control=row.find_child("UpgradeDetails",true,false)
+			for gauge in details.get_children():
+				if gauge.get_script()==Charges:gauge.set_amount(int(f.rerolls),float(f.rerollProgress),f.reduced)
+	if changed and not f.reduced:ui._restore_layout.call_deferred(poses)
 
 func metric(parent: Control,title: String,before: String,after: String) -> void:
 	var row:HBoxContainer=v.row(parent,4);v.text(row,title,9,"text-3").custom_minimum_size.x=26
@@ -159,80 +249,196 @@ func metric(parent: Control,title: String,before: String,after: String) -> void:
 	v.image(row,"arrow-right",v.color("text-3"),Vector2(11,11));v.text(row,after,12,"accent-ink",true).size_flags_horizontal=Control.SIZE_EXPAND_FILL
 
 func detail(id: String) -> void:
-	var item:Dictionary=ui.catalog[id];var head:HBoxContainer=v.row(root,13)
+	root.set_meta("shown_detail",id)
+	var item:Dictionary=ui.catalog[id];var head:HBoxContainer=v.row(root,13);head.name="DetailHeader"
 	emblem(head,item,40,22,8,.12)
 	var words:VBoxContainer=v.column(head,4);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	v.text(words,item.name,19,"ink",true);v.text(words,item.family+" · 跨关生效",10,"text-3")
+	var title:Label=v.text(words,item.name,19,"ink",true);title.name="DetailName"
+	var family:Label=v.text(words,item.family+" · 跨关生效",10,"text-3");family.name="DetailFamily"
 	var close:Button=v.button(head,"",ui._close,"x",44);close.custom_minimum_size.x=44;close.tooltip_text="关闭技能说明";close.add_theme_stylebox_override("normal",v.box(Color.TRANSPARENT,v.color("line"),6))
 	close.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	v.space(root,11);rarity(root,item);v.space(root,11)
-	v.text(root,item.description,12,"text-2",false,true).add_theme_constant_override("line_spacing",8)
+	v.space(root,11);var ribbon:Control=rarity(root,item);ribbon.name="DetailRarity";v.space(root,11)
+	var description:Label=v.text(root,item.description,12,"text-2",false,true);description.name="DetailDescription";description.add_theme_constant_override("line_spacing",8)
+	_motion_slot(head);_motion_slot(description)
 	if id not in f.skills:return
 	v.space(root,18);v.rule(root,"line-2");v.space(root,14)
-	if f.swapOffer is Dictionary and f.swapOffer.target==id:
-		var options:VBoxContainer=v.column(root,8);options.name="SwapOptions"
-		for candidate in f.swapOffer.options:swap_card(options,id,candidate)
-		v.space(root,10)
+	var options:VBoxContainer=v.column(root,0);options.name="SwapOptions"
 	reroll(root,func():ui._reroll(id),f.rerolls<=0 or not f.get("canSwap",f.phase=="ready"))
+	update_detail(id)
+
+func morph_detail(id:String,content_root:Control=null) -> void:
+	var scope:Control=root if content_root==null else content_root
+	var item:Dictionary=ui.catalog[id]
+	var head:Control=scope.find_child("DetailHeader",true,false)
+	if head==null or scope.get_meta("shown_detail","")==id:return
+	var description:Label=scope.find_child("DetailDescription",true,false)
+	var ribbon:Control=scope.find_child("DetailRarity",true,false)
+	if not f.reduced:
+		for node in [head,description,ribbon]:ui._retire_copy(node,.2)
+	scope.set_meta("shown_detail",id)
+	var mark:PanelContainer=head.find_child("Emblem",true,false)
+	var ink:=Color(item.color)
+	mark.add_theme_stylebox_override("panel",v.box(v.mix(ink,v.color("surface"),.12),v.mix(ink,v.color("line-2"),.4),8))
+	var image:TextureRect=mark.get_child(0).get_child(0);image.texture=v.icon(item.icon,v.mix(ink,v.color("ink"),.72))
+	var title:Label=scope.find_child("DetailName",true,false);title.text=item.name
+	var family:Label=scope.find_child("DetailFamily",true,false);family.text=item.family+" · 跨关生效"
+	description.text=item.description
+	var parent:Control=ribbon.get_parent();var at:=ribbon.get_index();parent.remove_child(ribbon);ribbon.queue_free()
+	var replacement:Control=rarity(parent,item);replacement.name="DetailRarity";parent.move_child(replacement,at)
+	if not f.reduced:
+		for node in [head,description]:
+			# The retiring copy keeps the old visible pose while the changed
+			# content enters again, including after an interrupted replacement.
+			Motion.cancel(node,["position","alpha"])
+			node.position=node.get_meta("reveal_position",Vector2.ZERO)
+			if node.has_meta("motion_revealed"):node.remove_meta("motion_revealed")
+		Motion.reveal(head,0,.34,Vector2(0,4));Motion.reveal(description,.04,.3,Vector2(0,4));Motion.settle_scale(mark,1.12)
+		replacement.modulate.a=0;Motion.fade(replacement,1.0,.24)
+	else:
+		for node in [head,description]:Motion.cancel(node,["position","alpha"]);node.position=Vector2.ZERO;node.modulate.a=1.0
+		Motion.cancel(mark,["scale"]);mark.scale=Vector2.ONE
+
+func update_detail(id:String) -> bool:
+	var options:Control=root.find_child("SwapOptions",true,false)
+	if options==null:return false
+	var ids:Array=f.swapOffer.options if f.swapOffer is Dictionary and f.swapOffer.target==id else []
+	var key:=JSON.stringify(ids)
+	var changed:bool=key!=options.get_meta("offer_key","")
+	if changed:
+		ui.panel.set_meta("deal_generation",int(ui.panel.get_meta("deal_generation",0))+1)
+		options.set_meta("offer_key",key)
+		if options.has_meta("dealt"):options.remove_meta("dealt")
+		if not f.reduced:
+			for card in Motion.cards(options):ui._retire_copy(card,.22)
+		for child in options.get_children():options.remove_child(child);child.queue_free()
+		for candidate in ids:swap_card(options,id,candidate)
+		if ids.is_empty():
+			ui.panel.set_meta("rolling",false);ui.rolling=false
+	for card in Motion.cards(options):card.disabled=ui.choosing or ui.rolling or bool(ui.panel.get_meta("rolling",false)) or not f.canSwap
+	update_reroll(root.find_child("Reroll",true,false))
+	return changed and not ids.is_empty()
 
 func swap_card(parent: Control,target: String,id: String) -> void:
 	var item:Dictionary=ui.catalog[id]
-	var button:Button=v.button(parent,"",func():ui._swap(target,id));button.name="Swap_"+id;button.clip_contents=true
+	var slot:=Slot.new();slot.size_flags_horizontal=Control.SIZE_EXPAND_FILL;slot.gap=8;parent.add_child(slot)
+	var button:=Button.new();button.pressed.connect(func():ui._swap(target,id));slot.adopt(button);button.name="Swap_"+id;button.clip_contents=true
 	button.add_theme_stylebox_override("normal",v.box(v.mix(Color(item.color),v.color("surface"),.09),tier_edge(item),10))
 	var pad:MarginContainer=v.margin(button,12,10,12,10);var row:HBoxContainer=v.row(pad,12)
 	emblem(row,item,40,20,11)
 	var words:VBoxContainer=v.column(row,4);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;words.custom_minimum_size.x=205
-	var title:HBoxContainer=v.row(words,8);v.text(title,item.name,14,"ink",true);rarity(title,item)
+	words.name="CardWords"
+	var title:HBoxContainer=v.row(words,8);v.text(title,item.name,14,"ink",true);var ribbon:Control=rarity(title,item);ribbon.name="CardRarity"
+	_motion_slot(ribbon)
 	v.text(words,item.description,11,"text-2",false,true).add_theme_constant_override("line_spacing",4)
 	v.image(row,"arrow-left-right",v.color("text-3"),Vector2(16,16))
 	button.custom_minimum_size.y=100;pad.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	words.minimum_size_changed.connect(func():button.custom_minimum_size.y=pad.get_combined_minimum_size().y)
 	v.pointer_through(pad)
+	_motion_slot(words)
+	if not f.reduced:Motion.prepare_deal(button);words.modulate.a=0
 
 func library() -> void:
 	heading("我的构筑","",21);v.space(root,16)
 	v.text(root,"按获得顺序排列 · 跨关生效 · 满槽时自动替换最早的技能",11,"text-3",false,true);v.space(root,18)
 	var grid:VBoxContainer=v.column(root,10);grid.name="LibraryGrid"
+	_library_cards(grid)
+	root.set_meta("library_key",JSON.stringify([f.skills,f.slots,f.theme]))
+
+func update_library() -> void:
+	var key:=JSON.stringify([f.skills,f.slots,f.theme])
+	if root.get_meta("library_key","")==key:return
+	root.set_meta("library_key",key)
+	var grid:Control=root.find_child("LibraryGrid",true,false)
+	if grid==null:return
+	if not f.reduced:ui._retire_copy(grid,.22)
+	for child in grid.get_children():grid.remove_child(child);child.queue_free()
+	_library_cards(grid)
+	if not f.reduced:grid.modulate.a=0;Motion.fade(grid,1.0,.28)
+
+func _library_cards(grid:Control) -> void:
 	if f.skills.is_empty():v.text(grid,"尚未装备技能。每关选择一个，逐步组成你的 %d 技能构筑。" % f.slots,12,"text-3",false,true)
 	for id in f.skills:
 		var item:Dictionary=ui.catalog[id];var card:=PanelContainer.new();card.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),v.color("line-2"),7,20));grid.add_child(card)
 		var content:VBoxContainer=v.column(card,10);v.text(content,item.family,10,"text-3")
 		var mark:PanelContainer=emblem(content,item,40,22,8,.1);mark.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
+		(mark.get_parent() as Control).size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
 		v.space(content,8);v.text(content,item.name,19,"ink",true);rarity(content,item)
 		v.text(content,item.description,12,"text-2",false,true).add_theme_constant_override("line_spacing",7)
 
 func equipment(expanded: bool=false) -> void:
-	heading("装备与技能","",18);v.space(root,8);v.rule(root);v.space(root,18)
+	root.set_meta("expanded",expanded)
+	heading("装备与技能","",18);v.space(root,8);v.rule(root);v.space(root,14)
 	v.text(root,"YOUR BALANCE",10,"text-3",true);v.space(root,10)
-	var balance:HBoxContainer=v.row(root,10);v.text(balance,"¥",18,"accent-ink").size_flags_vertical=Control.SIZE_SHRINK_CENTER;v.text(balance,fmt(f.coins),42,"ink",true)
-	v.space(root,10)
-	var stats:HBoxContainer=v.row(root,12);v.text(stats,"累计击碎  "+fmt(f.total),10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL;v.text(stats,"单箭最佳  "+str(int(f.best)),10,"text-3");v.space(root,18);v.rule(root);v.space(root,18)
+	var balance:HBoxContainer=v.row(root,10);v.text(balance,"¥",18,"accent-ink").size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	var wallet:Label=v.text(balance,fmt(f.coins),42,"ink",true);wallet.name="EquipmentBalance"
+	v.space(root,4)
+	var stats:HBoxContainer=v.row(root,12);v.text(stats,"累计击碎  "+fmt(f.total),10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL;v.text(stats,"单箭最佳  "+str(int(f.best)),10,"text-3");v.space(root,14);v.rule(root);v.space(root,14)
 	var skills:Button=v.button(root,"我的构筑",ui._library,"sparkles",44);skills.alignment=HORIZONTAL_ALIGNMENT_LEFT;skills.name="OpenLibrary";skills.add_theme_constant_override("icon_max_width",16)
-	var count:Label=v.text(skills,"%d / %d  ›" % [f.skills.size(),f.slots],10,"text-2");count.position=Vector2(276,15)
+	var count:Label=v.text(skills,"%d / %d  ›" % [f.skills.size(),f.slots],10,"text-2");count.name="EquipmentSkillCount";count.position=Vector2(276,15)
 	v.space(root,9)
-	var tags:=HFlowContainer.new();tags.add_theme_constant_override("h_separation",5);root.add_child(tags)
-	if f.skills.is_empty():v.text(tags,"技能跨关保留，满 %d 个后自动替换最早获得的技能" % f.slots,10,"text-3")
-	for id in f.skills:
-		var tag:=PanelContainer.new();tag.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),Color.TRANSPARENT,3,4));tags.add_child(tag);var line:HBoxContainer=v.row(tag,4);v.image(line,ui.catalog[id].icon,Color(ui.catalog[id].color),Vector2(13,13));v.text(line,ui.catalog[id].name,10,"text-2")
+	var tags:=HFlowContainer.new();tags.name="EquipmentSkills";tags.add_theme_constant_override("h_separation",5);root.add_child(tags)
+	_equipment_tags(tags)
+	root.set_meta("equipment_skills",JSON.stringify([f.skills,f.slots]))
 	v.space(root,14)
-	var achievements:Button=v.button(root,"精彩操作图鉴",func():ui._equipment(not expanded),"chevron-right",44);achievements.alignment=HORIZONTAL_ALIGNMENT_LEFT;achievements.add_theme_stylebox_override("normal",v.box(Color.TRANSPARENT,Color.TRANSPARENT,0))
+	var equipment_root:=root
+	var achievements:Button=v.button(root,"精彩操作图鉴",func():ui._equipment(not bool(equipment_root.get_meta("expanded",false))),"chevron-down" if expanded else "chevron-right",44);achievements.name="AchievementToggle";achievements.alignment=HORIZONTAL_ALIGNMENT_LEFT;achievements.add_theme_stylebox_override("normal",v.box(Color.TRANSPARENT,Color.TRANSPARENT,0))
 	var earned:=0
 	for n in f.achievementHistory.values():if n>0:earned+=1
 	var reading:Label=v.text(achievements,"%d / 12" % earned,11,"accent-ink",true);reading.position=Vector2(287,16)
-	if expanded:achievement_list(root)
-	v.space(root,14);v.rule(root);v.space(root,22)
+	var reveal:=Slot.new();reveal.name="AchievementSection";reveal.size_flags_horizontal=Control.SIZE_EXPAND_FILL;reveal.clip_contents=true;root.add_child(reveal)
+	var achievement_body:=VBoxContainer.new();achievement_body.add_theme_constant_override("separation",0);reveal.adopt(achievement_body)
+	if expanded:achievement_list(achievement_body)
+	else:reveal.extent=0.0;reveal.hide()
+	v.space(root,10);v.rule(root);v.space(root,16)
 	var core:HBoxContainer=v.row(root,8);v.image(core,"diamond",v.color("accent-bar"),Vector2(14,14));v.text(core,"一击终结",13,"ink",true);v.space(root,12)
 	v.text(root,"击碎 %d 块后，顶部核心出现。\n命中核心，清空本关。" % f.threshold,10,"text-3").add_theme_constant_override("line_spacing",8)
-	v.space(root,18);var reward:HBoxContainer=v.row(root);v.text(reward,"独立通关奖金",10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL;v.text(reward,"+ "+fmt(f.preview.bonus),14,"accent-ink",true)
-	v.space(root,22);v.text(root,"不止是方块",13,"ink",true);v.space(root,18)
+	v.space(root,14);var reward:HBoxContainer=v.row(root);v.text(reward,"独立通关奖金",10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL;v.text(reward,"+ "+fmt(f.preview.bonus),14,"accent-ink",true)
+	v.space(root,16);v.text(root,"不止是方块",13,"ink",true);v.space(root,14)
 	var grid:=GridContainer.new();grid.columns=2;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);root.add_child(grid)
 	for special in [["爆破","引爆周围方块","asterisk","bomb"],["电弧","跃击最近的 5 块","zap","lightning"],["冰晶","无视穿透 · 命中不消耗次数","snowflake","frost"],["分裂","分出三支箭","split","prism"],["金矿","本块金币 ×3","coins","gold"],["合金障碍","无法击碎 · 箭矢反弹","shield-minus","metal"]]:
 		var line:HBoxContainer=v.row(grid,8);line.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		var mark:=PanelContainer.new();mark.custom_minimum_size=Vector2(26,26);mark.add_theme_stylebox_override("panel",v.box(v.color("legend-"+special[3]+"-bg"),Color.TRANSPARENT,3));line.add_child(mark);var center:=CenterContainer.new();mark.add_child(center);v.image(center,special[2],v.color("legend-"+special[3]),Vector2(14,14))
 		var words:VBoxContainer=v.column(line,4);v.text(words,special[0],10);v.text(words,special[1],10,"text-3",false,true)
-	v.space(root,24);v.rule(root);v.space(root,16)
+	v.space(root,20);v.rule(root);v.space(root,12)
 	var footer:HBoxContainer=v.row(root);v.text(footer,"每一关，都是新的可能。",10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	var reset:Button=v.button(footer,"",ui._reset_confirmation,"rotate-ccw",44);reset.custom_minimum_size.x=44;reset.tooltip_text="重新开始";reset.add_theme_stylebox_override("normal",v.box(Color.TRANSPARENT,Color.TRANSPARENT,0))
+
+func _equipment_tags(tags:Control) -> void:
+	if f.skills.is_empty():v.text(tags,"技能跨关保留，满 %d 个后自动替换最早获得的技能" % f.slots,10,"text-3")
+	for id in f.skills:
+		var tag:=PanelContainer.new();tag.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),Color.TRANSPARENT,3,4));tags.add_child(tag)
+		var line:HBoxContainer=v.row(tag,4);v.image(line,ui.catalog[id].icon,Color(ui.catalog[id].color),Vector2(13,13));v.text(line,ui.catalog[id].name,10,"text-2")
+
+func update_equipment() -> void:
+	var wallet:Label=root.find_child("EquipmentBalance",true,false)
+	if wallet!=null:wallet.text=fmt(f.coins)
+	var key:=JSON.stringify([f.skills,f.slots])
+	if root.get_meta("equipment_skills","")==key:return
+	root.set_meta("equipment_skills",key)
+	var count:Label=root.find_child("EquipmentSkillCount",true,false)
+	if count!=null:count.text="%d / %d  ›" % [f.skills.size(),f.slots]
+	var tags:Control=root.find_child("EquipmentSkills",true,false)
+	if tags==null:return
+	if not f.reduced:ui._retire_copy(tags,.22)
+	for child in tags.get_children():tags.remove_child(child);child.queue_free()
+	_equipment_tags(tags)
+	if not f.reduced:tags.modulate.a=0;Motion.fade(tags,1.0,.28)
+
+func expand_achievements(expanded:bool) -> void:
+	root.set_meta("expanded",expanded)
+	var holder:Slot=root.find_child("AchievementSection",true,false)
+	if holder==null:return
+	if holder.content.get_child_count()==0:achievement_list(holder.content)
+	var destination:=holder.content.get_combined_minimum_size().y if expanded else 0.0
+	if holder.extent<0:holder.extent=holder.size.y
+	holder.show()
+	if f.reduced:Motion.stop(holder);holder.extent=destination;holder.visible=expanded
+	else:
+		var tween:=Motion.claim(holder,["extent"])
+		tween.tween_property(holder,"extent",destination,.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		if not expanded:tween.tween_callback(holder.hide)
+	var button:Button=root.find_child("AchievementToggle",true,false)
+	if button!=null:button.icon=v.icon("chevron-down" if expanded else "chevron-right",v.color("text-2"))
 
 func achievement_list(parent: Control) -> void:
 	v.text(parent,"击碎才计连击，每支箭独立从 0 计数，不因命中间隔断连。分裂箭、齐射箭分别判定；连锁与延迟伤害归属触发箭。",11,"text-3",false,true).add_theme_constant_override("line_spacing",7)

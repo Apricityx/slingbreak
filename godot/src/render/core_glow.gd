@@ -20,11 +20,11 @@ func present(simulation: RefCounted) -> void:
 	visible = simulation != null and simulation.core != null and not simulation.reduced and simulation.phase not in ["draft", "clearing"]
 	if not visible:
 		return
-	var motion := pose(simulation.time, simulation.core.born)
-	position = Vector2(simulation.core.x, simulation.core.y)
+	var motion := pose(simulation.presentation_time, simulation.core.born)
+	position = simulation.core_display_position()
 	rotation = PI/4+motion.spin
 	scale = Vector2.ONE*motion.scale
-	var blur: float = roundf((18.0+motion.pulse*6.0)*4.0)/4.0
+	var blur: float = 18.0+motion.pulse*6.0
 	var sigma: float = blur*0.5
 	extent = 21.0+sigma*4.0
 	glow_material.set_shader_parameter("tint", Color(simulation.content.palette(simulation.theme).core.glow))

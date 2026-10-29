@@ -5,5 +5,6 @@ from resource_contract import check_resources
 
 if __name__ == "__main__":
     verify_assets()
-    names = {path.relative_to(ROOT).as_posix() for path in (ROOT / "assets").rglob("*") if path.is_file()}
+    names = {path.relative_to(ROOT).as_posix() for directory in ["assets", "src"]
+             for path in (ROOT / directory).rglob("*") if path.is_file()}
     check_resources(names, lambda name: (ROOT / name).read_bytes())

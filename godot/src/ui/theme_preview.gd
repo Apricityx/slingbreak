@@ -1,6 +1,9 @@
 extends Control
 var mode: String="light"
 
+func motion_copy() -> Control:
+	var result:Control=get_script().new();result.set("mode",mode);return result
+
 func _ready() -> void:
 	custom_minimum_size=Vector2(0,58);mouse_filter=Control.MOUSE_FILTER_IGNORE
 

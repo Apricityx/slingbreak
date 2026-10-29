@@ -27,6 +27,10 @@ var intro_active := false
 var time := 0.0
 var clock := 0.0
 var accumulator := 0.0
+var presentation_fraction := 1.0
+var presentation_previous_time := 0.0
+var presentation_core_previous := Vector2.ZERO
+var presentation_time := 0.0
 var next_shot_at := 0.0
 var board_entrance: Variant = null
 var entrance_held:=false
@@ -170,6 +174,7 @@ func generate(restore: bool=false) -> void:
 	skills.reset();fx.reset();bosses.reset()
 	initial=0;killed=0;shots=0;level_money=0;shot_money=0;next_shot_at=0
 	latest_achievement=null;board_entrance=null;entrance_held=false;report=null;phase="ready"
+	presentation_previous_time=time;presentation_time=time;presentation_fraction=1.0
 	round_uses={};drag=null
 	if not state.skillRuntime is Dictionary or state.skillRuntime.get("level")!=state.level:
 		state.skillRuntime={"level":state.level,"shots":0,"forge":false,"decay":false}
@@ -286,6 +291,10 @@ func roll(exclude: Array=[]) -> Array:
 	return result
 
 func draft_chances() -> Dictionary:
+	# Only a visible draft/swap offer consumes these exact inclusion odds.
+	# Changing the equipped queue must not run this O(catalog^3) calculation
+	# during the card flight, board entrance, or ordinary gameplay snapshots.
+	if not state.draft is Dictionary and not state.swapOffer is Dictionary:return {}
 	var key:=str(state.skills.keys())+str(state.level)
 	if key==chance_key:return chances
 	chance_key=key;chances={}
@@ -330,6 +339,7 @@ func launch(position: Vector2, velocity: Vector2, amount: float=-1, pierce: int=
 	if arrows.size()>=64:return null
 	var arrow:=Arrow.new();serial+=1;arrow.id=serial
 	arrow.position=position;arrow.previous=position;arrow.velocity=velocity
+	arrow.reset_display()
 	arrow.scale=pow(2,rank("siegebreaker")+rank("spectral")+rank("timeslip"))
 	arrow.damage=(damage() if amount<0 else amount)*arrow.scale;arrow.base_damage=arrow.damage
 	arrow.pierce=(penetration() if pierce<0 else pierce)+6*(rank("boomerang")+rank("spectral"))+3*(rank("fusepath")+rank("rhythm"))
@@ -441,6 +451,7 @@ func evaluate_achievements(arrow: RefCounted) -> float:
 func spawn_core(quiet: bool=false) -> void:
 	if core!=null or phase=="clearing":return
 	core={"x":390.0,"y":80.0,"born":time-(2 if quiet else 0)}
+	presentation_core_previous=Vector2(core.x,core.y)
 	if not quiet:
 		fx.flash=1;fx.ring(Vector2(390,80),Color("#a4d65e"),220);fx.burst(Vector2(390,80),Color("#a4d65e"),45,2);cue("core");events.append({"type":"toast","text":"核心已显现 · 命中即可清场"})
 	revision+=1
@@ -482,8 +493,21 @@ func update(delta: float) -> void:
 		accumulator-=1.0/60;steps+=1
 		if clock>=freeze_until and phase!="draft":tick(1.0/60)
 	if steps==4:accumulator=0
+	# Keep one-step display latency without rewinding at pause/hit-stop
+	# boundaries. A stopped simulation may finish presenting its last step.
+	if clock>=freeze_until and phase!="draft":
+		presentation_time=maxf(presentation_time,lerpf(presentation_previous_time,time,clampf(accumulator*60,0,1)))
+		# Ordinary feedback runs at display cadence. Skill signatures/fields
+		# retain their existing simulation-owned lifetime and behaviour.
+		fx.advance_visual(minf(delta,0.05))
+	elif phase!="draft":presentation_time=minf(time,presentation_time+minf(delta,0.05))
+	var span:=time-presentation_previous_time
+	presentation_fraction=clampf((presentation_time-presentation_previous_time)/span,0,1) if span>0 else 1.0
 
 func tick(delta: float) -> void:
+	presentation_previous_time=time
+	if core!=null:presentation_core_previous=Vector2(core.x,core.y)
+	for arrow in arrows:arrow.capture_display()
 	time+=delta
 	if phase=="entering" and not entrance_held and board_entrance!=null and time>=board_entrance.end:board_entrance=null;phase="ready";revision+=1
 	if phase=="clearing" and time>=clear_at:generate();return
@@ -495,9 +519,13 @@ func tick(delta: float) -> void:
 			if phase!="flying":break
 			advance_arrow(arrow,scaled)
 		if phase=="flying" and arrows.is_empty() and not skills.pending():phase="ready";revision+=1
-	for brick in bricks:brick.flash=maxf(0,brick.flash-delta)
-	for wall in obstacles:wall.flash=maxf(0,wall.flash-delta)
 	fx.update(delta)
+
+func core_display_position() -> Vector2:
+	if core==null:return Vector2.ZERO
+	var point:=Vector2(core.x,core.y)
+	if time-core.born<=1.0/60 or presentation_core_previous.distance_to(point)>120:return point
+	return presentation_core_previous.lerp(point,presentation_fraction)
 
 func guide(arrow: RefCounted, delta: float) -> void:
 	if rank("boomerang") and arrow.life>=0.55 and not arrow.flags.get("returned",false):
@@ -574,6 +602,9 @@ func advance_arrow(arrow: RefCounted, delta: float) -> void:
 			if brick.id==id and brick.bounds.grow(2.5).has_point(arrow.position):present=true;break
 		if not present:arrow.overlap.erase(id)
 	if arrow.pierce<=0 or arrow.position.y>1080 or arrow.life>4.5:arrows.erase(arrow)
+	elif arrow.display_previous.distance_to(arrow.position)>maxf(40,arrow.velocity.length()*delta*120):
+		# Teleports are intentional cuts, rather than a ribbon through the board.
+		arrow.reset_display()
 
 func reflect(arrow: RefCounted, contact: Dictionary) -> bool:
 	var normal:Vector2=contact.normal

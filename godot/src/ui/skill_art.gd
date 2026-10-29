@@ -3,6 +3,9 @@ extends Control
 var visuals: RefCounted
 var ink: Color
 
+func motion_copy() -> Control:
+	var result:Control=get_script().new();result.set("visuals",visuals);result.set("ink",ink);return result
+
 func _ready() -> void:
 	mouse_filter=Control.MOUSE_FILTER_IGNORE;clip_contents=true
 

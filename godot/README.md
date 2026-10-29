@@ -32,6 +32,22 @@ patterns/transition recipes. Standard Ogg Vorbis data uses the `.vorbis` suffix
 and is loaded with Godot's built-in decoder. The cache budget is 32 MiB of
 compressed stream data; this is not a bound on total engine/decoder memory.
 
+Skill strokes include 81 compressed, offline-baked native mesh bundles (24 contour
+frames per skill). The original vector contours remain the loading fallback.
+Their manifest fingerprints bind them to `assets/signatures.json`; exports reject
+missing/stale bundles. Only when changing the contours or stroke bake, regenerate:
+
+```sh
+godot --headless --path godot --script res://tools/bake_strokes.gd
+python3 godot/tools/build_runtime.py
+python3 godot/tools/run_checks.py --godot /absolute/path/to/godot --gui --test native_stroke_test
+```
+
+The mesh cache holds 32 skill bundles. Retained display lists can keep additional
+references, so this is not a bound on total RAM. Native progress writes use one
+worker with atomic rename/latest-request coalescing; background, import/reload and
+exit wait for completion. The single-threaded Web export retains synchronous saves.
+
 ## Android
 
 Configure Android SDK, JDK and the debug keystore in Godot Editor Settings. No
@@ -150,6 +166,31 @@ do not establish collision order or full Boss counterplay agreement.
 The five-minute soak measures 18,000 simulation updates with full effects enabled;
 it excludes GPU rendering, real audio and mobile scheduling. Do not interpret its
 percentiles as Android frame-rate evidence.
+
+For separate, repeatable CPU samples of frozen UI copies, ordinary battlefield
+submission, and a fixed flying/impact workload, run without other checks in parallel:
+
+```sh
+xvfb-run -a godot --path godot --audio-driver Dummy --disable-vsync --script res://tests/native_performance_probe.gd
+```
+
+The probe reports board updates, vector submission and simulation separately.
+Separate background/halo draw callbacks and GPU execution are excluded.
+Its host frame intervals include the desktop graphics driver and scheduler;
+neither these values nor CPU percentiles establish phone FPS. The GUI regression
+gate includes retained-display-list invalidation for HP, impact flashes, freeze,
+mark expiry, theme changes, moving targets, entrance motion and removed bricks.
+
+For the separate mass-effects and full-queue selection workload:
+
+```sh
+xvfb-run -a godot --path godot --audio-driver Dummy --disable-vsync --script res://tests/native_spike_probe.gd
+```
+
+This probe holds 80 overlapping signatures and 300 particles, exercises 12 real
+draft-to-slot choices and 20 forced chain reactions. It excludes real audio/disk
+saves and does not establish phone FPS. The GUI gate compares 972 actual original-
+polyline/baked-mesh rasters, and tests fixed flight layout/surviving slot identity.
 
 Independent UI references are captured from the shipped browser page:
 

@@ -4,6 +4,7 @@ var manifest: Dictionary
 var icon_cache: Dictionary = {}
 var fonts: Array[Font] = []
 var mode := "light"
+var last_trigger:Control
 
 func _init() -> void:
 	manifest=JSON.parse_string(FileAccess.get_file_as_string("res://assets/ui/manifest.json"))
@@ -55,7 +56,11 @@ func space(parent: Control,height: int) -> Control:
 	var result:=Control.new();result.custom_minimum_size.y=height;result.mouse_filter=Control.MOUSE_FILTER_IGNORE;parent.add_child(result);return result
 
 func button(parent: Control,value: String,callback: Callable,id: String="",height: int=36) -> Button:
-	var result:=Button.new();result.text=value;result.custom_minimum_size.y=height;result.add_theme_font_size_override("font_size",12);result.pressed.connect(callback)
+	var result:=Button.new();result.text=value;result.custom_minimum_size.y=height;result.add_theme_font_size_override("font_size",12)
+	result.pressed.connect(func():
+		last_trigger=result;callback.call()
+		if last_trigger==result:last_trigger=null
+	)
 	if id!="":
 		result.icon=icon(id,color("text-2"));result.expand_icon=true;result.add_theme_constant_override("icon_max_width",14)
 		if value=="":result.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
@@ -92,6 +97,24 @@ func box(face: Color,edge: Color,radius: int=8,padding: int=0) -> StyleBoxFlat:
 	style.set_content_margin_all(padding)
 	return style
 
+func button_states(node:Node) -> void:
+	# A pill/icon/card with its own normal face must not turn into the default
+	# rectangular button on hover or press. Preserve its geometry and padding.
+	if node is Button and node.has_theme_stylebox_override("normal"):
+		var normal:StyleBoxFlat=node.get_theme_stylebox("normal") as StyleBoxFlat
+		if normal!=null:
+			for state in ["hover","pressed"]:
+				if node.has_theme_stylebox_override(state):continue
+				var face:StyleBoxFlat=normal.duplicate()
+				face.bg_color=mix(color("accent-soft"),normal.bg_color,.28 if state=="hover" else .48)
+				face.border_color=mix(color("accent-line"),normal.border_color,.55)
+				node.add_theme_stylebox_override(state,face)
+			if not node.has_theme_stylebox_override("focus"):
+				var focus:StyleBoxFlat=normal.duplicate()
+				focus.bg_color=Color.TRANSPARENT;focus.border_color=color("accent-ink");focus.set_border_width_all(2)
+				focus.shadow_size=0;node.add_theme_stylebox_override("focus",focus)
+	for child in node.get_children():button_states(child)
+
 func apply(control: Control) -> void:
 	var theme := Theme.new()
 	theme.default_font=fonts[0];theme.default_font_size=12
@@ -105,7 +128,15 @@ func apply(control: Control) -> void:
 	theme.set_stylebox("hover","Button",box(color("surface-2"),color("accent-line"),7,8))
 	theme.set_stylebox("pressed","Button",box(color("surface-3"),color("accent-line"),7,8))
 	theme.set_stylebox("disabled","Button",box(color("disabled-bg"),color("line"),6,8))
-	theme.set_stylebox("focus","Button",box(Color.TRANSPARENT,color("ink"),7))
+	var focus:=box(Color.TRANSPARENT,color("accent-ink"),7);focus.set_border_width_all(2)
+	theme.set_stylebox("focus","Button",focus)
+	# Scroll containers otherwise inherit Godot's grey desktop chrome.
+	var track:=box(Color.TRANSPARENT,Color.TRANSPARENT,3);track.set_border_width_all(0);track.content_margin_left=3;track.content_margin_right=3
+	theme.set_stylebox("scroll","VScrollBar",track)
+	for state in ["grabber","grabber_highlight","grabber_pressed"]:
+		var thumb:=box(color("line-2" if state=="grabber" else "text-3"),Color.TRANSPARENT,3);thumb.set_border_width_all(0);thumb.set_content_margin_all(3)
+		theme.set_stylebox(state,"VScrollBar",thumb)
+	for key in ["increment","increment_highlight","increment_pressed","decrement","decrement_highlight","decrement_pressed"]:theme.set_icon(key,"VScrollBar",ImageTexture.new())
 	theme.set_color("font_disabled_color","Button",color("text-3"))
 	theme.set_icon("checked","CheckBox",circle_icon("check",color("accent-ink"),18,true))
 	theme.set_icon("unchecked","CheckBox",circle_icon("check",color("line-2"),18))

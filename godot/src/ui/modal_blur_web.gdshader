@@ -5,6 +5,7 @@ render_mode unshaded;
 uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_linear;
 uniform vec4 tint : source_color;
 uniform float blur = 2.5;
+uniform float amount = 1.0;
 
 void fragment() {
 	vec2 step_size = SCREEN_PIXEL_SIZE * exp2(blur) * 0.6;
@@ -16,5 +17,5 @@ void fragment() {
 			background += texture(screen_texture, SCREEN_UV + vec2(float(x), float(y)) * step_size) * wx * wy / 256.0;
 		}
 	}
-	COLOR = vec4(mix(background.rgb, tint.rgb, tint.a), 1.0);
+	COLOR = vec4(mix(background.rgb, tint.rgb, tint.a), amount * COLOR.a);
 }

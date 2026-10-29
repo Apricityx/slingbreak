@@ -19,8 +19,8 @@ def main():
     engine = shutil.which(args.godot)
     if not engine:
         parser.error("Set GODOT_BIN or --godot")
-    tests = args.test or (["native_render_test", "interface_input_test", "native_motion_test", "interface_capture", "transition_test"]
-                          if args.gui else ["native_test", "native_prediction_test", "native_audio_test", "ui_test", "transition_test", "native_soak_test"])
+    tests = args.test or (["native_render_test", "native_stroke_test", "native_retained_test", "interface_input_test", "native_motion_test", "native_hud_test", "interface_capture", "transition_test"]
+                          if args.gui else ["native_test", "native_spike_test", "native_prediction_test", "native_audio_test", "ui_test", "transition_test", "native_soak_test"])
     out = ROOT.parent / "agent-tmp/godot/checks"
     out.mkdir(parents=True, exist_ok=True)
     failures = []

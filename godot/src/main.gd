@@ -53,11 +53,12 @@ func _finish_intro() -> void:
 	if session.frame.phase=="draft": interface.present(session.frame)
 
 func _process(delta: float) -> void:
+	session.poll_save()
 	session.update(delta)
 	save_clock += delta
 	if save_clock >= 5.0:
 		save_clock = 0.0
-		session.save()
+		session.request_save()
 
 func _action(method: String, input: Dictionary) -> void:
 	if method=="exportFile":
@@ -74,16 +75,19 @@ func _action(method: String, input: Dictionary) -> void:
 	session.command(method, input)
 	if not get_meta("test_mode",false):
 		if method=="configure": session.save_settings()
-		if method in ["choose", "buy", "reroll", "swap", "reset"]: session.save()
+		if method in ["choose", "buy", "reroll", "swap", "reset"]: session.request_save()
 
 func _resize() -> void:
 	# Stage layout remains fixed; the engine scales the whole 412 × 915 canvas.
 	arena.position = Vector2(0, 238)
 	arena.scale = Vector2.ONE
 	interface.size = Vector2(412, 915)
-	# Keep text and SVG-backed controls sampled at the display scale on mobile.
+	# The viewport already rasterizes fonts at the native display scale.
+	# Board coordinates add a fixed 0.52 scale. UI tweens must reuse the
+	# display-resolution glyph atlas instead of rasterizing a new one for
+	# every intermediate flip, pulse and flight scale.
 	arena.board.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED
-	interface.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED
+	interface.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_DISABLED
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED:
@@ -98,4 +102,5 @@ func _failed(message: String) -> void:
 	if interface != null: interface.show_error(message)
 
 func _exit_tree() -> void:
+	session.finish_save()
 	if session.runtime!=null:session.runtime.dispose()

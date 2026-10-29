@@ -4,6 +4,7 @@ extends Node2D
 const Signatures=preload("res://src/render/signatures.gd")
 const BossArt=preload("res://src/render/boss_art.gd")
 const CoreGlow=preload("res://src/render/core_glow.gd")
+const Retained=preload("res://src/render/retained_board.gd")
 var simulation: RefCounted
 var signatures:=Signatures.new()
 var font: Font
@@ -14,25 +15,113 @@ var prediction:=PackedVector2Array()
 var boss_art:=BossArt.new()
 var boxes:Dictionary={}
 var core_glow:=CoreGlow.new()
+var shake_offset:=Vector2.ZERO
+var shake_velocity:=Vector2.ZERO
+var arrow_trails:Dictionary={}
+var sling_pull:=Vector2.ZERO
+var sling_velocity:=Vector2.ZERO
+var draw_on:CanvasItem
+var background_layer:Node2D
+var masonry:Node2D
+var retained:Dictionary={}
+var retained_simulation:RefCounted
+var prepared_key:=""
+const GLYPHS={"bomb":"blast","lightning":"storm","frost":"ice","prism":"prism","gold":"mint","void":"starforge","hydra":"infection","anchor":"contract","shard":"piercer","plate":"heavy","magma":"rage","scale":"boomerang","star":"nova","hour":"timeslip"}
 
 func _ready() -> void:
 	add_child(core_glow)
 	font=preload("res://src/ui/presentation.gd").load_font("bold")
 	font.fallbacks=[preload("res://src/ui/presentation.gd").load_font("cjk")]
+	draw_on=self
+	signatures.attach(self,get_global_transform().get_scale().x)
+	signatures.prepare(["blast","storm","ice","prism","mint","pulse","supernova","timeslip","starforge","infection","contract","piercer","heavy","rage","nova"])
+	background_layer=Retained.new();background_layer.board=self;background_layer.background=true;background_layer.show_behind_parent=true;add_child(background_layer)
+	masonry=Node2D.new();masonry.show_behind_parent=true;add_child(masonry)
+
+func _exit_tree() -> void:
+	signatures.finish_loading()
 
 func _process(delta: float) -> void:
 	core_glow.present(simulation)
 	if simulation!=null:
 		var g=simulation
-		position=Vector2(sin(g.clock*93.7),sin(g.clock*111.3))*g.fx.shake*0.45 if not g.reduced else Vector2.ZERO
-		position+=Vector2(3.2,0)
+		var offers:Array=g.state.draft.options if g.state.draft is Dictionary else[]
+		if g.state.swapOffer is Dictionary:offers=offers+g.state.swapOffer.options
+		var key:=str(g.state.skills.keys())+str(offers)
+		if key!=prepared_key:
+			prepared_key=key;signatures.prepare(g.state.skills.keys()+offers)
+		signatures.collect()
+		var target:=Vector2.ZERO
+		if not g.reduced:
+			# Continuous, band-limited shake; impulses blend into the existing
+			# displacement instead of replacing the board transform in one frame.
+			target=Vector2(sin(g.fx.visual_time*47)+sin(g.fx.visual_time*71)*.3,sin(g.fx.visual_time*53)+sin(g.fx.visual_time*83)*.3)*g.fx.shake*.4
+		var step:float=0.0 if g.paused or g.intro_active else minf(delta,0.05)
+		var decay:=exp(-32*step)
+		var offset:=shake_offset-target
+		var impulse:Vector2=(shake_velocity+offset*32)*step
+		shake_offset=target+(offset+impulse)*decay
+		shake_velocity=(shake_velocity-impulse*32)*decay
+		position=Vector2(3.2,0)+shake_offset
+		if g.drag!=null:
+			sling_pull=Vector2(g.drag.dx,g.drag.dy);sling_velocity=Vector2.ZERO
+		elif g.reduced:sling_pull=Vector2.ZERO;sling_velocity=Vector2.ZERO
+		elif step>0:
+			# Release from the last visible pull. The damped analytic spring is
+			# independent of the collision/aim coordinates and display rate.
+			var damping:=15.0
+			var frequency:=31.0
+			var decay_pull:=exp(-damping*step)
+			var cosine:=cos(frequency*step)
+			var sine:=sin(frequency*step)
+			var a:=sling_pull
+			var b:Vector2=(sling_velocity+damping*a)/frequency
+			sling_pull=(a*cosine+b*sine)*decay_pull
+			sling_velocity=((-a*frequency*sine+b*frequency*cosine)-damping*(a*cosine+b*sine))*decay_pull
+			if sling_pull.length_squared()<.0001 and sling_velocity.length_squared()<.01:sling_pull=Vector2.ZERO;sling_velocity=Vector2.ZERO
 		if g.drag!=null and g.drag.dy>5 and not g.paused and g.phase in ["ready","flying"]:
 			var pull:=Vector2(g.drag.dx,g.drag.dy)
 			# Once per rendered frame, using the latest pull and live colliders.
 			# No 33 ms gate or visual interpolation across collision paths.
 			prediction=g.predict(g.origin,-pull.normalized()*g.speed()*(0.56+0.44*minf(1,pull.length()/100)))
 		else:prediction.clear()
+		_sync_retained()
 		queue_redraw()
+
+func _sync_retained() -> void:
+	var g=simulation
+	palette=g.content.palette(g.theme)
+	var active:bool=g.phase not in ["draft","clearing"]
+	masonry.visible=active
+	background_layer.queue_redraw()
+	if retained_simulation!=g:
+		for node in retained.values():node.queue_free()
+		retained.clear();retained_simulation=g
+	if not active:return
+	var wanted:Dictionary={}
+	var entrance:float=g.presentation_time if g.board_entrance!=null else -1.0
+	var entrance_start:float=g.board_entrance.start if g.board_entrance!=null else -1.0
+	var order:=0
+	for wall in g.obstacles:
+		var key:Array=[g.theme,wall.bounds,wall.flash,g.rank("spectral")]
+		_retain(wall,true,key,wanted,order);order+=1
+	for brick in g.bricks:
+		if brick.type=="scale":continue
+		var key:Array=[g.theme,brick.bounds,brick.type,brick.hp,brick.max_hp,brick.flash,brick.frozen,entrance,entrance_start,
+			brick.flags.get("markUntil",0)>g.time,brick.flags.get("ward",false),g.skills.contracted(brick),
+			brick.type=="hour" and g.bosses.boss_id=="clock" and g.bosses.model.lit(brick),
+			brick.type!="normal" and signatures.meshes.has(GLYPHS.get(brick.type,"pulse"))]
+		_retain(brick,false,key,wanted,order);order+=1
+	for entity in retained.keys():
+		if not wanted.has(entity):retained[entity].queue_free();retained.erase(entity)
+
+func _retain(entity:RefCounted,is_wall:bool,key:Array,wanted:Dictionary,order:int) -> void:
+	wanted[entity]=true
+	if not retained.has(entity):
+		var node:=Retained.new();node.board=self;node.entity=entity;node.wall=is_wall;node.material=material;masonry.add_child(node);retained[entity]=node
+	# Keep the original obstacles-then-bricks order during Boss mutations.
+	if retained[entity].get_index()!=order:masonry.move_child(retained[entity],order)
+	retained[entity].refresh(key)
 
 func color(section: String,key: String) -> Color:
 	return Color(palette.get(section,{}).get(key,"#48652c"))
@@ -46,28 +135,35 @@ func alpha(color_value: Color,opacity: float) -> Color:
 	color_value.a*=clampf(opacity,0,1);return color_value
 
 func _draw() -> void:
+	set_meta("stroke_meshes",[])
 	if simulation==null:return
 	var g=simulation
+	draw_on=self
+	arrow_trails.clear()
 	palette=g.content.palette(g.theme)
 	draw_set_transform(Vector2.ZERO)
-	draw_dashed_line(Vector2(85,840),Vector2(695,840),ink("guide"),1,6)
 	if g.phase!="draft" and g.phase!="clearing":
-		_draw_boss(false)
-		for wall in g.obstacles:_wall(wall)
-		for brick in g.bricks:
-			if brick.type!="scale":_brick(brick)
 		_core()
 		_fields()
 	for ring in g.fx.rings:
 		var t:float=ring.life/ring.max
-		draw_arc(ring.position,maxf(0.01,ring.radius*(1-t)),0,TAU,64,alpha(ring.color,t*0.65*ring.energy),2.8 if ring.energy>1 else 2,true)
+		var energy:float=ring.display_energy
+		draw_arc(ring.position,maxf(0.01,ring.radius*(1-t)),0,TAU,64,alpha(ring.color,t*0.65*energy),2+0.8*clampf(energy-1,0,1),true)
 	for beam in g.fx.beams:
 		var t:float=(g.time-beam.born)/beam.duration
 		for width in [beam.width,3.0]:draw_line(beam.start,beam.finish,alpha(beam.color,(1-t)*(0.16 if width>3 else 0.85)),width,true)
 	for bolt in g.fx.bolts:
 		var points:=PackedVector2Array([bolt.start])
+		var phase:float=g.fx.visual_time*24
+		var pose:=floori(phase)
+		var blend:float=phase-pose
+		blend=blend*blend*(3-2*blend)
 		for index in range(1,6):
-			var wave:=sin((floor(g.time*24)+index*7)*2.17)*9
+			# Retain the electric 24 Hz rhythm, interpolating the deformation
+			# between deterministic poses rather than snapping whole segments.
+			var a:=sin((pose+bolt.phase+index*7)*2.17)*9
+			var b:=sin((pose+1+bolt.phase+index*7)*2.17)*9
+			var wave:=lerpf(a,b,blend)
 			points.append(bolt.start.lerp(bolt.finish,index/6.0)+Vector2(wave,-wave*0.7))
 		points.append(bolt.finish)
 		draw_polyline(points,alpha(ink("bolt"),minf(1,bolt.life*4)),2.5,true)
@@ -83,7 +179,12 @@ func _draw() -> void:
 		signatures.paint(self,item.id,item.position-Vector2(0,t*35 if item.kind=="coin" else 0),0.55 if g.reduced else t,radius,item.color,item.accent,opacity*0.9)
 	for particle in g.fx.particles:
 		draw_set_transform(particle.position,particle.rotation);draw_rect(Rect2(-particle.size/2,-particle.size/2,particle.size,particle.size*0.7),alpha(particle.color,minf(1,particle.life*2)));draw_set_transform(Vector2.ZERO)
-	for text in g.fx.texts:_text(text.text,text.position,text.size,alpha(text.color,text.life*2))
+	for text in g.fx.texts:
+		var pop:float=0 if g.reduced else text.display_pop*5
+		var growth:float=minf(16,log(text.display_count+1)/log(2.0)*3.5) if text.arrow>=0 else 0.0
+		draw_set_transform(text.position,0,Vector2.ONE*(1+(growth+pop)/text.size))
+		_text(text.text,Vector2.ZERO,text.size,alpha(text.color,text.life*2))
+		draw_set_transform(Vector2.ZERO)
 	if g.phase not in ["draft","clearing"]:_draw_boss(true)
 	if g.fx.flash>0:draw_rect(Rect2(0,0,780,1100),Color(0.65,0.84,0.37,g.fx.flash*0.13))
 	if g.pointer!=null:
@@ -93,23 +194,23 @@ func _draw() -> void:
 
 func _text(value: String,point: Vector2,size: int,color_value: Color) -> void:
 	var width:=font.get_string_size(value,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x
-	draw_string(font,point-Vector2(width/2,0),value,HORIZONTAL_ALIGNMENT_LEFT,-1,size,color_value)
+	draw_on.draw_string(font,point-Vector2(width/2,0),value,HORIZONTAL_ALIGNMENT_LEFT,-1,size,color_value)
 
 func _rounded(rect: Rect2,face: Color,edge: Color=Color.TRANSPARENT,radius: int=5) -> void:
 	var key:=str(face.to_rgba32())+":"+str(edge.to_rgba32())+":"+str(radius)
 	if not boxes.has(key):
 		var box:=StyleBoxFlat.new();box.bg_color=face;box.border_color=edge;box.set_border_width_all(1);box.set_corner_radius_all(radius);boxes[key]=box
 		if boxes.size()>512:boxes.erase(boxes.keys()[0])
-	draw_style_box(boxes[key],rect)
+	draw_on.draw_style_box(boxes[key],rect)
 
 func _entrance(brick: RefCounted) -> void:
 	var g=simulation
 	if g.board_entrance==null:return
 	var delay:float=maxf(0,(brick.y-170)/60)*0.035+brick.x/780*0.045
-	var progress:=clampf((g.time-g.board_entrance.start-delay)/0.42,0,1)
+	var progress:=clampf((g.presentation_time-g.board_entrance.start-delay)/0.42,0,1)
 	var eased:=1-pow(1-progress,3)
 	var scale_value:=0.88+0.12*eased
-	draw_set_transform(brick.position+Vector2(0,-26*(1-eased)),0,Vector2.ONE*scale_value)
+	draw_on.draw_set_transform(brick.position+Vector2(0,-26*(1-eased)),0,Vector2.ONE*scale_value)
 
 func _brick(brick: RefCounted) -> void:
 	var rect:Rect2=brick.bounds
@@ -118,7 +219,7 @@ func _brick(brick: RefCounted) -> void:
 	var opacity:=1.0
 	if simulation.board_entrance!=null:
 		_entrance(brick);rect=Rect2(-brick.w/2,-brick.h/2,brick.w,brick.h)
-		opacity=clampf((simulation.time-simulation.board_entrance.start-(brick.y-170)/60*0.035)/0.42,0,1)
+		opacity=clampf((simulation.presentation_time-simulation.board_entrance.start-(brick.y-170)/60*0.035)/0.42,0,1)
 	_rounded(rect,alpha(face,opacity),alpha(edge,opacity),5)
 	if brick.flash>0:_rounded(rect,Color(1,1,1,brick.flash*3))
 	if brick.frozen:_rounded(rect.grow(2),Color.TRANSPARENT,ink("frozenEdge"),6)
@@ -133,16 +234,16 @@ func _brick(brick: RefCounted) -> void:
 	if brick.hp<brick.max_hp:
 		var ratio:=1-clampf(brick.hp/brick.max_hp,0,1)
 		var points:=PackedVector2Array([point+Vector2(-brick.w*0.25,-brick.h/2+3),point+Vector2(-4,-3),point+Vector2(-12,4),point+Vector2(brick.w*0.26,brick.h/2-3)])
-		draw_polyline(points,alpha(ink("crack"),ratio*0.4),1,true)
-	if brick.flags.get("markUntil",0)>simulation.time:draw_arc(point,brick.w*0.42,0,TAU,32,alpha(Color("#91b646"),0.6),1.5,true)
-	if brick.flags.get("ward",false):draw_rect(rect.grow(3),color("clock","ward"),false,2)
-	if brick.type=="hour" and simulation.bosses.boss_id=="clock" and simulation.bosses.model.lit(brick):draw_rect(rect.grow(3),color("clock","gem"),false,2)
-	if simulation.skills.contracted(brick):draw_rect(Rect2(point-Vector2(brick.w/2+4,brick.h/2+4),Vector2(brick.w+8,brick.h+8)),Color("#b69a48"),false,2)
-	if simulation.board_entrance!=null:draw_set_transform(Vector2.ZERO)
+		draw_on.draw_polyline(points,alpha(ink("crack"),ratio*0.4),1,true)
+	if brick.flags.get("markUntil",0)>simulation.time:draw_on.draw_arc(point,brick.w*0.42,0,TAU,32,alpha(Color("#91b646"),0.6),1.5,true)
+	if brick.flags.get("ward",false):draw_on.draw_rect(rect.grow(3),color("clock","ward"),false,2)
+	if brick.type=="hour" and simulation.bosses.boss_id=="clock" and simulation.bosses.model.lit(brick):draw_on.draw_rect(rect.grow(3),color("clock","gem"),false,2)
+	if simulation.skills.contracted(brick):draw_on.draw_rect(Rect2(point-Vector2(brick.w/2+4,brick.h/2+4),Vector2(brick.w+8,brick.h+8)),Color("#b69a48"),false,2)
+	if simulation.board_entrance!=null:draw_on.draw_set_transform(Vector2.ZERO)
 
 func _glyph(type: String,point: Vector2,color_value: Color) -> void:
-	var id:String={"bomb":"blast","lightning":"storm","frost":"ice","prism":"prism","gold":"mint","void":"starforge","hydra":"infection","anchor":"contract","shard":"piercer","plate":"heavy","magma":"rage","scale":"boomerang","star":"nova","hour":"timeslip"}.get(type,"pulse")
-	signatures.paint(self,id,point,0.5,11,color_value,color_value,1)
+	var id:String=GLYPHS.get(type,"pulse")
+	signatures.paint(draw_on,id,point,0.5,11,color_value,color_value,1)
 
 func _wall(wall: RefCounted) -> void:
 	_rounded(Rect2(wall.bounds.position+Vector2(0,4),wall.bounds.size),color("obstacle","shadow"),Color.TRANSPARENT,5)
@@ -150,14 +251,14 @@ func _wall(wall: RefCounted) -> void:
 	var rect:Rect2=wall.bounds
 	for index in range(5):
 		var x:float=rect.position.x+7+index*14
-		draw_line(Vector2(x,rect.position.y+6),Vector2(x+10,rect.end.y-6),color("obstacle","stripe"),4,true)
+		draw_on.draw_line(Vector2(x,rect.position.y+6),Vector2(x+10,rect.end.y-6),color("obstacle","stripe"),4,true)
 	_rounded(Rect2(wall.x-17,wall.y-10,34,20),color("obstacle","plate"),Color.TRANSPARENT,3)
-	for index in range(3):draw_line(Vector2(wall.x-9+index*9,wall.y-5),Vector2(wall.x-9+index*9,wall.y+5),color("obstacle","slot"),2,true)
+	for index in range(3):draw_on.draw_line(Vector2(wall.x-9+index*9,wall.y-5),Vector2(wall.x-9+index*9,wall.y+5),color("obstacle","slot"),2,true)
 	for index in range(4):
 		var point:Vector2=wall.position+Vector2(-31 if index%2==0 else 31,-12 if index<2 else 12)
-		draw_circle(point,2.5,color("obstacle","rivet"))
-	if wall.flash>0:draw_rect(wall.bounds,Color(1,1,1,wall.flash*2))
-	if simulation.rank("spectral"):draw_rect(wall.bounds.grow(3),alpha(Color("#779eb0"),0.7),false,1.5)
+		draw_on.draw_circle(point,2.5,color("obstacle","rivet"))
+	if wall.flash>0:draw_on.draw_rect(wall.bounds,Color(1,1,1,wall.flash*2))
+	if simulation.rank("spectral"):draw_on.draw_rect(wall.bounds.grow(3),alpha(Color("#779eb0"),0.7),false,1.5)
 
 func _srgb_mix(start: Color, finish: Color, amount: float) -> Color:
 	# HTML palette colours hold sRGB channel values; Color does not convert them.
@@ -166,7 +267,7 @@ func _srgb_mix(start: Color, finish: Color, amount: float) -> Color:
 func _aim_ink(key: String) -> Color:
 	# After a shot the line eases from the charging colour back to its ready colour.
 	var g = simulation
-	var amount := clampf(1.0-(g.next_shot_at-g.time)/0.5, 0, 1)
+	var amount := clampf(1.0-(g.next_shot_at-g.presentation_time)/0.5, 0, 1)
 	return _srgb_mix(color("aim", "charging"), color("aim", key), amount*amount*amount)
 
 func _dashed_circle(center: Vector2, radius: float, pattern: Array, ink: Color, width: float) -> void:
@@ -183,10 +284,10 @@ func _dashed_circle(center: Vector2, radius: float, pattern: Array, ink: Color, 
 func _core() -> void:
 	var g=simulation
 	if g.core==null:return
-	var point:=Vector2(g.core.x,g.core.y)
-	var motion:=CoreGlow.pose(g.time,g.core.born)
+	var point:Vector2=g.core_display_position()
+	var motion:=CoreGlow.pose(g.presentation_time,g.core.born)
 	var size:float=motion.scale
-	var age:float=g.time-g.core.born
+	var age:float=maxf(0,g.presentation_time-g.core.born)
 	if age<1.2:
 		var sweep:=minf(1,age/0.45)
 		var fade:=1-maxf(0,(age-0.6)/0.6)
@@ -198,7 +299,7 @@ func _core() -> void:
 	var spin:float=motion.spin
 	var pulse:float=motion.pulse
 	for index in 2:
-		draw_set_transform(point, spin+g.time*(-0.5 if index else 0.4), Vector2.ONE*size)
+		draw_set_transform(point, spin+g.presentation_time*(-0.5 if index else 0.4), Vector2.ONE*size)
 		_dashed_circle(Vector2.ZERO, 40+index*10+pulse*2, [12, 8, 3, 8], alpha(color("core", "ring"), 0.5), 1)
 	draw_set_transform(point, spin+PI/4, Vector2.ONE*size)
 	_rounded(Rect2(-21,-21,42,42),color("core","face"),Color.TRANSPARENT,4)
@@ -207,25 +308,29 @@ func _core() -> void:
 	draw_set_transform(Vector2.ZERO);_text("THE CORE",point-Vector2(0,31),9,color("core","label"))
 
 func _arrow(arrow: RefCounted) -> void:
+	var point:Vector2=arrow.display_position(simulation.presentation_fraction)
+	var trail:PackedVector2Array=arrow.display_trail(simulation.presentation_fraction)
+	arrow_trails[arrow.id]=trail
 	var arrow_color:Color=arrow.color if arrow.color.a>0 else color("arrow","shaft")
-	if arrow.visual!="" and arrow.trail.size()>1:_styled_trail(arrow)
+	if arrow.visual!="" and trail.size()>1:_styled_trail(arrow)
 	else:
-		for index in range(arrow.trail.size()):draw_circle(arrow.trail[index],2.2,alpha(color("arrow","trail"),float(index+1)/maxi(1,arrow.trail.size())*0.45))
-	_arrow_shape(arrow.position,arrow.velocity.angle(),arrow_color)
+		for index in range(trail.size()):draw_circle(trail[index],2.2,alpha(color("arrow","trail"),float(index+1)/maxi(1,trail.size())*0.45))
+	_arrow_shape(point,arrow.display_angle(simulation.presentation_fraction),arrow_color)
 	if arrow.flags.has("firewheel"):
-		draw_arc(arrow.position,90,0,TAU,48,alpha(Color("#cd8150"),0.25),2,true)
-		for side in [0,PI]:signatures.paint(self,"firewheel",arrow.position+Vector2.from_angle(simulation.time*7+side)*90,0.5,20,Color("#cd8150"),Color("#dec773"))
+		draw_arc(point,90,0,TAU,48,alpha(Color("#cd8150"),0.25),2,true)
+		for side in [0,PI]:signatures.paint(self,"firewheel",point+Vector2.from_angle(simulation.time*7+side)*90,0.5,20,Color("#cd8150"),Color("#dec773"))
 
 func _trace(arrow:RefCounted,ink_color:Color,width:float,opacity:float,offset:float=0,wave:bool=false,jagged:bool=false,dash:bool=false) -> void:
 	var points:=PackedVector2Array()
-	for index in range(arrow.trail.size()):
-		var point:Vector2=arrow.trail[index]
+	var trail:PackedVector2Array=arrow_trails.get(arrow.id,arrow.trail)
+	for index in range(trail.size()):
+		var point:Vector2=trail[index]
 		if offset!=0:
-			var tangent:Vector2=(arrow.trail[mini(index+1,arrow.trail.size()-1)]-arrow.trail[maxi(0,index-1)]).normalized()
-			point+=tangent.orthogonal()*offset*(sin(index*0.85-simulation.time*9) if wave else 1)*index/arrow.trail.size()
+			var tangent:Vector2=(trail[mini(index+1,trail.size()-1)]-trail[maxi(0,index-1)]).normalized()
+			point+=tangent.orthogonal()*offset*(sin(index*0.85-simulation.time*9) if wave else 1)*index/trail.size()
 		elif jagged:point+=Vector2(4,-3) if index%2 else Vector2(-4,3)
 		points.append(point)
-	points.append(arrow.position)
+	points.append(arrow.display_position(simulation.presentation_fraction))
 	if dash:
 		for index in range(1,points.size(),2):draw_line(points[index-1],points[index],alpha(ink_color,opacity),width,true)
 	else:draw_polyline(points,alpha(ink_color,opacity),width,true)
@@ -252,29 +357,30 @@ func _styled_trail(arrow:RefCounted) -> void:
 			"comet","heavy":_trace(arrow,primary,5 if style=="heavy" else 4,0.65);_trace(arrow,accent,1.5,0.95)
 			_:_trace(arrow,primary,1.5,0.65)
 	if detailed and style in ["beads","spark","crystal","slash"]:
-		for at in range(2,arrow.trail.size(),3):
-			var point:Vector2=arrow.trail[at]
-			var size_value:float=1+at/float(arrow.trail.size())*2.5
+		var trail:PackedVector2Array=arrow_trails.get(arrow.id,arrow.trail)
+		for at in range(2,trail.size(),3):
+			var point:Vector2=trail[at]
+			var size_value:float=1+at/float(trail.size())*2.5
 			match style:
 				"beads":draw_arc(point,size_value,0,TAU,16,alpha(accent,0.65),1.5,true)
 				"spark":draw_line(point-Vector2(size_value,0),point+Vector2(size_value,0),alpha(accent,0.65),1.5,true);draw_line(point-Vector2(0,size_value),point+Vector2(0,size_value),alpha(accent,0.65),1.5,true)
 				"crystal":
 					var corners:=PackedVector2Array([point+Vector2(0,-size_value*1.4),point+Vector2(size_value*1.4,0),point+Vector2(0,size_value*1.4),point+Vector2(-size_value*1.4,0),point+Vector2(0,-size_value*1.4)]);draw_polyline(corners,alpha(accent,0.65),1.5,true)
 				"slash":draw_line(point+Vector2(-4,4),point+Vector2(4,-4),alpha(accent,0.65),1.5,true)
-	if index<(6 if crowded else 12):signatures.paint(self,arrow.visual,arrow.position,0.5,16 if style=="heavy" else 12,primary,accent,0.85)
+	if index<(6 if crowded else 12):signatures.paint(self,arrow.visual,arrow.display_position(simulation.presentation_fraction),0.5,16 if style=="heavy" else 12,primary,accent,0.85)
 
 func _arrow_shape(point: Vector2,angle: float,arrow_color: Color) -> void:
-	draw_set_transform(point,angle)
-	draw_line(Vector2(-29,0),Vector2(4,0),arrow_color,2.3,true)
-	draw_colored_polygon(PackedVector2Array([Vector2(10,0),Vector2(0,-4),Vector2(0,4)]),arrow_color)
-	for side in [-1,1]:draw_line(Vector2(-23,0),Vector2(-29,side*4),color("arrow","fletch"),2,true)
-	draw_set_transform(Vector2.ZERO)
+	draw_on.draw_set_transform(point,angle)
+	draw_on.draw_line(Vector2(-29,0),Vector2(4,0),arrow_color,2.3,true)
+	draw_on.draw_colored_polygon(PackedVector2Array([Vector2(10,0),Vector2(0,-4),Vector2(0,4)]),arrow_color)
+	for side in [-1,1]:draw_on.draw_line(Vector2(-23,0),Vector2(-29,side*4),color("arrow","fletch"),2,true)
+	draw_on.draw_set_transform(Vector2.ZERO)
 
 func _sling() -> void:
 	var g=simulation
 	var point:Vector2=g.origin
 	var pull:=Vector2(g.drag.dx,g.drag.dy) if g.drag!=null else Vector2.ZERO
-	var pouch:=point+pull
+	var pouch:=point+sling_pull
 	_charge_aura(point, pull)
 	_dashed_circle(point, 79, [4, 6], alpha(color("sling", "range"), 0.72), 1.5)
 	draw_circle(point,48,color("sling","pad"))
