@@ -279,29 +279,23 @@
       for(let i=start;i<G.rings.length;i++)paint(G.rings[i]);ctx.globalAlpha=1;
     }
     function drawBolts(){
-      const limit=G.reduced?24:48,start=Math.max(0,G.bolts.length-limit),stamp=Math.floor(G.time*24);
+      const limit=G.reduced?24:48,start=Math.max(0,G.bolts.length-limit),stamp=Math.floor(G.time*30);
       ctx.strokeStyle=P.bolt;ctx.lineCap='round';ctx.lineJoin='round';
-      for(let step=0;step<4;step++){
-        ctx.beginPath();let count=0;
-        for(let n=start;n<G.bolts.length;n++){
-          const b=G.bolts[n],alpha=Math.min(1,b.life*4);if(Math.min(3,alpha*4|0)!==step)continue;
-          let path=b._path;if(!path)b._path=path=new Float32Array(10);
-          if(b._stamp!==stamp){for(let i=1;i<6;i++){const jitter=Math.sin((stamp+n*13+i*7)*2.17)*9;
-            path[(i-1)*2]=b.x+(b.tx-b.x)*i/6+jitter;path[(i-1)*2+1]=b.y+(b.ty-b.y)*i/6-jitter*.7;
-          }b._stamp=stamp;}
-          ctx.moveTo(b.x,b.y);for(let i=0;i<10;i+=2)ctx.lineTo(path[i],path[i+1]);ctx.lineTo(b.tx,b.ty);count++;
-        }
-        if(count){ctx.globalAlpha=(step+.5)/4;ctx.lineWidth=2.5;ctx.stroke();
-          if(!G.reduced){
-            // Only the newest eight arcs get the wide corona. Their thin
-            // electrical cores, including older arcs, remain fully visible.
-            ctx.beginPath();let glow=0;
-            for(let n=Math.max(start,G.bolts.length-8);n<G.bolts.length;n++){const b=G.bolts[n];
-              if(Math.min(3,Math.min(1,b.life*4)*4|0)!==step)continue;
-              ctx.moveTo(b.x,b.y);for(let i=0;i<10;i+=2)ctx.lineTo(b._path[i],b._path[i+1]);ctx.lineTo(b.tx,b.ty);glow++;
-            }
-            if(glow){ctx.globalAlpha*=.18;ctx.lineWidth=5;ctx.stroke();}
-          }
+      // Keep the whole arc alive through a soft tail. The old four alpha
+      // buckets made the last frames disappear as a visible hard cut.
+      for(let n=start;n<G.bolts.length;n++){
+        const b=G.bolts[n],maxLife=b.maxLife||.46;
+        const progress=1-Math.max(0,b.life)/maxLife;
+        const alpha=Math.min(1,Math.max(0,(b.life/.18)))*(.94-progress*.28);
+        if(alpha<=.015)continue;
+        let path=b._path;if(!path)b._path=path=new Float32Array(10);
+        if(b._stamp!==stamp){for(let i=1;i<6;i++){const jitter=Math.sin((stamp+(b.seed||n*13)+i*7)*2.17)*8;
+          path[(i-1)*2]=b.x+(b.tx-b.x)*i/6+jitter;path[(i-1)*2+1]=b.y+(b.ty-b.y)*i/6-jitter*.7;
+        }b._stamp=stamp;}
+        ctx.beginPath();ctx.moveTo(b.x,b.y);for(let i=0;i<10;i+=2)ctx.lineTo(path[i],path[i+1]);ctx.lineTo(b.tx,b.ty);
+        ctx.globalAlpha=alpha;ctx.lineWidth=2.2+Math.min(1,alpha)*.8;ctx.stroke();
+        if(!G.reduced&&n>=Math.max(start,G.bolts.length-8)){
+          ctx.globalAlpha=alpha*.16;ctx.lineWidth=5.5+alpha*2;ctx.stroke();
         }
       }
       ctx.globalAlpha=1;

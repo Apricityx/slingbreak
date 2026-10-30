@@ -255,6 +255,13 @@
     try{localStorage.setItem(KEY,JSON.stringify(state));}catch{}
     G.ui();
   };
+  G.bolt=(x,y,tx,ty,duration=.46)=>{
+    const maxLife=duration;
+    // Derive jitter from the endpoints so visual effects never consume the
+    // gameplay RNG sequence.
+    const seed=x*17+y*31+tx*43+ty*59+duration*71;
+    G.bolts.push({x,y,tx,ty,life:maxLife,maxLife,seed});
+  };
   G.hit=(b,damage,depth=0)=>{
     const index=G.bricks.indexOf(b);if(index<0||G.phase==='clearing')return;
     b.hp-=damage*(b.frozen?2:1);b.flash=.16;
@@ -270,7 +277,7 @@
     const effect=G.specialConfig?.(b.type)||{};
     if(depth<70){
       if(b.type==='bomb'){const radius=effect.radius||132;G.ring(b.x,b.y,'#ed8b6e',radius+4);G.shake=9;near(radius).forEach(t=>G.hit(t,G.damage()*(effect.damage||2),depth+1));}
-      if(b.type==='lightning'){const targets=G.nearestBricks(b.x,b.y,effect.links||5);let prev=b;targets.forEach(t=>{G.bolts.push({x:prev.x,y:prev.y,tx:t.x,ty:t.y,life:.4});prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
+      if(b.type==='lightning'){const targets=G.nearestBricks(b.x,b.y,effect.links||5);let prev=b;targets.forEach(t=>{G.bolt(prev.x,prev.y,t.x,t.y,.46);prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
       if(b.type==='frost'){const radius=effect.radius||140;G.ring(b.x,b.y,'#81bece',radius+4);near(radius).forEach(t=>{t.frozen=true;t.flash=.25;G.hit(t,G.damage()*(effect.damage||.5),depth+1);});}
       if(b.type==='prism'){G.ring(b.x,b.y,'#b399d8',55);const count=effect.shards||3;for(let i=0;i<count;i++){const a=-.9+i*1.8/(count-1);G.addArrow(b.x,b.y,Math.sin(a)*18,-Math.cos(a)*18,effect.pierce||2);}}
     }

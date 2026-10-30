@@ -298,7 +298,7 @@
   }
   function arc(x,y,count,damage,skillId){
     const targets=G.nearestBricks(x,y,count);
-    let from={x,y};targets.forEach(b=>{G.bolts.push({x:from.x,y:from.y,tx:b.x,ty:b.y,life:.35});from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
+    let from={x,y};targets.forEach(b=>{G.bolt(from.x,from.y,b.x,b.y,.46);from=b;G.hit(b,damage,1);});G.sound('lightning',1,x);
     if(skillId)G.skillFX?.(skillId,x,y,{kind:'electric',r:115});
   }
   function launch(x,y,angle,speed,damage=G.damage(),pierce=G.penetration(),homing=false){
@@ -323,7 +323,7 @@
     if(rank('sharpshooter')&&Math.hypot(dx,dy)>=95){main.damage*=3;main.pierce+=6;main.color='#d4af47';G.float(G.origin.x,G.origin.y-45,'满弓狙击','#9b7629',16);G.skillFX?.('sharpshooter',G.origin.x,G.origin.y,{kind:'power',r:180});}
     if(rank('mirror'))for(const x of [36,744])for(let i=0;i<2;i++)launch(x,G.origin.y-150-i*90,x<390?.65:-.65,speed,G.damage()*1.5,3,true);
     if(rank('reaper')&&S.skillRuntime.shots%3===0)enqueue(.15,()=>{
-      [...G.bricks].sort((a,b)=>a.hp-b.hp).slice(0,4).forEach(b=>{G.bolts.push({x:b.x,y:100,tx:b.x,ty:b.y,life:.4});G.float(b.x,b.y-20,'处决','#a56b80',15);G.hit(b,b.hp,1);});G.sound('lightning');
+      [...G.bricks].sort((a,b)=>a.hp-b.hp).slice(0,4).forEach(b=>{G.bolt(b.x,100,b.x,b.y,.5);G.float(b.x,b.y-20,'处决','#a56b80',15);G.hit(b,b.hp,1);});G.sound('lightning');
     });
     if(rank('orbital')&&G.bricks.length){
       const target=G.bricks.reduce((best,b)=>{const count=nearby(b.x,b.y,160).length;return count>best.count?{x:b.x,y:b.y,count}:best;},{count:-1});
@@ -340,7 +340,7 @@
     }
     if(rank('stormfront'))shuffled([...new Set(G.bricks.map(b=>b.y))]).slice(0,3).forEach((y,i)=>enqueue(.1+i*.14,()=>{
       G.skillFX?.('stormfront',390,y,{kind:'beam',force:true});
-      G.bolts.push({x:35,y,tx:745,ty:y,life:.4});G.bricks.filter(b=>b.y===y).forEach(b=>G.hit(b,G.damage()*3,1));G.sound('lightning');
+      G.bolt(35,y,745,y,.5);G.bricks.filter(b=>b.y===y).forEach(b=>G.hit(b,G.damage()*3,1));G.sound('lightning');
     }));
     for(let i=0;i<rank('echo');i++)enqueue(.24*(i+1),()=>{launch(G.origin.x,G.origin.y,angle,speed);fan(angle,speed,rank('trident')*5);G.sound('shoot');G.skillFX?.('echo',G.origin.x,G.origin.y,{r:110});});
     const meteorTargets=shuffled(G.bricks).slice(0,rank('meteor')*6);
@@ -373,13 +373,13 @@
     if(rank('doubletap'))enqueue(.2,()=>area(position.x,position.y,115,G.damage()*2,'#e8a475','doubletap'));
     if(rank('crossfire')&&!a.crossfire){a.crossfire=true;enqueue(.08,()=>{
       G.skillFX?.('crossfire',position.x,position.y,{kind:'beam',force:true});
-      G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4},{x:position.x,y:145,tx:position.x,ty:820,life:.4});
+      G.bolt(50,position.y,730,position.y,.5);G.bolt(position.x,145,position.x,820,.5);
       G.bricks.filter(t=>Math.abs(t.y-position.y)<12||Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*3,1));G.sound('lightning');
     });}
     if(!G.bricks.includes(b)&&rank('blast'))enqueue(.055,()=>area(position.x,position.y,125,G.damage()*1.5,'#e8a475','blast'));
     if(rank('lightning'))enqueue(.065,()=>arc(position.x,position.y,3,G.damage()*1.2,'lightning'));
-    if(rank('sweep')&&takeArrow(a,'sweep',rank('sweep')))enqueue(.08,()=>{G.skillFX?.('sweep',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:50,y:position.y,tx:730,ty:position.y,life:.4});G.bricks.filter(t=>Math.abs(t.y-position.y)<12).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
-    if(rank('lance')&&takeArrow(a,'lance',rank('lance')))enqueue(.08,()=>{G.skillFX?.('lance',position.x,position.y,{kind:'beam',force:true});G.bolts.push({x:position.x,y:145,tx:position.x,ty:G.origin.y-120,life:.4});G.bricks.filter(t=>Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+    if(rank('sweep')&&takeArrow(a,'sweep',rank('sweep')))enqueue(.08,()=>{G.skillFX?.('sweep',position.x,position.y,{kind:'beam',force:true});G.bolt(50,position.y,730,position.y,.5);G.bricks.filter(t=>Math.abs(t.y-position.y)<12).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
+    if(rank('lance')&&takeArrow(a,'lance',rank('lance')))enqueue(.08,()=>{G.skillFX?.('lance',position.x,position.y,{kind:'beam',force:true});G.bolt(position.x,145,position.x,G.origin.y-120,.5);G.bricks.filter(t=>Math.abs(t.x-position.x)<16).forEach(t=>G.hit(t,G.damage()*2,1));G.sound('lightning');});
   };
   G.onBrickDestroyed=b=>{
     if(rank('cascade')&&take('cascade',16))enqueue(.09,()=>area(b.x,b.y,145,G.damage()*2.5,'#e89a79','cascade'));
