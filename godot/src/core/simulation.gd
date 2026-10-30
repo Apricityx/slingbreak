@@ -388,7 +388,7 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 	var dealt:=amount*(2 if brick.frozen else 1)
 	skills.record_damage(brick,minf(brick.hp,dealt))
 	brick.hp-=dealt;brick.flash=0.16
-	if brick.hp>0:fx.burst(brick.position,fx.brick_color(brick.type),4,0.5);cue("tap",1,brick.x);return
+	if brick.hp>0:fx.burst(brick.position,fx.brick_color(brick.type),4,0.5);cue("brick_hit",1,brick.x);return
 	bricks.erase(brick);killed+=1;state.total+=1
 	if brick.frozen or brick.type=="frost":fx.frozen_target(brick.position,maxf(brick.w,brick.h)*0.5)
 	if active_arrow!=null:
@@ -398,9 +398,9 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 	fx.burst(brick.position,fx.brick_color(brick.type),16);fx.floating(brick.position,"+%d" % int(money));fx.shake=minf(8,fx.shake+1.5)
 	if brick.type=="normal":fx.normal_break(brick.position,fx.brick_color(brick.type))
 	if brick.type=="gold" and rank("alchemist"):fx.skill_event("alchemist",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.64)
-	if brick.type!="normal":fx.special_break(brick.position,brick.type,1.0 if depth==0 else 0.82,depth)
+	if brick.type not in ["normal","lightning"]:fx.special_break(brick.position,brick.type,1.0 if depth==0 else 0.82,depth)
 	if brick.type!="normal":cue("bomb" if brick.type=="bomb" else brick.type,1,brick.x,true)
-	cue("break",active_arrow.kills if active_arrow!=null else 0,brick.x)
+	cue("brick_break" if brick.type=="normal" else "break",active_arrow.kills if active_arrow!=null else 0,brick.x)
 	if killed>=threshold and core==null and bosses.fight.is_empty():spawn_core()
 	if depth<70:
 		match brick.type:
@@ -408,8 +408,10 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 			"lightning":
 				var from:Vector2=brick.position
 				for target in nearest(brick.position,7 if rank("storm") else 5):
-					if rank("storm"):fx.skill_event("storm",from,from.direction_to(target.position),target.position,1.0,0.5)
-					fx.bolt(from,target.position);from=target.position;hit(target,damage()*(2 if rank("storm") else 1.6),depth+1)
+					# Both brick variants share the Storm art, once per actual hop.
+					# Target selection, damage and source attribution stay synchronous.
+					fx.skill_event("storm",from,from.direction_to(target.position),target.position,1.0,0.5)
+					from=target.position;hit(target,damage()*(2 if rank("storm") else 1.6),depth+1)
 			"frost":
 				var radius:=190 if rank("blizzard") else 140
 				if rank("blizzard"):fx.skill_event("blizzard",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.72)
@@ -695,9 +697,14 @@ func predict(position: Vector2, velocity: Vector2, distance: float=720) -> Packe
 
 func cue(type: String, n: int=1, x: float=390, priority: bool=false, ui: bool=false) -> void:
 	if not state.sound or paused and not ui:return
+	# Normal and special breaks share the existing density limit.
+	var throttle_type:String="break" if type=="brick_break" else type
+	if type=="brick_hit":throttle_type="tap"
 	var interval:float={"draw":0.065,"break":0.018,"boom":0.055,"bomb":0.055,"lightning":0.06,"tap":0.03,"ricochet":0.035,"bell":0.2,"tick":0.08}.get(type,0.05)
-	if not priority and clock-last_sounds.get(type,-INF)<interval:return
-	last_sounds[type]=clock;sounds.append({"type":type,"n":clampi(n,0,20),"x":x,"priority":priority,"ui":ui})
+	if type=="brick_break":interval=0.018
+	if type=="brick_hit":interval=0.03
+	if not priority and clock-last_sounds.get(throttle_type,-INF)<interval:return
+	last_sounds[throttle_type]=clock;sounds.append({"type":type,"n":clampi(n,0,20),"x":x,"priority":priority,"ui":ui})
 
 func export_progress() -> Dictionary:
 	var saved:Dictionary=state.duplicate(true)

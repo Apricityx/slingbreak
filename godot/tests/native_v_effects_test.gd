@@ -2,6 +2,7 @@ extends SceneTree
 ## Sequential V2 effect coverage and graphics-driver stress test.
 ## Run with --gui; headless rendering cannot measure CanvasItem frame cost.
 const Main:=preload("res://src/main.gd")
+const StressFixture=preload("res://tests/effects_stress_fixture.gd")
 const EffectIds:= ["echo","piercer","seeking","ricochet"]
 const SpecialIds:= ["bomb","lightning","frost","prism","gold"]
 const FRAME_BUDGET_MS:=1000.0/60.0
@@ -46,22 +47,10 @@ func wait_frame() -> float:
 	return float(Time.get_ticks_usec()-started)/1000.0
 
 func trigger(g:RefCounted,id:String,index:int) -> void:
-	# Wrap emitters into the visible arena rather than letting the late stress
-	# frames scroll offscreen and accidentally benchmark culled effects.
-	var point:=Vector2(100+(index%6)*110,180+((index/6)%7)*85)
-	var direction:=Vector2.RIGHT.rotated(index*.31)
-	var target:=point+direction*90.0 if id=="seeking" else Vector2.ZERO
-	g.fx.skill_event(id,point,direction,target,1.0,0.42 if id=="seeking" else 0.5)
+	StressFixture.skill(g,id,index)
 
 func trigger_special(g:RefCounted,id:String,index:int) -> void:
-	var point:=Vector2(90+(index%6)*110,220+((index/6)%7)*80)
-	if id=="bomb":
-		g.fx.special_break(point,"bomb")
-	elif id=="frost":
-		g.fx.special_break(point,"frost")
-		g.fx.frozen_target(point+Vector2(48,0),42)
-	else:
-		g.fx.special_break(point,id)
+	StressFixture.special(g,id,index)
 
 func special_sequential(g:RefCounted,board:TimedBoard) -> Dictionary:
 	var frame_times:Array=[]
@@ -74,13 +63,15 @@ func special_sequential(g:RefCounted,board:TimedBoard) -> Dictionary:
 			check(g.fx.explosions.size()==1,"special brick queues explosion: "+id)
 		elif id=="frost":
 			check(g.fx.specials.size()==2,"special brick queues frost wave and shards")
+		elif id=="lightning":
+			check(g.fx.skill_events.size()==5 and g.fx.specials.is_empty(),"electric brick uses five Storm hop snapshots")
 		else:
 			check(g.fx.specials.size()==1,"special brick queues presentation event: "+id)
 		effects_seen.append(id)
 		for frame in range(90):
 			g.fx.advance_visual(1.0/60.0)
 			frame_times.append(await wait_frame())
-		check(g.fx.specials.is_empty() and g.fx.explosions.is_empty(),"special brick effect expires: "+id)
+		check(g.fx.specials.is_empty() and g.fx.explosions.is_empty() and g.fx.skill_events.is_empty(),"special brick effect expires: "+id)
 	return {"effects":effects_seen,"frames":stats(frame_times),"over_60fps":frame_times.filter(func(v):return v>FRAME_BUDGET_MS).size()}
 
 func sequential(g:RefCounted,board:TimedBoard) -> Dictionary:
@@ -107,10 +98,7 @@ func stress(g:RefCounted,board:TimedBoard) -> Dictionary:
 	for frame in range(STRESS_FRAMES):
 		# Four effects overlap continuously. This intentionally reaches the
 		# presentation queue limit without changing gameplay state.
-		for lane in range(4):trigger(g,EffectIds[(frame+lane)%EffectIds.size()],frame+lane)
-		trigger_special(g,SpecialIds[frame%SpecialIds.size()],frame)
-		if frame%3==0:g.fx.explosion(Vector2(250,320),132,1.0)
-		g.fx.advance_visual(1.0/60.0)
+		StressFixture.step(g,frame)
 		peak_queue=maxi(peak_queue,g.fx.skill_events.size())
 		frame_times.append(await wait_frame())
 	check(peak_queue<=64,"V2 stress queue stays within 64-event budget")
@@ -125,6 +113,9 @@ func run() -> void:
 		push_error("V2 effects graphics test requires --gui and a graphics driver")
 		quit(1)
 		return
+	# Match the real startup strategy, and report its cost separately rather
+	# than quietly discarding first-use frames from the stress statistics.
+	var preparation:Dictionary=await preload("res://src/render/effect_warmup.gd").prepare(root)
 	app=Main.new()
 	app.set_meta("test_mode",true)
 	root.add_child(app)
@@ -148,11 +139,13 @@ func run() -> void:
 	app.arena.board=board
 	app.arena.add_child(board)
 	await process_frame
-	var report:={"version":Engine.get_version_info(),"v2_effects":EffectIds,
+	var report:={"preparation":preparation,"version":Engine.get_version_info(),"v2_effects":EffectIds,
 		"special_bricks":SpecialIds,"sequential":await sequential(g,board),
 		"special_sequential":await special_sequential(g,board),"stress":await stress(g,board),
 		"environment":{"renderer":RenderingServer.get_video_adapter_name(),"display":DisplayServer.get_name(),
 			"scope":"CanvasItem board draw and host frame intervals; excludes GPU completion, audio and device scheduling"}}
+	report["sources"]=preload("res://tests/effects_source_manifest.gd").hashes()
+	report.sources["res://tests/native_v_effects_test.gd"]=FileAccess.get_sha256("res://tests/native_v_effects_test.gd")
 	app.queue_free()
 	await process_frame
 	print("Native V2 effects: "+JSON.stringify(report))

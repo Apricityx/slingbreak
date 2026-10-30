@@ -7,11 +7,18 @@ var uv:=PackedVector2Array()
 var indices:=PackedInt32Array()
 
 static func event_data(age:float,seed:float,value:float) -> Color:
-	# GL Compatibility stores custom channels as half floats. All consumers
-	# use seed only inside periodic trig; wrap it and split into two exactly
+	# GL Compatibility stores custom channels as half floats. Trig consumers
+	# wrap the seed and split it into two exactly
 	# representable parts rather than losing precision as the serial grows.
 	var wrapped:=fposmod(seed,TAU)
 	var high:=floorf(wrapped*256.0)/256.0
+	return Color(age,high,value,wrapped-high)
+
+static func noise_data(age:float,seed:float,value:float) -> Color:
+	# Noise is NOT TAU-periodic. Preserve the original early-game seed and
+	# bound long-session inputs explicitly, with high/low half-float parts.
+	var wrapped:=fposmod(seed,4096.0)
+	var high:=floorf(wrapped/4.0)*4.0
 	return Color(age,high,value,wrapped-high)
 
 func polygon(points:PackedVector2Array,tag:Vector2,ink:Color=Color.WHITE) -> void:
@@ -55,6 +62,22 @@ func path(tag:Vector2,segments:int) -> void:
 		for j in range(3):
 			var a:=first+i*4+j
 			indices.append_array(PackedInt32Array([a,a+4,a+1,a+1,a+4,a+5]))
+
+func ribbon(tag:Vector2,segments:int) -> void:
+	# One strip, not four overlapping feather/core strips. The fragment shader
+	# resolves the cross-section in screen pixels, including antialiasing.
+	var first:=vertices.size()
+	for i in range(segments+1):
+		for side in [-1.0,1.0]:vertices.append(Vector2(i,side));uv.append(tag);colors.append(Color.WHITE)
+	for i in range(segments):
+		var a:=first+i*2
+		indices.append_array(PackedInt32Array([a,a+2,a+1,a+1,a+2,a+3]))
+
+func disc(tag:Vector2,segments:int=20) -> void:
+	var first:=vertices.size()
+	vertices.append(Vector2.ZERO);uv.append(tag);colors.append(Color.WHITE)
+	for i in range(segments):vertices.append(Vector2.from_angle(i*TAU/segments));uv.append(tag);colors.append(Color.WHITE)
+	for i in range(segments):indices.append_array(PackedInt32Array([first,first+1+i,first+1+(i+1)%segments]))
 
 func build() -> ArrayMesh:
 	var arrays:Array=[];arrays.resize(Mesh.ARRAY_MAX)

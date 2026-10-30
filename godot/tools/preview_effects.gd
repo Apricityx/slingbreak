@@ -53,12 +53,14 @@ func capture() -> void:
 			elif time>=0 and not entry.fired:
 				if entry.fixture.kind=="batch_four_live":
 					preload("res://tools/preview_skill_batch_four.gd").fire(g,entry.id)
-				elif entry.fixture.kind=="storm_chain":
-					var previous:=Vector2(390,440)
-					for offset in [Vector2(-85,0),Vector2(-85,-50),Vector2(0,-50),Vector2(85,-50),Vector2(85,0),Vector2(85,50),Vector2(0,50)]:
-						var target:Vector2=Vector2(390,440)+offset
-						g.fx.skill_event("storm",previous,previous.direction_to(target),target,1,entry.fixture.duration)
-						previous=target
+				elif entry.fixture.kind in ["storm_chain","lightning_chain"]:
+					# Use the production kill/nearest/hop path, not a made-up arc.
+					g.state.skills={"storm":1} if entry.fixture.kind=="storm_chain" else {}
+					g.initial=1000
+					for brick in g.bricks.duplicate():
+						if brick.position==Vector2(390,440):g.bricks.erase(brick)
+					var electric:RefCounted=g.make_brick({"x":390,"y":440,"hp":1,"max":1,"type":"lightning"})
+					g.hit(electric,100)
 				elif entry.fixture.kind=="special_brick":
 					g.fx.special_break(Vector2(390,440),entry.fixture.type)
 					if entry.fixture.type=="frost":

@@ -1,58 +1,59 @@
 shader_type canvas_item;
 render_mode unshaded;
-uniform bool dark=false;
 uniform float pixel=1.923077;
+varying vec2 sample_point;
+varying float kind;
+varying float fade;
+varying float radius;
+varying float shard_index;
+varying float shard_size;
 
-vec2 diamond(float s,float size) {
-	float index=min(floor(s),3.0),f=s-index;
-	vec2 a= index<0.5 ? vec2(0,-1) : index<1.5 ? vec2(0.7,0) : index<2.5 ? vec2(0,1) : vec2(-0.7,0);
-	vec2 b= index<0.5 ? vec2(0.7,0) : index<1.5 ? vec2(0,1) : index<2.5 ? vec2(-0.7,0) : vec2(0,-1);
-	return mix(a,b,f)*size;
-}
+vec4 over(vec4 a,vec4 b) { return vec4(b.rgb*b.a+a.rgb*(1.0-b.a),b.a+a.a*(1.0-b.a)); }
+float edge(float d,float r) { return 1.0-smoothstep(r-pixel*0.5,r+pixel*0.5,d); }
 void vertex() {
 	float progress=INSTANCE_CUSTOM.x,seed=INSTANCE_CUSTOM.y+INSTANCE_CUSTOM.w;
-	float fade=1.0-smoothstep(0.2,0.58,progress);
-	float radius=15.0*(1.0+0.42*sin(min(1.0,progress*4.5)*3.141592654));
-	float index=UV.x,kind=UV.y,coverage=COLOR.a;
-	vec2 p=VERTEX;
-	vec4 ink;
-	if(kind<2.0) {
-		float r=length(p),extent=radius+(kind<0.5 ? 3.0 : 0.0);
-		VERTEX=p/max(r,0.0001)*(min(r,1.0)*extent+max(r-1.0,0.0)*pixel*2.0);
-		ink=kind<0.5 ? vec4(0.54902,0.392157,0.109804,0.82*fade) : vec4(0.956863,0.768627,0.247059,0.98*fade);
+	fade=1.0-smoothstep(0.2,0.58,progress);
+	radius=15.0*(1.0+0.42*sin(min(1.0,progress*4.5)*3.141592654));
+	shard_index=UV.x;kind=UV.y;vec2 p=VERTEX;
+	if(kind<0.5) {
+		VERTEX=p*(radius+3.0+pixel)/cos(3.141592654/24.0);sample_point=VERTEX;
+	} else if(kind<1.5) {
+		float angle=shard_index*1.570796327+0.785398163;
+		vec2 tangent=vec2(cos(angle),sin(angle)),normal=vec2(-tangent.y,tangent.x);
+		VERTEX=tangent*(radius+1.0+14.0*p.x)+normal*p.y*(1.1+pixel);
+		sample_point=vec2(p.y*(1.1+pixel),0.0);
 	} else {
-		vec2 center,normal,tangent;
-		float width=1.2,steps=1.0;
-		if(kind<4.0) {
-			steps=kind<2.5 ? 28.0 : 20.0;
-			float angle=kind<2.5 ? clamp(p.x,0.0,steps)/steps*6.283185307 : -3.141592654*0.78+clamp(p.x,0.0,steps)/steps*3.141592654;
-			normal=vec2(cos(angle),sin(angle));tangent=vec2(-normal.y,normal.x);
-			center=normal*radius*(kind<2.5 ? 1.0 : 0.7);
-			width=kind<2.5 ? 2.2 : 1.5;
-			ink=kind<2.5 ? vec4(1,0.972549,0.784314,fade) : vec4(0.607843,0.407843,0.090196,fade);
-		} else if(kind<4.5) {
-			float angle=index*3.141592654/2.0+3.141592654/4.0;
-			tangent=vec2(cos(angle),sin(angle));normal=vec2(-tangent.y,tangent.x);
-			center=tangent*(radius+8.0-7.0+14.0*clamp(p.x,0.0,1.0));
-			width=2.2;ink=vec4(1,0.984314,0.862745,fade);
+		float angle=seed+shard_index*0.628318531;
+		vec2 shard=vec2(cos(angle),sin(angle))*mix(10.0,48.0,smoothstep(0.0,0.24,progress))+vec2(0.0,30.0*progress*progress);
+		shard_size=(3.0+mod(shard_index,3.0))*fade;
+		if(kind<2.5) {
+			vec2 extent=vec2(shard_size*0.7,shard_size)+vec2(pixel*1.5);
+			VERTEX=shard+p*extent;sample_point=p*extent;
 		} else {
-			float angle=seed+index*6.283185307/10.0;
-			vec2 shard=vec2(cos(angle),sin(angle))*mix(10.0,48.0,smoothstep(0.0,0.24,progress))+vec2(0,30.0*progress*progress);
-			float size=(3.0+mod(index,3.0))*fade;
-			if(kind<5.5) {
-				steps=4.0;
-				float s=clamp(p.x,0.0,4.0);
-				vec2 prev=diamond(max(s-0.001,0.0),size),next=diamond(min(s+0.001,4.0),size);
-				tangent=normalize(next-prev+vec2(0.000001));normal=vec2(-tangent.y,tangent.x);
-				center=shard+diamond(s,size);
-				ink=mod(index,2.0)<0.5 ? vec4(1,0.945098,0.631373,fade) : vec4(0.905882,0.662745,0.180392,fade);
-			} else {
-				tangent=vec2(0,1);normal=vec2(-1,0);center=shard+vec2(0,(2.0-4.0*clamp(p.x,0.0,1.0))*size);
-				ink=vec4(1,0.984314,0.862745,fade*0.8);
-			}
+			VERTEX=shard+vec2(p.y*(0.6+pixel),(p.x*4.0-2.0)*shard_size);
+			sample_point=vec2(p.y*(0.6+pixel),0.0);
 		}
-		float edge=sign(p.y)*(min(abs(p.y),0.5)*width+max(abs(p.y)-0.5,0.0)*pixel*2.0);
-		VERTEX=center+normal*edge+tangent*(p.x-clamp(p.x,0.0,steps))*pixel;
 	}
-	COLOR=vec4(ink.rgb,ink.a*coverage);
+	COLOR=vec4(1.0);
+}
+void fragment() {
+	vec4 ink=vec4(0.0);
+	if(kind<0.5) {
+		float d=length(sample_point);
+		ink=over(ink,vec4(0.54902,0.392157,0.109804,0.82*fade*edge(d,radius+3.0)));
+		ink=over(ink,vec4(0.956863,0.768627,0.247059,0.98*fade*edge(d,radius)));
+		ink=over(ink,vec4(1.0,0.972549,0.784314,fade*edge(abs(d-radius),1.1)));
+		// Half-ring stamp; the two direction tests avoid atan per pixel.
+		float stamp=step(-0.637424*sample_point.x+0.770513*sample_point.y,0.0);
+		ink=over(ink,vec4(0.607843,0.407843,0.090196,fade*stamp*edge(abs(d-radius*0.7),0.75)));
+	} else if(kind<1.5 || kind>2.5) {
+		float alpha=edge(abs(sample_point.x),kind<1.5 ? 1.1 : 0.6);
+		ink=over(ink,vec4(1.0,0.984314,0.862745,fade*alpha*(kind>2.5 ? 0.8 : 1.0)));
+	} else {
+		float d=abs(sample_point.x)/0.7+abs(sample_point.y)-shard_size;
+		float alpha=edge(abs(d)*0.573462,0.6);
+		vec3 col=mod(shard_index,2.0)<0.5 ? vec3(1.0,0.945098,0.631373) : vec3(0.905882,0.662745,0.180392);
+		ink=over(ink,vec4(col,fade*alpha));
+	}
+	COLOR=vec4(ink.rgb/max(ink.a,0.00001),ink.a);
 }

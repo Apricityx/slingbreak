@@ -19,6 +19,56 @@ func _run() -> void:
 	check(audio.brick_explosion is AudioStreamWAV,"brick explosion uses a decoded WAV sample")
 	check(audio.players.size()==96,"bounded Godot player pool")
 	check(audio._sample("res://assets/audio/","../manifest.json")==null,"audio paths cannot escape the sample directory")
+	var hit_variants:Array=[]
+	for index in range(4):
+		audio.scheduled.clear()
+		audio.play_requests([{"type":"brick_hit","x":780}])
+		check(audio.scheduled.size()==1,"surviving hit replaces both synthesized voices with one sample")
+		var hit_voice:Dictionary=audio.scheduled[0]
+		hit_variants.append(hit_voice.stream)
+		check(hit_voice.stream is AudioStreamOggVorbis and hit_voice.stream.get_length()>0 and hit_voice.stream.get_length()<0.6,"light hit decodes with a short tail")
+		check(hit_voice.bus=="SlingEffects" and hit_voice.pan>0 and is_equal_approx(hit_voice.volume,0.32) and is_equal_approx(hit_voice.at,audio.clock),"hit is immediate, dry, spatial and softer than break")
+	check(hit_variants[0]!=hit_variants[1] and hit_variants[1]!=hit_variants[2] and hit_variants[0]!=hit_variants[2] and hit_variants[0]==hit_variants[3],"three hit variants rotate without immediate repetition")
+	audio.scheduled.clear()
+	audio.play_requests([{"type":"tap","ui":true}])
+	check(audio.scheduled.size()==2 and audio.scheduled.all(func(v):return v.ui and not hit_variants.has(v.stream)),"UI tap retains its original synthesized pair")
+	var variants:Array=[]
+	for index in range(4):
+		audio.scheduled.clear()
+		audio.play_requests([{"type":"brick_break","n":17,"x":0}])
+		check(audio.scheduled.size()==3,"normal break has one sampled impact and two combo notes")
+		var impact:Dictionary=audio.scheduled[0]
+		variants.append(impact.stream)
+		check(impact.stream is AudioStreamOggVorbis and impact.stream.get_length()>0 and impact.stream.get_length()<1.5,"stone impact decodes with a short bounded tail")
+		check(impact.bus=="SlingEffects" and impact.pan<0 and is_equal_approx(impact.volume,0.55),"stone impact is dry, attenuated and spatial")
+		var notes:Array=audio.cues["break"][17].slice(2)
+		for note_index in range(2):
+			var voice:Dictionary=audio.scheduled[note_index+1]
+			check(voice.stream==audio._sample("res://assets/audio/",notes[note_index].file) and is_equal_approx(voice.at,audio.clock+notes[note_index].delay),"combo pitch and timing preserved")
+	check(variants[0]!=variants[1] and variants[1]!=variants[2] and variants[0]!=variants[2] and variants[0]==variants[3],"three distinct impact variants rotate without immediate repetition")
+	audio.scheduled.clear()
+	audio.play_requests([{"type":"break","n":1}])
+	check(audio.scheduled.size()==4,"special bricks retain their original four-voice break recipe")
+	audio.scheduled.clear()
+	var g:RefCounted=session.runtime
+	g.sounds.clear();g.last_sounds.clear();g.phase="aiming";g.threshold=9999
+	var brick:RefCounted=g.make_brick({"x":200,"y":200,"hp":1,"type":"normal"})
+	g.hit(brick,2)
+	check(g.sounds.any(func(v):return v.type=="brick_break") and not g.sounds.any(func(v):return v.type=="break"),"normal brick destruction requests sampled break")
+	g.cue("break")
+	check(not g.sounds.any(func(v):return v.type=="break"),"normal and special breaks share the existing throttle")
+	g.sounds.clear();g.last_sounds.clear()
+	for type in ["normal","bomb"]:
+		var survivor:RefCounted=g.make_brick({"x":100,"y":100,"hp":10,"type":type})
+		g.hit(survivor,1)
+		check(survivor.hp==9 and g.bricks.has(survivor) and g.sounds.size()==1 and g.sounds[0].type=="brick_hit","surviving brick requests only sampled hit: "+type)
+		g.hit(survivor,1)
+		check(survivor.hp==8 and g.sounds.size()==1,"30 ms hit throttle does not suppress damage")
+		g.cue("tap")
+		check(g.sounds.size()==1,"hit shares existing tap throttle")
+		g.clock+=0.031;g.hit(survivor,1)
+		check(g.sounds.size()==2,"hit cue resumes after 30 ms")
+		g.bricks.erase(survivor);g.sounds.clear();g.last_sounds.clear()
 	audio.play_requests([{"type":"tap","x":0,"ui":false},{"type":"reroll","ui":true}])
 	audio.play_requests([{"type":"bomb","x":412,"priority":true}])
 	check(audio.scheduled.any(func(v):return v.stream==audio.brick_explosion and v.pan>0),"bomb cue schedules the brick explosion sample")

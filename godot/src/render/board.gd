@@ -9,6 +9,8 @@ const SkillImpacts=preload("res://src/render/skill_impacts.gd")
 const SkillBatchFive=preload("res://src/render/skill_batch_five.gd")
 const SkillBatchSix=preload("res://src/render/skill_batch_six.gd")
 const SkillBatchFour=preload("res://src/render/skill_batch_four.gd")
+const SkillBatch=preload("res://src/render/skill_batch.gd")
+var skill_batches:Dictionary={}
 var simulation: RefCounted
 var signatures:=Signatures.new()
 var font: Font
@@ -21,8 +23,7 @@ var boxes:Dictionary={}
 var core_glow:=CoreGlow.new()
 var explosions:=preload("res://src/render/explosions.gd").new()
 var frost:=preload("res://src/render/frost.gd").new()
-var arc_batch:=preload("res://src/render/special_batch.gd").new()
-var coin_batch:=preload("res://src/render/special_batch.gd").new()
+var coin_batch:=preload("res://src/render/coin_batch.gd").new()
 var foreground:=preload("res://src/render/effect_foreground.gd").new()
 var shake_offset:=Vector2.ZERO
 var shake_velocity:=Vector2.ZERO
@@ -39,8 +40,9 @@ const GLYPHS={"bomb":"blast","lightning":"storm","frost":"ice","prism":"prism","
 
 func _ready() -> void:
 	add_child(core_glow)
-	arc_batch.setup("lightning");add_child(arc_batch)
-	coin_batch.setup("gold");add_child(coin_batch)
+	for id in SkillBatch.IDS:
+		var batch:=SkillBatch.new();batch.setup(id);skill_batches[id]=batch;add_child(batch)
+	coin_batch.setup();add_child(coin_batch)
 	foreground.board=self;add_child(foreground)
 	add_child(explosions)
 	add_child(frost)
@@ -105,7 +107,8 @@ func _process(delta: float) -> void:
 		_sync_retained()
 		explosions.present(g)
 		frost.present(g)
-		arc_batch.present(g);coin_batch.present(g)
+		coin_batch.present(g)
+		for batch in skill_batches.values():batch.present(g)
 		queue_redraw()
 		foreground.queue_redraw()
 
@@ -277,6 +280,7 @@ func _draw_normal_breaks(g: RefCounted) -> void:
 
 func _draw_skill_events(g: RefCounted) -> void:
 	for event in g.fx.skill_events:
+		if event.id in SkillBatch.IDS:continue
 		if event.id in ["legion","poison","ambush","siphon"]:
 			SkillBatchFive.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
 			continue
@@ -286,71 +290,8 @@ func _draw_skill_events(g: RefCounted) -> void:
 		if event.id in ["treasury","bargain","resonance","corehunter"]:
 			SkillBatchFour.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
 			continue
-		if event.id in ["shatter","execute","rage","aftershock","storm","blizzard","prism","alchemist"]:
+		if event.id in ["shatter","execute","rage","aftershock","blizzard","prism","alchemist"]:
 			SkillImpacts.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
-			continue
-		var progress:float=clampf((g.fx.visual_time-event.born)/event.max,0,1)
-		var fade:float=1.0-pow(progress,0.72)
-		var point:Vector2=event.position
-		var direction:Vector2=event.direction.normalized()
-		var side:Vector2=direction.orthogonal()
-		var primary:Color=alpha(event.color,fade*event.strength)
-		var accent:Color=alpha(event.accent,fade*event.strength)
-		var seed:float=event.seed
-		match event.id:
-			"echo":
-				var pulse:float=smoothstep(0.0,0.18,progress)
-				var retreat:float=lerpf(8.0,34.0,pulse)
-				var count:int=2 if g.reduced else 3
-				for index in range(count):
-					var offset:float=(index-(count-1)*0.5)*14.0
-					var anchor:Vector2=point-direction*retreat-direction*index*7.0+side*offset
-					var ghost_alpha:float=fade*(1.0-float(index)*0.2)
-					draw_line(anchor-direction*22,anchor+direction*18,alpha(primary,ghost_alpha*0.55),3.4,true)
-					draw_line(anchor-direction*18,anchor+direction*15,alpha(accent,ghost_alpha*0.9),1.2,true)
-					var tip:=anchor+direction*23
-					draw_colored_polygon(PackedVector2Array([tip,anchor+direction*12+side*4,anchor+direction*12-side*4]),alpha(accent,ghost_alpha))
-				for index in range(2 if g.reduced else 3):
-					var arc_radius:=22.0+index*10.0+progress*10.0
-					draw_arc(point,arc_radius,-0.72+seed*0.12+index*0.24,0.72+seed*0.12+index*0.24,12,alpha(primary,fade*(0.4-index*0.08)),1.4,true)
-			"piercer":
-				var entry:Vector2=point-direction*42.0
-				var exit:Vector2=point+direction*(56.0+progress*20.0)
-				var flash:float=1.0-smoothstep(0.0,0.2,progress)
-				draw_line(entry,exit,alpha(primary,0.25*fade),8.0,true)
-				draw_line(entry,exit,alpha(accent,0.9*fade),2.2,true)
-				draw_line(point-direction*18,point+direction*40,alpha(Color.WHITE,flash*0.95),1.2,true)
-				var tip:=exit+direction*10
-				draw_colored_polygon(PackedVector2Array([tip,exit-direction*15+side*5,exit-direction*15-side*5]),alpha(accent,fade))
-				for index in range(2 if g.reduced else 4):
-					var shard_point:=point+side*((index-1.5)*5.0)+direction*(8.0+index*5.0)
-					draw_line(shard_point-side*3,shard_point+side*3,alpha(primary,fade*0.7),1.0,true)
-			"seeking":
-				if event.target==Vector2.ZERO:continue
-				var to_target:Vector2=event.target-point
-				var distance:float=minf(to_target.length(),128.0)
-				var aim:Vector2=to_target.normalized() if to_target.length_squared()>0.01 else direction
-				var aim_side:=aim.orthogonal()
-				var cursor:Vector2=point+aim*distance
-				var lock_radius:float=lerpf(16.0,9.0,smoothstep(0.0,1.0,progress))
-				var bracket:float=lock_radius*0.65
-				draw_line(point+aim*18,cursor-aim*lock_radius,alpha(primary,fade*0.4),1.1,true)
-				for sign in [-1,1]:
-					var corner:Vector2=cursor+aim_side*sign*lock_radius
-					draw_line(corner-aim*bracket,corner-aim*bracket+aim_side*sign*bracket,alpha(accent,fade*0.92),1.8,true)
-					draw_line(corner+aim*bracket,corner+aim*bracket+aim_side*sign*bracket,alpha(accent,fade*0.92),1.8,true)
-				draw_circle(cursor,2.5,alpha(Color.WHITE,fade*0.9))
-			"ricochet":
-				var impact:float=1.0-smoothstep(0.0,0.22,progress)
-				var travel:float=lerpf(6.0,28.0,smoothstep(0.0,0.28,progress))
-				for index in range(2 if g.reduced else 3):
-					var angle:float=-0.55+index*0.55
-					var bend:=direction.rotated(angle)
-					var start:=point+bend*4.0
-					var finish:=point+bend*travel*(1.0+index*0.12)
-					draw_line(start,finish,alpha(primary,impact*0.42),5.0,true)
-					draw_line(start,finish,alpha(accent,fade*0.95),1.5,true)
-				draw_circle(point,5.0+impact*8.0,alpha(Color.WHITE,impact*0.8))
 
 func _draw_special_breaks(g: RefCounted) -> void:
 	for item in g.fx.specials:
@@ -363,8 +304,6 @@ func _draw_special_breaks(g: RefCounted) -> void:
 		var radius:float=(10+progress*52)*item.intensity
 		var seed:float=item.seed
 		match item.type:
-			"lightning":
-				pass # Shared arc mesh preserves the eight-layer central flash.
 			"prism","shard":
 				var corners:=PackedVector2Array()
 				for index in range(5):

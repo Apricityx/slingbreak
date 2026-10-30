@@ -10,11 +10,9 @@ func setup(is_ice:bool,capacity:int) -> void:
 	if not templates.has(ice):
 		var geometry:=Geometry.new()
 		for index in range(10 if ice else 18):
-			if ice:
-				for layer in range(2):geometry.polygon(PackedVector2Array([Vector2.LEFT,Vector2.UP,Vector2.RIGHT,Vector2.DOWN]),Vector2(index,layer))
-				geometry.line(Vector2(index,2))
-			else:
-				geometry.line(Vector2(index,0));geometry.circle(Vector2(index,1))
+			# One oriented carrier per shard. Diamond / streak / hot tip are
+			# composed together, not submitted as overlapping rings and strips.
+			geometry.polygon(PackedVector2Array([Vector2(-1,-1),Vector2(1,-1),Vector2(1,1),Vector2(-1,1)]),Vector2(index,0))
 		templates[ice]=geometry.build()
 	multimesh=MultiMesh.new();multimesh.transform_format=MultiMesh.TRANSFORM_2D
 	multimesh.use_custom_data=true;multimesh.mesh=templates[ice];multimesh.instance_count=capacity

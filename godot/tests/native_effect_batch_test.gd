@@ -2,7 +2,7 @@ extends SceneTree
 ## Shared mesh lifecycle, float payload, draw ordering and real GPU visibility.
 const Sim=preload("res://src/core/simulation.gd")
 const Board=preload("res://src/render/board.gd")
-const Special=preload("res://src/render/special_batch.gd")
+const Coin=preload("res://src/render/coin_batch.gd")
 const Debris=preload("res://src/render/debris_batch.gd")
 const Geometry=preload("res://src/render/effect_mesh.gd")
 var checks:=0
@@ -30,7 +30,7 @@ func run() -> void:
 	var board:=OverlayBoard.new();board.simulation=g;root.add_child(board)
 	board.set_process(false)
 	var rng_state:int=g.rng.state
-	for type in ["lightning","gold","ice_shards","bomb"]:
+	for type in ["gold","ice_shards","bomb"]:
 		g.fx.reset()
 		for i in range(100):
 			if type=="bomb":g.fx.explosion(Vector2(200+i,300),232)
@@ -40,7 +40,6 @@ func run() -> void:
 		board._process(0)
 		var batch:MultiMeshInstance2D
 		match type:
-			"lightning":batch=board.arc_batch
 			"gold":batch=board.coin_batch
 			"ice_shards":batch=board.frost.debris
 			_:batch=board.explosions.debris
@@ -54,9 +53,13 @@ func run() -> void:
 			if type=="bomb":check(is_equal_approx(payload.b,232),"radius > 1 survives custom data")
 			check(batch.multimesh.get_instance_transform_2d(0).origin==event.position,"instance preserves event position: "+type)
 		var mesh:=batch.multimesh.mesh
-		var twin:MultiMeshInstance2D=Debris.new() if type in ["bomb","ice_shards"] else Special.new()
+		if type=="gold":
+			check(mesh.surface_get_array_len(0)<=160,"special hit vertex budget <= 160: "+type)
+			check(mesh.surface_get_array_index_len(0)<=500,"special hit index budget <= 500: "+type)
+		else:check(mesh.surface_get_array_len(0)<=72,"debris vertex budget <= 72: "+type)
+		var twin:MultiMeshInstance2D=Debris.new() if type in ["bomb","ice_shards"] else Coin.new()
 		if twin is Debris:twin.setup(type=="ice_shards",capacity)
-		else:twin.setup(type)
+		else:twin.setup()
 		check(twin.multimesh.mesh==mesh,"immutable template shared across boards: "+type);twin.free()
 		g.state.performanceMode=true;board._process(0)
 		if type in ["bomb","ice_shards"]:check(batch.material.get_shader_parameter("reduced"),"existing reduced mode forwarded: "+type)
@@ -66,8 +69,8 @@ func run() -> void:
 		g.phase="ready";board._process(0);await frame()
 		check(batch.is_visible_in_tree(),"resume shows batch: "+type)
 		if type=="gold":check(board.coin_batch.glyphs.items.size()==48,"real currency glyph retained for every coin")
-		if type in ["lightning","gold"]:
-			var limit:=0.42 if type=="lightning" else 0.58
+		if type=="gold":
+			var limit:=0.58
 			for item in g.fx.specials:item.life=item.max*(1.0-limit+0.001)
 			board._process(0)
 			check(batch.multimesh.visible_instance_count==capacity,"preserve last nontransparent beat: "+type)
@@ -90,7 +93,7 @@ func run() -> void:
 	check(g.rng.state==rng_state,"batch playback never consumes gameplay RNG")
 	var large_seed:=Geometry.event_data(0.1,16180000.0,132)
 	check(absf(large_seed.g+large_seed.a-fposmod(16180000.0,TAU))<0.000004,"large serial wraps without phase loss")
-	check(board.arc_batch.get_index()<board.foreground.get_index() and board.coin_batch.get_index()<board.foreground.get_index(),"arrows and text remain above special hits")
+	check(board.coin_batch.get_index()<board.foreground.get_index(),"arrows and text remain above coin hits")
 	check(board.foreground.get_index()<board.explosions.get_index() and board.explosions.get_index()<board.frost.get_index(),"original fire/frost overlay order preserved")
 	if DisplayServer.get_name()!="headless":await graphics_checks(g,board)
 	board.queue_free();await process_frame;g.dispose()
@@ -109,6 +112,7 @@ func graphics_checks(g:RefCounted,board:Node2D) -> void:
 			var point:=Vector2(390,440)
 			if type=="bomb":g.fx.explosion(point,132)
 			elif type=="ice_shards":g.fx.frozen_target(point)
+			elif type=="lightning":g.fx.skill_event("storm",point,Vector2.RIGHT,point+Vector2(90,0))
 			else:g.fx.special_break(point,type)
 			g.fx.advance_visual(0.08);board._process(0);await frame()
 			var image:=root.get_texture().get_image()
@@ -118,19 +122,21 @@ func graphics_checks(g:RefCounted,board:Node2D) -> void:
 					if image.get_pixel(x,y)!=before.get_pixel(x,y):changed+=1
 			check(changed>20,"actual GPU effect remains visible: "+theme+"/"+type)
 			check(image.save_png(out+theme+"-"+type+".png")==OK,"save graphics evidence: "+theme+"/"+type)
-	# A shader-expanded bolt can enter the screen while the unit template and
-	# emitter are completely outside. Its AABB must include that reach.
+	# A real hop entering the viewport must render with an offscreen source.
 	g.fx.reset();board._process(0);await frame()
 	var before:=root.get_texture().get_image()
-	g.fx.special_break(Vector2(-80,440),"lightning");g.fx.specials[0].seed=0.0
-	g.fx.advance_visual(0.06);board._process(0);await frame()
+	g.fx.skill_event("storm",Vector2(-80,440),Vector2.RIGHT,Vector2(80,440))
+	g.fx.advance_visual(0.1);board._process(0);await frame()
 	var image:=root.get_texture().get_image();var changed:=0
 	for y in range(190,270):
 		for x in range(0,60):
 			if image.get_pixel(x,y)!=before.get_pixel(x,y):changed+=1
-	check(changed>20,"offscreen emitter retains visible shader-expanded bolt")
+	check(changed>20,"offscreen emitter retains visible Storm hop")
 	for type in ["lightning","gold"]:
-		g.fx.reset();g.fx.special_break(Vector2(390,440),type);g.fx.advance_visual(0.04)
+		g.fx.reset()
+		if type=="lightning":g.fx.skill_event("storm",Vector2(390,440),Vector2.RIGHT,Vector2(480,440))
+		else:g.fx.special_break(Vector2(390,440),type)
+		g.fx.advance_visual(0.04)
 		board.sentinel=true;board._process(0);await frame()
 		image=root.get_texture().get_image()
 		check(image.get_pixel(206,229).is_equal_approx(Color.RED),"foreground really renders above special hit: "+type)

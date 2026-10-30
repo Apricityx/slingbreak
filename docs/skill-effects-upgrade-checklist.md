@@ -65,14 +65,30 @@
 
 | 状态 | GIF 夹具 | 保留的视觉内容 | 预算 / 生命周期 |
 | --- | --- | --- | --- |
-| [x] | `brick_lightning` | 8 条多层电弧、4 处分叉、原中心闪核叠加；只跳过 alpha 已为 0 的尾段 | 最多 48 事件；原 0.42s 事件时长 |
-| [x] | `brick_gold` | 硬币面/边缘、真实 ¥ 字体、4 处闪芒、10 个菱形碎片 | 最多 48 事件；原 0.58s 事件时长 |
+| [x] | `brick_lightning` | 2026-10-30 改为复用 `storm` 雷神降临逐跳主弧、内芯、闪核与短分叉；旧放射电弧和重复细线已删除 | 共用 64 个 skill event；每跳 0.5s；普通 5 目标、强化 7 目标不变 |
+| [x] | `brick_gold` | 硬币面/边缘、真实 ¥ 字体、4 处闪芒、10 个菱形碎片；单面 shader 合成轮廓 | 最多 48 事件；原 0.58s 事件时长；101 顶点共享模板 |
 | [x] | `brick_frost` | 原冰冻波与持续冰层、10 片旋转冰晶；既有 reduced 为 4 片 | 最多 48 特殊事件；冰晶 0.58s / reduced 0.38s |
 | [x] | `brick_bomb` | 原火团/烟尘 shader 与 18 片弹道火星；既有 reduced 为 6 片 | 最多 16 事件；火团 1.4s、碎片 1.2s |
 
 - `native_effect_batch_test.gd` 覆盖容量、过期、reset、共享模板、半精度 seed 编码、reduced 参数、真实渲染可见性、屏外发射点与前景遮挡顺序；已接入默认原生和 GUI gate。
 - 浅/深色及 reduced 的真实渲染 GIF 使用上述四个夹具生成，检查峰值和收尾。收益、视觉差异与软件渲染限制见 `docs/godot-effects-performance.md`。
 - 本表的特殊砖夹具不代表同名技能已完成 V2 升级；技能进度仍以下表为准。
+
+### 第二轮紧凑实现（2026-10-30）
+
+- 电弧砖与雷神降临只保留 `skill_impacts.gd` 的 `storm` 视觉。`simulation.gd` 在原连锁循环中无条件生成真实 hop endpoint；不再生成 lightning special 或 legacy bolt。删除电弧专用 shader/UID/Board 节点，原 special batch 收窄并改名为 `coin_batch.gd`。
+- `brick_lightning` / `storm` GIF 均由实际 `Simulation.hit()` 触发，分别验证 5／7 目标，而非直接调用没有终点的 special event。孤立电弧砖不生成虚构目标。
+- 金币 101 顶点，冰晶 40 顶点，火星 72 顶点；保留 10／18 片及原 reduced 4／6 片设置。火团载体改包围有效范围的 12 边形；火团／冰层用多项式 hash，时间包络移至 vertex，冰层复用晶体场生成纹理裂纹。允许噪声细节、边缘及局部重叠有轻微变化。
+- 新增普通／技能强化、完整／reduced 电弧连锁回归：真实端点、目标数、伤害倍率、原箭矢击杀归属、无重复绘制、64 队列、视觉时钟过期与活动 reset；见 `native_special_brick_test.gd`。
+- 最终原生 15/15、GUI 18/18、特殊砖／爆炸／冰冻专项 3/3 通过；电弧真实连锁回归 115 项。8／12 个五跳电弧砖的 llvmpipe 峰值 p50 约降低 24%／26%，单砖持平；持续混播长尾仍未达标。完整对照与混播队列差异见性能记录，不将软件渲染收益外推为 Android FPS。
+
+### 第三轮高频技能与长尾（2026-10-30）
+
+- `echo/piercer/seeking/ricochet/storm` 改用 `skill_batch.gd` / `skill_batch.gdshader` 的共享不可变几何和有界 MultiMesh；删除对应旧 CPU 绘制分支。每种技能编译期特化，保留事件端点、原始时长、64 共享队列、普通／强化 Storm 唯一视觉路径与 reduced 元素数，不主动降级。
+- 爆炸火团改为固定 16 实例池，不在首次命中创建 Polygon2D／材质；年龄相关载体保留火团、烟尘、冲击波和微光收尾，18／6 片火星不变。
+- 首次可操作前通过 `effect_warmup.gd` 的 128×128 独立 viewport 真实渲染 16 帧，缓解首用 GL／JIT 尖峰；准备阶段显示提示、不推进真实游戏时钟，完成即释放，每进程一次。启动耗时另报，不能把预热成本从报告中隐去。
+- 新增 `native_skill_batch_test.gd` 与 `native_effect_startup_test.gd`，接入默认原生／GUI gate；覆盖模板、容量、像素、端点、过期／reset、玩法 RNG、预热隔离与资源释放、真实非测试启动门禁。持续测试与逐帧探针共用 `effects_stress_fixture.gd`，统一源码指纹。
+- 浅／深色完整与 reduced GIF 均使用既有真实 Board 夹具，不新增伪事件。A/B 检查修正 Echo 的世界角度镜像与反弹／Storm 分叉旋转符号；线头、抗锯齿及跨类局部遮挡允许轻微变化。最终数据与剩余限制见 `docs/godot-effects-performance.md` 第三轮。
 
 ## 全量进度
 

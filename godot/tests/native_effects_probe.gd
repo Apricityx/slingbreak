@@ -63,12 +63,13 @@ class ProbeBoard extends "res://src/render/board.gd":
 		frost.debris.visible=mode!="original_quads" and g_visible()
 		explosions.draw_debris=mode!="hide_debris"
 		explosions.debris.visible=mode!="hide_debris" and g_visible()
-		arc_batch.visible=mode!="hide_specials" and g_visible()
 		coin_batch.visible=mode!="hide_specials" and g_visible()
+		for id in skill_batches:
+			skill_batches[id].visible=g_visible() and not ((mode=="hide_specials" and id=="storm") or (mode=="hide_skills" and id!="storm"))
 		get_parent().position=Vector2(0,5000) if mode=="offscreen" else Vector2(0,238)
-		for quad in explosions.pool:
-			if mode=="hide_volumes":quad.visible=false
-			quad.material.shader=flat if mode=="flat_volumes" else explosions.SHADER
+		explosions.volumes.visible=mode!="hide_volumes"
+		var shader:Shader=flat if mode=="flat_volumes" else explosions.SHADER
+		if explosions.volumes.material.shader!=shader:explosions.volumes.material.shader=shader
 		process_ms=float(Time.get_ticks_usec()-started)/1000.0
 
 	func g_visible() -> bool:return simulation!=null and simulation.phase!="draft"
@@ -95,7 +96,14 @@ class ProbeBoard extends "res://src/render/board.gd":
 
 	func _draw_skill_events(g:RefCounted) -> void:
 		var started:=Time.get_ticks_usec()
-		if mode!="hide_skills":super._draw_skill_events(g)
+		if mode!="hide_skills" and mode!="hide_specials":super._draw_skill_events(g)
+		else:
+			# Storm is now the electric-brick art. Attribute it to specials,
+			# not to the four ordinary skills, without changing queue order.
+			var events:Array=g.fx.skill_events
+			g.fx.skill_events=events.filter(func(e):return (e.id=="storm") if mode=="hide_skills" else (e.id!="storm"))
+			super._draw_skill_events(g)
+			g.fx.skill_events=events
 		skill_ms=float(Time.get_ticks_usec()-started)/1000.0
 
 var g:RefCounted
@@ -137,13 +145,29 @@ func populate(kind:String,count:int) -> void:
 		elif kind=="mixed":
 			var id:String=SKILLS[i%4]
 			g.fx.skill_event(id,p,Vector2.UP,p+Vector2(40,-60),1.0,0.5)
+			# Interleave chains with ordinary skills so the real shared queue
+			# cap does not erase every ordinary skill from the mixed fixture.
+			if i<48:
+				if SPECIALS[i%4]=="lightning":lightning(p,5)
+				else:g.fx.special_break(p,SPECIALS[i%4])
 		elif kind in SKILLS:g.fx.skill_event(kind,p,Vector2.UP,p+Vector2(40,-60),1.0,0.5)
+		elif kind=="lightning":lightning(p)
+		elif kind=="lightning_chains":lightning(p,5)
 		elif kind=="ice_shards":g.fx.frozen_target(p)
 		else:g.fx.special_break(p,kind)
 	if kind=="mixed":
 		for i in range(16):g.fx.explosion(point(i))
-		for i in range(48):g.fx.special_break(point(i),SPECIALS[i%4])
 		for i in range(32):g.bricks[i].frozen=true;g.bricks[i].frost_born=0.0
+
+func lightning(p:Vector2,hops:int=1) -> void:
+	# Fixed-count endpoint snapshots through the same event/renderer as live
+	# Simulation.hit(); one electric brick contributes five of these hops.
+	var previous:=p
+	var offsets:=[Vector2(80,0),Vector2(80,-50),Vector2(0,-50),Vector2(-80,-50),Vector2(-80,0)]
+	for i in range(hops):
+		var target:Vector2=p+offsets[i]
+		g.fx.skill_event("storm",previous,previous.direction_to(target),target)
+		previous=target
 
 func pose(frame:int) -> void:
 	# A repeated 0.06..0.36 s impact sweep keeps population fixed, yet exercises
@@ -186,7 +210,7 @@ func measure(fixture:Dictionary,trial:int) -> Dictionary:
 		"explosion_draw_ms":stats(explosion_cost),"frost_draw_ms":stats(frost_cost),
 		"fixture_update_ms":stats(update_cost),"draw_calls":stats(calls),
 		"lifecycle_ms":stats(lifecycle_cost),
-		"queues":{"skills":g.fx.skill_events.size(),"specials":g.fx.specials.size(),"explosions":g.fx.explosions.size(),"normal":g.fx.normal_breaks.size()},
+		"queues":{"skills":g.fx.skill_events.size(),"storm_hops":g.fx.skill_events.filter(func(e):return e.id=="storm").size(),"specials":g.fx.specials.size(),"explosions":g.fx.explosions.size(),"normal":g.fx.normal_breaks.size()},
 		"emitters_in_board":fixture.get("mode","full")!="offscreen",
 		"over_33ms":intervals.filter(func(v):return v>1000.0/30.0).size()}
 	print("Native FX case: "+JSON.stringify(result))
@@ -231,6 +255,7 @@ func run() -> void:
 		for count in [1,48]:fixtures.append({"label":id+"_"+str(count),"kind":id,"count":count})
 	for id in ["lightning","gold"]:
 		for count in [8,16]:fixtures.append({"label":id+"_"+str(count),"kind":id,"count":count})
+	for count in [1,8,12]:fixtures.append({"label":"lightning_chains_"+str(count),"kind":"lightning_chains","count":count})
 	for id in ["lightning","gold","ice_shards"]:
 		fixtures.append({"label":id+"_48_offscreen","kind":id,"count":48,"mode":"offscreen"})
 	fixtures.append({"label":"ice_shards_48_original_quads","kind":"ice_shards","count":48,"mode":"original_quads"})
@@ -244,10 +269,10 @@ func run() -> void:
 	var report:={"environment":{"version":Engine.get_version_info().string,"renderer":RenderingServer.get_video_adapter_name(),
 		"display":DisplayServer.get_name(),"viewport":root.size,"resolution":resolution,"samples":samples,"warmup":warmup,
 		"age_start":age_start,"age_end":age_end,
+		"electric_fixture":"lightning_N = N Storm hops; lightning_chains_N = N five-hop bricks; mixed interleaves 64 ordinary events and 12 five-hop chains in the existing 64-event skill queue, plus 36 other specials, 16 explosions and 32 shells",
 		"scope":"Post-draw wall intervals and CPU board callbacks; includes actual renderer but not explicit GPU completion, real audio or physics. Fixed in-view queues; test-only ablations."},"cases":[]}
-	report["sources"]={}
-	for path in ["res://src/render/board.gd","res://src/render/effect_foreground.gd","res://src/render/explosions.gd","res://src/render/frost.gd","res://src/render/explosion.gdshader","res://src/render/frost.gdshader","res://src/render/effect_mesh.gd","res://src/render/debris_batch.gd","res://src/render/debris.gdshader","res://src/render/special_batch.gd","res://src/render/arc_batch.gdshader","res://src/render/coin_batch.gdshader"]:
-		report.sources[path]=FileAccess.get_sha256(path)
+	report["sources"]=preload("res://tests/effects_source_manifest.gd").hashes()
+	report.sources["res://tests/native_effects_probe.gd"]=FileAccess.get_sha256("res://tests/native_effects_probe.gd")
 	for trial in range(repeats):
 		for fixture in fixtures:
 			if not selection.is_empty():
