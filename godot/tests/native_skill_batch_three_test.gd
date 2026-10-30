@@ -24,6 +24,7 @@ func _initialize() -> void:
 	hit(g,a,lightning)
 	check(g.fx.skill_events.size()==2,"storm emits one hop event per chained target")
 	check(g.fx.skill_events[0].id=="storm" and g.fx.skill_events[1].target==Vector2(490,400),"storm events retain hop endpoints")
+	check(g.fx.specials.is_empty() and g.fx.bolts.is_empty(),"Storm upgrade does not double-draw the brick or hops")
 	g.dispose()
 	g=fresh("blizzard");a=g.launch(Vector2(390,600),Vector2.UP*24)
 	var frost:=brick(g,Vector2(390,400),1,"frost");brick(g,Vector2(440,400),100)

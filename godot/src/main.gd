@@ -32,6 +32,14 @@ func _ready() -> void:
 	_resize()
 	var test_mode: bool=get_meta("test_mode",false)
 	if test_mode: set_process(false)
+	if not test_mode and not preload("res://src/render/effect_warmup.gd").complete and DisplayServer.get_name()!="headless":
+		set_process(false);arena.visible=false;interface.visible=false
+		var preparing:=Label.new();preparing.text="准备特效…";preparing.position=Vector2(0,420);preparing.size=Vector2(412,60)
+		preparing.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		preparing.add_theme_font_override("font",preload("res://src/ui/presentation.gd").load_font("cjk"))
+		preparing.add_theme_color_override("font_color",Color("#34412f"));add_child(preparing)
+		await preload("res://src/render/effect_warmup.gd").prepare(self)
+		preparing.queue_free();arena.visible=true;interface.visible=true;set_process(true)
 	if session.start(9128 if test_mode else int(Time.get_unix_time_from_system()), {} if test_mode else session.load_progress()):
 		arena.simulation=session.runtime
 		audio.simulation=session.runtime

@@ -80,28 +80,6 @@ static func paint(canvas:CanvasItem, event:Dictionary, clock:float, reduced:bool
 				canvas.draw_polyline(points,light,1.2,true)
 				var chip:=p+axis*(reach*0.65+age*12*motion)+Vector2(0,25*age*age*motion)
 				canvas.draw_colored_polygon(PackedVector2Array([chip-axis*4,chip+normal*3,chip+axis*5,chip-normal*3]),ink)
-		"storm":
-			# Short chained lightning: each event is one hop, so dense chains stay readable.
-			var target:Vector2=event.target
-			var to_target:=target-p
-			var reach:float=to_target.length()*smoothstep(0.0,0.18,t)
-			var finish:=p+to_target.normalized()*reach if to_target.length_squared()>0.01 else p
-			var points:=PackedVector2Array([p])
-			var segments:int=3 if reduced else 5
-			for i in range(1,segments):
-				var at:=p.lerp(finish,i/float(segments))+to_target.normalized().orthogonal()*sin(event.seed+i*4.7+age*32*motion)*7*motion
-				points.append(at)
-			points.append(finish)
-			canvas.draw_polyline(points,Color(0.3,0.75,1,fade*(0.15 if reduced else 0.3)),8,true)
-			canvas.draw_polyline(points,edge,4,true)
-			canvas.draw_polyline(points,light,2,true)
-			canvas.draw_polyline(points,Color(1,1,1,fade),0.7,true)
-			canvas.draw_circle(p,5+flash*9,Color(0.8,0.98,1,flash*0.8))
-			canvas.draw_circle(finish,2.5,light)
-			if not reduced:
-				var branch:=p.lerp(finish,0.55)
-				var tip:=branch+to_target.normalized().rotated(0.8)*18
-				canvas.draw_line(branch,tip,light,1.3,true)
 		"blizzard":
 			# Short branching ice veins break apart into facets, never a circular rim.
 			var radius:float=lerpf(10,76,grow)

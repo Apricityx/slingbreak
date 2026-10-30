@@ -15,7 +15,7 @@
   "execute": {"kind": "skill_event", "duration": 0.4, "tail": 0.4},
   "rage": {"kind": "skill_event", "duration": 0.48, "tail": 0.48},
   "aftershock": {"kind": "explosion_and_skill", "duration": 0.62, "tail": 1.4},
-  "storm": {"kind": "storm_chain", "duration": 0.5, "tail": 0.5},
+  "storm": {"kind": "storm_chain", "duration": 0.5, "tail": 0.9},
   "blizzard": {"kind": "skill_event", "duration": 0.72, "tail": 0.72},
   "prism": {"kind": "skill_event", "duration": 0.52, "tail": 0.52},
   "alchemist": {"kind": "skill_event", "duration": 0.64, "tail": 0.64},
@@ -23,7 +23,7 @@
   "bargain": {"kind": "batch_four_live", "duration": 0.60, "tail": 0.60},
   "resonance": {"kind": "batch_four_live", "duration": 0.68, "tail": 0.68},
   "corehunter": {"kind": "batch_four_live", "duration": 0.46, "tail": 0.46},
-  "brick_lightning": {"kind": "special_brick", "type": "lightning", "label": "电弧砖", "duration": 0.42, "tail": 0.42},
+  "brick_lightning": {"kind": "lightning_chain", "type": "lightning", "label": "电弧砖 · 雷神同款", "duration": 0.5, "tail": 0.9},
   "brick_gold": {"kind": "special_brick", "type": "gold", "label": "金币砖", "duration": 0.58, "tail": 0.58},
   "brick_frost": {"kind": "special_brick", "type": "frost", "label": "冰冻砖与冰晶", "duration": 0.58, "tail": 0.82},
   "brick_bomb": {"kind": "special_brick", "type": "bomb", "label": "爆炸砖", "duration": 1.4, "tail": 1.4}

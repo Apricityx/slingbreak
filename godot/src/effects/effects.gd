@@ -97,6 +97,9 @@ func arrow_break(point: Vector2, flight: Vector2, primary: Color, accent: Color,
 	ring(point-direction*10,accent,48)
 
 func special_break(point: Vector2, type: String, intensity: float=1.0, depth: int=0) -> void:
+	# Lightning requires real hop endpoints, emitted by Simulation.hit().
+	# There is no independent radial/source impact for an electric brick.
+	if type=="lightning":return
 	if type=="bomb":
 		explosion(point,132.0,intensity)
 		return
@@ -106,7 +109,7 @@ func special_break(point: Vector2, type: String, intensity: float=1.0, depth: in
 	special_serial+=1
 	var color:=brick_color(type)
 	var accent:=Color(g.content.palette(g.theme).brickInk.get(type,"#ffffff"))
-	var duration:float=0.56 if type=="frost" else 0.42 if type=="lightning" else 0.58 if type=="gold" else 0.72 if not g.reduced else 0.48
+	var duration:float=0.56 if type=="frost" else 0.58 if type=="gold" else 0.72 if not g.reduced else 0.48
 	var event:Dictionary={"position":point,"type":type,"born":visual_time,"life":duration,"max":duration,"intensity":clampf(intensity,0.65,1.5),"seed":special_serial*1.618,"color":color,"accent":accent}
 	if type=="frost":event.radius=190.0 if g.rank("blizzard") else 140.0
 	# Chain reactions can produce many hits in one simulation tick. Keep the

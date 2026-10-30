@@ -330,11 +330,11 @@ python3 godot/tools/preview_effects.py --list
 
 | 特效 | 入口 | 渲染实现 | 节奏 |
 | --- | --- | --- | ---: |
-| 爆炸砖 | `Effects.explosion()` | GPU 火团 + Canvas 火星 + 场景响应 | 约 1.4s |
-| 冰砖冲击 | `Effects.special_break()` | GPU 中心冰闪 + Canvas 冰片 | 约 0.56s |
+| 爆炸砖 | `Effects.explosion()` | 固定 16 实例 GPU 火团 + 合批弹道火星 + 场景响应 | 约 1.4s |
+| 冰砖冲击 | `Effects.special_break()` | GPU 中心冰闪 + 合批冰片 | 约 0.56s |
 | 被冰冻砖块 | `Effects.frozen_target()` + brick frost state | GPU 冰层薄膜 | 持续状态 |
-| 电弧砖 | `Effects.special_break()` | Canvas 多层折线跳电 | 约 0.42s |
-| 金钱砖 | `Effects.special_break()` | Canvas 金币徽章 + 金色碎片 | 约 0.58s |
+| 电弧砖 | `Simulation.hit()` → `Effects.skill_event("storm")` | 复用雷神降临逐跳 GPU ribbon，无旧放射层或重复 bolt | 0.5s/跳 |
+| 金钱砖 | `Effects.special_break()` | 合批金币徽章 + 真字体 ¥ + 金色碎片 | 约 0.58s |
 
 对应测试：
 

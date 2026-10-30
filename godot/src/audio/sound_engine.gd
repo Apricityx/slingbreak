@@ -6,6 +6,10 @@ const MAX_VOICES:=96
 const MOBILE_VOICES:=24
 const CACHE_BYTES:=32*1024*1024
 const BRICK_EXPLOSION_FILE:="res://assets/audio/brick-explosion.wav"
+const BRICK_BREAK_FILES:=["brick-break-1.vorbis","brick-break-2.vorbis","brick-break-3.vorbis"]
+const BRICK_BREAK_GAIN:=0.55
+const BRICK_HIT_FILES:=["brick-hit-1.vorbis","brick-hit-2.vorbis","brick-hit-3.vorbis"]
+const BRICK_HIT_GAIN:=0.32
 var simulation: RefCounted
 var available:=false
 var mobile_output:=false
@@ -41,6 +45,8 @@ var music_gain:=0.0
 var death_at:=-1.0
 var death_gain:=0.0
 var brick_explosion:AudioStreamWAV
+var brick_break_index:=0
+var brick_hit_index:=0
 
 func _ready() -> void:
 	mobile_output=OS.has_feature("android")
@@ -122,13 +128,30 @@ func _sample(directory: String,file: String) -> AudioStream:
 func play_requests(requests: Array) -> void:
 	if not available:return
 	for request in requests:
+		var normal_break:bool=request.type=="brick_break"
+		if request.type=="brick_hit":
+			var hit_sample:=_sample("res://assets/audio/",BRICK_HIT_FILES[brick_hit_index])
+			brick_hit_index=(brick_hit_index+1)%BRICK_HIT_FILES.size()
+			if hit_sample!=null:
+				var hit_ui:bool=request.get("ui",false)
+				_schedule(hit_sample,clock,BRICK_HIT_GAIN,"SlingUI" if hit_ui else "SlingEffects",request.get("priority",false),hit_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			continue
 		if request.type=="bomb":
 			var bomb_ui:bool=request.get("ui",false)
 			var bomb_bus:String="SlingUI" if bomb_ui else "SlingEffects"
 			if brick_explosion!=null:_schedule(brick_explosion,clock,1.0,bomb_bus,request.get("priority",false),bomb_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
 			continue
-		if not cues.has(request.type):continue
-		var voices:Array=cues[request.type][clampi(int(request.get("n",1)),0,20)]
+		var cue_type:String="break" if normal_break else request.type
+		if not cues.has(cue_type):continue
+		var voices:Array=cues[cue_type][clampi(int(request.get("n",1)),0,20)]
+		if normal_break:
+			var sample:=_sample("res://assets/audio/",BRICK_BREAK_FILES[brick_break_index])
+			brick_break_index=(brick_break_index+1)%BRICK_BREAK_FILES.size()
+			if sample!=null:
+				var ui:bool=request.get("ui",false)
+				_schedule(sample,clock,BRICK_BREAK_GAIN,"SlingUI" if ui else "SlingEffects",request.get("priority",false),ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			# Replace only the dry impact/noise pair; retain both combo notes.
+			voices=voices.slice(2)
 		for voice in voices:
 			var stream:=_sample("res://assets/audio/",voice.file)
 			var ui:bool=request.get("ui",false)
