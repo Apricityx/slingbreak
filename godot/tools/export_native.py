@@ -65,7 +65,7 @@ def stage_project(stage):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("platform", choices=["android", "web"])
+    parser.add_argument("platform", choices=["android", "linux", "web"])
     parser.add_argument("--godot", default=os.environ.get("GODOT_BIN", "godot"))
     parser.add_argument("--output", type=Path)
     parser.add_argument("--web-template", type=Path, help="Chromium 89 template built by build_web_template.py")
@@ -73,6 +73,9 @@ def main(argv=None):
     engine = shutil.which(options.godot)
     if not engine:
         parser.error("Set GODOT_BIN or --godot to Godot 4.7.2")
+    version = subprocess.check_output([engine, "--version"], text=True).strip()
+    if not version.startswith("4.7.2.stable."):
+        parser.error(f"Expected Godot 4.7.2 stable; detected {version}")
     template = None
     if options.platform == "web":
         template = (options.web_template or OUTPUT / "web-template/web_release.zip").resolve()
@@ -100,16 +103,24 @@ def main(argv=None):
         before, web = presets.read_text().split("[preset.1.options]", 1)
         web = web.replace('custom_template/release=""', "custom_template/release=" + json.dumps(str(template)), 1)
         presets.write_text(before + "[preset.1.options]" + web)
-    output = options.output or (OUTPUT / "export/slingbreak-godot-native-preview.apk" if options.platform == "android" else OUTPUT / "web-native/index.html")
+    defaults = {"android": OUTPUT / "export/slingbreak-godot-native-preview.apk",
+                "linux": OUTPUT / "export/slingbreak-godot-native-preview.x86_64",
+                "web": OUTPUT / "web-native/index.html"}
+    output = options.output or defaults[options.platform]
     output = output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     # The staging checkout contains no game/, generated/, native/, or addons/.
     run_engine([engine, "--headless", "--path", str(stage), "--editor", "--import"])
     mode = "--export-debug" if options.platform == "android" else "--export-release"
-    preset = "Android Preview" if options.platform == "android" else "Web Preview"
+    preset = {"android": "Android Preview", "linux": "Linux Preview", "web": "Web Preview"}[options.platform]
     run_engine([engine, "--headless", "--path", str(stage), mode, preset, str(output)])
     if options.platform == "android":
         subprocess.run(["python3", str(ROOT / "tools/check-apk.py"), str(output)], check=True)
+    elif options.platform == "linux":
+        if output.read_bytes()[:4] != b"\x7fELF":
+            raise SystemExit(f"Linux export is not an ELF binary: {output}")
+        output.chmod(0o755)
+        print(f"{output.stat().st_size / 1048576:.0f} MiB, embedded PCK")
     else:
         subprocess.run(["python3", str(ROOT / "tools/check-pck.py"), str(output.with_suffix(".pck"))], check=True)
     print(f"Standalone {options.platform} export: {output}\nStaging project: {stage}")

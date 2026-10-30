@@ -1,5 +1,12 @@
 # Repository instructions
 
+## Migration status
+
+- The browser implementation under `game/` is deprecated and is being replaced by the Godot implementation under `godot/`.
+- For bug fixes and feature work, modify `godot/` and its tests by default. Do not change `game/` or browser tests unless the user explicitly requests a Web implementation or a migration compatibility change.
+- Godot is the authoritative runtime during this migration; use the Godot scene, renderer, simulation and native test paths when investigating gameplay or visual bugs.
+- Target Godot **4.7.2 stable** with matching `4.7.2.stable` export templates. The project feature tag is `4.7` (Godot stores major/minor there); export and regression scripts enforce the exact stable patch version. Run native checks with `python3 godot/tools/run_checks.py --godot godot`; use `--gui` for actual graphics checks (Xvfb is supported), not headless rendering.
+
 ## Project layout
 
 - All browser runtime resources live in `game/`: `index.html`, `manifest.json`, `src/`, `styles/`, `vendor/` and `icons/`. The project root stays minimal (tooling, tests, docs, Android and game). `game/` is deployable as one unit; keep cross-references inside it relative to `game/`.
@@ -23,6 +30,11 @@
 
 ## Test server
 
+- 每次完成新的 Godot 特效后，必须用 `python3 godot/tools/preview_effects.py --skills <技能ID...>` 生成真实渲染的循环 GIF，检查峰值/收尾，打开并在最终回复中向用户交付动图。新技能需同步注册 `godot/tools/effect_previews.json` 并维护 `docs/skill-effects-upgrade-checklist.md`；仅静态截图不能替代动图交付。详见 `docs/godot-v2-effects-guidelines.md`。
+
 - Godot Web 预览: 监听 `0.0.0.0`，端口 `8081`，即 <http://0.0.0.0:8081>（`http://<host-ip>:8081/index.html`）。
 - 启动: `python3 godot/tools/serve_web.py --host 0.0.0.0 --port 8081`；服务目录 `agent-tmp/godot/web-native/`。
-- 导出: `python3 godot/tools/build_web.py --godot /absolute/path/to/godot`（生成上述目录，需先构建 Chromium 89 模板）；当前目录由内置 4.7.2 模板导出，仅适用于新浏览器。日志 `agent-tmp/godot/web-server.log`。
+- 导出: `python3 godot/tools/build_web.py --godot godot`（生成上述目录，需先构建 Chromium 89 模板）；当前目录由内置 4.7.2 模板导出，仅适用于新浏览器。日志 `agent-tmp/godot/web-server.log`。
+- 引擎: Godot 4.7.2 已装在 `/opt/godot/4.7.2/godot`，`godot`/`godot4` 在 `PATH`；导出模板在 `~/.local/share/godot/export_templates/4.7.2.stable/`。
+- 视觉预览: `python3 godot/tools/preview.py --page draft|game|shop|boss|... [--theme dark] [--seconds 6] [--watch]`，约 5 秒出图到 `agent-tmp/godot/preview/`。
+- Linux 导出: `python3 godot/tools/build_linux.py --godot godot` → `agent-tmp/godot/export/slingbreak-godot-native-preview.x86_64`（x86_64，内嵌 PCK，约 145 MB）。
