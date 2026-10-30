@@ -1,0 +1,17 @@
+{
+  "regular": {
+    "file": "regular.otf",
+    "rawFile": "regular.bin",
+    "sha256": "7c25be4d78155523080ab85b10277150657ff7dabbcad7037bdd536c9b6d0d08"
+  },
+  "bold": {
+    "file": "bold.otf",
+    "rawFile": "bold.bin",
+    "sha256": "7f33328e6b4d4cd21b45fa625791928c9407dc702db6780e56b09ca9a3ecaa67"
+  },
+  "cjk": {
+    "file": "cjk.ttf",
+    "rawFile": "cjk.bin",
+    "sha256": "acb6440a713d880a13a21b468ba7cd43f5a2b2934972e51be791c880730777b8"
+  }
+}

@@ -1,0 +1,569 @@
+{
+  "trident": {
+    "kind": "split",
+    "color": "#785fb0",
+    "accent": "#53a59b",
+    "trail": "fork",
+    "duration": 0.7
+  },
+  "echo": {
+    "kind": "split",
+    "color": "#708ca8",
+    "accent": "#b5a1cd",
+    "trail": "echo",
+    "duration": 0.95
+  },
+  "legion": {
+    "kind": "split",
+    "color": "#8177a6",
+    "accent": "#c3a979",
+    "trail": "fork",
+    "duration": 0.85
+  },
+  "prism": {
+    "kind": "split",
+    "color": "#9872b3",
+    "accent": "#61aaa2",
+    "trail": "fork",
+    "duration": 0.85
+  },
+  "nova": {
+    "kind": "split",
+    "color": "#8b80b9",
+    "accent": "#c7ac73",
+    "trail": "spark",
+    "duration": 0.7
+  },
+  "mirror": {
+    "kind": "split",
+    "color": "#839db1",
+    "accent": "#c1b1cd",
+    "trail": "echo",
+    "duration": 1
+  },
+  "hunters": {
+    "kind": "seek",
+    "color": "#388e7f",
+    "accent": "#b6bc58",
+    "trail": "dash",
+    "duration": 0.65
+  },
+  "seeking": {
+    "kind": "seek",
+    "color": "#3f929a",
+    "accent": "#b7bf75",
+    "trail": "scan",
+    "duration": 0.7
+  },
+  "swarmqueen": {
+    "kind": "seek",
+    "color": "#8e9d42",
+    "accent": "#65a28c",
+    "trail": "helix",
+    "duration": 0.9
+  },
+  "bankshot": {
+    "kind": "seek",
+    "color": "#5b9b91",
+    "accent": "#c7b774",
+    "trail": "fork",
+    "duration": 0.75
+  },
+  "titan": {
+    "kind": "power",
+    "color": "#bd7650",
+    "accent": "#e0bd67",
+    "trail": "heavy",
+    "duration": 0.85
+  },
+  "piercer": {
+    "kind": "power",
+    "color": "#398c99",
+    "accent": "#a9c56e",
+    "trail": "rail",
+    "duration": 0.55
+  },
+  "heavy": {
+    "kind": "power",
+    "color": "#b27c62",
+    "accent": "#cdbb91",
+    "trail": "heavy",
+    "duration": 0.8
+  },
+  "railgun": {
+    "kind": "power",
+    "color": "#548e9c",
+    "accent": "#dec185",
+    "trail": "rail",
+    "duration": 0.65
+  },
+  "sharpshooter": {
+    "kind": "power",
+    "color": "#9d9451",
+    "accent": "#9ac4b4",
+    "trail": "scan",
+    "duration": 0.75
+  },
+  "rapid": {
+    "kind": "power",
+    "color": "#549d91",
+    "accent": "#b5c881",
+    "trail": "dash",
+    "duration": 0.42
+  },
+  "growing": {
+    "kind": "power",
+    "color": "#779e55",
+    "accent": "#d2b46c",
+    "trail": "ribbon",
+    "duration": 0.9
+  },
+  "critical": {
+    "kind": "slash",
+    "color": "#c75f68",
+    "accent": "#dfb266",
+    "trail": "slash",
+    "duration": 0.42
+  },
+  "execute": {
+    "kind": "slash",
+    "color": "#a56179",
+    "accent": "#c3a9be",
+    "trail": "slash",
+    "duration": 0.65
+  },
+  "rage": {
+    "kind": "slash",
+    "color": "#c66546",
+    "accent": "#e3b46c",
+    "trail": "flame",
+    "duration": 0.65
+  },
+  "ambush": {
+    "kind": "slash",
+    "color": "#ab7265",
+    "accent": "#d4b386",
+    "trail": "slash",
+    "duration": 0.5
+  },
+  "opportunist": {
+    "kind": "slash",
+    "color": "#aa7e69",
+    "accent": "#c3a0ad",
+    "trail": "slash",
+    "duration": 0.5
+  },
+  "reaper": {
+    "kind": "slash",
+    "color": "#89748e",
+    "accent": "#bbb0be",
+    "trail": "slash",
+    "duration": 0.95
+  },
+  "siphon": {
+    "kind": "drain",
+    "color": "#b76178",
+    "accent": "#d9a594",
+    "trail": "helix",
+    "duration": 0.85
+  },
+  "ricochet": {
+    "kind": "bounce",
+    "color": "#488d9e",
+    "accent": "#d4b768",
+    "trail": "zigzag",
+    "duration": 0.65
+  },
+  "meteor": {
+    "kind": "blast",
+    "color": "#d77743",
+    "accent": "#e5c273",
+    "trail": "comet",
+    "duration": 0.8
+  },
+  "blast": {
+    "kind": "blast",
+    "color": "#d67550",
+    "accent": "#e3ba66",
+    "trail": "comet",
+    "duration": 0.6
+  },
+  "doubletap": {
+    "kind": "blast",
+    "color": "#cb8950",
+    "accent": "#d8bd84",
+    "trail": "beads",
+    "duration": 0.55
+  },
+  "aftershock": {
+    "kind": "blast",
+    "color": "#b48355",
+    "accent": "#d2b38a",
+    "trail": "zigzag",
+    "duration": 0.95
+  },
+  "cascade": {
+    "kind": "blast",
+    "color": "#c58460",
+    "accent": "#d1b46c",
+    "trail": "comet",
+    "duration": 0.85
+  },
+  "orbital": {
+    "kind": "blast",
+    "color": "#879ca0",
+    "accent": "#d0ad66",
+    "trail": "rail",
+    "duration": 1.05
+  },
+  "minefield": {
+    "kind": "blast",
+    "color": "#b29250",
+    "accent": "#c4b47d",
+    "trail": "beads",
+    "duration": 0.8
+  },
+  "lightning": {
+    "kind": "electric",
+    "color": "#b5952b",
+    "accent": "#77a9ae",
+    "trail": "electric",
+    "duration": 0.5
+  },
+  "storm": {
+    "kind": "electric",
+    "color": "#a98d35",
+    "accent": "#73a2ba",
+    "trail": "electric",
+    "duration": 0.8
+  },
+  "thunderlottery": {
+    "kind": "electric",
+    "color": "#b89946",
+    "accent": "#a18eb6",
+    "trail": "electric",
+    "duration": 0.85
+  },
+  "stormfront": {
+    "kind": "electric",
+    "color": "#7399aa",
+    "accent": "#c7b579",
+    "trail": "dash",
+    "duration": 0.85
+  },
+  "ice": {
+    "kind": "frost",
+    "color": "#4099b1",
+    "accent": "#b6d4d9",
+    "trail": "crystal",
+    "duration": 0.9
+  },
+  "shatter": {
+    "kind": "frost",
+    "color": "#569ab5",
+    "accent": "#a8b9d8",
+    "trail": "crystal",
+    "duration": 0.6
+  },
+  "blizzard": {
+    "kind": "frost",
+    "color": "#75a8b9",
+    "accent": "#bbced0",
+    "trail": "helix",
+    "duration": 1.1
+  },
+  "snowburst": {
+    "kind": "frost",
+    "color": "#5c9fae",
+    "accent": "#c1d7bd",
+    "trail": "crystal",
+    "duration": 0.8
+  },
+  "frostfire": {
+    "kind": "frostfire",
+    "color": "#5b9eae",
+    "accent": "#d77f59",
+    "trail": "helix",
+    "duration": 0.85
+  },
+  "poison": {
+    "kind": "poison",
+    "color": "#7a9f48",
+    "accent": "#b5bd70",
+    "trail": "beads",
+    "duration": 0.95
+  },
+  "decay": {
+    "kind": "poison",
+    "color": "#8c9961",
+    "accent": "#b8ba92",
+    "trail": "beads",
+    "duration": 1.2
+  },
+  "sweep": {
+    "kind": "beam",
+    "color": "#c47953",
+    "accent": "#d5b177",
+    "trail": "ribbon",
+    "duration": 0.55
+  },
+  "lance": {
+    "kind": "beam",
+    "color": "#658ba7",
+    "accent": "#c5b480",
+    "trail": "rail",
+    "duration": 0.65
+  },
+  "crossfire": {
+    "kind": "beam",
+    "color": "#bd7863",
+    "accent": "#d6b57a",
+    "trail": "rail",
+    "duration": 0.7
+  },
+  "pulse": {
+    "kind": "nova",
+    "color": "#8ba248",
+    "accent": "#d0c86d",
+    "trail": "wave",
+    "duration": 1.05
+  },
+  "supernova": {
+    "kind": "nova",
+    "color": "#c69737",
+    "accent": "#db9c68",
+    "trail": "comet",
+    "duration": 1.2
+  },
+  "alchemist": {
+    "kind": "coin",
+    "color": "#ad963e",
+    "accent": "#89b480",
+    "trail": "spark",
+    "duration": 0.85
+  },
+  "mint": {
+    "kind": "coin",
+    "color": "#b69b35",
+    "accent": "#d2c784",
+    "trail": "beads",
+    "duration": 0.85
+  },
+  "treasury": {
+    "kind": "coin",
+    "color": "#b89634",
+    "accent": "#79a39a",
+    "trail": "spark",
+    "duration": 1.15
+  },
+  "bargain": {
+    "kind": "coin",
+    "color": "#7f9a54",
+    "accent": "#c7af64",
+    "trail": "dash",
+    "duration": 0.7
+  },
+  "forge": {
+    "kind": "coin",
+    "color": "#ba8650",
+    "accent": "#e1be70",
+    "trail": "spark",
+    "duration": 0.75
+  },
+  "jackpot": {
+    "kind": "coin",
+    "color": "#bf9c37",
+    "accent": "#d28067",
+    "trail": "spark",
+    "duration": 1.05
+  },
+  "bounty": {
+    "kind": "coin",
+    "color": "#b59c4f",
+    "accent": "#8caf72",
+    "trail": "beads",
+    "duration": 0.9
+  },
+  "specialist": {
+    "kind": "coin",
+    "color": "#a08a58",
+    "accent": "#8fb3a1",
+    "trail": "spark",
+    "duration": 0.85
+  },
+  "resonance": {
+    "kind": "orbit",
+    "color": "#4a9a91",
+    "accent": "#bac578",
+    "trail": "wave",
+    "duration": 1.05
+  },
+  "corehunter": {
+    "kind": "orbit",
+    "color": "#578b9e",
+    "accent": "#a9c47d",
+    "trail": "helix",
+    "duration": 0.85
+  },
+  "roulette": {
+    "kind": "orbit",
+    "color": "#a68d63",
+    "accent": "#7eada6",
+    "trail": "helix",
+    "duration": 1.05
+  },
+  "boomerang": {
+    "kind": "orbit",
+    "color": "#5c9c8b",
+    "accent": "#c5b579",
+    "trail": "ribbon",
+    "duration": 0.85
+  },
+  "wormhole": {
+    "kind": "orbit",
+    "color": "#947cab",
+    "accent": "#9dc2b4",
+    "trail": "echo",
+    "duration": 1
+  },
+  "spectral": {
+    "kind": "orbit",
+    "color": "#779eb0",
+    "accent": "#c1ced0",
+    "trail": "dash",
+    "duration": 0.95
+  },
+  "timeslip": {
+    "kind": "orbit",
+    "color": "#649caa",
+    "accent": "#b9c694",
+    "trail": "scan",
+    "duration": 1
+  },
+  "buzzsaw": {
+    "kind": "power",
+    "color": "#a38b60",
+    "accent": "#d4bb79",
+    "trail": "heavy",
+    "duration": 0.65
+  },
+  "siegebreaker": {
+    "kind": "power",
+    "color": "#b77b59",
+    "accent": "#a5b58b",
+    "trail": "zigzag",
+    "duration": 0.8
+  },
+  "threadweaver": {
+    "kind": "power",
+    "color": "#b7748d",
+    "accent": "#c6b98c",
+    "trail": "rail",
+    "duration": 0.8
+  },
+  "transmute": {
+    "kind": "poison",
+    "color": "#859f54",
+    "accent": "#c9ae7b",
+    "trail": "spark",
+    "duration": 0.9
+  },
+  "infection": {
+    "kind": "poison",
+    "color": "#7d9f57",
+    "accent": "#bda0b5",
+    "trail": "beads",
+    "duration": 1.1
+  },
+  "contract": {
+    "kind": "coin",
+    "color": "#b69a48",
+    "accent": "#a6b575",
+    "trail": "spark",
+    "duration": 1
+  },
+  "nailburst": {
+    "kind": "split",
+    "color": "#b97b51",
+    "accent": "#9db77b",
+    "trail": "fork",
+    "duration": 0.6
+  },
+  "pendulum": {
+    "kind": "split",
+    "color": "#658ca8",
+    "accent": "#c99d70",
+    "trail": "ribbon",
+    "duration": 0.75
+  },
+  "fusepath": {
+    "kind": "blast",
+    "color": "#cf7554",
+    "accent": "#dec779",
+    "trail": "flame",
+    "duration": 0.8
+  },
+  "firewheel": {
+    "kind": "blast",
+    "color": "#cd8150",
+    "accent": "#dec773",
+    "trail": "flame",
+    "duration": 0.75
+  },
+  "rhythm": {
+    "kind": "power",
+    "color": "#b75e7e",
+    "accent": "#d8b77a",
+    "trail": "beads",
+    "duration": 0.6
+  },
+  "worldfold": {
+    "kind": "power",
+    "color": "#459c95",
+    "accent": "#dbbd75",
+    "trail": "rail",
+    "duration": 1
+  },
+  "reboundaim": {
+    "kind": "bounce",
+    "color": "#39978c",
+    "accent": "#c5b66c",
+    "trail": "zigzag",
+    "duration": 0.6
+  },
+  "overkill": {
+    "kind": "drain",
+    "color": "#a38d42",
+    "accent": "#78aca1",
+    "trail": "beads",
+    "duration": 0.85
+  },
+  "teslanet": {
+    "kind": "electric",
+    "color": "#a99231",
+    "accent": "#69a7ad",
+    "trail": "electric",
+    "duration": 0.65
+  },
+  "undertow": {
+    "kind": "frost",
+    "color": "#419eab",
+    "accent": "#b6cb9d",
+    "trail": "helix",
+    "duration": 0.9
+  },
+  "chronicle": {
+    "kind": "orbit",
+    "color": "#9b789a",
+    "accent": "#b4c8bf",
+    "trail": "echo",
+    "duration": 1
+  },
+  "starforge": {
+    "kind": "nova",
+    "color": "#bd9141",
+    "accent": "#71aaa2",
+    "trail": "comet",
+    "duration": 1.2
+  }
+}

@@ -27,7 +27,7 @@
    state.performanceMode = state.performanceMode===true;
    const motion=matchMedia('(prefers-reduced-motion: reduce)');
    const engine = Engine.create({gravity:{x:0,y:.48}}),previewEngine=Engine.create({gravity:{x:0,y:.48}});
-     const G = window.Game = {state,engine,bricks:[],obstacles:[],arrows:[],particles:[],texts:[],rings:[],bolts:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:motion.matches||state.performanceMode,physicsStep:1/60,predictionVersion:0};
+     const G = window.Game = {state,engine,bricks:[],obstacles:[],particles:[],texts:[],rings:[],bolts:[],brickFX:[],core:null,W:780,H:1400,origin:{x:390,y:970},roundKills:0,shotMoney:0,levelMoney:0,shotTime:0,shots:0,killed:0,initial:0,threshold:0,phase:'ready',paused:false,drag:null,shake:0,time:0,coreFlash:0,toast:null,ui:()=>{},keyboardAngle:0,keyboardPower:.85,reduced:motion.matches||state.performanceMode,physicsStep:1/60,predictionVersion:0};
    const syncReduced=()=>{G.reduced=motion.matches||state.performanceMode;document.documentElement?.classList?.toggle('performance-mode',state.performanceMode);};
    motion.addEventListener?.('change',syncReduced);
    syncReduced();
@@ -156,7 +156,7 @@
      uiDirty=false;visuals.clear();
      G.boardEntrance = null;
      G.nextShotAt=0;
-      G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.levelMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.texts=[];G.coreFlash=0;
+       G.predictionVersion++;Composite.clear(engine.world);G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;G.roundKills=0;G.shotMoney=0;G.levelMoney=0;G.killed=0;G.shots=0;G.phase='ready';G.particles=[];G.rings=[];G.bolts=[];G.brickFX=[];G.texts=[];G.coreFlash=0;
     const board=state.board;
     const validObstacles=board && (board.obstacles===undefined || (Array.isArray(board.obstacles)&&board.obstacles.length<=12&&board.obstacles.every(o=>['x','y','w','h'].every(k=>validNumber(o[k]))&&o.w>0&&o.h>0)));
      if(restore && board && !(board.layoutVersion!==G.layoutVersion&&board.killed===0) && !(board.balanceVersion!==G.balanceVersion&&board.killed===0) && board.level===state.level && Array.isArray(board.bricks) && board.bricks.length<=240 && board.bricks.every(b=>['x','y','w','h','hp','max'].every(k=>validNumber(b[k])) && b.hp>0 && b.w>0 && b.h>0 && b.type in G.colors) && validNumber(board.initial) && validNumber(board.killed) && board.initial>0 && validObstacles){
@@ -215,7 +215,7 @@
       p.x=x;p.y=y;p.vx=Math.cos(a)*v;p.vy=Math.sin(a)*v-1;p.life=life;p.max=1;p.size=size;p.color=color;p.rot=rot;G.particles.push(p);
     }
   };
-  G.ring=(x,y,color,r=90)=>{
+   G.ring=(x,y,color,r=90)=>{
     // Nearby simultaneous detonations read as one brighter shockwave, not a
     // stack of indistinguishable circles. Never merge the large clear pulses.
     if(r<260)for(let i=G.rings.length-1;i>=0;i--){const p=G.rings[i];
@@ -225,7 +225,13 @@
     const cap=G.reduced?24:48;
     if(G.rings.length>cap){const index=G.rings.findIndex(p=>p.r<260);G.rings.splice(index<0?0:index,1);}
     return G.rings.length;
-  };
+   };
+   // Short-lived scene beats are kept separate from damage and particles so a
+   // special brick can animate after its body has left the physics world.
+   G.brickBeat=(type,x,y,options={})=>{
+     const beat={type,x,y,born:G.time,duration:options.duration||.72,r:options.r||120,angle:options.angle||0,seed:Math.random()};
+     G.brickFX.push(beat);if(G.brickFX.length>36)G.brickFX.splice(0,G.brickFX.length-36);return beat;
+   };
   G.float=(x,y,text,color=theme()?.text.float||'#48652c',size=17)=>{
     G.texts.push({x,y,text,color,size,life:1.05});if(G.texts.length>48)G.texts.splice(0,G.texts.length-48);return G.texts.length;
   };
@@ -243,7 +249,7 @@
     G.ring(390,80,'#a4d65e',850);G.burst(390,80,'#93c446',80,3);G.float(390,385,'核心击破',theme()?.text.coreTitle||'#3b5d1f',35);G.float(390,431,'关卡奖金 + '+G.fmt(bonus),theme()?.text.coreBonus||'#4d7a26',24);G.specialSound('win');
     G.bricks.forEach(b=>G.burst(b.x,b.y,G.colors[b.type],6));
     // Core cleanup is deliberately separate from rewarded destruction and combo counters.
-    G.bricks=[];G.obstacles=[];G.arrows=[];G.core=null;Composite.clear(engine.world);
+     G.bricks=[];G.obstacles=[];G.arrows=[];G.brickFX=[];G.core=null;Composite.clear(engine.world);
     // Clearing every fifth level banks one reroll charge. The grant level stops
     // a level from paying twice (e.g. an admin jump back across it).
     G.rerollGained=false;
@@ -265,8 +271,11 @@
   G.hit=(b,damage,depth=0)=>{
     const index=G.bricks.indexOf(b);if(index<0||G.phase==='clearing')return;
     b.hp-=damage*(b.frozen?2:1);b.flash=.16;
-    if(b.hp>0){G.burst(b.x,b.y,G.colors[b.type],4,.5);G.sound('tap',1,b.x);return;}
-    G.bricks.splice(index,1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
+     if(b.hp>0){G.burst(b.x,b.y,G.colors[b.type],4,.5);G.sound('tap',1,b.x);return;}
+     const effect=G.specialConfig?.(b.type)||{};
+     if(b.type==='bomb')G.brickBeat('bomb',b.x,b.y,{r:effect.radius||132,duration:.82});
+     if(b.type==='frost')G.brickBeat('frost',b.x,b.y,{r:effect.radius||150,duration:.95});
+      G.bricks.splice(index,1);G.predictionVersion++;Composite.remove(engine.world,b.body);G.killed++;state.total++;G.roundKills++;
     const arrow=G.activeArrow;
     if(arrow){arrow.kills=G.arrowKills(arrow)+1;state.best=Math.max(state.best,arrow.kills);}
     const money=G.awardBrick?G.awardBrick(b,depth):G.reward(b.type,G.arrowKills(arrow));state.coins+=money;G.shotMoney+=money;G.levelMoney+=money;G.burst(b.x,b.y,G.colors[b.type],16);G.float(b.x,b.y,'+'+G.fmt(money));G.shake=Math.min(8,G.shake+1.5);
@@ -274,11 +283,10 @@
     G.sound('break',G.arrowKills(arrow),b.x);
     if(G.killed>=G.threshold&&!G.core)G.spawnCore();
     const near=range=>G.bricksNear(b.x,b.y,range);
-    const effect=G.specialConfig?.(b.type)||{};
     if(depth<70){
       if(b.type==='bomb'){const radius=effect.radius||132;G.ring(b.x,b.y,'#ed8b6e',radius+4);G.shake=9;near(radius).forEach(t=>G.hit(t,G.damage()*(effect.damage||2),depth+1));}
       if(b.type==='lightning'){const targets=G.nearestBricks(b.x,b.y,effect.links||5);let prev=b;targets.forEach(t=>{G.bolt(prev.x,prev.y,t.x,t.y,.46);prev=t;G.hit(t,G.damage()*(effect.damage||1.6),depth+1);});}
-      if(b.type==='frost'){const radius=effect.radius||140;G.ring(b.x,b.y,'#81bece',radius+4);near(radius).forEach(t=>{t.frozen=true;t.flash=.25;G.hit(t,G.damage()*(effect.damage||.5),depth+1);});}
+       if(b.type==='frost'){const radius=effect.radius||140;G.ring(b.x,b.y,'#81bece',radius+4);near(radius).forEach(t=>{t.frozen=true;t.freezeAt=G.time;t.flash=.25;G.brickBeat('freeze',t.x,t.y,{r:Math.max(t.w,t.h)*.8,duration:.55});G.hit(t,G.damage()*(effect.damage||.5),depth+1);});}
       if(b.type==='prism'){G.ring(b.x,b.y,'#b399d8',55);const count=effect.shards||3;for(let i=0;i<count;i++){const a=-.9+i*1.8/(count-1);G.addArrow(b.x,b.y,Math.sin(a)*18,-Math.cos(a)*18,effect.pierce||2);}}
     }
     G.onBrickDestroyed?.(b,depth);
@@ -401,7 +409,7 @@
     let alive=0;
     for(const p of G.particles){p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=dt*7;p.life-=dt;p.rot+=dt*3;if(p.life>0)G.particles[alive++]=p;}G.particles.length=alive;
     alive=0;for(const p of G.texts){p.y-=dt*25;p.life-=dt;if(p.life>0)G.texts[alive++]=p;}G.texts.length=alive;
-    for(const items of [G.rings,G.bolts]){alive=0;for(const p of items){p.life-=dt;if(p.life>0)items[alive++]=p;}items.length=alive;}
+     for(const items of [G.rings,G.bolts,G.brickFX]){alive=0;for(const p of items){p.life===undefined?p.life=p.duration:p.life-=dt;if(p.life>0)items[alive++]=p;}items.length=alive;}
     if(G.bolts.length>64)G.bolts.splice(0,G.bolts.length-64);
     G.bricks.forEach(b=>b.flash=Math.max(0,b.flash-dt));G.obstacles.forEach(o=>o.flash=Math.max(0,o.flash-dt));G.shake=Math.max(0,G.shake-dt*28);G.coreFlash=Math.max(0,G.coreFlash-dt*1.4);
   };

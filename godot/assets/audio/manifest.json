@@ -1,0 +1,1272 @@
+{
+  "version": 2,
+  "sampleRate": 48000,
+  "browser": "HeadlessChrome/89.0.4389.0",
+  "recipeHash": "bb636eb09fa9a92bcbee2e936a5f6f88b158d5f0661ce4764e07ff3196eacb85",
+  "noiseSeed": 85629821,
+  "samples": [
+    {
+      "key": "[\"tone\",205,49,0.2,0.27,\"triangle\"]",
+      "file": "b2f9eda1b79ba2f2c6717041.vorbis",
+      "frames": 10800,
+      "bytes": 5489,
+      "sha256": "74deb9ea08829258be785f6f39af18a427c7299f6e93a474be41cecb45eeaa3b"
+    },
+    {
+      "key": "[\"tone\",510,140,0.09,0.075,\"sine\"]",
+      "file": "ededcc83684c9e9a9de3cd31.vorbis",
+      "frames": 5520,
+      "bytes": 4328,
+      "sha256": "a83c40c39c97a2405d063e75349db04d2aae29b5ea88298a9775a017792374d7"
+    },
+    {
+      "key": "[\"noise\",3100,650,0.16,0.24,\"bandpass\"]",
+      "file": "acef97bd92d51cac82a4a2b9.vorbis",
+      "frames": 8880,
+      "bytes": 6045,
+      "sha256": "89e994e812c539affb7a542523e83577487534251dd71d9edd4131b9c606f390"
+    },
+    {
+      "key": "[\"tone\",230,100,0.09,0.19,\"triangle\"]",
+      "file": "60708d291468a06a5a7c162d.vorbis",
+      "frames": 5520,
+      "bytes": 4852,
+      "sha256": "358426798ef115bf0be539de7a082478e5a9b77e3a50b698bec1fa6b78933dbe"
+    },
+    {
+      "key": "[\"noise\",1800,1800,0.045,0.14,\"highpass\"]",
+      "file": "6df836bade52ad170efc1463.vorbis",
+      "frames": 3361,
+      "bytes": 5119,
+      "sha256": "3dbb132dbab1143da615129dc57c5b4e00730908a8ee968bdd642dd52b018e5b"
+    },
+    {
+      "key": "[\"tone\",135,32,0.5,0.52,\"sine\"]",
+      "file": "f681c5c89ef4c542e7f9ebbc.vorbis",
+      "frames": 25200,
+      "bytes": 5071,
+      "sha256": "167184199291b0a6b42a9b47d8d14fa90e8753d4a5100b0d20f549bbdfbe0364"
+    },
+    {
+      "key": "[\"tone\",74,40,0.25,0.16,\"triangle\"]",
+      "file": "baa5d7ec9cb7d63f2744a039.vorbis",
+      "frames": 13201,
+      "bytes": 5688,
+      "sha256": "38dae5ea0674d895e1f9773b5fac0224cfb042fc2d4c1d7dd954dd5aba0f46d4"
+    },
+    {
+      "key": "[\"noise\",1900,150,0.36,0.52,\"lowpass\"]",
+      "file": "26c132f600ee1da15ee60ce2.vorbis",
+      "frames": 18480,
+      "bytes": 6753,
+      "sha256": "ed53e02ddaa21603b3ed8d7990985ffc716c52643bdc783213f11c9269a1690a"
+    },
+    {
+      "key": "[\"noise\",3200,3200,0.055,0.2,\"highpass\"]",
+      "file": "dffbfe37ebcb9ee46bccae34.vorbis",
+      "frames": 3840,
+      "bytes": 5133,
+      "sha256": "ba6ad1395e6c771515a0c688a7b9e9bd30195095cd3c1b083d0e5dda3637c184"
+    },
+    {
+      "key": "[\"tone\",790,679.4,0.18,0.13,\"sine\"]",
+      "file": "228f981661519db72a572e18.vorbis",
+      "frames": 9840,
+      "bytes": 4619,
+      "sha256": "6193e09a3137dfea0d8be9220271ab649178bf331da64bebdbdaecf44a26dbed"
+    },
+    {
+      "key": "[\"tone\",1277,1098.22,0.145,0.065,\"sine\"]",
+      "file": "2de932e13cbbfa26735b9f82.vorbis",
+      "frames": 8160,
+      "bytes": 4486,
+      "sha256": "2e1ae1b99b1dce92378ea50efee5942c9ffdc5ad0ef9f61530550ad2f24262dc"
+    },
+    {
+      "key": "[\"tone\",2061,1772.46,0.10999999999999999,0.043333333333333335,\"sine\"]",
+      "file": "f21124fbb6f7a6c02d569b07.vorbis",
+      "frames": 6480,
+      "bytes": 4374,
+      "sha256": "d78efbec038511a8e3556afe76163baf561ed39bf80de56a4ef8df8befbacc3f"
+    },
+    {
+      "key": "[\"noise\",2600,2600,0.035,0.22,\"highpass\"]",
+      "file": "5de01c5586303a904927ae5d.vorbis",
+      "frames": 2880,
+      "bytes": 4923,
+      "sha256": "626d9fdd9787caabaed60833168ed339d5db6a2416c2c7440f129adb1132241b"
+    },
+    {
+      "key": "[\"tone\",145,80,0.08,0.16,\"triangle\"]",
+      "file": "a18a65f2dcf68220d74fe058.vorbis",
+      "frames": 5041,
+      "bytes": 4898,
+      "sha256": "2f871b6119514a3ddfbc0e049b627bc80b83208375aab17b144a1eee910e7bed"
+    },
+    {
+      "key": "[\"noise\",4800,450,0.19,0.32,\"bandpass\"]",
+      "file": "7c60b65750b9dcb1757f7812.vorbis",
+      "frames": 10320,
+      "bytes": 6314,
+      "sha256": "48523f413bb3961d284dc62bc047ad55143b8506571ed7ca6aad4993ce70cf10"
+    },
+    {
+      "key": "[\"tone\",1600,150,0.16,0.13,\"sawtooth\"]",
+      "file": "63c9e9cc8a7d8693a7708107.vorbis",
+      "frames": 8880,
+      "bytes": 6145,
+      "sha256": "04ff15cb65766d6c4ed8945701a34edd0368b4ec6b8f548f9c4773fbe414f6d3"
+    },
+    {
+      "key": "[\"noise\",3300,3300,0.045,0.24,\"highpass\"]",
+      "file": "4ef7ff9e4c566504b422a5b5.vorbis",
+      "frames": 3361,
+      "bytes": 5117,
+      "sha256": "91e6d869feb3c247a791be0d2bf4c44a72b6b595acfcd2ca4cd6dc3bf80d1fd9"
+    },
+    {
+      "key": "[\"tone\",180,60,0.12,0.18,\"triangle\"]",
+      "file": "91a452f7ee1f0452c2b3989a.vorbis",
+      "frames": 6960,
+      "bytes": 4983,
+      "sha256": "fae0f61720eae97c543ab1e59ddfae29d0a3f1a06123320f68d32f5ff0fefb93"
+    },
+    {
+      "key": "[\"tone\",1397,1369.06,0.3,0.09,\"sine\"]",
+      "file": "dbc163395219819b66efe649.vorbis",
+      "frames": 15600,
+      "bytes": 4791,
+      "sha256": "ee43856c30c8b266c2b10a07d8f29b4149b42221af4f0295f882523bdc45d555"
+    },
+    {
+      "key": "[\"tone\",2093,2051.14,0.3,0.09,\"sine\"]",
+      "file": "3b47ecc9611775aa891ddb77.vorbis",
+      "frames": 15600,
+      "bytes": 4798,
+      "sha256": "4d6de6918785585a0882b835b31b2b5340d2ffc4d62bd3432b7e28a49d606a31"
+    },
+    {
+      "key": "[\"tone\",2794,2738.12,0.3,0.09,\"sine\"]",
+      "file": "d0aafcb8ee9c7fbe3600ab4c.vorbis",
+      "frames": 15600,
+      "bytes": 4770,
+      "sha256": "83274129c614c1b5e3a81a9b6ad0faf8587f33804f40a25a6f8b07b36c18a89b"
+    },
+    {
+      "key": "[\"noise\",4700,4700,0.19,0.21,\"highpass\"]",
+      "file": "fa9db0e8bfe9acabee6ee9d5.vorbis",
+      "frames": 10320,
+      "bytes": 6682,
+      "sha256": "36dd99ce18a93d8e5991d9941d1022928631095be52de1dd30f5dd54af7cf8f2"
+    },
+    {
+      "key": "[\"tone\",380,1400,0.26,0.14,\"triangle\"]",
+      "file": "bc821e46e4a67bf5c138c26c.vorbis",
+      "frames": 13681,
+      "bytes": 6795,
+      "sha256": "f60ab2c60218bddb65953042758ec5e5cbb0d27cd574bfb1cc6e11d0acd9a8fe"
+    },
+    {
+      "key": "[\"tone\",1760,1320,0.22,0.08,\"sine\"]",
+      "file": "4fb0c3ecdbf082215f63d743.vorbis",
+      "frames": 11760,
+      "bytes": 4649,
+      "sha256": "d598a4cfb0c5125bd469e438d2b353423ff1624e08aa2aa5a340242ae9cdf384"
+    },
+    {
+      "key": "[\"noise\",3200,3200,0.045,0.13,\"highpass\"]",
+      "file": "b1e0b09e7d4863381ef27605.vorbis",
+      "frames": 3361,
+      "bytes": 5089,
+      "sha256": "62eb32688b126a84b4d7946a2f7a9d140e860ec376bb9d27d562dcb73696abab"
+    },
+    {
+      "key": "[\"tone\",1319,1319,0.25,0.16,\"sine\"]",
+      "file": "1c2dff23d7502ce0c8873510.vorbis",
+      "frames": 13201,
+      "bytes": 4812,
+      "sha256": "a4b6df00ae5a940de5bf3563fdf649eca72f9ab9e89dc622d0ab1a8cfb123f89"
+    },
+    {
+      "key": "[\"tone\",1760,1760,0.25,0.16,\"sine\"]",
+      "file": "16b01d82c5443b6ebff61899.vorbis",
+      "frames": 13201,
+      "bytes": 4715,
+      "sha256": "cf8733b36d89e391e5ec98e63f50ebf54c78635ea378a5d774db2c970e2ccefe"
+    },
+    {
+      "key": "[\"tone\",2093,2093,0.25,0.16,\"sine\"]",
+      "file": "99168ce7832cbb942e4eb8bb.vorbis",
+      "frames": 13201,
+      "bytes": 4776,
+      "sha256": "8d9da440b8d61fc59b6ade32b225aee55b85228e8d3a2a56a2409b0b31b6c441"
+    },
+    {
+      "key": "[\"noise\",4200,4200,0.04,0.08,\"highpass\"]",
+      "file": "d291e979347b04088e4eada1.vorbis",
+      "frames": 3120,
+      "bytes": 5003,
+      "sha256": "1b9280a5ef62865a510911504c8da3f7eb850c0929710dc14de7455f67533db7"
+    },
+    {
+      "key": "[\"tone\",110,880,0.7,0.14,\"triangle\"]",
+      "file": "18ecdc9f54877212b6687348.vorbis",
+      "frames": 34800,
+      "bytes": 10156,
+      "sha256": "c0319e92bb3960d9b90dcd97234f4d855e5f73c95484c21af7da37659e2ed038"
+    },
+    {
+      "key": "[\"noise\",400,4000,0.55,0.13,\"bandpass\"]",
+      "file": "2f0b3d192a9be3b7c8465b01.vorbis",
+      "frames": 27601,
+      "bytes": 9950,
+      "sha256": "c9a7683ec34c7e316956ffc4c90370c146bd1adb6a1fb40077f48c7e875cac6a"
+    },
+    {
+      "key": "[\"tone\",523,523,0.4,0.095,\"sine\"]",
+      "file": "e7a046452c54971b8d80da8a.vorbis",
+      "frames": 20401,
+      "bytes": 5115,
+      "sha256": "e3cb814358d5b2325bb4ac8a1b9eb7f4fe2f6f2704c26773aa1e1effcb111885"
+    },
+    {
+      "key": "[\"tone\",659,659,0.4,0.095,\"sine\"]",
+      "file": "f68446d746041a6d7e3c3c2d.vorbis",
+      "frames": 20401,
+      "bytes": 5027,
+      "sha256": "6cd877e8f7e82f7f91b720abc84c44fcb9400880182f47cfb030e3d1f9271841"
+    },
+    {
+      "key": "[\"tone\",784,784,0.4,0.095,\"sine\"]",
+      "file": "6af95e80234a1cbce0798e5e.vorbis",
+      "frames": 20401,
+      "bytes": 5174,
+      "sha256": "1cb244f3f93a401c35acbaba2361b67c8f3d67f4ca815e4103fefbd96e705c02"
+    },
+    {
+      "key": "[\"tone\",1047,1047,0.4,0.095,\"sine\"]",
+      "file": "b9fda9e6502df3da63ca4228.vorbis",
+      "frames": 20401,
+      "bytes": 5006,
+      "sha256": "17a33606c1b5628d28f0f9b0983f1b1a50779d2a1822347eb67e1837ccd62789"
+    },
+    {
+      "key": "[\"tone\",160,28,0.9,0.6,\"sine\"]",
+      "file": "744a596c28ee748745964c61.vorbis",
+      "frames": 44400,
+      "bytes": 5702,
+      "sha256": "fd2c70e35c7313e9bfb13749d08bf824140addd6a27d84f34e61617e6e82a726"
+    },
+    {
+      "key": "[\"noise\",2300,120,0.75,0.55,\"lowpass\"]",
+      "file": "39da5255b212b47ddccd4b23.vorbis",
+      "frames": 37200,
+      "bytes": 9510,
+      "sha256": "d7425a170180e733d5ce6aeebeb659d865c33403a3a7df76c4ff7ff0ed5c8de3"
+    },
+    {
+      "key": "[\"tone\",523,523,0.65,0.13,\"sine\"]",
+      "file": "632aa187745d53fe19d64b74.vorbis",
+      "frames": 32401,
+      "bytes": 5416,
+      "sha256": "17ae327fe817442a9d2880e4ee3d4c2d36366d37c83c273922d01ae539bc982c"
+    },
+    {
+      "key": "[\"tone\",261.5,261.5,0.45,0.07,\"triangle\"]",
+      "file": "c64e86ad6007721e78270231.vorbis",
+      "frames": 22800,
+      "bytes": 6901,
+      "sha256": "324b1ac07b38a331479be4140980a7f9a201e13ff342427493b40683371e29b2"
+    },
+    {
+      "key": "[\"tone\",659,659,0.65,0.13,\"sine\"]",
+      "file": "2197503b1ebf0634e02572e9.vorbis",
+      "frames": 32401,
+      "bytes": 5531,
+      "sha256": "ecab6fe16e119e6df6ae9524d3fa3a4e84fd1d550226393a6ef7349dbb18b03f"
+    },
+    {
+      "key": "[\"tone\",329.5,329.5,0.45,0.07,\"triangle\"]",
+      "file": "817a4233d75501f01cae3abc.vorbis",
+      "frames": 22800,
+      "bytes": 7136,
+      "sha256": "55438487b4383845a85659eb5e1073080795809a6cd7a1088463b813c42ea229"
+    },
+    {
+      "key": "[\"tone\",784,784,0.65,0.13,\"sine\"]",
+      "file": "788b6d7eb28731cbe4a9d96f.vorbis",
+      "frames": 32401,
+      "bytes": 5620,
+      "sha256": "cd32b008634825a7236bf88d2ec3f8370dbc67d7a2daf7568e6c201e2e155310"
+    },
+    {
+      "key": "[\"tone\",392,392,0.45,0.07,\"triangle\"]",
+      "file": "1c291ad989854d9f15865050.vorbis",
+      "frames": 22800,
+      "bytes": 7203,
+      "sha256": "b0095b73bb80d59210ad8c1e676b761cd9e4b4edaaec36e1d49d6c0e74b16798"
+    },
+    {
+      "key": "[\"tone\",1047,1047,0.65,0.13,\"sine\"]",
+      "file": "f73856840027411cdba5cca1.vorbis",
+      "frames": 32401,
+      "bytes": 5555,
+      "sha256": "5db532d952e6ea61ede9ef2c58f52d6be5809ce938358a80d6f4899c2ce18ba4"
+    },
+    {
+      "key": "[\"tone\",523.5,523.5,0.45,0.07,\"triangle\"]",
+      "file": "260d34f851b1194aec576ef9.vorbis",
+      "frames": 22800,
+      "bytes": 6880,
+      "sha256": "1864332aa3aeb9826f55db1c5cf11ddfba831dc5a48a5b73fbdf400a84154a56"
+    },
+    {
+      "key": "[\"tone\",1319,1319,0.65,0.13,\"sine\"]",
+      "file": "b63b9ec71dd4e08a77420762.vorbis",
+      "frames": 32401,
+      "bytes": 5461,
+      "sha256": "7bb620f6a23358b77c71499d1089742b99c8eb964c26a9a6ea7e7ccbea171705"
+    },
+    {
+      "key": "[\"tone\",659.5,659.5,0.45,0.07,\"triangle\"]",
+      "file": "b04eba5e9c64858de17bfd4a.vorbis",
+      "frames": 22800,
+      "bytes": 6934,
+      "sha256": "b1db31d96e52b05467f76812184a68af2571ada14ce3d69c0c2cf9da7730f05c"
+    },
+    {
+      "key": "[\"noise\",900,5200,0.32,0.16,\"bandpass\"]",
+      "file": "3419293baf0d78b7894381f7.vorbis",
+      "frames": 16560,
+      "bytes": 7825,
+      "sha256": "95cd63eafb12600b7f618ef3587292b0a7d52fea26784be84dfafe0c9d37057b"
+    },
+    {
+      "key": "[\"tone\",180,720,0.3,0.09,\"triangle\"]",
+      "file": "6c6b83d35576d5ba22e178e3.vorbis",
+      "frames": 15600,
+      "bytes": 6865,
+      "sha256": "c641b583b051e2a3f0e2d50f5392aeb913aa244a414f383aa2ffc138e2e83056"
+    },
+    {
+      "key": "[\"tone\",880,880,0.24,0.07,\"sine\"]",
+      "file": "5247fd349302f0069f5f10b6.vorbis",
+      "frames": 12720,
+      "bytes": 4674,
+      "sha256": "923e899ad048f0acb089ecc4bb2470e3dc609c318254a5cb4f12357a4cac9765"
+    },
+    {
+      "key": "[\"tone\",1319,1319,0.24,0.07,\"sine\"]",
+      "file": "16546632aa5d6352bb3e51df.vorbis",
+      "frames": 12720,
+      "bytes": 4565,
+      "sha256": "dd97d058b50edb015369f918f8cd6726a81a5c1c990f10212d8dee0ef94333ec"
+    },
+    {
+      "key": "[\"noise\",2600,2600,0.06,0.07,\"bandpass\"]",
+      "file": "0ffbdbfd022b54b44002327b.vorbis",
+      "frames": 4080,
+      "bytes": 5062,
+      "sha256": "1bbcc897a07a45fc4f032dbf8c9dc1334f2157fe19cd8ad114921c908ba9793e"
+    },
+    {
+      "key": "[\"noise\",3100,3100,0.06,0.07,\"bandpass\"]",
+      "file": "e182e01025db8cb86043bcfb.vorbis",
+      "frames": 4080,
+      "bytes": 5080,
+      "sha256": "fd3d4fd4e0a45dfe5a3e2cedf0e9b1359b1cb8f18ac9dd682e2e365d4de6b5b8"
+    },
+    {
+      "key": "[\"noise\",3600,3600,0.06,0.07,\"bandpass\"]",
+      "file": "27ef8e031feae89af81cb4fa.vorbis",
+      "frames": 4080,
+      "bytes": 5060,
+      "sha256": "7f64e971498fdeb9ed6a2a9de6179827cf33dd41bb67338ae403e61c06acbc3a"
+    },
+    {
+      "key": "[\"tone\",320,520,0.12,0.05,\"triangle\"]",
+      "file": "7f16d6f3066c7fbad1bd0114.vorbis",
+      "frames": 6960,
+      "bytes": 5322,
+      "sha256": "9f5e2606a8039ae304a61eba8efa73156e9e2d201c6547e6fb63fa253267974c"
+    },
+    {
+      "key": "[\"noise\",500,3400,0.46,0.14,\"bandpass\"]",
+      "file": "d206d73629603a8091e3514e.vorbis",
+      "frames": 23281,
+      "bytes": 9109,
+      "sha256": "72017e8b84ded945e3bfee7cc68873632457bea88632249ec19940035613cf34"
+    },
+    {
+      "key": "[\"tone\",140,300,0.4,0.035,\"sine\"]",
+      "file": "d989814b210f1f952f2a40ef.vorbis",
+      "frames": 20401,
+      "bytes": 4895,
+      "sha256": "8ad02fe52dae6941132b56d58e17a384c63bdba55f102833e1416f2f6ffcae27"
+    },
+    {
+      "key": "[\"tone\",180,62,0.2,0.24,\"triangle\"]",
+      "file": "3bdf9165582e6b42e95d7093.vorbis",
+      "frames": 10800,
+      "bytes": 5532,
+      "sha256": "7b3d269239b7f3b6ebddcb46631dab4df9337f2a426ad42b52de6f4fbd517751"
+    },
+    {
+      "key": "[\"noise\",3600,3600,0.03,0.16,\"highpass\"]",
+      "file": "621f3e11fe8f30059b6fe167.vorbis",
+      "frames": 2640,
+      "bytes": 4801,
+      "sha256": "3accb05a0ae91682c08d851f601b8ea263b0a4e584584d4e59319e8b839defc3"
+    },
+    {
+      "key": "[\"tone\",1047,1047,0.32,0.07,\"sine\"]",
+      "file": "c162a4fc73c01603d1adb6d6.vorbis",
+      "frames": 16560,
+      "bytes": 4831,
+      "sha256": "cbdf99ed53697c1217f295194ccf860698d758c4d53bc968d02c43e8ac9e0805"
+    },
+    {
+      "key": "[\"tone\",1568,1568,0.32,0.07,\"sine\"]",
+      "file": "04355da1208ddb60421cf0c6.vorbis",
+      "frames": 16560,
+      "bytes": 4813,
+      "sha256": "95743facc4a7b2d657c7d2b4530c5f745e3246a0068b9ec8c79cf677fd89f04e"
+    },
+    {
+      "key": "[\"tone\",440,440,0.25,0.12,\"triangle\"]",
+      "file": "ee40b0e43eb6b5aa1d2abfc1.vorbis",
+      "frames": 13201,
+      "bytes": 5851,
+      "sha256": "386032e87205b4f4f1763107c387c40257c5a9d1e08a3f94a26db2af03f7087f"
+    },
+    {
+      "key": "[\"tone\",554,554,0.25,0.12,\"triangle\"]",
+      "file": "8bbe36e7fe00e14aca933ce7.vorbis",
+      "frames": 13201,
+      "bytes": 5940,
+      "sha256": "507db16fde48b505a360e8371a96079b537b0668573d4cd1d55770ff0a8572e9"
+    },
+    {
+      "key": "[\"tone\",659,659,0.25,0.12,\"triangle\"]",
+      "file": "9c443dab82ada1df93b1e1dc.vorbis",
+      "frames": 13201,
+      "bytes": 5929,
+      "sha256": "8d92de57ae1c9f8c5c35242196a180e92bafe42946cd489b7696e9eb7e9748bc"
+    },
+    {
+      "key": "[\"tone\",880,880,0.25,0.12,\"triangle\"]",
+      "file": "1f743cb0c09e72df5415e5d5.vorbis",
+      "frames": 13201,
+      "bytes": 5582,
+      "sha256": "cc868d8148ca870a3e0733e2df07a7e411226419e834a3a119cf084c0e97a9ab"
+    },
+    {
+      "key": "[\"tone\",62,36,1.5,0.5,\"sawtooth\"]",
+      "file": "0ad074f4cc029bbdbab7d7f1.vorbis",
+      "frames": 73200,
+      "bytes": 25395,
+      "sha256": "91b57ea91370366a8db3edac825f5b435f232677331c5e929f414f9847416dca"
+    },
+    {
+      "key": "[\"tone\",93,52,1.2,0.22,\"triangle\"]",
+      "file": "ff1157489589a96db7d9184b.vorbis",
+      "frames": 58800,
+      "bytes": 11366,
+      "sha256": "e946aebcc2eff637f5000c33259ec84bc100e14662e9def324da079a25ee949f"
+    },
+    {
+      "key": "[\"noise\",620,90,1.1,0.35,\"lowpass\"]",
+      "file": "861fae24fc75ed5da6186cd5.vorbis",
+      "frames": 54000,
+      "bytes": 10614,
+      "sha256": "be0d2f576a5202fe5d8f7c5f865551c9ec9deb7cc68ef6462d6624993791543d"
+    },
+    {
+      "key": "[\"tone\",196,199.92000000000002,1.1,0.07,\"sine\"]",
+      "file": "c896403a9db529087ce1055c.vorbis",
+      "frames": 54000,
+      "bytes": 6026,
+      "sha256": "cc15c0617c6026f54ae944d5b5485e80ab94161e7665733f53cb539e2adb9077"
+    },
+    {
+      "key": "[\"tone\",294,299.88,0.9000000000000001,0.035,\"sine\"]",
+      "file": "bcac339f0a49ae2b5ad6b7ea.vorbis",
+      "frames": 44401,
+      "bytes": 5826,
+      "sha256": "823cd6d1c1a05d521f6cc9cded168b316ce551ceb5d1eafb38839f991b5e2a81"
+    },
+    {
+      "key": "[\"tone\",392,399.84000000000003,0.7000000000000001,0.023333333333333334,\"sine\"]",
+      "file": "8b17f09eabbbeb3764670f70.vorbis",
+      "frames": 34801,
+      "bytes": 5611,
+      "sha256": "eb9f34739e18d0edb6e46c77a868bb276c3136105137480c508ff4d0992c43ea"
+    },
+    {
+      "key": "[\"tone\",220,440,0.8,0.05,\"triangle\"]",
+      "file": "f8885e974ff55b2ab771ae13.vorbis",
+      "frames": 39600,
+      "bytes": 9765,
+      "sha256": "782d7a07c895a65b15ad8ad987a8d9e58efa70248c8301a284d90655cc2dfaf8"
+    },
+    {
+      "key": "[\"tone\",124,46,0.24,0.42,\"sine\"]",
+      "file": "5f32f9036822c8a46f927c72.vorbis",
+      "frames": 12720,
+      "bytes": 4638,
+      "sha256": "6cda36a80eccd8be44fc4466c1124c091d237ec7d36fd3a0ea8be7ab4d9f01a8"
+    },
+    {
+      "key": "[\"noise\",900,900,0.08,0.3,\"lowpass\"]",
+      "file": "92f7395711e770265f1f90ab.vorbis",
+      "frames": 5041,
+      "bytes": 4927,
+      "sha256": "f50996a1af78b7f7030cb0f8f87accc495e7a9bf01d3e20953ac42f72755fcb1"
+    },
+    {
+      "key": "[\"tone\",880,620,0.2,0.08,\"triangle\"]",
+      "file": "f4377a6ffce23635e591890c.vorbis",
+      "frames": 10800,
+      "bytes": 5719,
+      "sha256": "152e1ccd5a9c6afd9cdd37c95292b12e067e03c892b852a550323b0f86e1996a"
+    },
+    {
+      "key": "[\"tone\",2637,2373.3,0.24,0.06,\"sine\"]",
+      "file": "ccdb4ef8654fcf817c1ae148.vorbis",
+      "frames": 12720,
+      "bytes": 4668,
+      "sha256": "8228c74e2a4c8a99aa9700807e5e365acffed1b58d2ba5ba20577e6d08ab598c"
+    },
+    {
+      "key": "[\"tone\",3136,2822.4,0.24,0.06,\"sine\"]",
+      "file": "b05bb94642ab4e5df3f570d6.vorbis",
+      "frames": 12720,
+      "bytes": 4665,
+      "sha256": "caa7a75a2d607f587e55a1ea1d0129585a5a5887de97afd5a000565bcb948dc3"
+    },
+    {
+      "key": "[\"tone\",3951,3555.9,0.24,0.06,\"sine\"]",
+      "file": "43cf48e6a29992eb7d140c97.vorbis",
+      "frames": 12720,
+      "bytes": 4649,
+      "sha256": "499923dc7411443706fbf7062e88fb0b013e920871c0d14a3e1a17d6a54d24cc"
+    },
+    {
+      "key": "[\"tone\",4699,4229.1,0.24,0.06,\"sine\"]",
+      "file": "294b0372dd7db8b754c659c9.vorbis",
+      "frames": 12720,
+      "bytes": 4619,
+      "sha256": "fbc00dc72430eed23027676ad45001b4e6f386718a1edd3024f8f590dedb9804"
+    },
+    {
+      "key": "[\"noise\",5200,2400,0.32,0.3,\"highpass\"]",
+      "file": "824774742f998246e59f285e.vorbis",
+      "frames": 16560,
+      "bytes": 8258,
+      "sha256": "a2724c17dd172a8d04a564e5c15c3c4b623432db6187f2595b26cee9649e4f49"
+    },
+    {
+      "key": "[\"tone\",320,38,0.65,0.26,\"sine\"]",
+      "file": "70190df6e0dd31c5dc999847.vorbis",
+      "frames": 32401,
+      "bytes": 5232,
+      "sha256": "f336f9a8f6280b2c86ba121653bd5137fa84944bbf56e40e3866a6f19107d754"
+    },
+    {
+      "key": "[\"noise\",720,110,0.55,0.22,\"bandpass\"]",
+      "file": "f03e36469263342bd4f4b8a3.vorbis",
+      "frames": 27601,
+      "bytes": 9299,
+      "sha256": "f74e4070916aafa5d7c9a7d311ac6ffde5d15b5eb9478b2af66ff06e214624be"
+    },
+    {
+      "key": "[\"tone\",440,880,0.12,0.12,\"triangle\"]",
+      "file": "62bf446d785afb8adf5874c7.vorbis",
+      "frames": 6960,
+      "bytes": 5402,
+      "sha256": "fdf6dee68d9184e59c986864527921c0c78ea621e113b7e73d7a4dd7c95242ae"
+    },
+    {
+      "key": "[\"noise\",2400,2400,0.05,0.12,\"highpass\"]",
+      "file": "a667772bf6b973841b9cd263.vorbis",
+      "frames": 3601,
+      "bytes": 5128,
+      "sha256": "663ffce039c16dd0c75b38680fc551848103eb24e11e129b2b621f04e3b1cdea"
+    },
+    {
+      "key": "[\"noise\",1500,300,0.26,0.34,\"bandpass\"]",
+      "file": "1caf6ac2714aefda10a93a7f.vorbis",
+      "frames": 13681,
+      "bytes": 6918,
+      "sha256": "83289d050728ff196f99f585dde7d52aaee8c81d330ee5b5fb524592d8443a6e"
+    },
+    {
+      "key": "[\"tone\",210,88,0.32,0.24,\"triangle\"]",
+      "file": "695c6d134ac0bc220859d7cf.vorbis",
+      "frames": 16560,
+      "bytes": 6518,
+      "sha256": "aafc7eca6fe35d484bb44d5ad063e7b602378e2128fe456766028b0148fb05bd"
+    },
+    {
+      "key": "[\"tone\",1175,1175,0.3,0.07,\"sine\"]",
+      "file": "a89d736ec03808a3f4a9b258.vorbis",
+      "frames": 15600,
+      "bytes": 4743,
+      "sha256": "94bcc2db3f78af459e7cffdeeb09a9b822c7515a1c8fceed07235fd887bfe4b1"
+    },
+    {
+      "key": "[\"tone\",1568,1568,0.3,0.07,\"sine\"]",
+      "file": "d25ef08b27096609753c2341.vorbis",
+      "frames": 15600,
+      "bytes": 4772,
+      "sha256": "8c8526c9452f331dada592a93835a6294378b7d6835308ad8066c794a2363337"
+    },
+    {
+      "key": "[\"tone\",3136,2885.1200000000003,0.16,0.05,\"sine\"]",
+      "file": "4b502f4767be671a532e169b.vorbis",
+      "frames": 8880,
+      "bytes": 4501,
+      "sha256": "e1e94aaeeb11ab86c677dc5eb9a21550db7e9e9380a23f320d71479f8a84b0d2"
+    },
+    {
+      "key": "[\"tone\",3951,3634.92,0.16,0.05,\"sine\"]",
+      "file": "e97593d70e3a789d97270fb5.vorbis",
+      "frames": 8880,
+      "bytes": 4485,
+      "sha256": "5bed2c5d7e6b77f88f076d7d6aa026e889ced0e241002ae05147e50731c17f44"
+    },
+    {
+      "key": "[\"noise\",5600,5600,0.12,0.16,\"highpass\"]",
+      "file": "86fb1c064a5a3ea4dfcd55f7.vorbis",
+      "frames": 6960,
+      "bytes": 5795,
+      "sha256": "4d6e6385d505fb62406b7ec55f6b056925068462f8671f7109c033f0c9b85390"
+    },
+    {
+      "key": "[\"tone\",48,30,1.6,0.55,\"sawtooth\"]",
+      "file": "8dc0ac7bab4e850737a8d0f5.vorbis",
+      "frames": 78000,
+      "bytes": 24982,
+      "sha256": "4fafd89572a36173502768bb30bc8e2f05bfa6a9b5e4a1491f8d40b09211a7a6"
+    },
+    {
+      "key": "[\"noise\",380,70,1.3,0.4,\"lowpass\"]",
+      "file": "c50f180bb8c1548f91280267.vorbis",
+      "frames": 63600,
+      "bytes": 11185,
+      "sha256": "aa6e2aadca1aee4fbd1e95df0e5b35d43035fb206a7987a5e0cb4bb2d611066e"
+    },
+    {
+      "key": "[\"tone\",96,60,1.1,0.2,\"square\"]",
+      "file": "cb97d084aa0c102a1913528c.vorbis",
+      "frames": 54000,
+      "bytes": 24752,
+      "sha256": "d785f2c3d5730dd5abaf1a2bdf620fe4082648728849940a8a86e9ce439725ce"
+    },
+    {
+      "key": "[\"tone\",131,131,1,0.08,\"triangle\"]",
+      "file": "a5292dfd8db727f9b74a31d6.vorbis",
+      "frames": 49200,
+      "bytes": 9428,
+      "sha256": "c9a220c024a656d0880a2ece26e4be9317ac92634dbd9885730d79d41b99d8b3"
+    },
+    {
+      "key": "[\"tone\",196,196,0.85,0.04,\"triangle\"]",
+      "file": "b857c20732b0f4e420350efe.vorbis",
+      "frames": 42000,
+      "bytes": 8682,
+      "sha256": "1245895db3136d982654c6cd9494ae41637ebcd470b0e1ef306d4481a7d8295f"
+    },
+    {
+      "key": "[\"tone\",262,262,0.7,0.02666666666666667,\"triangle\"]",
+      "file": "6f54b3f614d9ad4b8def1297.vorbis",
+      "frames": 34800,
+      "bytes": 8026,
+      "sha256": "67aa381e0e4bbb7fb5f19895d6beb995ca118c589ce1fc0b65a27be3b64ebb78"
+    },
+    {
+      "key": "[\"tone\",1047,1036.53,0.8,0.04,\"sine\"]",
+      "file": "46ab7ecd0eb1fbeec4f7dff1.vorbis",
+      "frames": 39600,
+      "bytes": 5648,
+      "sha256": "669a494320ced8300da91c1eda096c6f7d7c7a9409d82305de6db2368bc68cb8"
+    },
+    {
+      "key": "[\"tone\",1568,1552.32,0.8,0.04,\"sine\"]",
+      "file": "482d8683a5a3b614201009b7.vorbis",
+      "frames": 39600,
+      "bytes": 5569,
+      "sha256": "c690b0f75294cea6df9d91fc6612056251642b853de6b68d324a6b39e52626a7"
+    },
+    {
+      "key": "[\"tone\",523,515.155,0.7,0.11,\"sine\"]",
+      "file": "499cb296b790f10462511238.vorbis",
+      "frames": 34800,
+      "bytes": 5516,
+      "sha256": "9ad3053302fc6eee503ee2efac9dc3a094d18609d8f1cca18d6f427162a133d0"
+    },
+    {
+      "key": "[\"tone\",1109,1092.365,0.58,0.055,\"sine\"]",
+      "file": "be324a1fcdc8d2e265e6a329.vorbis",
+      "frames": 29040,
+      "bytes": 5254,
+      "sha256": "44a2eaf5421679c7e5f81a24cc0dcff7ec2d66c86826170e12fa1344afbb973e"
+    },
+    {
+      "key": "[\"tone\",1661,1636.085,0.45999999999999996,0.03666666666666667,\"sine\"]",
+      "file": "bfc9a24fcf2d388884f83e75.vorbis",
+      "frames": 23280,
+      "bytes": 5004,
+      "sha256": "8a83ba913673f6cef3b13a82fcdd074ecef52397f92d30dc4facd788092463ab"
+    },
+    {
+      "key": "[\"tone\",2489,2451.665,0.33999999999999997,0.0275,\"sine\"]",
+      "file": "afdb97ad2d55d7ff0b76238a.vorbis",
+      "frames": 17520,
+      "bytes": 4841,
+      "sha256": "612b67013bac884db0da9305c055c864271bfee397eef8ba107a144830235bbb"
+    },
+    {
+      "key": "[\"noise\",3800,3800,0.06,0.3,\"highpass\"]",
+      "file": "3d6d52f4d987229821f7c212.vorbis",
+      "frames": 4080,
+      "bytes": 5232,
+      "sha256": "34a800fd81a7e86cce1a8fb6ebc5ca93e7e11c2e0027442c18c185f4e3090840"
+    },
+    {
+      "key": "[\"tone\",90,45,0.3,0.3,\"triangle\"]",
+      "file": "e88e88bdb06848125b44a63c.vorbis",
+      "frames": 15600,
+      "bytes": 6034,
+      "sha256": "a033be93dafb01a5ba0bb7c36152a959e8ac02fef0d770a1cb378c00c7e03852"
+    },
+    {
+      "key": "[\"noise\",900,160,0.5,0.32,\"bandpass\"]",
+      "file": "0636284f82efad65cfceabfd.vorbis",
+      "frames": 25200,
+      "bytes": 9029,
+      "sha256": "c939452ff3f040dde8a11c06ed199850273d800977baf5e0ff0a37b9127790b1"
+    },
+    {
+      "key": "[\"tone\",380,70,0.5,0.2,\"sawtooth\"]",
+      "file": "1d538b3e4763d2721d825ee7.vorbis",
+      "frames": 25200,
+      "bytes": 9613,
+      "sha256": "c87fb415cd2eb3aad801f75fa508dad9e90c67efe3bdcacf6fecf783ebc8e9ab"
+    },
+    {
+      "key": "[\"tone\",80,34,0.4,0.4,\"sine\"]",
+      "file": "39ea5a8fdf3af58abe69f2c2.vorbis",
+      "frames": 20401,
+      "bytes": 5079,
+      "sha256": "9abc69a729bf75e8a25232c7763859184a92489831620600922bc6766696a3a6"
+    },
+    {
+      "key": "[\"noise\",2600,5200,1.2,0.3,\"bandpass\"]",
+      "file": "ceac2df34268f85711e7a1db.vorbis",
+      "frames": 58800,
+      "bytes": 17148,
+      "sha256": "38c03c3517727cb72e4390e528515b3304b25e22632f9f27d298e7256cf01f2a"
+    },
+    {
+      "key": "[\"tone\",70,44,1.3,0.42,\"sawtooth\"]",
+      "file": "6649ee5be7ded7bbd3f102aa.vorbis",
+      "frames": 63600,
+      "bytes": 22759,
+      "sha256": "ab6750ff49b79466210d2869c87611c2cead5220e52a4e6b954591781292a44f"
+    },
+    {
+      "key": "[\"tone\",330,660,0.7,0.06,\"triangle\"]",
+      "file": "effec0743cbf8670a728b3a6.vorbis",
+      "frames": 34800,
+      "bytes": 9273,
+      "sha256": "f28ba267ef533fa983eb1621656b47862ad4289e4d54517e0fdc24a8b6e84125"
+    },
+    {
+      "key": "[\"tone\",440,444.4,1,0.06,\"sine\"]",
+      "file": "7fa0b235f97d2abb8631c334.vorbis",
+      "frames": 49200,
+      "bytes": 6108,
+      "sha256": "1c489ca593b409ab2466c90a32df15efa584f899334011f7ed08d7f97507b7a4"
+    },
+    {
+      "key": "[\"tone\",659,665.59,0.8,0.03,\"sine\"]",
+      "file": "100ba9dc2666c72787293945.vorbis",
+      "frames": 39600,
+      "bytes": 5649,
+      "sha256": "d1cbbe0fc61078d6c3a00b69ab88b6fd8b4878904827a5eaf5d5d3cedcf34b41"
+    },
+    {
+      "key": "[\"tone\",880,888.8,0.6,0.02,\"sine\"]",
+      "file": "42b94af4c7ac274eb243e25b.vorbis",
+      "frames": 30000,
+      "bytes": 5325,
+      "sha256": "2554ce5633c84c1f66e48a9cdeb62705a8919e606173fad1c633fc14659decd6"
+    },
+    {
+      "key": "[\"noise\",5200,2600,0.7,0.16,\"highpass\"]",
+      "file": "9eb35f7f14cf84ab0bd1c5a1.vorbis",
+      "frames": 34800,
+      "bytes": 12581,
+      "sha256": "13b51898cf9abc193b2b4f928bfe8c7e64ed528521a1572866905d2e4e21d9a1"
+    },
+    {
+      "key": "[\"tone\",180,90,0.5,0.06,\"sawtooth\"]",
+      "file": "97b0968dd9f395dc53e45a46.vorbis",
+      "frames": 25200,
+      "bytes": 12484,
+      "sha256": "1e324cde0d60fd1bbac0ae21aa7fc4413984c03ebcda7ac0227024efc2792a7d"
+    },
+    {
+      "key": "[\"tone\",55,32,1.8,0.45,\"sawtooth\"]",
+      "file": "b211bf3cefc3c16fc1c31812.vorbis",
+      "frames": 87600,
+      "bytes": 28741,
+      "sha256": "962a4aa5bcfda795cda081a673d3546fdca75953408d26ad6afdcb7dee13e7ec"
+    },
+    {
+      "key": "[\"noise\",300,1400,1.6,0.34,\"lowpass\"]",
+      "file": "b673120ad0b674c1409b061e.vorbis",
+      "frames": 78000,
+      "bytes": 17244,
+      "sha256": "a10d014ca3398868d8c77dd7b547de13d6236fa2751b4e2d917e5fe89fbf9e99"
+    },
+    {
+      "key": "[\"tone\",98,88.2,0.7,0.12,\"triangle\"]",
+      "file": "fcd7e3cda3b39ff27a325845.vorbis",
+      "frames": 34800,
+      "bytes": 7967,
+      "sha256": "947735911b5e8010106e363ea6e280238e483b19664a937191bdecf44501cc37"
+    },
+    {
+      "key": "[\"tone\",92,82.8,0.7,0.12,\"triangle\"]",
+      "file": "a7c87ba61ed1f79a3149d351.vorbis",
+      "frames": 34800,
+      "bytes": 7917,
+      "sha256": "64f291067f52d54676e1bafd97bd53677317af43370a648d3543ec7abf16ed9f"
+    },
+    {
+      "key": "[\"tone\",87,78.3,0.7,0.12,\"triangle\"]",
+      "file": "61c11dd9c1ca2e9ad7996986.vorbis",
+      "frames": 34800,
+      "bytes": 7940,
+      "sha256": "05fe42e43fdbb80fba74c7565bb6c62df865199121e9d90aea35beec6047cc2c"
+    },
+    {
+      "key": "[\"noise\",800,3600,0.6,0.14,\"bandpass\"]",
+      "file": "f699085b1a58837e094e629e.vorbis",
+      "frames": 30000,
+      "bytes": 10593,
+      "sha256": "5a67e08f94aa1d165ea360c0d900f6b3c807d4ccba041e543d402946a3172505"
+    },
+    {
+      "key": "[\"tone\",220,660,0.6,0.1,\"triangle\"]",
+      "file": "03152503ed1d6aac244da4e3.vorbis",
+      "frames": 30000,
+      "bytes": 9164,
+      "sha256": "55f0e09de73871ffc9c97f1e74fd9c513ef27ae623537ce5fc679673a8454bf5"
+    },
+    {
+      "key": "[\"tone\",880,880,0.35,0.05,\"sine\"]",
+      "file": "e322d9e48cfb694240642c02.vorbis",
+      "frames": 18000,
+      "bytes": 4865,
+      "sha256": "b495c444810628fb36a2b1a5206cfabbd7e64b2a9f6185845843e68c8802f74c"
+    },
+    {
+      "key": "[\"tone\",1319,1319,0.35,0.05,\"sine\"]",
+      "file": "51a333db58fb85c8a3cea57f.vorbis",
+      "frames": 18000,
+      "bytes": 4773,
+      "sha256": "58d941c7ab46259ff9f03c9cdde9ebce6b42f8c2031832fe7c7bff1251ad6257"
+    },
+    {
+      "key": "[\"tone\",140,40,0.45,0.5,\"sine\"]",
+      "file": "09a050f7777bc18766097649.vorbis",
+      "frames": 22800,
+      "bytes": 4980,
+      "sha256": "771793acd99ee430d53c983d31efe2a28bba78be3ec03bbf92957936454ebeb4"
+    },
+    {
+      "key": "[\"noise\",500,120,0.3,0.25,\"lowpass\"]",
+      "file": "40f13d12330bb12aef8432db.vorbis",
+      "frames": 15600,
+      "bytes": 5917,
+      "sha256": "f573ed442508c10c0fc2c51ad95e9eeb6d968ac94690d199f8be9883bbd1bc8c"
+    },
+    {
+      "key": "[\"tone\",220,220,1.6,0.2,\"sine\"]",
+      "file": "f649962a72587d70d73c0763.vorbis",
+      "frames": 78000,
+      "bytes": 6928,
+      "sha256": "2671b064854303d4f91968c592daf238d0bb55ae594b5998ba9c327f4cd6d5de"
+    },
+    {
+      "key": "[\"tone\",440,440,1.4000000000000001,0.1,\"sine\"]",
+      "file": "385bc1cc5c8bb4822fe1a469.vorbis",
+      "frames": 68400,
+      "bytes": 6847,
+      "sha256": "295735072ad07b290415298de09030fc790850c68d82cd8181731b05d030120e"
+    },
+    {
+      "key": "[\"tone\",587,587,1.2000000000000002,0.06666666666666667,\"sine\"]",
+      "file": "69bb24f4479be97dfb405720.vorbis",
+      "frames": 58801,
+      "bytes": 6506,
+      "sha256": "b32cc3aa5bd2c03529112c495591943fdc9e73568a7ef0d5e12816c65958f7ad"
+    },
+    {
+      "key": "[\"tone\",880,880,1,0.05,\"sine\"]",
+      "file": "c6c9535a21e118ec747c2ab0.vorbis",
+      "frames": 49200,
+      "bytes": 6025,
+      "sha256": "c927e412bf82658628a4e6e70b715e39ea45d4242cd7973e749d65c188a847f4"
+    },
+    {
+      "key": "[\"tone\",1175,1175,0.8,0.04,\"sine\"]",
+      "file": "d6e2696727ce8f573b99fd34.vorbis",
+      "frames": 39600,
+      "bytes": 5717,
+      "sha256": "3e4c59734449348ddca0a18ccf984ad6238735745765d3ad349e9e2188313b1a"
+    },
+    {
+      "key": "[\"noise\",2600,2600,0.05,0.18,\"highpass\"]",
+      "file": "a6650f3a31a23c209b625d9b.vorbis",
+      "frames": 3601,
+      "bytes": 5130,
+      "sha256": "46ff8360754b5f5783c1a5363fe7c034878e35d05fab2a3d09d2b8d80d172027"
+    },
+    {
+      "key": "[\"tone\",1568,1568,0.45,0.08,\"sine\"]",
+      "file": "caa0d06d54a2d189c0a81e7f.vorbis",
+      "frames": 22800,
+      "bytes": 5049,
+      "sha256": "3c4191d7f7dde28118c29957a0584205c39d70a80d68949088ce0278b89c1c65"
+    },
+    {
+      "key": "[\"tone\",2093,2093,0.45,0.08,\"sine\"]",
+      "file": "b91229ace67daafa8bb76936.vorbis",
+      "frames": 22800,
+      "bytes": 5052,
+      "sha256": "79e012cac87080b6ee4a803cbebb0e95834287e326689a4b255b8efe06271ab0"
+    },
+    {
+      "key": "[\"tone\",2637,2637,0.45,0.08,\"sine\"]",
+      "file": "f916f664e8b51d34c06ee6a3.vorbis",
+      "frames": 22800,
+      "bytes": 4948,
+      "sha256": "3eb0cc543d79ae6b9958605578d08b11986bdf86f94b6250b571e481713ceee2"
+    },
+    {
+      "key": "[\"tone\",2400,2200,0.05,0.07,\"square\"]",
+      "file": "a712a91d22a825ee5939ec51.vorbis",
+      "frames": 3601,
+      "bytes": 4624,
+      "sha256": "3d9aa4342b265f8db830847799f3bada71afc94d0bd5336b78e89a77146fd5f9"
+    },
+    {
+      "key": "[\"noise\",5200,5200,0.03,0.1,\"highpass\"]",
+      "file": "95f5a28c90445508f993c189.vorbis",
+      "frames": 2640,
+      "bytes": 4788,
+      "sha256": "3494514d9780ec79ae2169c8ae203699d38249885d157aaf38b0ee55feec8aea"
+    },
+    {
+      "key": "[\"noise\",1800,1800,0.05,0.2,\"bandpass\"]",
+      "file": "04912357235439eb0f0f5a81.vorbis",
+      "frames": 3601,
+      "bytes": 5006,
+      "sha256": "a9574dcbd34dfd993d6c2b26995009c6aaac4236650f5cdc2e4501e2017e651c"
+    },
+    {
+      "key": "[\"noise\",2400,2400,0.05,0.2,\"bandpass\"]",
+      "file": "a11caa0a9740bf01f1d6011d.vorbis",
+      "frames": 3601,
+      "bytes": 5026,
+      "sha256": "d671f7d7571a63a6de89c68f0dfb58ccd591226e53248c2e0eb01d872e6e6142"
+    },
+    {
+      "key": "[\"noise\",3000,3000,0.05,0.2,\"bandpass\"]",
+      "file": "4a8c5912a408bd47e8ad45ea.vorbis",
+      "frames": 3601,
+      "bytes": 5022,
+      "sha256": "5ccbed1c11ad7a63c4badeae8438448716b2708aacca1a3a7ac6eedb29947384"
+    },
+    {
+      "key": "[\"tone\",90,60,0.4,0.3,\"triangle\"]",
+      "file": "3d9961818966d1ed7fccd44d.vorbis",
+      "frames": 20401,
+      "bytes": 6833,
+      "sha256": "21cb233e34525820784bdc7b07669cd61459d1ec55242f9f3dbec67de9cae616"
+    },
+    {
+      "key": "[\"tone\",392,395.92,0.9,0.07,\"sine\"]",
+      "file": "24c2422382cd81d9f9393c2e.vorbis",
+      "frames": 44400,
+      "bytes": 5812,
+      "sha256": "ae84c873103a13b75c097d6a37881161b904f9669d9c7562de0b3eeb3cb93052"
+    },
+    {
+      "key": "[\"tone\",523,528.23,0.75,0.035,\"sine\"]",
+      "file": "d3930f072457f49030e61985.vorbis",
+      "frames": 37200,
+      "bytes": 5509,
+      "sha256": "4c6700065662b8af0eb86badc65331255340d33aab7cc831b256efec9ead356b"
+    },
+    {
+      "key": "[\"tone\",784,791.84,0.6000000000000001,0.023333333333333334,\"sine\"]",
+      "file": "f6755ef80c7a82974fd894c9.vorbis",
+      "frames": 30001,
+      "bytes": 5384,
+      "sha256": "f6ff332397f058bcace3f638ac559777a7f0a13770693823840cfa42ee6da94a"
+    },
+    {
+      "key": "[\"tone\",1200,90,0.7,0.22,\"sine\"]",
+      "file": "07b1c09795a34721662c5757.vorbis",
+      "frames": 34800,
+      "bytes": 5543,
+      "sha256": "624ec865352e3a8272c4e1ba0f84a8c6084783dac094abdf1fe3547681ac6341"
+    },
+    {
+      "key": "[\"noise\",1200,200,0.5,0.2,\"bandpass\"]",
+      "file": "97cc1fb7d118c0310d94b2b8.vorbis",
+      "frames": 25200,
+      "bytes": 9073,
+      "sha256": "7a981373319b3685a24f4bd68408c445f81540ff6490a0fb2d43321cbc02a774"
+    },
+    {
+      "key": "[\"tone\",60,40,0.8,0.3,\"triangle\"]",
+      "file": "ec85317e0195b8a34a0b60f8.vorbis",
+      "frames": 39600,
+      "bytes": 8783,
+      "sha256": "2bd50d2ef55db19dc96ec9abcb26b57ab630487eaf78f44847b51d90083606db"
+    },
+    {
+      "key": "[\"tone\",125,145,0.09,0.075,\"triangle\"]",
+      "file": "58f9f112bf9c0216485d385f.vorbis",
+      "frames": 5520,
+      "bytes": 4738,
+      "sha256": "acc2b4ec4b98d3aa89f95e6c7b755f49e37ccc00a4a5377dbaf00de443575596"
+    },
+    {
+      "key": "[\"noise\",1100,1100,0.04,0.025,\"bandpass\"]",
+      "file": "cd29a1ca190d0ac046f5197d.vorbis",
+      "frames": 3120,
+      "bytes": 4816,
+      "sha256": "a6bcf325e118e25ebf735acff1d0d8b479db91d07c3f09955e588f92f44874f8"
+    },
+    {
+      "key": "[\"tone\",158,183.28,0.09,0.075,\"triangle\"]",
+      "file": "c2dee9e861346c9440940599.vorbis",
+      "frames": 5520,
+      "bytes": 4789,
+      "sha256": "892742ad0a2fe329bc31f3b6779687a17deb93947064bfddb8d54752d6eda5fe"
+    },
+    {
+      "key": "[\"tone\",191,221.55999999999997,0.09,0.075,\"triangle\"]",
+      "file": "c271722154631459bc97a3fc.vorbis",
+      "frames": 5520,
+      "bytes": 4817,
+      "sha256": "119e4e3abd55bd1041d463ccc5e7eb1f6221cde888d7ea3ce4272d156fb366d4"
+    },
+    {
+      "key": "[\"tone\",224,259.84,0.09,0.075,\"triangle\"]",
+      "file": "08bfff3bc72b9dedb64dfe68.vorbis",
+      "frames": 5520,
+      "bytes": 4930,
+      "sha256": "4c8da13e7239a32c6b71fac87f86e387af9f61e147c72d697c845b4fa0a849d0"
+    },
+    {
+      "key": "[\"tone\",257,298.12,0.09,0.075,\"triangle\"]",
+      "file": "5793265e8ebcfc67532a1108.vorbis",
+      "frames": 5520,
+      "bytes": 4936,
+      "sha256": "f6fabfacefaaf5fea023cd07286ff7a2dfbb05dff0c59c40a9a63a18242c34d0"
+    },
+    {
+      "key": "[\"tone\",290,336.4,0.09,0.075,\"triangle\"]",
+      "file": "19821f876e06765584220dc5.vorbis",
+      "frames": 5520,
+      "bytes": 4961,
+      "sha256": "6e40280fbc7a9f48046a60aa77a7bc4a6394f6e59d140061480bfde9a5382083"
+    },
+    {
+      "key": "[\"tone\",262,523,0.14,0.13,\"triangle\"]",
+      "file": "cbace672528a6c5865f12fb5.vorbis",
+      "frames": 7920,
+      "bytes": 5545,
+      "sha256": "662f94be5f45aa411d34416951a634dfc26937ad41ba9b3af04e79a2e223b68f"
+    },
+    {
+      "key": "[\"noise\",2400,2400,0.05,0.1,\"highpass\"]",
+      "file": "a831f8a2190077058259fdb4.vorbis",
+      "frames": 3601,
+      "bytes": 5123,
+      "sha256": "924996ad17f24daf07e3daf4df4cdda0ff9117d8784c6d36b5400be4afd8e6d4"
+    },
+    {
+      "key": "[\"tone\",659,659,0.3,0.08,\"sine\"]",
+      "file": "53b228850258a7d9f1e1cb42.vorbis",
+      "frames": 15600,
+      "bytes": 4728,
+      "sha256": "71d7ce007dc5e1e7d35d48bb782e476b91e34c914d0f29cb596c8b641edcc40c"
+    },
+    {
+      "key": "[\"tone\",784,784,0.3,0.08,\"sine\"]",
+      "file": "bc45b20322e7710dbff6ec17.vorbis",
+      "frames": 15600,
+      "bytes": 4815,
+      "sha256": "835640617310b1354cabc587aa8bfc56d0fa5b71e6b09771092c7c8d5f552e80"
+    },
+    {
+      "key": "[\"tone\",988,988,0.3,0.08,\"sine\"]",
+      "file": "e2b91a6c466501f4cf889bf3.vorbis",
+      "frames": 15600,
+      "bytes": 4752,
+      "sha256": "f32a0942edae9050e5f9400eb4b15d2bea83e0b21ad7556158bfd4dc3a9b2a67"
+    },
+    {
+      "key": "[\"tone\",155,53,0.115,0.2,\"triangle\"]",
+      "file": "c79dd561376d7619750ffe5b.vorbis",
+      "frames": 6721,
+      "bytes": 5065,
+      "sha256": "f207aff444f53604bb55a6ae797d3cc69f9e41ec5c2df0a3fdbbcb0108daebd5"
+    },
+    {
+      "key": "[\"noise\",1700,1700,0.085,0.23,\"highpass\"]",
+      "file": "4705779920032b843dab1cac.vorbis",
+      "frames": 5281,
+      "bytes": 5596,
+      "sha256": "d2c9c834384bacaf164981bf7b1934efd4a4c4e1d02a41dbfc031c8c72c96e44"
+    },
+    {
+      "key": "[\"tone\",390,388.05,0.2,0.1,\"sine\"]",
+      "file": "8fd14f19f1757288c89e9558.vorbis",
+      "frames": 10800,
+      "bytes": 4580,
+      "sha256": "54937399e75730e91212582a8379257aace98381e7c1098c77135b4835282fa6"
+    },
+    {
+      "key": "[\"tone\",586.9499999999999,585,0.13,0.045,\"sine\"]",
+      "file": "b98a2c132ed3a688efc28e31.vorbis",
+      "frames": 7440,
+      "bytes": 4477,
+      "sha256": "7c3c8298fe8d525349083bb0c0395afd18d9c8f2c82d6a0edc9b5533e069cd5b"
+    },
+    {
+      "key": "[\"tone\",463.7907748510612,461.4718209768059,0.2,0.1,\"sine\"]",
+      "file": "77a7e7ffb80807a7c5032c5f.vorbis",
+      "frames": 10800,
+      "bytes": 4577,
+      "sha256": "b7404275cbc41fb9b7ce9cf7c0d2ba399539bfa3a53f77b776390ff3825f8567"
+    },
+    {
+      "key": "[\"tone\",698.005116150847,695.6861622765919,0.13,0.045,\"sine\"]",
+      "file": "f21efbe043c07be5925c0f84.vorbis",
+      "frames": 7440,
+      "bytes": 4467,
+      "sha256": "bd5e95980496078a1f6faa4201f8f7fdddd6d5c0e9f2f0ecaaa5302a5f097325"
+    },
+    {
+      "key": "[\"tone\",584.3397599819058,581.4180611819962,0.2,0.1,\"sine\"]",
+      "file": "5ede8ceed92978a41207e66e.vorbis",
+      "frames": 10800,
+      "bytes": 4600,
+      "sha256": "a2f23b8161c010348411c91cdc71cf976cb29453758a0da8f1cd6c61921909a8"
+    },
+    {
+      "key": "[\"tone\",879.4313387727682,876.5096399728586,0.13,0.045,\"sine\"]",
+      "file": "5240c448c298191f83671f70.vorbis",
+      "frames": 7440,
+      "bytes": 4495,
+      "sha256": "5c75eead4f6d4b1386c82e94679d96eedd93be1df72255eed14a203da640afe7"
+    },
+    {
+      "key": "[\"tone\",694.9010001494647,691.4264951487174,0.2,0.1,\"sine\"]",
+      "file": "be92c668753abf8513edfbfa.vorbis",
+      "frames": 10800,
+      "bytes": 4580,
+      "sha256": "e587ff83cc9e2bfe497e1337ef5cbb57397b90d67123c4cf3ad71844c4fa83f1"
+    },
+    {
+      "key": "[\"tone\",1045.8260052249443,1042.351500224197,0.13,0.045,\"sine\"]",
+      "file": "010792d02a06256083ad4ebf.vorbis",
+      "frames": 7440,
+      "bytes": 4485,
+      "sha256": "f1950a3221f5a38ebdfe3f3582c330d6cac829c5c5fd73bab4cda4b513487166"
+    },
+    {
+      "key": "[\"tone\",780,776.1,0.2,0.1,\"sine\"]",
+      "file": "c8a916785515991e9497e85b.vorbis",
+      "frames": 10800,
+      "bytes": 4642,
+      "sha256": "3d325b7615c974db6ce77bc3572e7a8da2c5a2fc333b4c5287e9f1ca882fe133"
+    },
+    {
+      "key": "[\"tone\",1173.8999999999999,1170,0.13,0.045,\"sine\"]",
+      "file": "163dd4d6211c094544b6df7e.vorbis",
+      "frames": 7440,
+      "bytes": 4410,
+      "sha256": "f074c8398c317beae456321b8873fbcfe13628e4dbbb06c908e949c996d6ab38"
+    },
+    {
+      "key": "[\"tone\",927.5815497021224,922.9436419536117,0.2,0.1,\"sine\"]",
+      "file": "be9ca04fd925680f01388a82.vorbis",
+      "frames": 10800,
+      "bytes": 4622,
+      "sha256": "06c3c600e2e3e7a277e3eec69dfc504670ab068f85b83f31bcc3210964f1fae4"
+    },
+    {
+      "key": "[\"tone\",1396.010232301694,1391.3723245531837,0.13,0.045,\"sine\"]",
+      "file": "183e68be62df78470fe3d166.vorbis",
+      "frames": 7440,
+      "bytes": 4443,
+      "sha256": "3b704e05b31a233da3f8a163222e6129640c8565da0f4758b2661cdfa7648cc2"
+    },
+    {
+      "key": "[\"tone\",1168.6795199638116,1162.8361223639924,0.2,0.1,\"sine\"]",
+      "file": "9908f25b98f842586308c9e6.vorbis",
+      "frames": 10800,
+      "bytes": 4534,
+      "sha256": "76dc9e635f90a2ec0fbc693fdfd6859d9652b33b0cc0b9c258f2e06b560a7dbd"
+    },
+    {
+      "key": "[\"tone\",1758.8626775455364,1753.0192799457172,0.13,0.045,\"sine\"]",
+      "file": "1ecaddbc56c6f9af569e4e22.vorbis",
+      "frames": 7440,
+      "bytes": 4478,
+      "sha256": "29d7a412b97cb570db78235806e0b017a47140fe1038115f7971a57312849f94"
+    },
+    {
+      "key": "[\"tone\",1389.8020002989292,1382.8529902974346,0.2,0.1,\"sine\"]",
+      "file": "9d137ce8f12ba7ea07d58807.vorbis",
+      "frames": 10800,
+      "bytes": 4596,
+      "sha256": "78fa15bd838ff598bebc4ce366b6d6f2a448a3856cc468aeaf255bbe700a9854"
+    },
+    {
+      "key": "[\"tone\",2091.652010449888,2084.703000448394,0.13,0.045,\"sine\"]",
+      "file": "5f8823c1fa57ff20135cf69b.vorbis",
+      "frames": 7440,
+      "bytes": 4455,
+      "sha256": "c22e7e3ba47407155014d2b82a8956e2c3537b79bb5f3f3a346c5281376a3039"
+    },
+    {
+      "key": "[\"tone\",1560,1552.2,0.2,0.1,\"sine\"]",
+      "file": "121fa9dc3c3efc89580fd88b.vorbis",
+      "frames": 10800,
+      "bytes": 4576,
+      "sha256": "622136d6d9b1e27c2bf83ded90443fa9ff3b375a1b30aecd7473b55eef1e5d27"
+    },
+    {
+      "key": "[\"tone\",2347.7999999999997,2340,0.13,0.045,\"sine\"]",
+      "file": "0cc24eaa2b213d47c2ac9f86.vorbis",
+      "frames": 7440,
+      "bytes": 4457,
+      "sha256": "2810a21e192b2ed5089cc569a75274106c6b5a239e163fd0a9975b20e5654656"
+    }
+  ],
+  "codec": "vorbis",
+  "channels": 1,
+  "quality": 6
+}
