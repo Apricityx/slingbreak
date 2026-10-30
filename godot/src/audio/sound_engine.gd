@@ -5,6 +5,7 @@ const RATE:=48000
 const MAX_VOICES:=96
 const MOBILE_VOICES:=24
 const CACHE_BYTES:=32*1024*1024
+const BRICK_EXPLOSION_FILE:="res://assets/audio/brick-explosion.wav"
 var simulation: RefCounted
 var available:=false
 var mobile_output:=false
@@ -39,6 +40,7 @@ var filter_target:=18000.0
 var music_gain:=0.0
 var death_at:=-1.0
 var death_gain:=0.0
+var brick_explosion:AudioStreamWAV
 
 func _ready() -> void:
 	mobile_output=OS.has_feature("android")
@@ -47,6 +49,7 @@ func _ready() -> void:
 	scores=JSON.parse_string(FileAccess.get_file_as_string("res://assets/music/scores.json"))
 	var manifest:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/music/manifest.json"))
 	for entry in manifest.samples:instruments[entry.key]=entry.file
+	brick_explosion=_load_wav(BRICK_EXPLOSION_FILE)
 	_bus("Sling","Master")
 	_bus("SlingEffects","Sling");_bus("SlingUI","Sling")
 	if not mobile_output:
@@ -69,6 +72,19 @@ func _ready() -> void:
 			player.bus=bus
 			var pan:=AudioEffectPanner.new();AudioServer.add_bus_effect(AudioServer.get_bus_index(bus),pan);pan_effects.append(pan)
 	available=true
+
+func _load_wav(path:String) -> AudioStreamWAV:
+	var bytes:=FileAccess.get_file_as_bytes(path)
+	if bytes.size()<44 or bytes.slice(0,4).get_string_from_ascii()!="RIFF" or bytes.slice(8,12).get_string_from_ascii()!="WAVE":return null
+	var offset:=12;var channels:=0;var rate:=0;var format:=0;var pcm:=PackedByteArray()
+	while offset+8<=bytes.size():
+		var chunk:=bytes.slice(offset,offset+4).get_string_from_ascii();var size:=bytes.decode_u32(offset+4);offset+=8
+		if chunk=="fmt " and size>=16:
+			format=bytes.decode_u16(offset);channels=bytes.decode_u16(offset+2);rate=bytes.decode_u32(offset+4)
+		elif chunk=="data":pcm=bytes.slice(offset,mini(offset+size,bytes.size()))
+		offset+=size+(size%2)
+	if format!=1 or channels<1 or channels>2 or rate<=0 or pcm.is_empty():return null
+	var stream:=AudioStreamWAV.new();stream.format=AudioStreamWAV.FORMAT_16_BITS;stream.stereo=channels==2;stream.mix_rate=rate;stream.data=pcm;return stream
 
 func _wet_bus(name:String,send:String,delay_ms:float,feedback:float,wet:float) -> void:
 	_bus(name,send)
@@ -106,6 +122,11 @@ func _sample(directory: String,file: String) -> AudioStream:
 func play_requests(requests: Array) -> void:
 	if not available:return
 	for request in requests:
+		if request.type=="bomb":
+			var bomb_ui:bool=request.get("ui",false)
+			var bomb_bus:String="SlingUI" if bomb_ui else "SlingEffects"
+			if brick_explosion!=null:_schedule(brick_explosion,clock,1.0,bomb_bus,request.get("priority",false),bomb_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			continue
 		if not cues.has(request.type):continue
 		var voices:Array=cues[request.type][clampi(int(request.get("n",1)),0,20)]
 		for voice in voices:

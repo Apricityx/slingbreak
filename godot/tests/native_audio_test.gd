@@ -16,9 +16,12 @@ func _run() -> void:
 	var session:=Session.new();session.start(7281);audio.simulation=session.runtime
 	session.changed.connect(audio.sync);session.sound_requested.connect(audio.play_requests)
 	check(audio.available and audio.cues.size()==38,"all effect recipes load independently")
+	check(audio.brick_explosion is AudioStreamWAV,"brick explosion uses a decoded WAV sample")
 	check(audio.players.size()==96,"bounded Godot player pool")
 	check(audio._sample("res://assets/audio/","../manifest.json")==null,"audio paths cannot escape the sample directory")
 	audio.play_requests([{"type":"tap","x":0,"ui":false},{"type":"reroll","ui":true}])
+	audio.play_requests([{"type":"bomb","x":412,"priority":true}])
+	check(audio.scheduled.any(func(v):return v.stream==audio.brick_explosion and v.pan>0),"bomb cue schedules the brick explosion sample")
 	check(audio.scheduled.any(func(v):return v.pan<0),"spatial effects preserve left pan")
 	var ui_before:=audio.ui_played
 	session.command("pause",{"paused":true})
