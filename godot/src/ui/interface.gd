@@ -665,6 +665,9 @@ func _update_wipe(value:Dictionary) -> void:
 		wipe_age=maxf(0,(float(value.transition.clock)-float(info.at))/1000.0)
 		if wipe_layer!=null:wipe_layer.queue_free()
 		wipe_layer=Control.new();wipe_layer.position=Vector2(0,238);wipe_layer.size=Vector2(412,572);wipe_layer.z_index=14;wipe_layer.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(wipe_layer)
+		# Keep the curtain alive for the whole hand-off. Its last beat is a
+		# gentle release, so the board behind it does not appear on a hard frame.
+		wipe_layer.pivot_offset=Vector2(206,286)
 		for i in range(2):
 			var clip:=Control.new();clip.name="Clip%d" % i;clip.clip_contents=true;clip.mouse_filter=Control.MOUSE_FILTER_IGNORE;wipe_layer.add_child(clip)
 			var sheet:=ColorRect.new();sheet.size=Vector2(412,572);sheet.color=visuals.color("accent-bar" if i==0 else "panel");sheet.mouse_filter=Control.MOUSE_FILTER_IGNORE;clip.add_child(sheet)
@@ -676,10 +679,17 @@ func _update_wipe(value:Dictionary) -> void:
 
 func _paint_wipe() -> void:
 	if wipe_layer==null:return
+	var exit_progress:=clampf((wipe_age-.78)/.34,0,1)
+	var exit_ease:=Easing.bezier(exit_progress,.2,0,.2,1)
+	# The overlay yields before its lifetime ends. This overlaps the incoming
+	# page's first reveal frames and removes the old opaque-to-nothing snap.
+	wipe_layer.modulate.a=1.0-exit_ease*.72
+	wipe_layer.position.y=238.0-5.0*exit_ease
+	wipe_layer.scale=Vector2.ONE*(1.0-.012*exit_ease)
 	for i in range(2):
 		var clip:Control=wipe_layer.get_node("Clip%d" % i)
 		var age:float=(wipe_age-i*.07)/1.05
-		var p:float=Easing.bezier(clampf(age,0,1),.65,0,.35,1)
+		var p:float=Easing.bezier(clampf(age,0,1),.58,0,.32,1)
 		var left:float=clampf((p-.62)/.38,0,1)*412
 		var right:float=clampf(p/.34,0,1)*412
 		clip.position=Vector2(left,0);clip.size=Vector2(maxf(0,right-left),572);clip.get_child(0).position.x=-left
@@ -718,8 +728,10 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	rolling=false
 	modal_kind=kind
 	modal_enter_pending=not morph_from.has_area()
-	modal_width=250 if kind=="reset" else 388 if kind=="shop" else 380
-	modal_padding=31 if kind=="reset" else 25 if kind=="shop" else 23 if kind=="settings" else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 17
+	# Keep the draft sheet on the same 412px design grid as the Web dialog.
+	# Draft owns its section insets, so the sheet itself has no hidden inset.
+	modal_width=250 if kind=="reset" else 388 if kind=="shop" else 396
+	modal_padding=31 if kind=="reset" else 25 if kind=="shop" else 23 if kind=="settings" else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
 	var depth:=modal_stack.size()*2
 	scrim=ColorRect.new();scrim.size=Vector2(412,915);scrim.z_index=11+depth;scrim.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(scrim)
 	# Chromium 89 computes a transparent dialog backdrop: ::backdrop does not

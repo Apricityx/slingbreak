@@ -19,6 +19,9 @@ func _init() -> void:
 static func load_font(key: String) -> FontFile:
 	var font:=FontFile.new()
 	font.data=FileAccess.get_file_as_bytes("res://assets/fonts/"+key+".bin")
+	# UI text is animated through non-unit Control scales. Extra source
+	# resolution keeps the CJK fallback crisp during those transitions.
+	font.oversampling=2.0
 	return font
 
 func color(key: String) -> Color:

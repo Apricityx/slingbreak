@@ -182,6 +182,7 @@ func update(delta:float) -> void:
 	model.update(delta)
 	if not busy:fight.clock+=delta
 	if fight.hp<=0:
+		for arrow in g.arrows:g.fx.linger_trail(arrow)
 		g.arrows.clear();tasks.clear();recent.clear()
 		if fight.phase<fight.phases:
 			fight.phase+=1;fight.max=ceil(g.damage()*(24+6*fight.phase));fight.hp=fight.max;fight.clock=0

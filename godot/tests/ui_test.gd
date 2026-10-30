@@ -12,8 +12,10 @@ func _run() -> void:
 	await process_frame
 	_check(app.session.ready,"UI runtime boots")
 	var ui: Control=app.interface
+	_check(ui.oversampling_with_scale==CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED,"scaled UI keeps font atlas resolution")
+	_check(ui.visuals.fonts[0].oversampling>=2.0 and ui.visuals.fonts[2].oversampling>=2.0,"runtime UI fonts use oversampling")
 	_check(ui.modal_kind=="draft","first draft is modal")
-	_check(ui.panel.position.x==16 and ui.panel.size.x==380,"reference dialog width: "+str(ui.panel.size))
+	_check(ui.panel.position.x==8 and ui.panel.size.x==396,"draft dialog fits the 412px design grid: "+str(ui.panel.size))
 	_check(ui.panel.position.y>=8 and ui.panel.position.y+ui.panel.size.y<=907,"dialog fits stage")
 	_check(ui.panel.size.y<=ui.modal_content.get_combined_minimum_size().y+35,"draft hugs its content")
 	_check(ui.hud_nodes.progress.size.y==5,"core progress track matches the browser's five-pixel height")

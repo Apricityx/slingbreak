@@ -72,7 +72,9 @@ func _action(method: String, input: Dictionary) -> void:
 		if not progress is Dictionary or not session.import_progress(progress): interface.show_error("无效的游戏进度文件")
 		else:arena.simulation=session.runtime;audio.simulation=session.runtime
 		return
-	session.command(method, input)
+	var result:Variant=session.command(method, input)
+	if method=="buy" and result is Dictionary and result.get("accepted",false) and session.runtime.rank("bargain"):
+		preload("res://src/render/bargain_feedback.gd").show_at(interface,session.runtime,input.get("key",""))
 	if not get_meta("test_mode",false):
 		if method=="configure": session.save_settings()
 		if method in ["choose", "buy", "reroll", "swap", "reset"]: session.request_save()
@@ -82,12 +84,11 @@ func _resize() -> void:
 	arena.position = Vector2(0, 238)
 	arena.scale = Vector2.ONE
 	interface.size = Vector2(412, 915)
-	# The viewport already rasterizes fonts at the native display scale.
-	# Board coordinates add a fixed 0.52 scale. UI tweens must reuse the
-	# display-resolution glyph atlas instead of rasterizing a new one for
-	# every intermediate flip, pulse and flight scale.
+	# Board coordinates add a fixed 0.52 scale. UI cards and modal sheets are
+	# also animated with non-unit Control scales, so let Godot rebuild the
+	# glyph atlas for the effective scale instead of stretching one raster.
 	arena.board.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED
-	interface.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_DISABLED
+	interface.oversampling_with_scale = CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED:

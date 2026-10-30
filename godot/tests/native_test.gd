@@ -43,6 +43,10 @@ func _run() -> void:
 	sim.integrate(a,1.0/60)
 	check(a.px<500 and a.py>600 and a.vx<0,"external collision/steering writes feed the next integration")
 	sim= fresh(["spectral"])
+	sim.fx.signature("spectral",Vector2(390,300),80)
+	sim.fx.beam("spectral",Vector2(100,200),Vector2(200,300))
+	sim.fx.skill_bolt(Vector2(100,200),Vector2(200,300))
+	check(sim.fx.signatures.is_empty() and sim.fx.beams.is_empty() and sim.fx.bolts.is_empty(),"v1 skill effects stay hidden")
 	check(sim.predict(sim.origin,Vector2(0,-24)).size()>12,"native aim prediction")
 	var before_rng:int=sim.rng.state
 	for i in range(20):sim.fx.burst(Vector2(10,10),Color.GREEN,20)

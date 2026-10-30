@@ -330,6 +330,7 @@ func buy(key: String) -> bool:
 	var price:=cost(key)
 	if state.coins<price:return false
 	state.coins-=price;state.up[key]+=1
+	if rank("bargain"):fx.skill_event("bargain",origin-Vector2(0,72),Vector2.UP,Vector2.ZERO,1.0,0.60)
 	if rank("forge") and key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false):
 		state.skillRuntime.forge=true;state.up[key]+=mini(2,10-int(state.up.draw)) if key=="draw" else 2
 	cue("upgrade");events.append({"type":"toast","text":"升级成功"});revision+=1
@@ -389,12 +390,16 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 	brick.hp-=dealt;brick.flash=0.16
 	if brick.hp>0:fx.burst(brick.position,fx.brick_color(brick.type),4,0.5);cue("tap",1,brick.x);return
 	bricks.erase(brick);killed+=1;state.total+=1
+	if brick.frozen or brick.type=="frost":fx.frozen_target(brick.position,maxf(brick.w,brick.h)*0.5)
 	if active_arrow!=null:
 		active_arrow.kills+=1;state.best=maxi(state.best,active_arrow.kills)
 	var money:=_award(brick,depth)
 	state.coins+=money;shot_money+=money;level_money+=money
 	fx.burst(brick.position,fx.brick_color(brick.type),16);fx.floating(brick.position,"+%d" % int(money));fx.shake=minf(8,fx.shake+1.5)
-	if brick.type!="normal":cue("boom" if brick.type=="bomb" else brick.type,1,brick.x,true)
+	if brick.type=="normal":fx.normal_break(brick.position,fx.brick_color(brick.type))
+	if brick.type=="gold" and rank("alchemist"):fx.skill_event("alchemist",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.64)
+	if brick.type!="normal":fx.special_break(brick.position,brick.type,1.0 if depth==0 else 0.82,depth)
+	if brick.type!="normal":cue("bomb" if brick.type=="bomb" else brick.type,1,brick.x,true)
 	cue("break",active_arrow.kills if active_arrow!=null else 0,brick.x)
 	if killed>=threshold and core==null and bosses.fight.is_empty():spawn_core()
 	if depth<70:
@@ -403,13 +408,20 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 			"lightning":
 				var from:Vector2=brick.position
 				for target in nearest(brick.position,7 if rank("storm") else 5):
+					if rank("storm"):fx.skill_event("storm",from,from.direction_to(target.position),target.position,1.0,0.5)
 					fx.bolt(from,target.position);from=target.position;hit(target,damage()*(2 if rank("storm") else 1.6),depth+1)
 			"frost":
 				var radius:=190 if rank("blizzard") else 140
-				fx.ring(brick.position,Color("#81bece"),radius+4)
-				for target in near(brick.position,radius):target.frozen=true;hit(target,damage()*(1 if rank("blizzard") else 0.5),depth+1)
+				if rank("blizzard"):fx.skill_event("blizzard",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.72)
+				for target in near(brick.position,radius):
+					target.frozen=true
+					# Presentation follows the wave; damage remains synchronous.
+					target.frost_born=fx.visual_time+target.position.distance_to(brick.position)/(radius*2.4/0.82)
+					target.frost_direction=(target.position-brick.position).normalized()
+					hit(target,damage()*(1 if rank("blizzard") else 0.5),depth+1)
 			"prism":
 				var count:=6 if rank("prism") else 3
+				if rank("prism"):fx.skill_event("prism",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.52)
 				for i in range(count):
 					var angle:float=-0.9+i*1.8/(count-1)
 					launch(brick.position,Vector2(sin(angle),-cos(angle))*18,-1,3 if rank("prism") else 2)
@@ -425,6 +437,8 @@ func _award(brick: RefCounted, depth: int) -> float:
 	if brick.type!="normal":tally.types[brick.type]=true
 	tally.bankKill=tally.bankKill or tally.bounces>0;tally.trickKill=tally.trickKill or tally.bounces>=3;tally.airKill=tally.airKill or arrow.life>=2
 	tally.baseMult=multiplier(arrow.kills);tally.bountyMult=1+rank("bounty")*mini(8,maxi(0,arrow.kills-1))*0.25
+	if rank("bounty") and arrow.kills>=2:
+		fx.skill_event("bounty",brick.position,Vector2.UP,Vector2.ZERO,0.55+mini(8,arrow.kills-1)*0.65/8.0,0.62)
 	var base:=reward(brick.type,arrow.kills);tally.base+=base
 	var value:=evaluate_achievements(arrow)
 	stats.brick+=minf(value,base);stats.mult+=value-minf(value,base)
@@ -453,6 +467,7 @@ func spawn_core(quiet: bool=false) -> void:
 	core={"x":390.0,"y":80.0,"born":time-(2 if quiet else 0)}
 	presentation_core_previous=Vector2(core.x,core.y)
 	if not quiet:
+		if rank("resonance"):fx.skill_event("resonance",Vector2(core.x,core.y),Vector2.UP,Vector2.ZERO,1.0,0.68)
 		fx.flash=1;fx.ring(Vector2(390,80),Color("#a4d65e"),220);fx.burst(Vector2(390,80),Color("#a4d65e"),45,2);cue("core");events.append({"type":"toast","text":"核心已显现 · 命中即可清场"})
 	revision+=1
 
@@ -460,10 +475,12 @@ func clear() -> void:
 	if phase=="clearing":return
 	var level:=int(state.level)
 	settled_bonus=bonus();state.coins+=settled_bonus;level_money+=settled_bonus
+	if rank("treasury"):fx.skill_event("treasury",Vector2(core.x,core.y) if core!=null else Vector2(390,80),Vector2.DOWN,Vector2.ZERO,1.0,0.72)
 	phase="clearing";clear_shown_at=clock;clear_at=time+3.4
 	hitstop(0.13)
 	fx.flash=1.6;fx.shake=14;fx.ring(Vector2(390,80),Color("#a4d65e"),850);fx.burst(Vector2(390,80),Color("#93c446"),80,3)
 	for brick in bricks:fx.burst(brick.position,fx.brick_color(brick.type),6)
+	for arrow in arrows:fx.linger_trail(arrow)
 	bricks.clear();obstacles.clear();arrows.clear();core=null;skills.reset();cue("win",1,390,true)
 	var parts:Array=[]
 	for entry in [["基础砖块",stats.brick,"#9bcc5d"],["倍率加成",stats.mult,"#e0ad2c"],["核心奖金",settled_bonus,"#5f8a2f"],["技能与其他",maxf(0,level_money-stats.brick-stats.mult-settled_bonus-stats.carried),"#8d78b9"],["此前进度",stats.carried,"#b9c2ad"]]:
@@ -543,7 +560,12 @@ func guide(arrow: RefCounted, delta: float) -> void:
 			var score:float=difference.length()*(1 if brick.type=="normal" else 0.7)
 			if score<best:best=score;target=brick.position
 	if target!=null:
-		arrow.velocity=arrow.velocity.rotated(clampf(arrow.velocity.angle_to(target-arrow.position),-delta*4,delta*4))
+		var correction:float=clampf(arrow.velocity.angle_to(target-arrow.position),-delta*4,delta*4)
+		if rank("corehunter") and core!=null and target==Vector2(core.x,core.y) and absf(correction)>0.01 and fx.visual_time>=float(arrow.flags.get("corehunterFxAt",-INF)):
+			fx.skill_event("corehunter",arrow.position,arrow.velocity,target,1.0,0.46);arrow.flags.corehunterFxAt=fx.visual_time+0.18
+		if rank("seeking") and absf(correction)>0.01 and time>=float(arrow.flags.get("seekingFxAt",-INF)):
+			fx.skill_event("seeking",arrow.position,arrow.velocity,target,1.0,0.42);arrow.flags.seekingFxAt=time+0.14
+		arrow.velocity=arrow.velocity.rotated(correction)
 		arrow.color=Color("#91b646" if core!=null else "#8873b1")
 
 func integrate(arrow: RefCounted, delta: float) -> void:
@@ -601,7 +623,11 @@ func advance_arrow(arrow: RefCounted, delta: float) -> void:
 		for brick in bricks:
 			if brick.id==id and brick.bounds.grow(2.5).has_point(arrow.position):present=true;break
 		if not present:arrow.overlap.erase(id)
-	if arrow.pierce<=0 or arrow.position.y>1080 or arrow.life>4.5:arrows.erase(arrow)
+	if arrows.has(arrow) and (arrow.pierce<=0 or arrow.position.y>1080 or arrow.life>4.5):
+		fx.linger_trail(arrow)
+		var arrow_color:Color=arrow.color if arrow.color.a>0 else Color(content.palette(theme).arrow.shaft)
+		fx.arrow_break(arrow.position,arrow.velocity,arrow_color,Color(content.palette(theme).arrow.fletch),arrow.scale)
+		arrows.erase(arrow)
 	elif arrow.display_previous.distance_to(arrow.position)>maxf(40,arrow.velocity.length()*delta*120):
 		# Teleports are intentional cuts, rather than a ribbon through the board.
 		arrow.reset_display()
@@ -669,7 +695,7 @@ func predict(position: Vector2, velocity: Vector2, distance: float=720) -> Packe
 
 func cue(type: String, n: int=1, x: float=390, priority: bool=false, ui: bool=false) -> void:
 	if not state.sound or paused and not ui:return
-	var interval:float={"draw":0.065,"break":0.018,"boom":0.055,"lightning":0.06,"tap":0.03,"ricochet":0.035,"bell":0.2,"tick":0.08}.get(type,0.05)
+	var interval:float={"draw":0.065,"break":0.018,"boom":0.055,"bomb":0.055,"lightning":0.06,"tap":0.03,"ricochet":0.035,"bell":0.2,"tick":0.08}.get(type,0.05)
 	if not priority and clock-last_sounds.get(type,-INF)<interval:return
 	last_sounds[type]=clock;sounds.append({"type":type,"n":clampi(n,0,20),"x":x,"priority":priority,"ui":ui})
 

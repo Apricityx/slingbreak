@@ -68,7 +68,7 @@ func _run() -> void:
 	dense.slots=4;dense.skills=dense.draft.options.duplicate();dense.skills.append(chosen)
 	for id in dense.draft.options:ui.catalog[id].description="这是用来验证长技能说明可以换行和滚动的文本。".repeat(14)
 	ui.present(dense);ui._draft();await settle()
-	check(ui.panel.size.x==380 and ui.panel.size.y<=883,"long draft stays inside stage")
+	check(ui.panel.size.x==396 and ui.panel.size.y<=883,"long draft stays inside stage")
 	check(ui.modal_content.size.y>ui.modal_scroll.size.y,"long draft has real vertical scrolling")
 	ui.modal_scroll.scroll_vertical=9999;await settle()
 	check(ui.modal_scroll.scroll_vertical>0,"long draft scroll reaches content below fold")

@@ -72,14 +72,22 @@ func run() -> void:
 	g.generate();g.phase="ready";g.board_entrance=null;await settle()
 	check(previous.all(func(item):return not is_instance_valid(item)) and board.retained.has(g.bricks[0]),"new generation retires old display lists and shows new targets")
 	brick=g.bricks[0];brick.type="bomb";await settle();node=board.retained[brick]
+	check(node.get_meta("stroke_meshes",[]).is_empty(),"procedural bomb glyph does not depend on baked mesh ownership")
+	# Standard brick glyphs are now procedural vectors. Exercise the actual
+	# mesh fallback separately so cache ownership remains covered.
+	brick.type="mesh_fixture";board.signatures.prepare(["pulse"])
+	# Mesh-only fixtures opt into the stroke material; text-bearing bricks must not.
+	node.material=board.material
+	while "pulse" in board.signatures.pending:await process_frame;board.signatures.collect()
+	await settle()
 	var mesh_draws:=[0];node.draw.connect(func():mesh_draws[0]+=1)
-	var bundle:Resource=board.signatures.meshes.get("blast")
+	var bundle:Resource=board.signatures.meshes.get("pulse")
 	check(bundle!=null and not node.get_meta("stroke_meshes",[]).is_empty(),"retained glyph owns its mesh bundle beyond cache lifetime")
-	board.signatures.meshes.erase("blast");board.signatures.mesh_order.erase("blast")
+	board.signatures.meshes.erase("pulse");board.signatures.mesh_order.erase("pulse")
 	await settle()
 	check(mesh_draws[0]>0,"eviction invalidates retained mesh glyph without a gameplay mutation")
-	while "blast" in board.signatures.pending:await process_frame;board.signatures.collect()
+	while "pulse" in board.signatures.pending:await process_frame;board.signatures.collect()
 	await settle()
-	check(board.signatures.meshes.has("blast") and not node.get_meta("stroke_meshes",[]).is_empty(),"async mesh readiness invalidates fallback glyph and restores retained mesh")
+	check(board.signatures.meshes.has("pulse") and not node.get_meta("stroke_meshes",[]).is_empty(),"async mesh readiness invalidates fallback glyph and restores retained mesh")
 	app.queue_free();await process_frame
 	print("Native retained rendering: %d checks, %d failures" % [checks,failures]);quit(1 if failures else 0)

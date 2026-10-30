@@ -82,13 +82,14 @@ func reroll(parent: Control,callback: Callable,disabled: bool) -> Button:
 	return button
 
 func draft() -> void:
-	var header:HBoxContainer=v.row(root,8);header.name="DraftHeader";header.alignment=BoxContainer.ALIGNMENT_END
+	var header_inset:MarginContainer=v.margin(root,16,18,16,0)
+	var header:HBoxContainer=v.row(header_inset,16);header.name="DraftHeader";header.alignment=BoxContainer.ALIGNMENT_END
 	var words:VBoxContainer=v.column(header,6);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.text(words,"第 %d 关 · 三选一" % f.level,11,"accent-ink",true)
 	v.text(words,"加入下一块拼图",22,"ink",true)
 	var count:Control=v.badge(header,"%d / %d 已装备" % [f.skills.size(),f.slots],v.color("surface-2"),v.color("line-2"),v.color("text-2"),11,20);count.size_flags_vertical=Control.SIZE_SHRINK_END
-	v.space(root,14)
-	var loadout:=PanelContainer.new();loadout.name="Loadout";loadout.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),Color.TRANSPARENT,10,8));root.add_child(loadout)
+	var loadout_inset:MarginContainer=v.margin(root,16,14,16,0)
+	var loadout:=PanelContainer.new();loadout.name="Loadout";loadout.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),Color.TRANSPARENT,10,8));loadout_inset.add_child(loadout)
 	var row:HBoxContainer=v.row(loadout,5)
 	for i in range(int(f.slots)):
 		var id:String=f.skills[i] if i<f.skills.size() else ""
@@ -101,10 +102,11 @@ func draft() -> void:
 		if outgoing:slot.tooltip_text="最早 · 将替换"
 		_motion_slot(slot)
 	v.space(root,16)
-	var options:VBoxContainer=v.column(root,0);options.name="DraftOptions"
+	var options_inset:MarginContainer=v.margin(root,16,0,16,0)
+	var options:VBoxContainer=v.column(options_inset,10);options.name="DraftOptions"
 	for id in f.draft.options:skill_card(options,id,func():ui._select(id))
-	v.space(root,28)
-	reroll(root,func():ui._reroll(),f.rerolls<=0)
+	var reroll_inset:MarginContainer=v.margin(root,16,12,16,16)
+	reroll(reroll_inset,func():ui._reroll(),f.rerolls<=0)
 
 func skill_card(parent: Control,id: String,callback: Callable) -> Button:
 	var item:Dictionary=ui.catalog[id]
@@ -113,26 +115,29 @@ func skill_card(parent: Control,id: String,callback: Callable) -> Button:
 	card.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),tier_edge(item),11))
 	card.add_theme_stylebox_override("hover",v.box(v.color("surface-2"),v.mix(Color(item.color),v.color("line-2"),.65),11))
 	card.add_theme_stylebox_override("pressed",v.box(v.color("surface-2"),Color(item.color),11))
+	# Web cards deliberately have no persistent focus outline. Godot's shared
+	# button theme would otherwise add an accent frame to the first focused card.
+	card.add_theme_stylebox_override("focus",v.box(v.color("surface-2"),tier_edge(item),11))
 	var layout:=HBoxContainer.new();layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);layout.add_theme_constant_override("separation",0);layout.mouse_filter=Control.MOUSE_FILTER_IGNORE;card.add_child(layout)
 	var art:=Art.new();art.visuals=v;art.ink=Color(item.color);art.custom_minimum_size.x=76;art.size_flags_vertical=Control.SIZE_EXPAND_FILL;layout.add_child(art)
 	var center:=CenterContainer.new();center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);center.mouse_filter=Control.MOUSE_FILTER_IGNORE;art.add_child(center);emblem(center,item)
 	var content:VBoxContainer=v.column(layout);content.size_flags_horizontal=Control.SIZE_EXPAND_FILL;content.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	var inset:MarginContainer=v.margin(content,14,12,14,0)
+	var inset:MarginContainer=v.margin(content,14,6,14,0)
 	var words:VBoxContainer=v.column(inset);words.mouse_filter=Control.MOUSE_FILTER_IGNORE
 	var ribbon:=HBoxContainer.new();words.add_child(ribbon)
 	var badge:Control=rarity(ribbon,item,true);badge.name="CardRarity";_motion_slot(badge)
-	v.space(words,6);v.text(words,item.name,17,"ink",true);v.space(words,4);v.text(words,item.family+" · 跨关生效",10,"text-3")
+	v.space(words,0);v.text(words,item.name,17,"ink",true);v.space(words,4);v.text(words,item.family+" · 跨关生效",10,"text-3")
 	v.space(words,8)
 	var desc:Label=v.text(words,item.description,11,"text-2",false,true);desc.custom_minimum_size.x=238;desc.add_theme_constant_override("line_spacing",5)
 	words.name="CardWords"
-	v.space(words,8);v.text(words,"本轮出现率 %.2f%%" % (f.chances.get(id,0)*100),10,"text-3");v.space(words,10)
+	v.space(words,0);v.text(words,"本轮出现率 %.2f%%" % (f.chances.get(id,0)*100),10,"text-3");v.space(words,10)
 	v.rule(content)
 	var footer:MarginContainer=v.margin(content,14,9,14,9);var pick:HBoxContainer=v.row(footer,8)
 	footer.name="CardFooter"
 	var outgoing:bool=f.skills.size()>=f.slots
 	var text:Label=v.text(pick,"替换「%s」" % ui.catalog[f.skills[0]].name if outgoing else "加入技能槽",12,"warm-ink" if outgoing else "accent-ink",true);text.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.image(pick,"arrow-left-right" if outgoing else "arrow-up-right",v.color("warm-ink" if outgoing else "accent-ink"),Vector2(15,15))
-	card.custom_minimum_size=Vector2(344,190)
+	card.custom_minimum_size=Vector2(0,0)
 	content.minimum_size_changed.connect(func():card.custom_minimum_size.y=content.get_combined_minimum_size().y+2)
 	v.pointer_through(layout)
 	_motion_slot(words);_motion_slot(footer)

@@ -30,6 +30,9 @@ func run() -> void:
 		for field in reference[i]:same=same and g.fx.particles[i][field]==reference[i][field]
 	check(same,"ring reuse preserves newest particles and oldest-first draw order")
 	g.fx.advance_visual(1);check(g.fx.particles.is_empty(),"reused particles expire normally")
+	g.fx.arrow_break(Vector2.ZERO,Vector2.RIGHT,Color.WHITE,Color.GREEN)
+	check(g.fx.particles.size()==10 and g.fx.particles[0].has("polygon") and g.fx.particles[0].position.distance_to(g.fx.particles[6].position)>20,"arrow destruction reconstructs shaft, arrowhead and fletching as shards")
+	g.fx.advance_visual(1);check(g.fx.particles.is_empty(),"arrow shard particles expire normally")
 	g.dispose()
 	var session:=Session.new();session.save_path="user://spike-test-progress.json";session.start(9128)
 	for i in range(8):session.runtime.state.coins=i;session.request_save()

@@ -8,6 +8,9 @@ var hp := 3.0
 var max_hp := 3.0
 var type := "normal"
 var frozen := false
+## Transient presentation state; deliberately excluded from saves.
+var frost_born := -1.0
+var frost_direction := Vector2.RIGHT
 var flash := 0.0
 var flags: Dictionary = {}
 var position: Vector2:

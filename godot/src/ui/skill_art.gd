@@ -11,12 +11,16 @@ func _ready() -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO,size),visuals.mix(ink,visuals.color("surface"),.09))
+	# Match the Web art band: a soft centered bloom behind the emblem and a
+	# restrained 9px diagonal hatch over the skill tint.
+	var bloom:=ink;bloom.a=.30
+	draw_circle(Vector2(size.x*.5,size.y*.58),size.y*.62,bloom)
 	var hatch:=ink;hatch.a=.07
-	for x in range(-int(size.y),int(size.x)+int(size.y),13):
+	for x in range(-int(size.y),int(size.x)+int(size.y),9):
 		draw_line(Vector2(x,0),Vector2(x-size.y,size.y),hatch,1,true)
 	var center:=size/2
-	for r in range(44,0,-1):
-		var glow:=ink;glow.a=.013*(1-float(r)/44);draw_circle(center,r,glow)
+	for r in range(34,0,-1):
+		var glow:=ink;glow.a=.010*(1-float(r)/34);draw_circle(center,r,glow)
 	draw_line(Vector2(size.x-1,0),Vector2(size.x-1,size.y),visuals.mix(ink,visuals.color("line"),.18),1)
 	# Control clipping is rectangular; cover the left corner wedges explicitly.
 	for corner in [0,1]:
