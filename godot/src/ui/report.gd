@@ -46,6 +46,10 @@ func build(layer: Control,report: Dictionary,bonus: float) -> void:
 		v.space(content,10);var rift:=HFlowContainer.new();rift.add_theme_constant_override("h_separation",6);rift.add_theme_constant_override("v_separation",6);content.add_child(rift)
 		v.text(rift,report.rift.title,10,"text-3")
 		for item in report.rift.items:v.badge(rift,item,v.color("legend-prism-bg"),Color.TRANSPARENT,v.color("legend-prism"),10,3)
+	if report.get("variant") is Dictionary:
+		v.space(content,10);var variant:=HFlowContainer.new();variant.name="Variant";variant.add_theme_constant_override("h_separation",6);variant.add_theme_constant_override("v_separation",6);content.add_child(variant)
+		v.text(variant,report.variant.title,10,"text-3")
+		for item in report.variant.items:v.badge(variant,item,v.color("accent-soft"),Color.TRANSPARENT,v.color("accent-ink-strong"),10,3)
 	if not report.get("skills",[]).is_empty():
 		v.space(content,10);var skills:=HFlowContainer.new();skills.name="Skills";skills.add_theme_constant_override("h_separation",6);skills.add_theme_constant_override("v_separation",6);content.add_child(skills)
 		v.text(skills,"主力技能",10,"text-3")

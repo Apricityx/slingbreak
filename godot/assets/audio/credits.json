@@ -1,0 +1,9 @@
+{
+  "title": "RPG Sound Package / Heroes of Hawks Haven",
+  "author": "Tuomo Untinen (Reemax)",
+  "source": "https://opengameart.org/content/rpg-sound-package",
+  "license": "CC-BY 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "changes": "弓箭与冰冻音效经过裁剪、滤波、淡入淡出、峰值调整及 Vorbis 编码。",
+  "files": ["arrow-shoot.vorbis", "frost-freeze.vorbis"]
+}

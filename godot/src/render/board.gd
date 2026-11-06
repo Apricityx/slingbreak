@@ -8,8 +8,11 @@ const Retained=preload("res://src/render/retained_board.gd")
 const SkillImpacts=preload("res://src/render/skill_impacts.gd")
 const SkillBatchFive=preload("res://src/render/skill_batch_five.gd")
 const SkillBatchSix=preload("res://src/render/skill_batch_six.gd")
+const SkillBatchSeven=preload("res://src/render/skill_batch_seven.gd")
 const SkillBatchFour=preload("res://src/render/skill_batch_four.gd")
 const SkillBatch=preload("res://src/render/skill_batch.gd")
+const SkillBatchEight=preload("res://src/render/skill_batch_eight.gd")
+const SkillBatchNine=preload("res://src/render/skill_batch_nine.gd")
 var skill_batches:Dictionary={}
 var simulation: RefCounted
 var signatures:=Signatures.new()
@@ -19,12 +22,20 @@ var palette: Dictionary={}
 var last_theme:=""
 var prediction:=PackedVector2Array()
 var boss_art:=BossArt.new()
+var abyss_surface:=preload("res://src/render/abyss_surface.gd").new()
+var abyss_fx:=preload("res://src/render/abyss_fx.gd").new()
+var clock_surface:=preload("res://src/render/clock_surface.gd").new()
+var forge_surface:=preload("res://src/render/forge_surface.gd").new()
+var serpent_surface:=preload("res://src/render/serpent_surface.gd").new()
 var boxes:Dictionary={}
 var core_glow:=CoreGlow.new()
 var explosions:=preload("res://src/render/explosions.gd").new()
 var frost:=preload("res://src/render/frost.gd").new()
 var coin_batch:=preload("res://src/render/coin_batch.gd").new()
+var shatter_batch:=preload("res://src/render/shatter_batch.gd").new()
+var bomb_batch:=preload("res://src/render/bomb_batch.gd").new()
 var foreground:=preload("res://src/render/effect_foreground.gd").new()
+var income_layer:=preload("res://src/render/income_layer.gd").new()
 var shake_offset:=Vector2.ZERO
 var shake_velocity:=Vector2.ZERO
 var arrow_trails:Dictionary={}
@@ -35,6 +46,8 @@ var background_layer:Node2D
 var masonry:Node2D
 var retained:Dictionary={}
 var retained_simulation:RefCounted
+var jolts:Array=[]
+var blasts:Array=[]
 var prepared_key:=""
 const GLYPHS={"bomb":"blast","lightning":"storm","frost":"ice","prism":"prism","gold":"mint","void":"starforge","hydra":"infection","anchor":"contract","shard":"piercer","plate":"heavy","magma":"rage","scale":"boomerang","star":"nova","hour":"timeslip"}
 
@@ -43,23 +56,42 @@ func _ready() -> void:
 	for id in SkillBatch.IDS:
 		var batch:=SkillBatch.new();batch.setup(id);skill_batches[id]=batch;add_child(batch)
 	coin_batch.setup();add_child(coin_batch)
+	shatter_batch.setup();add_child(shatter_batch)
+	for id in SkillBatchEight.IDS:
+		var batch:=SkillBatchEight.new();batch.setup(id);skill_batches[id]=batch;add_child(batch)
+	for id in SkillBatchNine.IDS:
+		var batch:=SkillBatchNine.new();batch.setup(id);skill_batches[id]=batch;add_child(batch)
+	add_child(abyss_surface)
+	add_child(abyss_fx)
 	foreground.board=self;add_child(foreground)
 	add_child(explosions)
+	bomb_batch.setup();add_child(bomb_batch)
 	add_child(frost)
+	income_layer.board=self;add_child(income_layer)
 	font=preload("res://src/ui/presentation.gd").load_font("bold")
 	font.fallbacks=[preload("res://src/ui/presentation.gd").load_font("cjk")]
 	draw_on=self
 	signatures.attach(self,get_global_transform().get_scale().x)
 	signatures.attach(foreground,get_global_transform().get_scale().x)
 	signatures.prepare(["blast","storm","ice","prism","mint","pulse","supernova","timeslip","starforge","infection","contract","piercer","heavy","rage","nova"])
+	# The clock dial and forge body sit behind the guide line and masonry; their guidance labels draw above.
+	clock_surface.show_behind_parent=true;add_child(clock_surface);add_child(clock_surface.guidance)
+	forge_surface.show_behind_parent=true;add_child(forge_surface);add_child(forge_surface.guidance)
 	background_layer=Retained.new();background_layer.board=self;background_layer.background=true;background_layer.show_behind_parent=true;add_child(background_layer)
 	masonry=Node2D.new();masonry.show_behind_parent=true;add_child(masonry)
+	# The serpent body lies over the masonry, under arrows and its vector head.
+	serpent_surface.show_behind_parent=true;add_child(serpent_surface);add_child(serpent_surface.guidance)
 
 func _exit_tree() -> void:
 	signatures.finish_loading()
 
 func _process(delta: float) -> void:
 	core_glow.present(simulation)
+	abyss_surface.present(simulation)
+	abyss_fx.present(simulation)
+	clock_surface.present(simulation)
+	forge_surface.present(simulation)
+	serpent_surface.present(simulation)
 	if simulation!=null:
 		var g=simulation
 		var offers:Array=g.state.draft.options if g.state.draft is Dictionary else[]
@@ -108,9 +140,12 @@ func _process(delta: float) -> void:
 		explosions.present(g)
 		frost.present(g)
 		coin_batch.present(g)
+		shatter_batch.present(g)
+		bomb_batch.present(g)
 		for batch in skill_batches.values():batch.present(g)
 		queue_redraw()
 		foreground.queue_redraw()
+		income_layer.queue_redraw()
 
 func _sync_retained() -> void:
 	var g=simulation
@@ -126,6 +161,16 @@ func _sync_retained() -> void:
 	var entrance:float=g.presentation_time if g.board_entrance!=null else -1.0
 	var entrance_start:float=g.board_entrance.start if g.board_entrance!=null else -1.0
 	var order:=0
+	# Fresh normal breaks nudge their neighbours. Prefiltered and capped so a
+	# dense chain costs at most eight distance checks per retained brick.
+	jolts.clear();blasts.clear()
+	for event in g.fx.bombs:
+		var age:float=g.fx.visual_time-event.born
+		if age>=0 and age<0.5:blasts.append([event.position,age,event.radius])
+	if not g.reduced:
+		for event in g.fx.normal_breaks:
+			var age:float=g.fx.visual_time-event.born
+			if age>=0 and age<0.16 and jolts.size()<8:jolts.append([event.position,age])
 	for wall in g.obstacles:
 		var key:Array=[g.theme,wall.bounds,wall.flash,g.rank("spectral")]
 		_retain(wall,true,key,wanted,order);order+=1
@@ -160,8 +205,33 @@ func _retain(entity:RefCounted,is_wall:bool,key:Array,wanted:Dictionary,order:in
 		var envelope:float=exp(-age*12.0)*maxf(0,1-distance/(event.radius*1.8))
 		heat=maxf(heat,envelope*0.45)
 		if not simulation.reduced:displacement+=delta.normalized()*sin(age*28.0)*envelope*5.0
+	for blast in blasts:
+		# The shock front reaches each brick when the ring does, kicks it
+		# outward and lets it spring back; survivors glow at the fringe.
+		var delta:Vector2=entity.position-blast[0]
+		var distance:float=delta.length()
+		var reach:float=blast[2]*1.9
+		if distance<1.0 or distance>reach:continue
+		var age:float=blast[1]-distance/1300.0
+		if age<0:continue
+		var falloff:float=1.0-distance/reach
+		heat=maxf(heat,exp(-age*7.0)*falloff*0.6)
+		if not simulation.reduced:displacement+=delta/distance*sin(age*34.0)*exp(-age*14.0)*falloff*9.0
+	for jolt in jolts:
+		var delta:Vector2=entity.position-jolt[0]
+		var distance_squared:float=delta.length_squared()
+		if distance_squared<1.0 or distance_squared>14400.0:continue
+		var distance:float=sqrt(distance_squared)
+		var age:float=jolt[1]-distance/1500.0
+		if age>0:displacement+=delta/distance*sin(age*40.0)*exp(-age*22.0)*(1.0-distance/120.0)*4.0
 	retained[entity].position=displacement.limit_length(6.0)
 	retained[entity].modulate=Color(1.0,1.0-heat*0.35,1.0-heat*0.7)
+	if simulation.bosses.boss_id=="eye":
+		var reflected:float=abyss_fx.illumination(entity.position)
+		retained[entity].modulate*=Color(1+reflected*0.5,1+reflected*0.15,1+reflected)
+	if is_wall and simulation.bosses.boss_id=="eye" and simulation.board_entrance!=null:
+		var entrance:float=simulation.presentation_time-simulation.board_entrance.start
+		retained[entity].modulate.a=clampf((entrance-(entity.y-170)/60*0.035)/0.42,0,1)
 
 func color(section: String,key: String) -> Color:
 	return Color(palette.get(section,{}).get(key,"#48652c"))
@@ -184,6 +254,7 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	if g.phase!="draft" and g.phase!="clearing":
 		_core()
+		g.variants.draw(self)
 		_fields()
 		_bounty_markers()
 		_draw_brick_atmosphere(g)
@@ -197,7 +268,6 @@ func _draw() -> void:
 func _draw_foreground() -> void:
 	if simulation==null:return
 	var g=simulation
-	_draw_normal_breaks(g)
 	for beam in g.fx.beams:
 		var t:float=(g.time-beam.born)/beam.duration
 		for width in [beam.width,3.0]:draw_on.draw_line(beam.start,beam.finish,alpha(beam.color,(1-t)*(0.16 if width>3 else 0.85)),width,true)
@@ -224,6 +294,9 @@ func _draw_foreground() -> void:
 		elif ghost.trail.size()>1:_ribbon_trail(ghost,color("arrow","trail"),color("arrow","shaft"),fade,false,ghost.id*0.37)
 	for arrow in g.arrows:_arrow(arrow)
 	_sling()
+	# The release string must sit above the opaque launcher pad.
+	for event in g.fx.skill_events:
+		if event.id=="rapid":SkillBatchSeven.paint(draw_on,event,g.fx.visual_time,g.reduced,g.theme=="dark")
 	if g.fx.skill_v1_effects_visible():
 		for item in g.fx.signatures:
 			var t:float=(g.time-item.born)/item.duration
@@ -258,34 +331,20 @@ func _draw_foreground() -> void:
 func _draw_brick_atmosphere(g: RefCounted) -> void:
 	pass
 
-func _draw_normal_breaks(g: RefCounted) -> void:
-	for event in g.fx.normal_breaks:
-		var age:float=clampf((g.fx.visual_time-event.born)/event.life,0,1)
-		var impact:float=1.0-pow(age,0.7)
-		var travel:float=lerpf(4.0,34.0,ease(age,0.72))*event.intensity
-		var color_value:Color=event.color
-		var edge_color:=Color("#34412f") if g.theme=="light" else Color("#f4f8e9")
-		var seed:float=float(event.seed)
-		# A compact core flash sells the hit without adding another particle.
-		draw_on.draw_circle(event.position,lerpf(15.0,3.0,age),alpha(Color.WHITE,impact*0.28))
-		for index in range(4):
-			var angle:float=seed*1.731+index*TAU/4.0
-			var direction:Vector2=Vector2.from_angle(angle)
-			var start:Vector2=Vector2(event.position)+direction*travel*0.35
-			var finish:Vector2=Vector2(event.position)+direction*travel
-			var side:Vector2=direction.orthogonal()*lerpf(5.0,1.0,age)
-			draw_on.draw_colored_polygon(PackedVector2Array([start-side*1.45,finish,start+side*1.45]),alpha(edge_color,impact*0.72))
-			draw_on.draw_colored_polygon(PackedVector2Array([start-side,finish, start+side]),alpha(color_value,impact*0.9))
-			draw_on.draw_line(start,finish,alpha(Color.WHITE,impact*0.32),1.2,true)
-
 func _draw_skill_events(g: RefCounted) -> void:
 	for event in g.fx.skill_events:
+		if event.id=="rapid":continue # Launcher foreground, after its opaque pad.
+		if event.id in SkillBatchEight.IDS:continue
+		if event.id in SkillBatchNine.IDS:continue
 		if event.id in SkillBatch.IDS:continue
 		if event.id in ["legion","poison","ambush","siphon"]:
 			SkillBatchFive.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
 			continue
 		if event.id in ["opportunist","bounty","nailburst","fusepath"]:
 			SkillBatchSix.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
+			continue
+		if event.id in SkillBatchSeven.IDS:
+			SkillBatchSeven.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
 			continue
 		if event.id in ["treasury","bargain","resonance","corehunter"]:
 			SkillBatchFour.paint(self,event,g.fx.visual_time,g.reduced,g.theme=="dark")
@@ -367,6 +426,33 @@ func _draw_special_breaks(g: RefCounted) -> void:
 				for index in range(6):
 					var angle:float=index*TAU/6.0+seed
 					draw_line(point,point+Vector2.from_angle(angle)*radius,alpha(accent,0.7),1.5,true)
+
+func _draw_income(g:RefCounted) -> void:
+	var dark:bool=g.theme=="dark"
+	var colors:Array=[Color("#a8c78a"),Color("#b4df78"),Color("#ffc16a"),Color("#ff936d")] if dark else [Color("#56703a"),Color("#3a7f1c"),Color("#a85f0c"),Color("#c8431d")]
+	var outline:=Color("#191f1b" if dark else "#fafbf7")
+	for item in g.fx.income.items:
+		var opacity:=clampf(item.life*2.4,0,1)
+		var scale_value:float=(17+item.growth+(0 if g.reduced else item.pop*7))/24.0
+		# A fixed glyph size + continuous CanvasItem scale avoids integer-size
+		# stepping and repeatedly rasterizing fonts during every bounce.
+		if item.get("layout","")!=item.text+item.sub:
+			item.layout=item.text+item.sub
+			item.width=font.get_string_size(item.text,HORIZONTAL_ALIGNMENT_LEFT,-1,24).x
+			item.sub_width=font.get_string_size(item.sub,HORIZONTAL_ALIGNMENT_LEFT,-1,12).x
+		var half:float=maxf(item.width*scale_value,item.sub_width)*0.5+6
+		var point:Vector2=item.position
+		point.x=clampf(point.x,half,780-half);point.y=clampf(point.y,50,1060)
+		draw_on.draw_set_transform(point,0,Vector2.ONE*scale_value)
+		var baseline:=Vector2(-item.width*0.5,0)
+		draw_on.draw_string_outline(font,baseline,item.text,HORIZONTAL_ALIGNMENT_LEFT,-1,24,5,alpha(outline,opacity))
+		draw_on.draw_string(font,baseline,item.text,HORIZONTAL_ALIGNMENT_LEFT,-1,24,alpha(colors[item.tier],opacity))
+		if item.count>1:
+			draw_on.draw_set_transform(point)
+			baseline=Vector2(-item.sub_width*0.5,17)
+			draw_on.draw_string_outline(font,baseline,item.sub,HORIZONTAL_ALIGNMENT_LEFT,-1,12,4,alpha(outline,opacity))
+			draw_on.draw_string(font,baseline,item.sub,HORIZONTAL_ALIGNMENT_LEFT,-1,12,alpha(Color("#bdc9af" if dark else "#5a6453"),opacity))
+		draw_on.draw_set_transform(Vector2.ZERO)
 
 func _text(value: String,point: Vector2,size: int,color_value: Color) -> void:
 	var width:=font.get_string_size(value,HORIZONTAL_ALIGNMENT_LEFT,-1,size).x

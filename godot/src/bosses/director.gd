@@ -28,9 +28,10 @@ var weak:bool:
 var rage:bool:
 	get:return not fight.is_empty() and fight.phase==fight.phases
 var busy:bool:
-	get:return dying_at>=0 or g.time<intro_at+2.6 or g.time<shift_until
+	get:return dying_at>=0 or g.time<intro_at+intro_seconds() or g.time<shift_until
 
 func _init(simulation:RefCounted) -> void:owner=weakref(simulation)
+func intro_seconds() -> float:return Eye.Rig.INTRO_SECONDS if boss_id=="eye" else model.intro_seconds() if model!=null else 2.6
 func reset() -> void:
 	fight={};boss_id="";model=null;notices=[];wind=0;intro_at=0;shift_until=0;dying_at=-1;exploded=false;recent.clear();tasks.clear()
 
@@ -52,7 +53,7 @@ func start(restore:bool) -> void:
 	if restored:fight=saved.duplicate(true)
 	model={"eye":Eye,"clock":Clock,"serpent":Serpent,"forge":Forge}[boss_id].new(self)
 	model.setup(restored)
-	intro_at=g.time-3 if fight.intro else g.time
+	intro_at=g.time-(intro_seconds()+0.4) if fight.intro else g.time
 	g.core=null
 
 func roll_abilities() -> Array:
@@ -62,7 +63,7 @@ func roll_abilities() -> Array:
 	pool.erase(first);pool=g.shuffle(pool)
 	var result:Array=[[first],pool.slice(0,2),pool.slice(2,4)]
 	if boss_id=="serpent":result.append(["twin",g.shuffle([first]+pool)[0]])
-	elif boss_id in ["eye","clock"]:result[2].append("doom" if boss_id=="eye" else "midnight")
+	elif boss_id in ["eye","clock","forge"]:result[2].append({"eye":"doom","clock":"midnight","forge":"meltdown"}[boss_id])
 	return result
 
 func has(id:String) -> bool:return not fight.is_empty() and id in fight.abilities[fight.phase-1]
@@ -72,10 +73,12 @@ func status() -> Variant:
 	if fight.is_empty():return null
 	var value:Dictionary={"text":"崩解中","state":"dying"} if dying_at>=0 else model.status()
 	value.merge({"name":fight.name,"phases":fight.phases,"phaseName":PHASES[boss_id][fight.phase-1],"resist":roundi((1-resistance().factor)*10)*10})
+	if boss_id=="eye" and model.modern():value.phaseName=["识印","辨视","断仪"][fight.phase-1]
 	return value
 
 func resistance() -> Dictionary:
 	if fight.is_empty():return {"factor":1.0,"pace":1.0,"room":INF}
+	if boss_id=="eye" and model!=null and model.modern():return {"factor":1.0,"pace":1.0,"room":INF}
 	recent=recent.filter(func(item):return g.time-item.at<3)
 	var used:=0.0
 	for item in recent:used+=item.value
@@ -86,15 +89,17 @@ func resistance() -> Dictionary:
 
 func hurt(amount:float,point:Vector2) -> void:
 	if dying_at>=0 or fight.is_empty() or amount<=0:return
+	if boss_id=="eye" and busy:return
 	var r:=resistance()
 	var under:=minf(amount,r.room)
 	var dealt:=minf(fight.hp,under*r.pace+(amount-under)*minf(r.pace,0.25))
-	fight.hp-=dealt;recent.append({"at":g.time,"value":dealt})
+	fight.hp-=dealt
+	if not (boss_id=="eye" and model.modern()):recent.append({"at":g.time,"value":dealt})
 	g.fx.ring(point,Color(COLORS[boss_id]),70)
 	g.revision+=1
 
 func pay(arrow:RefCounted,point:Vector2,scale:float=1) -> void:
-	var money:float=round(g.reward("gold",maxi(1,arrow.kills))*scale)
+	var money:float=round(g.reward("gold",maxi(1,arrow.kills),point)*scale)
 	fight.paid+=money;g.state.coins+=money;g.level_money+=money;g.shot_money+=money
 	g.fx.floating(point,"+%d" % money,Color(palette().text),15)
 
@@ -102,7 +107,7 @@ func strike(arrow:RefCounted,point:Vector2,multiplier:float) -> bool:
 	if dying_at>=0 or g.time<arrow.flags.get("bossAt",-1) or arrow.flags.get("bossHits",0)>=6:return false
 	arrow.flags.bossAt=g.time+0.12;arrow.flags.bossHits=arrow.flags.get("bossHits",0)+1
 	fight.hits+=1;pay(arrow,point);hurt(arrow.damage*multiplier,point)
-	g.bounce(arrow);g.cue("eyehit",1,point.x);g.hitstop(0.06)
+	g.bounce(arrow);g.cue("eye_hit" if boss_id=="eye" else "eyehit",1,point.x);g.hitstop(0.06)
 	return true
 
 func bounce_circle(arrow:RefCounted,point:Vector2,radius:float) -> Dictionary:
@@ -160,8 +165,9 @@ func destroyed(brick:RefCounted,depth:int) -> void:
 
 func update(delta:float) -> void:
 	if fight.is_empty() or g.phase=="draft":return
+	if boss_id=="eye":model.visuals.advance(g.time)
 	if not fight.intro and g.phase=="ready":
-		fight.intro=true;intro_at=g.time;g.locked_until=g.clock+(0.4 if g.reduced else 2.6)
+		fight.intro=true;intro_at=g.time;g.locked_until=g.clock+(Eye.Rig.INTRO_SECONDS if boss_id=="eye" else 0.4 if g.reduced else intro_seconds())
 		banner("WARNING",fight.name,"第 %d 相" % fight.phase);model.intro()
 	var due:Array=[]
 	var keep:Array=[]
@@ -174,7 +180,11 @@ func update(delta:float) -> void:
 	if dying_at>=0:
 		var age:float=g.time-dying_at
 		if age>=1.3 and not exploded:
-			exploded=true;g.fx.ring(model.focus(),Color(COLORS[boss_id]),1100);g.fx.burst(model.focus(),Color(COLORS[boss_id]),90,4);g.fx.flash=2;g.cue("shatter");g.cue("win")
+			exploded=true
+			if boss_id=="eye":
+				g.fx.burst(model.focus(),Color("#93a7c2"),48,2);g.fx.flash=0.2;g.fx.shake=8;g.cue("eye_break",1,390,true)
+			elif not model.explode():g.fx.ring(model.focus(),Color(COLORS[boss_id]),1100);g.fx.burst(model.focus(),Color(COLORS[boss_id]),90,4);g.fx.flash=2;g.cue("shatter")
+			g.cue("win")
 		if age>=2.8:
 			for brick in g.bricks.duplicate():g.hit(brick,1e12,99)
 			g.clear()
@@ -186,11 +196,24 @@ func update(delta:float) -> void:
 		g.arrows.clear();tasks.clear();recent.clear()
 		if fight.phase<fight.phases:
 			fight.phase+=1;fight.max=ceil(g.damage()*(24+6*fight.phase));fight.hp=fight.max;fight.clock=0
+			var masonry_echo:Array=[]
+			if boss_id=="eye":
+				for brick in g.bricks.slice(0,96):masonry_echo.append({"position":brick.position,"size":Vector2(brick.w,brick.h),"type":brick.type})
 			g.bricks.clear();g.obstacles.clear();g.layout();model.setup(false)
-			g.phase="entering";g.board_entrance={"start":g.time,"end":g.time+1.3};shift_until=g.time+1.3;g.locked_until=g.clock+1.3
+			if boss_id=="eye" and not model.visuals.events.is_empty():model.visuals.events[-1].masonry=masonry_echo
+			var shift_seconds:float=Eye.Rig.SHIFT_SECONDS if boss_id=="eye" else model.shift_seconds()
+			var entrance_delay:float=2.25 if boss_id=="eye" else model.shift_delay()
+			g.phase="entering";g.board_entrance={"start":g.time+entrance_delay,"end":g.time+shift_seconds};shift_until=g.time+shift_seconds;g.locked_until=g.clock+shift_seconds
 			banner("PHASE %d / %d" % [fight.phase,fight.phases],PHASES[boss_id][fight.phase-1],"", "rage" if rage else "shift")
-		else:dying_at=g.time;model.calm();banner("COLLAPSE",fight.name+" · 崩解","","seal")
-		g.fx.shake=16;g.fx.flash=1.4;g.fx.ring(model.focus(),Color(COLORS[boss_id]),900);g.hitstop(0.16);g.revision+=1
+		else:
+			dying_at=g.time;model.calm();banner("COLLAPSE",fight.name+" · 崩解","","seal")
+			if boss_id=="eye":
+				g.cue("eye_death",1,390,true);model.visuals.reset();model.visuals.emit("death",model.focus(),g.time)
+		if boss_id=="eye":g.fx.shake=4;g.hitstop(0.08)
+		elif boss_id=="clock":g.fx.shake=10;g.fx.flash=0.5;g.fx.ring(model.focus(),Color(palette().gem),420);g.fx.burst(model.focus(),Color(palette().brass),36,3);g.cue("timestop",1,390,true);g.hitstop(0.16)
+		elif boss_id=="forge":g.fx.shake=12;g.fx.flash=0.6;g.fx.ring(model.focus(),Color(palette().molten),460);g.fx.burst(model.focus(),Color(palette().ember),40,3);g.cue("forge",1,390,true);g.hitstop(0.16)
+		else:g.fx.shake=16;g.fx.flash=1.4;g.fx.ring(model.focus(),Color(COLORS[boss_id]),900);g.hitstop(0.16)
+		g.revision+=1
 
 func serialize() -> Dictionary:
 	if model!=null:model.persist()

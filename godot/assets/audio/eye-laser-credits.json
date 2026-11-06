@@ -1,0 +1,51 @@
+{
+  "author": "Kenney",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "collection": "https://kenney.nl/assets/sci-fi-sounds",
+  "mirror": "https://cc0-sounds.netlify.app/collection/sci-fi-sounds",
+  "changes": "48kHz mono, sample-based time/pitch editing, layered laser transient + force-field body, 5ms attack / 40ms release, DC removal, level matching, Vorbis q7.",
+  "sources": [
+    {
+      "file": "laserLarge_001.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/sci-fi-sounds/Audio/laserLarge_001.ogg",
+      "sha256": "e678aca631495b7dfef4ac625f0349875ccac81a60f538d530e072241af3e4bd",
+      "seconds": 0.721
+    },
+    {
+      "file": "forceField_003.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/sci-fi-sounds/Audio/forceField_003.ogg",
+      "sha256": "15e3fe971ffd3415e5ab641d3a4d043fb31f6712b0956315b524ba29c3889cda",
+      "seconds": 0.9559583333333334
+    },
+    {
+      "file": "computerNoise_002.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/sci-fi-sounds/Audio/computerNoise_002.ogg",
+      "sha256": "6ae9bb261c6536d1699972da0cdbf6e0762cf7e9b925adb64a06ff375255cb71",
+      "seconds": 5.0
+    },
+    {
+      "file": "slime_001.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/sci-fi-sounds/Audio/slime_001.ogg",
+      "sha256": "822ca475d71e18ef6bba707dbe6bff2bd493d3457b2552f7473d23022c1257ca",
+      "seconds": 4.709854166666666
+    }
+  ],
+  "outputs": [
+    {
+      "file": "eye-lock.vorbis",
+      "seconds": 0.22,
+      "sha256": "20e3c6643c87407325cd934ebb50e730584bc5608ef1504bf4dc97d1adb06f0b"
+    },
+    {
+      "file": "eye-laser.vorbis",
+      "seconds": 0.9,
+      "sha256": "5ed6ae6afea0eaa331fd346cf0ae262f6bfc9b075b46807d13937a62eadd2caf"
+    },
+    {
+      "file": "eye-infect.vorbis",
+      "seconds": 0.42,
+      "sha256": "f513be2ad9cbd4d0f71beb3961735d149cc35a287f182b50c6179c1c0d2cfa8f"
+    }
+  ]
+}

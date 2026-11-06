@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,11 +23,16 @@ def main():
     version = subprocess.check_output([engine, "--version"], text=True).strip()
     if not version.startswith("4.7.2.stable."):
         parser.error(f"Expected Godot 4.7.2 stable; detected {version}")
-    tests = args.test or (["native_render_test", "native_stroke_test", "native_retained_test", "native_brick_numbers_test", "interface_input_test", "native_motion_test", "native_hud_test", "native_arrow_break_test", "native_effect_batch_test", "native_v_effects_test", "interface_capture", "transition_test"]
+    tests = args.test or (["native_abyss_render_test", "native_render_test", "native_stroke_test", "native_retained_test", "native_brick_numbers_test", "native_income_render_test", "interface_input_test", "native_motion_test", "native_hud_test", "native_arrow_break_test", "native_effect_batch_test", "native_v_effects_test", "interface_capture", "transition_test"]
                           if args.gui else ["native_test", "native_spike_test", "native_arrow_break_test", "native_effect_batch_test", "native_prediction_test", "native_audio_test", "ui_test", "transition_test", "native_soak_test"])
     if not args.test:
-        tests += ["native_skill_effect_test", "native_skill_batch_test", "native_effect_startup_test", "native_skill_batch_two_test", "native_skill_batch_three_test",
-                  "native_skill_batch_four_test", "native_skill_batch_five_test", "native_skill_batch_six_test"]
+        tests += ["boot_test"]
+        tests += ["aspect_adapter_test"]
+        tests += ["native_abyss_test", "native_eye_test", "native_clock_test", "native_forge_test", "native_serpent_test", "developer_test", "button_focus_test", "native_skill_effect_test", "native_skill_batch_test", "native_effect_startup_test", "native_skill_batch_two_test", "native_skill_batch_three_test",
+                  "native_skill_batch_four_test", "native_skill_batch_five_test", "native_skill_batch_six_test",
+                  "native_skill_batch_seven_test", "native_skill_batch_eight_test", "native_skill_batch_nine_test",
+                    "native_skill_gold_integration_test", "native_income_test", "native_variant_test", "native_variant_core_test", "native_variant_board_test",
+                     "native_variant_physics_test", "native_variant_tempo_test", "native_variant_economy_test", "boss_notice_test", "launcher_test", "wallet_test"]
     out = ROOT.parent / "agent-tmp/godot/checks"
     out.mkdir(parents=True, exist_ok=True)
     failures = []

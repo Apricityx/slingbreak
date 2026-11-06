@@ -65,6 +65,14 @@ static func valid(payload: Dictionary) -> bool:
 		if not candidate.bossDeck is Array or candidate.bossDeck.size()>4:return false
 		for id in candidate.bossDeck:
 			if not id in BOSSES:return false
+	if candidate.has("variantDeck"):
+		if not candidate.variantDeck is Array or candidate.variantDeck.size()>64:return false
+		for id in candidate.variantDeck:
+			if not id is String or id.length()>24:return false
+	if candidate.has("variantLast") and not (candidate.variantLast is String and candidate.variantLast.length()<=24):return false
+	var variant_override:Variant=candidate.get("variantOverride")
+	if variant_override!=null and (not variant_override is Dictionary or not finite_number(variant_override.get("level"),1,100000,true) or not variant_override.get("id") is String):return false
+	if candidate.has("paceShots") and not finite_number(candidate.paceShots,0,1e6):return false
 	if candidate.get("board")!=null and not valid_board(candidate.board):return false
 	if candidate.get("nativeBoss")!=null and not valid_boss(candidate.nativeBoss,candidate.level):return false
 	return true
@@ -80,10 +88,21 @@ static func valid_boss(boss:Variant,level:float) -> bool:
 	for phase in boss.abilities:
 		if not phase is Array or phase.is_empty() or phase.size()>5:return false
 		for ability in phase:
-			if not ability is String or not ability in {"eye":["orbit","summon","tear","gaze","mirage","doom"],"clock":["stop","toll","pendulum","rewind","haste","midnight"],"serpent":["coil","dive","devour","eclipse","comet","twin"],"forge":["meteor","magma","slam","bellows","palm"]}[boss.boss]:return false
+			if not ability is String or not ability in {"eye":["orbit","summon","tear","gaze","mirage","doom"],"clock":["stop","toll","pendulum","rewind","haste","midnight"],"serpent":["coil","dive","devour","eclipse","comet","twin"],"forge":["meteor","magma","slam","bellows","palm","meltdown"]}[boss.boss]:return false
 	var meter:String={"eye":"ward","clock":"spring","forge":"heat"}.get(boss.boss,"")
 	if meter!="" and not finite_number(boss.data.get(meter),0,100):return false
-	if boss.boss=="serpent":
+	if boss.boss=="eye" and boss.data.has("encounterVersion"):
+		if not finite_number(boss.data.encounterVersion,3,5,true) or not boss.data.get("sequence") is Dictionary:return false
+		if boss.data.sequence.size()>3:return false
+		for key in boss.data.sequence:
+			if key not in ["1","2","3"] or not finite_number(boss.data.sequence[key],0,3,true):return false
+	if boss.boss=="serpent" and boss.data.has("serpentVersion"):
+		# v2: one armour meter plus the weak scales riding the body.
+		if not finite_number(boss.data.serpentVersion,2,2,true) or not finite_number(boss.data.get("armor"),0,100):return false
+		if not boss.data.get("scales") is Array or boss.data.scales.size()>8:return false
+		for item in boss.data.scales:
+			if not item is Dictionary or not finite_number(item.get("segment"),0,64,true) or not finite_number(item.get("hp"),.001,1e15):return false
+	elif boss.boss=="serpent":
 		if not boss.data.get("snakes") is Array or boss.data.snakes.is_empty() or boss.data.snakes.size()>2:return false
 		for snake in boss.data.snakes:
 			if not snake is Dictionary or not snake.get("hp") is Array or snake.hp.size()>64 or not finite_number(snake.get("max"),0,64,true):return false
@@ -96,6 +115,7 @@ static func valid_board(board: Variant) -> bool:
 	if not finite_number(board.get("initial"),1,10000,true) or not finite_number(board.get("killed"),0,10000,true):return false
 	if not finite_number(board.get("level",1),1,100000,true) or not finite_number(board.get("levelMoney",0),0,1e18):return false
 	if board.has("core") and not board.core is bool:return false
+	if board.has("variant") and not valid_variant(board.variant):return false
 	for item in board.bricks:
 		if not item is Dictionary:return false
 		for key in ["x","y","w","h","hp","max"]:
@@ -107,7 +127,7 @@ static func valid_board(board: Variant) -> bool:
 			for flag in item.nativeFlags:
 				if flag=="markUntil":
 					if not finite_number(item.nativeFlags[flag],0,1e18):return false
-				elif flag in ["hourIndex","slot","count"]:
+				elif flag in ["hourIndex","slot","count","segment"]:
 					if not finite_number(item.nativeFlags[flag],0,64,true):return false
 				elif not item.nativeFlags[flag] is bool:return false
 	if not board.get("obstacles",[]) is Array or board.get("obstacles",[]).size()>12:return false
@@ -116,3 +136,7 @@ static func valid_board(board: Variant) -> bool:
 		for key in ["x","y","w","h"]:
 			if not finite_number(item.get(key),0.001 if key in ["w","h"] else -2000,2000):return false
 	return true
+
+static func valid_variant(variant: Variant) -> bool:
+	# Loaded lazily: the host and its rules may preload this file.
+	return load("res://src/core/variants.gd").valid_saved(variant)

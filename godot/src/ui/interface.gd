@@ -17,6 +17,7 @@ const Flights=preload("res://src/ui/coin_flights.gd")
 const Charges=preload("res://src/ui/charges.gd")
 const CoreMeter=preload("res://src/ui/core_meter.gd")
 const HudFeedback=preload("res://src/ui/hud_feedback.gd")
+const HudActionLayout=preload("res://src/ui/hud_action_layout.gd")
 var visuals := Presentation.new()
 var pages := Pages.new()
 var report_view := Report.new()
@@ -28,6 +29,10 @@ var modal_content: VBoxContainer
 var modal_kind := ""
 var restore_pause := false
 var draft_key := ""
+# "level:id" of the last variant card shown, so it opens once per level.
+var variant_key := ""
+## Scripted UI tests that drive the draft directly opt out of the rule card.
+var variant_cards := true
 var choosing := false
 var hud_nodes: Dictionary = {}
 var queue: HBoxContainer
@@ -80,6 +85,11 @@ var pending_swap_from:=""
 var hud_feedback:Control
 var combo_stamp:=""
 var combo_ink:=Color.TRANSPARENT
+var credits_unlocked:=false
+var startup_covered:=false
+var content_height:=915.0
+var content_top:=0.0
+var launcher_mode:=false
 
 func _ready() -> void:
 	mouse_filter=Control.MOUSE_FILTER_IGNORE
@@ -106,10 +116,23 @@ func _build_hud() -> void:
 	var mark := _button("",Vector2(12,14),Vector2(29,29),func():_equipment())
 	mark.icon=visuals.icon("move-up-right",visuals.color("on-accent"));mark.expand_icon=true
 	mark.add_theme_stylebox_override("normal",visuals.box(visuals.color("accent"),visuals.color("accent"),8))
+	mark.visible=true
 	_text("brand","弓引力",Vector2(49,18),18,"ink",true)
-	_icon_button("settings",Vector2(260,7),func():_settings())
-	_icon_button("maximize",Vector2(304,7),func():_fullscreen())
-	var wallet := _button("0",Vector2(352,15),Vector2(48,27),func():_equipment());wallet.icon=visuals.icon("wallet",visuals.color("text-2"));wallet.expand_icon=true;wallet.add_theme_font_size_override("font_size",10);hud_nodes.wallet=wallet
+	hud_nodes.brand.visible=true
+	_icon_button("settings",Vector2(268 if launcher_mode else 224,6.5 if launcher_mode else 7),func():_settings())
+	if not launcher_mode:_icon_button("maximize",Vector2(268,7),func():_fullscreen())
+	var wallet := _button("0",Vector2(316,15),Vector2(84,27),func():_equipment());wallet.add_theme_font_size_override("font_size",10);hud_nodes.wallet=wallet
+	# Button.expand_icon shrinks the icon to nothing when the balance fills the
+	# available width. Reserve an independent icon slot instead of sharing it.
+	wallet.clip_text=true
+	for state in ["normal","hover","pressed","disabled"]:
+		var face:StyleBoxFlat=wallet.get_theme_stylebox(state).duplicate()
+		face.content_margin_left=22;face.content_margin_right=4
+		wallet.add_theme_stylebox_override(state,face)
+	var wallet_icon:=visuals.image(wallet,"wallet",visuals.color("text-2"),Vector2(12,12));wallet_icon.name="WalletIcon"
+	wallet_icon.anchor_top=.5;wallet_icon.anchor_bottom=.5;wallet_icon.offset_left=6;wallet_icon.offset_right=18;wallet_icon.offset_top=-6;wallet_icon.offset_bottom=6
+	if launcher_mode:
+		wallet.position=Vector2(316,13.5);wallet.size=Vector2(84,30);wallet.add_theme_font_size_override("font_size",11)
 	_line(Vector2(0,57),Vector2(412,1))
 	_text("level_tag","LEVEL",Vector2(16,67),10,"text-3")
 	_text("level","01",Vector2(58,56),30,"ink",true)
@@ -145,9 +168,7 @@ func _build_hud() -> void:
 	_line(Vector2(0,172),Vector2(412,1))
 	var queue_panel := Panel.new();queue_panel.position=Vector2(10,181);queue_panel.size=Vector2(392,49);queue_panel.mouse_filter=Control.MOUSE_FILTER_IGNORE;queue_panel.add_theme_stylebox_override("panel",visuals.box(Color.TRANSPARENT,visuals.color("line"),7));add_child(queue_panel)
 	queue=HBoxContainer.new();queue.position=Vector2(20,191);queue.size=Vector2(372,29);queue.add_theme_constant_override("separation",5);add_child(queue)
-	var shop := _button("",Vector2(350,722),Vector2(46,46),func():_shop());shop.icon=visuals.icon("store",visuals.color("on-panel"));shop.expand_icon=true;shop.tooltip_text="打开升级商店";shop.add_theme_stylebox_override("normal",visuals.box(visuals.color("panel"),visuals.color("panel"),23,12))
-	_text("status","就绪",Vector2(16,788),9,"text-3")
-	_text("power","POWER  0%",Vector2(337,788),9,"text-3")
+	var shop := _button("",HudActionLayout.MARKET_RECT.position,HudActionLayout.MARKET_RECT.size,func():_shop());shop.icon=visuals.icon("store",visuals.color("on-panel"));shop.expand_icon=true;shop.tooltip_text="打开升级商店";shop.add_theme_stylebox_override("normal",visuals.box(visuals.color("panel"),visuals.color("panel"),23,12));hud_nodes.market=shop
 	var earnings := ColorRect.new();earnings.position=Vector2(0,810);earnings.size=Vector2(412,105);earnings.color=visuals.color("panel");earnings.mouse_filter=Control.MOUSE_FILTER_IGNORE;add_child(earnings)
 	_text("earnings_label","本关收益",Vector2(30,831),10,"on-panel")
 	_text("earnings","+ 0",Vector2(30,850),44,"accent",true)
@@ -178,6 +199,9 @@ func set_catalog(entries: Array) -> void:
 
 func present(value: Dictionary) -> void:
 	frame=value
+	if value.get("developer",{}).get("unlocked",false) and not credits_unlocked:
+		credits_unlocked=true
+		if modal_kind=="settings":_settings.call_deferred()
 	if current_theme!=value.theme:
 		current_theme=value.theme;visuals.mode=current_theme;_build_hud()
 	if hud_nodes.is_empty(): return
@@ -207,12 +231,6 @@ func present(value: Dictionary) -> void:
 	hud_nodes.progress.present(core_state,value.reduced or value.paused)
 	hud_feedback.present(_combo_heat(value,achievement),core_state,value.reduced,value.paused)
 	hud_nodes.core_value.text="%d / %d" % [mini(value.killed,int(core_threshold)),int(core_threshold)]
-	var status := {"draft":"选择新技能 · 滚动构筑","ready":"就绪","entering":"砖块入场中","flying":"可继续射击","clearing":"下一关即将开始"}
-	hud_nodes.status.text="已暂停" if value.paused else status.get(value.phase,"")
-	if value.get("drag") is Dictionary:
-		hud_nodes.power.text="POWER  %d%%" % mini(100,int(Vector2(value.drag.dx,value.drag.dy).length()))
-		hud_nodes.status.text="蓄力中"
-	else:hud_nodes.power.text="POWER  0%"
 	var key := JSON.stringify([value.skills,value.slots])
 	if queue_key!=key and not catalog.is_empty():
 		queue_key=key
@@ -278,7 +296,11 @@ func present(value: Dictionary) -> void:
 	_update_modal_gauges(value)
 	_update_boss(value)
 	if notices!=null:notices.present(value)
-	if value.phase=="draft" and not value.transition.holdDraft and not catalog.is_empty() and not choosing:
+	# The level's rule is announced before its draft: the draft waits behind it.
+	if variant_cards and value.phase=="draft" and value.get("variant") is Dictionary and modal_kind=="" and not startup_covered and not value.transition.holdDraft and not choosing:
+		var rule_key:="%d:%s" % [int(value.level),value.variant.id]
+		if rule_key!=variant_key:variant_key=rule_key;_variant_intro()
+	if value.phase=="draft" and not startup_covered and not value.transition.holdDraft and not catalog.is_empty() and not choosing:
 		var next_key := JSON.stringify(value.draft)
 		if modal_kind in ["","draft"] and (next_key!=draft_key or modal_kind==""): draft_key=next_key;_draft()
 	elif modal_kind=="draft" and not choosing: _close()
@@ -730,10 +752,11 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	modal_enter_pending=not morph_from.has_area()
 	# Keep the draft sheet on the same 412px design grid as the Web dialog.
 	# Draft owns its section insets, so the sheet itself has no hidden inset.
-	modal_width=250 if kind=="reset" else 388 if kind=="shop" else 396
-	modal_padding=31 if kind=="reset" else 25 if kind=="shop" else 23 if kind=="settings" else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
+	modal_width=250 if kind=="reset" else 320 if kind=="variant" else 388 if kind=="shop" else 396
+	modal_padding=31 if kind in ["reset","variant"] else 25 if kind=="shop" else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
 	var depth:=modal_stack.size()*2
 	scrim=ColorRect.new();scrim.size=Vector2(412,915);scrim.z_index=11+depth;scrim.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(scrim)
+	if launcher_mode:scrim.position.y=content_top;scrim.size.y=content_height-content_top
 	# Chromium 89 computes a transparent dialog backdrop: ::backdrop does not
 	# inherit the custom properties. Preserve that measured reference here.
 	var tint:=Color.TRANSPARENT
@@ -748,6 +771,7 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	scrim.gui_input.connect(func(event):if kind!="draft" and event is InputEventMouseButton and event.pressed:_close())
 	panel=Sheet.new();panel.z_index=12+depth;panel.position=Vector2((412-modal_width)/2,100);add_child(panel)
 	panel.setup(visuals.box(visuals.color("surface"),visuals.color("line-2" if kind in ["draft","library","detail"] else "line"),12 if kind=="draft" else 8,0),modal_width,modal_padding)
+	panel.max_height=content_height-content_top-32.0
 	modal_scroll=panel.scroll;modal_content=panel.content
 	var source:Control=opening_control if is_instance_valid(opening_control) else visuals.last_trigger if is_instance_valid(visuals.last_trigger) else get_viewport().gui_get_focus_owner()
 	if retained_opener.has_area():
@@ -766,7 +790,7 @@ func _center() -> void:
 	if is_instance_valid(panel):visuals.button_states(panel)
 	if panel==null: return
 	var dimensions:Vector2=panel.desired_size()
-	var destination:=Vector2((412-modal_width)/2,maxf(8,(915-dimensions.y)/2))
+	var destination:=Vector2((412-modal_width)/2,content_top+maxf(8,(content_height-content_top-dimensions.y)/2))
 	var previous:Vector2=panel.get_meta("layout_size",Vector2.ZERO)
 	panel.set_meta("layout_position",destination);panel.set_meta("layout_size",dimensions)
 	if frame.get("reduced",false):
@@ -841,6 +865,9 @@ func _close(force_fold:bool=false) -> void:
 	if not modal_stack.is_empty():
 		var previous:Dictionary=modal_stack.pop_back()
 		panel=previous.panel;scrim=previous.scrim;modal_content=previous.content;modal_scroll=previous.scroll;modal_kind=previous.kind;modal_padding=previous.padding;modal_width=previous.width
+		# A developer rebuild may have completed selection underneath settings.
+		if modal_kind=="draft" and frame.get("phase")!="draft":
+			_close();return
 		Motion.focus_gate(panel,false)
 		rolling=panel.get_meta("rolling",false)
 		if modal_kind=="detail":
@@ -862,6 +889,8 @@ func _close(force_fold:bool=false) -> void:
 	modal_content=null;modal_scroll=null
 	if frame.get("paused",false)!=was_paused: action.emit("pause",{"paused":was_paused})
 	if pause_layer!=null:_update_pause(frame)
+	# The draft frame is idle, so nothing else re-presents it after the rule card.
+	if closing_kind=="variant" and frame.get("phase")=="draft":_present_latest.call_deferred()
 
 func _label(text: String,size: int=12,bold: bool=false) -> Label:
 	var label := visuals.label(text,size,"ink",bold);label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;modal_content.add_child(label);return label
@@ -1183,6 +1212,14 @@ func _achievements() -> void:
 	_open("","achievements",true)
 	pages.setup(self);pages.equipment(true)
 
+## Deferred re-present reads the frame at call time, never a queued copy.
+func _present_latest() -> void:
+	if frame.get("phase")=="draft" and modal_kind=="":present(frame)
+
+func _variant_intro() -> void:
+	_open("","variant")
+	pages.setup(self);pages.variant()
+
 func _reset_confirmation() -> void:
 	_open("","reset",true)
 	pages.setup(self);pages.reset()
@@ -1190,6 +1227,18 @@ func _reset_confirmation() -> void:
 func _settings() -> void:
 	_open("","settings",true)
 	pages.setup(self);pages.settings()
+
+func _developer() -> void:
+	if not frame.get("developer",{}).get("unlocked",false):return
+	_open("","developer",true)
+	pages.setup(self)
+	preload("res://src/ui/developer_page.gd").new().build(self)
+
+func _developer_command(input:Dictionary) -> void:
+	action.emit("developer",input)
+	if input.get("operation")=="boss":
+		_close_all();return
+	_developer.call_deferred()
 
 func _close_all() -> void:
 	var previously_choosing:=choosing

@@ -15,6 +15,8 @@ func present(frame: Dictionary) -> void:
 		for card in cards.values():card.queue_free()
 		cards.clear();current_theme=frame.theme
 	for item in frame.get("notices",[]):
+		# Boss status changes are communicated visually, without footer callouts.
+		if item.kind=="rift-callout":continue
 		var key:=str(item.get("key",JSON.stringify(item)))
 		wanted[key]=true
 		if cards.has(key):continue
@@ -31,11 +33,7 @@ func present(frame: Dictionary) -> void:
 func _build(holder:Control,item:Dictionary,reduced:bool) -> void:
 	var lines:Array=[item.get("kicker",""),item.get("title",""),item.get("note","")]
 	if item.kind=="rift-callout":
-		var card:=PanelContainer.new();card.add_theme_stylebox_override("panel",visuals.box(visuals.color("surface"),visuals.color("legend-prism"),20,6));holder.add_child(card)
-		var row:HBoxContainer=visuals.row(card,8);visuals.text(row,lines[0],14,"ink",true)
-		var sub:Label=visuals.text(row,lines[1],11,"text-2");sub.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS;sub.custom_minimum_size.x=180
-		card.size=card.get_combined_minimum_size();card.size.x=minf(388,card.size.x);card.position=Vector2((412-card.size.x)/2,float(str(item.get("top","34%")).trim_suffix("%"))/100*572-card.size.y/2)
-		if not reduced:Motion.enter(card)
+		_build_boss_status(holder,item,reduced)
 	else:
 		var intro:bool=item.kind=="rift-intro"
 		if intro:
@@ -45,3 +43,23 @@ func _build(holder:Control,item:Dictionary,reduced:bool) -> void:
 		for i in range(lines.size()):
 			var text:Label=visuals.text(words,lines[i],38 if intro and i==1 else 30 if i==1 else 11,"danger" if i==0 and (intro or item.get("tone","")=="rage") else "legend-prism" if i==0 else "ink" if i==1 else "text-2",i<2,true);text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 		if not reduced:Motion.enter(holder)
+
+func _build_boss_status(holder:Control,item:Dictionary,reduced:bool) -> void:
+	# The right half of the earnings footer is reserved for transient boss
+	# messages. Never cover the board, boss health, queue or aiming controls.
+	holder.position=Vector2(218,590);holder.size=Vector2(178,74)
+	var tone:String=item.get("tone","minor")
+	var accent:Color=visuals.color("accent" if tone=="weak" else "on-panel")
+	var rule:=ColorRect.new();rule.position=Vector2(0,4);rule.size=Vector2(2,62)
+	rule.color=Color(accent,0.65);holder.add_child(rule)
+	var words:=VBoxContainer.new();words.position=Vector2(12,0);words.size=Vector2(166,74)
+	words.add_theme_constant_override("separation",3);holder.add_child(words)
+	var caption:Label=visuals.text(words,{"weak":"弱点暴露","rage":"狂暴预警","shift":"阶段变化","seal":"战斗结束"}.get(tone,"首领动态"),9,"on-panel",true)
+	caption.modulate.a=0.6
+	var title:Label=visuals.text(words,item.get("title",""),18,"on-panel",true)
+	title.add_theme_color_override("font_color",accent)
+	title.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+	var note:Label=visuals.text(words,item.get("note",""),10,"on-panel",false,true)
+	note.modulate.a=0.8;note.visible=not note.text.is_empty()
+	if not reduced:
+		holder.modulate.a=0.0;Motion.fade(holder,1.0,.2)

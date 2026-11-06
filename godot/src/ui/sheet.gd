@@ -3,6 +3,7 @@ extends Control
 ## The face and the scroll viewport follow the same rectangle on every frame.
 var padding:=16.0
 var layout_width:=380.0
+var max_height:=883.0
 var scroll:ScrollContainer
 var face:Panel
 var content:VBoxContainer
@@ -15,7 +16,7 @@ func setup(style:StyleBoxFlat,width:float,inset:float) -> void:
 	resized.connect(_arrange);_arrange()
 
 func desired_size() -> Vector2:
-	return Vector2(layout_width,minf(883.0,content.get_combined_minimum_size().y+padding*2))
+	return Vector2(layout_width,minf(max_height,content.get_combined_minimum_size().y+padding*2))
 
 func _arrange() -> void:
 	if scroll==null:return

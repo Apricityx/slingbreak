@@ -1,0 +1,68 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "collections": [
+    "https://cc0-sounds.netlify.app/collection/Horror%20Sound%20Pack",
+    "https://cc0-sounds.netlify.app/collection/Horror%20Strings",
+    "https://kenney.nl/assets/impact-sounds"
+  ],
+  "changes": "48 kHz conversion, editing, fades, DC removal and level matching; Vorbis encoding.",
+  "samples": [
+    {
+      "file": "audio/eye-awaken.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Sound%20Pack/SFX/Deep%20Growl.wav",
+      "sha256": "6ec778f5a01a694d35de42be83218b5cf650e9054ff0383eedd9f20f3838a690",
+      "duration": 3.0,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-charge.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Sound%20Pack/SFX/Acceleration%20Into%20Cutoff.wav",
+      "sha256": "a0e446d4c0b48a2f01f2ad4d1f94dde68411feadcc184f50aac8ec6680f40d73",
+      "duration": 4.8,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-cast.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Strings/OGG/Stabs_Strings_High_1.ogg",
+      "sha256": "e0e7fd8293532f436c776bdfd29ae89ecd9d2079eec14c071fb15ed0f367cbfa",
+      "duration": 1.2,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-beam.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Sound%20Pack/SFX/Eerie%20Sound.wav",
+      "sha256": "1e934f3b4901aeb9cdd4cbe86ab16fcb56cfb4271ebb508e1d7fd0e69badacb1",
+      "duration": 2.8,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-break.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/kenney_impactsounds/Audio/impactGlass_heavy_000.ogg",
+      "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+      "duration": 0.24122916666666666,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-hit.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/kenney_impactsounds/Audio/impactMetal_heavy_000.ogg",
+      "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+      "duration": 0.16766666666666666,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-pulse.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Strings/OGG/Stabs_Strings_Low_1.ogg",
+      "sha256": "e1b03a391526a2af6769ce7517bc1d3d10b3ec32581f835ae8eaccce423e79e5",
+      "duration": 0.8,
+      "loop": false
+    },
+    {
+      "file": "audio/eye-death.vorbis",
+      "source": "https://cc0-sounds.netlify.app/sounds/Horror%20Sound%20Pack/SFX/Jumpscare%20-%2004.wav",
+      "sha256": "d67415c53336e0050eaedac531ab502da988faf3b782d6efb61ab9cf75a8c29d",
+      "duration": 3.0,
+      "loop": false
+    }
+  ]
+}

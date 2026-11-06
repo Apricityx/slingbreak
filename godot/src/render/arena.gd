@@ -29,7 +29,12 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO,VIEW_SIZE),Color("#1a1f17") if frame.get("theme")=="dark" else Color("#fafbf7"))
 
 func _world(point: Vector2) -> Vector2:
-	return (to_local(point) - VIEW_OFFSET) / VIEW_SCALE
+	return (_local_pointer(point) - VIEW_OFFSET) / VIEW_SCALE
+
+func _local_pointer(point: Vector2) -> Vector2:
+	# Input positions are viewport coordinates; include the centered canvas
+	# transform used when the background expands beyond the fixed stage.
+	return get_global_transform_with_canvas().affine_inverse()*point
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or frame.is_empty() or frame.get("paused",false) or frame.phase not in ["ready","flying"]:
@@ -49,7 +54,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_pointer_button(_world(event.position),event.pressed)
 	elif event is InputEventMouseMotion:
 		var point := _world(event.position)
-		action.emit("pointer",{"active":Rect2(Vector2.ZERO,VIEW_SIZE).has_point(to_local(event.position)),"x":point.x,"y":point.y})
+		action.emit("pointer",{"active":Rect2(Vector2.ZERO,VIEW_SIZE).has_point(_local_pointer(event.position)),"x":point.x,"y":point.y})
 		if dragging: _drag_to(point)
 	elif event is InputEventScreenTouch:
 		if touch_id<0 and event.pressed:

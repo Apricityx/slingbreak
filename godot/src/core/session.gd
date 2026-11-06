@@ -81,6 +81,14 @@ func command(method: String, input: Dictionary={}) -> Variant:
 func call_method(method: String,input: Dictionary={}) -> Variant:
 	if runtime==null:return null
 	match method:
+		"developerTap":
+			runtime.developer.tap(Time.get_ticks_msec());runtime.revision+=1
+			if runtime.developer.unlocked:save_settings()
+			return {"unlocked":runtime.developer.unlocked}
+		"developer":
+			var accepted:bool=runtime.developer.apply(runtime,input)
+			if accepted:save_settings()
+			return {"accepted":accepted}
 		"shoot":return {"accepted":runtime.shoot(float(input.get("dx",0)),float(input.get("dy",0)))}
 		"choose":return {"accepted":runtime.choose(input.get("id",""))}
 		"holdEntrance":
@@ -147,7 +155,7 @@ func save() -> bool:
 
 func save_settings() -> void:
 	var file:=FileAccess.open(SETTINGS,FileAccess.WRITE)
-	if file!=null:file.store_string(JSON.stringify({"theme":runtime.theme_mode}));file.close()
+	if file!=null:file.store_string(JSON.stringify({"theme":runtime.theme_mode,"developer":runtime.developer.config()}));file.close()
 
 func load_progress() -> Dictionary:
 	finish_save()

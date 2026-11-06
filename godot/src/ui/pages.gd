@@ -21,9 +21,21 @@ func setup(owner: Control) -> void:
 	ui=owner;v=ui.visuals;f=ui.frame;root=ui.modal_content if is_instance_valid(ui.modal_content) else null
 
 func fmt(value: float) -> String:
-	if value>=1000000:return "%.1fm" % (value/1000000)
-	if value>=10000:return "%.1fk" % (value/1000)
-	return str(int(value))
+	const UNITS=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"]
+	var amount:=absf(value)
+	if amount<1000:return str(int(value))
+	var unit:=0
+	while amount>=1000 and unit<UNITS.size()-1:
+		amount/=1000.0;unit+=1
+	# Rounding at a boundary must promote the unit rather than show 1000K.
+	amount=snappedf(amount,.01)
+	if amount>=1000 and unit<UNITS.size()-1:
+		amount/=1000.0;unit+=1
+	if amount>=1000:return "%.2e" % value
+	var digits:="%.2f" % amount
+	while digits.ends_with("0"):digits=digits.left(-1)
+	if digits.ends_with("."):digits=digits.left(-1)
+	return ("-" if value<0 else "")+digits+UNITS[unit]
 
 func heading(title: String,kicker: String="",size: int=22,close: bool=true,parent: Control=null) -> HBoxContainer:
 	var row:HBoxContainer=v.row(root if parent==null else parent,12)
@@ -37,16 +49,35 @@ func heading(title: String,kicker: String="",size: int=22,close: bool=true,paren
 	return row
 
 func rarity(parent: Control,item: Dictionary,ribbon: bool=false) -> Control:
-	var edge:Color=tier_edge(item)
-	var row:HBoxContainer
-	var host:Control=parent
-	if ribbon:
-		var badge:=PanelContainer.new();badge.add_theme_stylebox_override("panel",v.box(v.color("gold-soft" if item.tier=="gold" else "surface"),v.color("gold-line") if item.tier=="gold" else edge,20,4));parent.add_child(badge);host=badge
-	row=v.row(host,3)
+	if ribbon:return _draft_rarity(parent,item)
+	var row:HBoxContainer=v.row(parent,3)
 	var dot:=Panel.new();dot.custom_minimum_size=Vector2(8,8);dot.size_flags_vertical=Control.SIZE_SHRINK_CENTER
 	dot.add_theme_stylebox_override("panel",v.box(Color("#edbf42" if item.tier=="gold" else "#439be8" if item.tier=="blue" else "#f4f6f0"),Color("#ac801c" if item.tier=="gold" else "#2875b9" if item.tier=="blue" else "#9aa294"),4));row.add_child(dot)
-	v.text(row,{"white":"普通","blue":"稀有","gold":"传说"}[item.tier],10,"gold-ink" if item.tier=="gold" else "text-2",ribbon)
-	return host if ribbon else row
+	v.text(row,{"white":"普通","blue":"稀有","gold":"传说"}[item.tier],10,"gold-ink" if item.tier=="gold" else "text-2")
+	return row
+
+func _draft_rarity(parent: Control,item: Dictionary) -> Control:
+	# Compact, borderless rank label; the number of diamonds also encodes tier.
+	var rank:int={"white":1,"blue":2,"gold":3}[item.tier]
+	var ink:Color=v.color("text-2") if rank==1 else v.color("gold-ink") if rank==3 else v.mix(Color("#439be8"),v.color("ink"),.65)
+	var badge:=PanelContainer.new();badge.size_flags_horizontal=Control.SIZE_SHRINK_BEGIN
+	var style:StyleBoxFlat=v.box(v.mix(ink,v.color("surface-2"),.08),Color.TRANSPARENT,4)
+	style.set_border_width_all(0)
+	style.content_margin_left=7;style.content_margin_right=7;style.content_margin_top=3;style.content_margin_bottom=3
+	badge.add_theme_stylebox_override("panel",style);parent.add_child(badge)
+	var row:HBoxContainer=v.row(badge,5)
+	var marks:=Control.new();marks.custom_minimum_size=Vector2(rank*7-1,8);marks.size_flags_vertical=Control.SIZE_SHRINK_CENTER
+	marks.draw.connect(func():
+		for i in range(rank):
+			var x:float=i*7.0
+			var diamond:=PackedVector2Array([Vector2(x+3,0),Vector2(x+6,4),Vector2(x+3,8),Vector2(x,4)])
+			marks.draw_colored_polygon(diamond,ink)
+	)
+	row.add_child(marks)
+	var title:Label=v.text(row,{"white":"普通","blue":"稀有","gold":"传说"}[item.tier],10,"text-2",true)
+	title.add_theme_color_override("font_color",ink)
+	v.pointer_through(badge)
+	return badge
 
 func tier_edge(item: Dictionary) -> Color:
 	return v.mix(Color("#439be8"),v.color("line-2"),.45) if item.tier=="blue" else v.mix(Color("#e0ad2c"),v.color("line-2"),.7) if item.tier=="gold" else v.color("line-2")
@@ -115,9 +146,8 @@ func skill_card(parent: Control,id: String,callback: Callable) -> Button:
 	card.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),tier_edge(item),11))
 	card.add_theme_stylebox_override("hover",v.box(v.color("surface-2"),v.mix(Color(item.color),v.color("line-2"),.65),11))
 	card.add_theme_stylebox_override("pressed",v.box(v.color("surface-2"),Color(item.color),11))
-	# Web cards deliberately have no persistent focus outline. Godot's shared
-	# button theme would otherwise add an accent frame to the first focused card.
-	card.add_theme_stylebox_override("focus",v.box(v.color("surface-2"),tier_edge(item),11))
+	# Focus is an overlay, not a replacement face: inherit the empty shared
+	# style so it cannot repaint the card or cover its hover/pressed border.
 	var layout:=HBoxContainer.new();layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);layout.add_theme_constant_override("separation",0);layout.mouse_filter=Control.MOUSE_FILTER_IGNORE;card.add_child(layout)
 	var art:=Art.new();art.visuals=v;art.ink=Color(item.color);art.custom_minimum_size.x=76;art.size_flags_vertical=Control.SIZE_EXPAND_FILL;layout.add_child(art)
 	var center:=CenterContainer.new();center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);center.mouse_filter=Control.MOUSE_FILTER_IGNORE;art.add_child(center);emblem(center,item)
@@ -400,7 +430,7 @@ func equipment(expanded: bool=false) -> void:
 	v.space(root,14);var reward:HBoxContainer=v.row(root);v.text(reward,"独立通关奖金",10,"text-3").size_flags_horizontal=Control.SIZE_EXPAND_FILL;v.text(reward,"+ "+fmt(f.preview.bonus),14,"accent-ink",true)
 	v.space(root,16);v.text(root,"不止是方块",13,"ink",true);v.space(root,14)
 	var grid:=GridContainer.new();grid.columns=2;grid.add_theme_constant_override("h_separation",12);grid.add_theme_constant_override("v_separation",12);root.add_child(grid)
-	for special in [["爆破","引爆周围方块","asterisk","bomb"],["电弧","跃击最近的 5 块","zap","lightning"],["冰晶","无视穿透 · 命中不消耗次数","snowflake","frost"],["分裂","分出三支箭","split","prism"],["金矿","本块金币 ×3","coins","gold"],["合金障碍","无法击碎 · 箭矢反弹","shield-minus","metal"]]:
+	for special in [["爆破","引爆周围方块","asterisk","bomb"],["电弧","跃击最近的 5 块","zap","lightning"],["冰晶","无视穿透 · 命中不消耗次数","snowflake","frost"],["分裂","分出三支半属性箭 · 不触发技能","split","prism"],["金矿","本块金币 ×3","coins","gold"],["合金障碍","无法击碎 · 箭矢反弹","shield-minus","metal"]]:
 		var line:HBoxContainer=v.row(grid,8);line.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		var mark:=PanelContainer.new();mark.custom_minimum_size=Vector2(26,26);mark.add_theme_stylebox_override("panel",v.box(v.color("legend-"+special[3]+"-bg"),Color.TRANSPARENT,3));line.add_child(mark);var center:=CenterContainer.new();mark.add_child(center);v.image(center,special[2],v.color("legend-"+special[3]),Vector2(14,14))
 		var words:VBoxContainer=v.column(line,4);v.text(words,special[0],10);v.text(words,special[1],10,"text-3",false,true)
@@ -490,6 +520,43 @@ func settings() -> void:
 	var progress:HBoxContainer=v.row(root,8);v.text(progress,"游戏进度",13,"ink",true).size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.button(progress,"导出进度",func():ui._file(false));v.button(progress,"导入进度",func():ui._file(true));v.space(root,8)
 	v.text(root,"将当前存档保存为文件，或从其他设备恢复存档。",11,"text-3",false,true)
+	v.space(root,18);v.rule(root);v.space(root,12)
+	var credits:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/audio/credits.json"))
+	var credits_title:Label=v.text(root,"音效鸣谢",12,"text-2",true)
+	credits_title.name="CreditsUnlock";credits_title.mouse_filter=Control.MOUSE_FILTER_STOP
+	credits_title.gui_input.connect(func(event):
+		if event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and event.pressed:ui.action.emit("developerTap",{})
+	)
+	var attribution:Label=v.text(root,credits.title+"\n"+credits.author+" · "+credits.license+"\n"+credits.changes,11,"text-3",false,true)
+	attribution.name="AudioCredits"
+	attribution.mouse_filter=Control.MOUSE_FILTER_STOP
+	attribution.gui_input.connect(func(event):
+		if event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT and event.pressed:ui.action.emit("developerTap",{})
+	)
+	var credit_links:HBoxContainer=v.row(root,12)
+	for entry in [{"label":"素材来源","url":credits.source},{"label":"CC-BY 3.0 许可","url":credits.licenseUrl}]:
+		var link:=LinkButton.new();link.text=entry.label;link.uri=entry.url;link.add_theme_font_size_override("font_size",11)
+		for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:link.add_theme_color_override(state,v.color("accent-ink"))
+		credit_links.add_child(link)
+	v.space(root,8)
+	v.text(root,"深渊之眼配乐：原创曲，采样自 VSCO-2 Community Edition（Versilian Studios）· CC0\n深渊之眼音效：Horror Sound Pack / Horror Strings / Kenney Impact Sounds · CC0\n采样经过剪辑、移调、混响、响度匹配与 Vorbis 编码。",11,"text-3",false,true)
+	if f.get("developer",{}).get("unlocked",false):
+		v.space(root,16)
+		var dev:Button=v.button(root,"开发者模式",ui._developer,"",44);dev.name="OpenDeveloper"
+
+## Pre-draft card naming this level's rule; dismissing it opens the draft.
+func variant() -> void:
+	var info:Dictionary=f.variant
+	var ink:Color=v.mix(Color(info.color),v.color("ink"),.7)
+	v.text(root,"第 %d 关 · 本关特效" % f.level,11,"accent-ink",true);v.space(root,10)
+	var title:Label=v.text(root,info.name,24,"ink",true);title.name="VariantTitle";title.add_theme_color_override("font_color",ink)
+	v.space(root,12)
+	var note:=PanelContainer.new();note.name="VariantNote";note.add_theme_stylebox_override("panel",v.box(v.mix(Color(info.color),v.color("surface-2"),.14),v.mix(Color(info.color),v.color("line-2"),.45),10,14));root.add_child(note)
+	var words:Label=v.text(note,info.note,13,"text-2",false,true);words.add_theme_constant_override("line_spacing",5)
+	v.space(root,22)
+	var go:Button=v.button(root,"选择技能",ui._close,"",44);go.name="VariantContinue"
+	go.add_theme_stylebox_override("normal",v.box(v.color("accent"),Color.TRANSPARENT,5,8))
+	go.call_deferred("grab_focus")
 
 func reset() -> void:
 	v.text(root,"从第一箭重新开始？",20,"ink",true);v.space(root,18);v.text(root,"当前关卡、金币与升级将被清空。",12,"text-3");v.space(root,28)

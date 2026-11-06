@@ -1,0 +1,63 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "collections": [
+    "https://opengameart.org/content/boss-battle-2-symphonic-metal",
+    "https://opengameart.org/content/30-cc0-sfx-loops",
+    "https://opengameart.org/content/dramatic-boss-encounter",
+    "https://opengameart.org/content/sinister-boss-appears"
+  ],
+  "changes": "48 kHz conversion, DC removal, beat-aligned loop cut with overlap-added decay tail, furnace bed layered from tiled SFX loops, level matching and peak limiting; Vorbis encoding.",
+  "samples": [
+    {
+      "file": "music/forge-smoulder.vorbis",
+      "source": "https://opengameart.org/sites/default/files/Sinister%20Boss%20Appears.wav",
+      "page": "https://opengameart.org/content/sinister-boss-appears",
+      "author": "cynicmusic",
+      "members": [
+        "Sinister Boss Appears.wav"
+      ],
+      "sha256": "32449627faddd1458b00b12513c991457a84b0036e6a40cfa250f9f057b30e27",
+      "duration": 40.32,
+      "loop": true
+    },
+    {
+      "file": "music/forge-stoke.vorbis",
+      "source": "https://opengameart.org/sites/default/files/Heavy%20Concept%20A%20Bass%20Master.wav",
+      "page": "https://opengameart.org/content/dramatic-boss-encounter",
+      "author": "cynicmusic",
+      "members": [
+        "Heavy Concept A Bass Master.wav"
+      ],
+      "sha256": "f0cbc3f72525df74f1de3be122e13e8c4116f109a3344df0d94aa9579b96a715",
+      "duration": 30.01,
+      "loop": true
+    },
+    {
+      "file": "music/forge-inferno.vorbis",
+      "source": "https://opengameart.org/sites/default/files/boss_battle_%232_metal_pack.zip",
+      "page": "https://opengameart.org/content/boss-battle-2-symphonic-metal",
+      "author": "nene",
+      "members": [
+        "boss_battle_#2_metal_opening.wav"
+      ],
+      "sha256": "27845e601593ec3348488b0479111cda656a97127ef69a066256f7c967e125ab",
+      "duration": 26.482770833333333,
+      "loop": true
+    },
+    {
+      "file": "music/forge-furnace.vorbis",
+      "source": "https://opengameart.org/sites/default/files/sfx_loops.zip",
+      "page": "https://opengameart.org/content/30-cc0-sfx-loops",
+      "author": "rubberduck",
+      "members": [
+        "ambient_01.ogg",
+        "noise_01.ogg",
+        "water_boiling.ogg"
+      ],
+      "sha256": "9c013474c7e56192a0d1b2840535a1e1d8b93166948d4a9f7136bb6c3d5421cd",
+      "duration": 24.0,
+      "loop": true
+    }
+  ]
+}

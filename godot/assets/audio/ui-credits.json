@@ -1,0 +1,216 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "credits": [
+    {
+      "author": "Kenney",
+      "collection": "https://kenney.nl/assets/casino-audio",
+      "mirror": "https://cc0-sounds.netlify.app/collection/kenney_casinoaudio/"
+    },
+    {
+      "author": "Sam Gossner / Versilian Studios",
+      "collection": "https://github.com/sgossner/VSCO-2-CE",
+      "commit": "440300901dfe9275fd84e0b7763af1f8443ae62e"
+    }
+  ],
+  "changes": "48kHz mono, transient alignment, 300Hz-3.5kHz high-pass per layer, <=4 semitone resampling between recorded notes, exponential trims, layering, peak leveling, Vorbis q8.",
+  "sources": [
+    {
+      "file": "ca_chipsCollide1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsCollide1.ogg",
+      "sha256": "f41b3d106360fc68ebc061a211d4265b4cb5fa1fbe86e4d57d3673510e2c3784"
+    },
+    {
+      "file": "ca_chipsCollide2.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsCollide2.ogg",
+      "sha256": "2a10c5ff4b2fbaa55a317fc258ddce3fec85bd26db2d3c2ad298b3b33ce23bc6"
+    },
+    {
+      "file": "ca_chipsCollide3.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsCollide3.ogg",
+      "sha256": "1c5e885f72b64c38fff7ef05579e49310e7acf026cf123ffb65fffb57fb06e1c"
+    },
+    {
+      "file": "ca_chipsCollide4.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsCollide4.ogg",
+      "sha256": "1ffa34af64adc62fce583c5aa9a3c98287b1673ef191576a5571f1ffd39529dd"
+    },
+    {
+      "file": "ca_chipsStack1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsStack1.ogg",
+      "sha256": "12bf175b9afcea112175b241ad3336c6244ac5fdcdff8b5942ecc03f2225e0c4"
+    },
+    {
+      "file": "ca_chipsHandle3.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsHandle3.ogg",
+      "sha256": "7c5a86e27b2bef839ae096dd655506cf46a82494bd01cc28f51bed6ab26cc342"
+    },
+    {
+      "file": "ca_chipLay1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipLay1.ogg",
+      "sha256": "4b2111252ccb64eed67f171e061053849cfbb29873536c03948646f244a3905c"
+    },
+    {
+      "file": "ca_cardShove1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/cardShove1.ogg",
+      "sha256": "1ea667aa6795d5f14239192116ebcbd8f3f47eb1c7faaf2ec56844b9067b8b06"
+    },
+    {
+      "file": "ca_cardShove2.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/cardShove2.ogg",
+      "sha256": "8e95c1d3ae94b5b91bc663432ad7c3bf4e03a541c22ec10fa51c65fe0e29054b"
+    },
+    {
+      "file": "ca_cardSlide7.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/cardSlide7.ogg",
+      "sha256": "bda2040194f43484d03ee3c65ed6fff57251882ea7227abce4214bfa30bf2705"
+    },
+    {
+      "file": "vs_claves_mf.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/VSCO 1 Percussion/varWood/claves_mf.wav",
+      "sha256": "7906ca75132d3374a00d12c23b030807107e4576716b6a437a9a6a8c7824b291"
+    },
+    {
+      "file": "vs_claves_mp.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/VSCO 1 Percussion/varWood/claves_mp.wav",
+      "sha256": "d2d6d73c5a91baa06f0a43af2f6fa11b3184c75b626fa4446e578b74d55a9ccc"
+    },
+    {
+      "file": "vs_Xylo_Medium_G5_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_G5_ff_01_far.wav",
+      "sha256": "d5b45edd0c164356c0425b663b9307bbb77a647ba7554423c6a8aa455ac8b2b3"
+    },
+    {
+      "file": "vs_Xylo_Medium_C6_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_C6_ff_01_far.wav",
+      "sha256": "183d04381c44705f65c3750383f28695f4b2576311ace8fdbe567134f416ff27"
+    },
+    {
+      "file": "vs_Xylo_Medium_G6_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_G6_ff_01_far.wav",
+      "sha256": "8d46e7cb1d2f61f466458f042bd20ce6086802a2396cfc1dab13a5d72232d8bf"
+    },
+    {
+      "file": "vs_Xylo_Medium_C7_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_C7_ff_01_far.wav",
+      "sha256": "f922a9ca996341c3cd6d54d3f3c569812e5c4c3325b1bb19de503b113b9a9197"
+    },
+    {
+      "file": "vs_glock_medium_C6.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_C6.wav",
+      "sha256": "e942cbf502cf6731df2925945fe3234c876cb63f047d91007b6929887f9e4904"
+    },
+    {
+      "file": "vs_glock_medium_G6.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_G6.wav",
+      "sha256": "a2ba94e59119cd5272c1161fc8b8fbfb94c7b44de45a9a6cc5973b1c332103af"
+    },
+    {
+      "file": "vs_glock_medium_C7.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_C7.wav",
+      "sha256": "b2ecbe0e60c983bbfaa49a1f45f8a11559f7dba27b8c8a032eb2cb7366a36910"
+    },
+    {
+      "file": "vs_Triangle3-HitM_v1_rr1_Sum.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Triangle3-HitM_v1_rr1_Sum.wav",
+      "sha256": "95070247743dac4064497f7c2e04a97a4c7b0a2cc98894156c8eaebd076133cf"
+    },
+    {
+      "file": "vs_Triangle3-HitM_v2_rr1_Sum.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Triangle3-HitM_v2_rr1_Sum.wav",
+      "sha256": "4be477be0b659aa1f7d1ff570e3dc176a65a37eb2f2bf1e453a1ddc2cdbb33fe"
+    },
+    {
+      "file": "vs_bell_tree_scrape1.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/VSCO 1 Percussion/varMetal/various/bell_tree_scrape1.wav",
+      "sha256": "508c7c896f454e638fabdac7163cbd29b129ec1b63e6646aca9e94660c63d4a4"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "ui-tap-1.vorbis",
+      "seconds": 0.11,
+      "sha256": "50b30937f5a254eba7d5404e0c816b4f3d10c628797092ec6006c255aa18b974"
+    },
+    {
+      "file": "ui-tap-2.vorbis",
+      "seconds": 0.11,
+      "sha256": "48bd745306c37c69d86056b7d6d2ab7043e5363487bce01c72ed26aa736e48e2"
+    },
+    {
+      "file": "ui-tap-3.vorbis",
+      "seconds": 0.11,
+      "sha256": "665c74dd28f1776b69b1f65a0c5575d2ee6e08894b2b2ecf6ec7796ab27504a3"
+    },
+    {
+      "file": "ui-tick-1.vorbis",
+      "seconds": 0.035,
+      "sha256": "f4da5d4b6fe227abc8e665c08d323587b7efbe5383ef35a7bb85058880462bbc"
+    },
+    {
+      "file": "ui-tick-2.vorbis",
+      "seconds": 0.035,
+      "sha256": "a11ca36f21593f9e99e7d039701d77dd06f7c68526bde7737fcda964494cc927"
+    },
+    {
+      "file": "ui-tick-3.vorbis",
+      "seconds": 0.035,
+      "sha256": "625017a9879912057607258d7d9cd79fcadf844faaabc9b201bb4a546da5b640"
+    },
+    {
+      "file": "ui-tick-4.vorbis",
+      "seconds": 0.035,
+      "sha256": "334103f0660491153ee9ffd14b58e127857a58f1aa0a1a853a7322eff090be55"
+    },
+    {
+      "file": "ui-deal.vorbis",
+      "seconds": 0.3,
+      "sha256": "9f686aee95b393b1401b56fb5f6290ada452f9c4378951aaf5d36f89014c4100"
+    },
+    {
+      "file": "ui-pick-1.vorbis",
+      "seconds": 0.22,
+      "sha256": "9ce7a210f302cf13b138f4392c3d592a93befd54b68dde9b584c1874b3cb48da"
+    },
+    {
+      "file": "ui-pick-2.vorbis",
+      "seconds": 0.3,
+      "sha256": "fa667d4b53480b16bc20555322540a2210d2c3601d5a990dea73a3064bba80ac"
+    },
+    {
+      "file": "ui-pick-3.vorbis",
+      "seconds": 0.42,
+      "sha256": "629b230320c554321add5bbe976df2fcd952f1f7f112bee88c2ce50c1c0a8833"
+    },
+    {
+      "file": "ui-whoosh.vorbis",
+      "seconds": 0.45,
+      "sha256": "dd58765960d6303d7a491827f7bdaca6c5de08cb4996f74a0abf52c1a8c33bfe"
+    },
+    {
+      "file": "ui-slot.vorbis",
+      "seconds": 0.2,
+      "sha256": "0a407c3350b64d4486820245b65c0e6647d008612bf10cd3aa2bbc89ceba8c37"
+    },
+    {
+      "file": "ui-chime.vorbis",
+      "seconds": 0.5,
+      "sha256": "dce3e9ac956fe84bbf91709f7051cc221b0a59b2017f843a50fce69438b9e3ee"
+    },
+    {
+      "file": "ui-gold.vorbis",
+      "seconds": 0.85,
+      "sha256": "04db3483bd02b4410df27c37d4534970f2d1fa4a105453682d5c0130bd21367d"
+    },
+    {
+      "file": "ui-reroll.vorbis",
+      "seconds": 0.4,
+      "sha256": "4056c1b60bb8546d5f6102d667cdedebe64d24fde728138d7de6e1f79d42616e"
+    },
+    {
+      "file": "ui-upgrade.vorbis",
+      "seconds": 0.75,
+      "sha256": "cd504ec9c069739ab55e0650df4e20383320d2c04b12072f130244f5eb3f2877"
+    }
+  ]
+}

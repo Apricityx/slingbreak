@@ -6,15 +6,41 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
-	app=load("res://scenes/main.tscn").instantiate();app.set_meta("test_mode",true);root.add_child(app)
+	app=load("res://scenes/main.tscn").instantiate();app.set_meta("test_mode",true);app.set_meta("variant_cards",true);root.add_child(app)
 	await create_timer(.1).timeout
 	await process_frame
 	await process_frame
 	_check(app.session.ready,"UI runtime boots")
 	var ui: Control=app.interface
+	_check(not ui.hud_nodes.has("status") and not ui.hud_nodes.has("power"),"bottom corner status and power labels are removed")
 	_check(ui.oversampling_with_scale==CanvasItem.OVERSAMPLING_WITH_SCALE_ENABLED,"scaled UI keeps font atlas resolution")
 	_check(ui.visuals.fonts[0].oversampling>=2.0 and ui.visuals.fonts[2].oversampling>=2.0,"runtime UI fonts use oversampling")
+	var icon_manifest:Dictionary=ui.visuals.manifest.get("icons",{})
+	for skill in ui.catalog.values():
+		var icon_id:String=str(skill.get("icon",""))
+		_check(icon_manifest.has(icon_id),"skill icon is registered: "+str(skill.id)+" / "+icon_id)
+		var texture:Texture2D=ui.visuals.icon(icon_id,Color.WHITE)
+		_check(texture!=null and texture.get_image().get_used_rect().has_area(),"skill icon has visible pixels: "+str(skill.id)+" / "+icon_id)
+	# Every level announces its rule before the draft.
+	_check(ui.modal_kind=="variant" and ui.frame.variant is Dictionary,"level rule card opens before the draft")
+	var rule_title:Label=ui.modal_content.find_child("VariantTitle",true,false) if ui.modal_content!=null else null
+	_check(rule_title!=null and rule_title.text==ui.frame.variant.name and ui.modal_content.find_child("VariantContinue",true,false) is Button,"rule card names the rule and offers the draft")
+	ui.modal_content.find_child("VariantContinue",true,false).pressed.emit()
+	await process_frame
+	await process_frame
 	_check(ui.modal_kind=="draft","first draft is modal")
+	var badge_host:=VBoxContainer.new();root.add_child(badge_host)
+	for mode in ["light","dark"]:
+		ui.visuals.mode=mode
+		for tier in ["white","blue","gold"]:
+			var badge:Control=ui.pages.rarity(badge_host,{"tier":tier},true)
+			var style:StyleBoxFlat=badge.get_theme_stylebox("panel")
+			var rank:int={"white":1,"blue":2,"gold":3}[tier]
+			_check(style.border_width_left==0 and style.corner_radius_top_left==4,"draft rarity uses a soft rectangular label: "+mode+" "+tier)
+			_check(badge.get_child(0).get_child(0).custom_minimum_size.x==rank*7-1,"draft rarity encodes tier in diamond count: "+tier)
+			_check(badge.mouse_filter==Control.MOUSE_FILTER_IGNORE,"rarity leaves card input unobstructed")
+	ui.visuals.mode="light"
+	badge_host.queue_free()
 	_check(ui.panel.position.x==8 and ui.panel.size.x==396,"draft dialog fits the 412px design grid: "+str(ui.panel.size))
 	_check(ui.panel.position.y>=8 and ui.panel.position.y+ui.panel.size.y<=907,"dialog fits stage")
 	_check(ui.panel.size.y<=ui.modal_content.get_combined_minimum_size().y+35,"draft hugs its content")
@@ -45,6 +71,7 @@ func _run() -> void:
 	ui._close()
 	app.session.command("configure",{"theme":"dark"})
 	_check(ui.visuals.mode=="dark","UI follows canvas palette")
+	_check(not ui.hud_nodes.has("status") and not ui.hud_nodes.has("power"),"theme rebuild keeps bottom corner labels removed")
 	ui._settings()
 	await process_frame
 	await process_frame

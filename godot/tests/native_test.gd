@@ -22,8 +22,31 @@ func fresh(ids:Array=[],seed_value:int=7281) -> RefCounted:
 	sim.state.skillChosenLevel=50;sim.generate();sim.phase="ready"
 	return sim
 
+func check_draft_weights() -> void:
+	var sim:=fresh()
+	for equipped in [[],["titan"],["railgun","reaper"]]:
+		sim.state.skills={}
+		var pressure:=0
+		for id in equipped:
+			sim.state.skills[id]=1
+			pressure+={"white":0,"blue":1,"gold":2}[sim.content.by_id[id].tier]
+		for item in sim._weights():
+			var skill:Dictionary=sim.content.by_id[item.id]
+			var expected:float=skill.weight*{"white":1.0,"blue":0.7,"gold":0.5}[skill.tier]/(1+{"white":0.0,"blue":0.2,"gold":0.4}[skill.tier]*pressure)
+			check(is_equal_approx(item.weight,expected),"balanced draw weight retains rarity pressure: "+item.id)
+			check(not item.id in equipped,"equipped skill excluded: "+item.id)
+		sim.state.draft={"options":sim.roll(),"level":sim.state.level}
+		var total:=0.0
+		for value in sim.draft_chances().values():total+=value
+		check(is_equal_approx(total,3.0),"balanced three-card inclusion probabilities sum to three")
+		for i in range(100):
+			var options:Array=sim.roll()
+			check(options.size()==3 and options[0]!=options[1] and options[0]!=options[2] and options[1]!=options[2],"balanced draft draws three unique skills")
+			for id in options:check(not id in equipped,"balanced draft never draws equipped skills")
+
 func _run() -> void:
 	check(not ClassDB.class_exists("SlingRuntime"),"project starts with no JavaScript extension")
+	check_draft_weights()
 	var sim:=fresh()
 	check(sim.content.catalog.size()==81,"all 81 skills owned by standalone content")
 	check(sim.bricks.size()+sim.obstacles.size()>=66,"native board density")

@@ -25,11 +25,29 @@ test('Godot Vorbis encoder writes decodable mono audio with exact duration', t =
     const sample = encode(pcm, out, 'test-tone');
     assert.equal(sample.frames, frames);
     assert.ok(sample.bytes < pcm.length / 4);
+    // The final Ogg granule is the exact playback length. Older FFmpeg versions
+    // can output padding from the final Vorbis block rather than trim to it.
+    const encoded = fs.readFileSync(path.join(out, sample.file));
+    let offset = 0;
+    let finalGranule = null;
+    while (offset < encoded.length) {
+        assert.equal(encoded.toString('ascii', offset, offset + 4), 'OggS');
+        const segments = encoded[offset + 26];
+        const headerEnd = offset + 27 + segments;
+        assert.ok(headerEnd <= encoded.length);
+        let bodyBytes = 0;
+        for (let i = offset + 27; i < headerEnd; i++) bodyBytes += encoded[i];
+        if (encoded[offset + 5] & 4) finalGranule = encoded.readBigUInt64LE(offset + 6);
+        offset = headerEnd + bodyBytes;
+        assert.ok(offset <= encoded.length);
+    }
+    assert.equal(finalGranule, BigInt(frames));
     const decoded = spawnSync(ffmpeg, ['-v', 'error', '-i', path.join(out, sample.file),
         '-f', 'f32le', '-ar', '48000', '-ac', '1', 'pipe:1']);
     assert.equal(decoded.status, 0, String(decoded.stderr));
-    // FFmpeg may drop a short Vorbis priming block; Godot uses the original frame count.
-    assert.ok(Math.abs(decoded.stdout.length / 4 - frames) <= 128);
+    // Allow a short priming drop or at most one 2048-frame encoder tail block.
+    const decodedFrames = decoded.stdout.length / 4;
+    assert.ok(decodedFrames >= frames - 128 && decodedFrames <= frames + 2048);
     let energy = 0;
     for (let i = 0; i < decoded.stdout.length; i += 4) energy += decoded.stdout.readFloatLE(i) ** 2;
     assert.ok(energy / (decoded.stdout.length / 4) > .1);

@@ -139,6 +139,8 @@
       "crack": "#ff7a2e",
       "smoke": "#8a7f75",
       "wind": "#b09a82",
+      "ironLight": "#8f8275",
+      "soot": "#1f1915",
       "text": "#9a3f12",
       "weak": "#d8401f"
     },
@@ -337,6 +339,8 @@
       "crack": "#ff8a3d",
       "smoke": "#6b625a",
       "wind": "#8a7d70",
+      "ironLight": "#6f665d",
+      "soot": "#080605",
       "text": "#ffb27a",
       "weak": "#ff6a4a"
     },

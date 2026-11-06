@@ -9,13 +9,16 @@ const Geometry = preload("res://src/core/geometry.gd")
 const Skills = preload("res://src/skills/mechanics.gd")
 const Bosses = preload("res://src/bosses/director.gd")
 const FX = preload("res://src/effects/effects.gd")
+const Variants = preload("res://src/core/variants.gd")
 var content := Content.new()
+var developer := preload("res://src/core/developer.gd").new()
 var state := Progress.defaults()
 var rng := RandomNumberGenerator.new()
 var visual_rng := RandomNumberGenerator.new()
 var skills: RefCounted
 var bosses: RefCounted
 var fx: RefCounted
+var variants: RefCounted
 var bricks: Array = []
 var obstacles: Array = []
 var arrows: Array = []
@@ -68,22 +71,24 @@ var reduced: bool:
 var slots: int:
 	get:return 1+mini(3,int(state.up.slots))
 var threshold: int:
-	get:return ceili(initial*(0.6-0.15*rank("resonance")))
+	get:return mini(initial,ceili(initial*developer.value("thresholdRate",0.6-0.15*rank("resonance"))*variants.threshold_scale()))
 
 func _init() -> void:
 	skills=Skills.new(self)
 	bosses=Bosses.new(self)
 	fx=FX.new(self)
+	variants=Variants.new(self)
 
 func dispose() -> void:
 	# Delayed Callables retain their skill/Boss owner. Break these cycles even
 	# when a run is replaced with jobs still pending (reset, import or shutdown).
-	skills.reset();bosses.reset();fx.reset();arrows.clear();active_arrow=null
+	skills.reset();bosses.reset();fx.reset();variants.reset();arrows.clear();active_arrow=null
 
 func start(seed_value: int, progress: Dictionary={}, preferences: Dictionary={}) -> void:
 	rng.seed=seed_value
 	visual_rng.seed=seed_value^0x4f7314
 	state=Progress.defaults()
+	if preferences.get("developer") is Dictionary:developer.load_config(preferences.developer)
 	if Progress.valid(progress):
 		var imported:Dictionary=progress.state.duplicate(true)
 		for key in imported:state[key]=imported[key]
@@ -106,7 +111,7 @@ func start(seed_value: int, progress: Dictionary={}, preferences: Dictionary={})
 func _normalize_skills(value: Dictionary) -> Dictionary:
 	var result:Dictionary={}
 	for id in value:
-		if content.by_id.has(id) and value[id]==1 and state.level>=content.by_id[id].minLevel:result[id]=1
+		if content.by_id.has(id) and value[id]==1 and (developer.enabled or state.level>=content.by_id[id].minLevel):result[id]=1
 	while result.size()>slots:result.erase(result.keys()[0])
 	return result
 
@@ -120,43 +125,47 @@ func base_damage() -> float:
 	return 2+0.65*log(float(state.up.arrow)+1)/log(2.0)
 
 func damage() -> float:
-	return base_damage()*(1+rank("titan")+0.35*rank("rapid")+0.8*rank("heavy")+0.5*rank("supernova")+0.6*rank("reaper")+3*rank("railgun")+mini(10,int(state.skillRuntime.shots))*0.2*rank("growing"))
+	return developer.value("damage",base_damage()*(1+rank("titan")+0.35*rank("rapid")+0.8*rank("heavy")+0.5*rank("supernova")+0.6*rank("reaper")+3*rank("railgun")+mini(10,int(state.skillRuntime.shots))*0.2*rank("growing")))
 
 func speed() -> float:
-	return 24+11*(1-exp(-float(state.up.power)/9))
+	return developer.value("speed",24+11*(1-exp(-float(state.up.power)/9)))
 
 func penetration() -> int:
-	return mini(6,2+int(state.up.arrow)/4)+4*rank("piercer")+2*rank("heavy")+12*rank("railgun")+2*rank("opportunist")
+	return int(developer.value("penetration",mini(6,2+int(state.up.arrow)/4)+4*rank("piercer")+2*rank("heavy")+12*rank("railgun")+2*rank("opportunist")))
 
 func draw_interval() -> float:
-	return (100-9*mini(10,int(state.up.draw)))/100.0
+	return developer.value("drawInterval",(100-9*mini(10,int(state.up.draw)))/100.0)
 
 func special_rate() -> float:
-	return minf(0.22,0.10+0.12*(1-exp(-float(state.up.brick)/12)))
+	return developer.value("specialRate",minf(0.22,0.10+0.12*(1-exp(-float(state.up.brick)/12))))
 
 func base_hp() -> float:
 	var n:=log(float(state.level))/log(2.0)
-	return floor(3+0.8*n+0.2*n*n)
+	return developer.value("baseHp",floor(3+0.8*n+0.2*n*n))
 
 func bonus(level: int=-1) -> float:
 	# The reference rounds the base payout, then rounds again after Treasury.
 	var scaled: int = int(state.level) if level<0 else level
-	return round(round(240*pow(scaled,1.15))*(1+2*rank("treasury")))
+	return developer.value("bonus",round(round(240*pow(scaled,1.15))*(1+2*rank("treasury"))))
 
-func combo_step() -> float:return 0.25+0.025*state.up.comboCap
-func combo_cap() -> float:return 3+0.5*state.up.comboCap
+func combo_step() -> float:return developer.value("comboStep",0.25+0.025*state.up.comboCap)
+func combo_cap() -> float:return developer.value("comboCap",3+0.5*state.up.comboCap)
 func cap_kills() -> int:return 1+ceili((combo_cap()-1)/combo_step()-0.000000001)
 func multiplier(kills: int) -> float:return minf(combo_cap(),1+maxi(0,kills-1)*combo_step())
 func reroll_cap() -> int:return 1+mini(4,int(state.up.rerollCap))
 
-func reward(type: String, kills: int) -> float:
+func reward(type: String, kills: int, point:Variant=null, brick:RefCounted=null) -> float:
 	var value:=maxf(1,round(3*pow(state.level,1.1)*(1+0.16*state.up.brick)*multiplier(kills)*(3 if type=="gold" else 1)))
 	value*=1+rank("mint")
 	if type=="gold":value*=(3+5*rank("alchemist"))/3.0
-	if rank("jackpot"):value*=10 if rng.randf()<0.25 else 1.5
-	value*=1+rank("bounty")*mini(8,maxi(0,kills-1))*0.25
+	if rank("jackpot") and arrow_skills_enabled():
+		var jackpot:float=10 if rng.randf()<0.25 else 1.5
+		value*=jackpot
+		if point is Vector2:fx.skill_batch_eight("jackpot",point,PackedVector2Array(),jackpot)
+	value*=1+(rank("bounty")*mini(8,maxi(0,kills-1))*0.25 if arrow_skills_enabled() else 0)
 	if type!="normal" and rank("specialist"):value*=3
-	return round(value)
+	if brick!=null:value*=variants.reward_scale(brick)
+	return round(value*developer.value("rewardScale",1))
 
 func cost(key: String) -> float:
 	var value:=0.0
@@ -165,13 +174,13 @@ func cost(key: String) -> float:
 		"rerollCap":value=[2e4,4e5,8e6,1.6e8][mini(3,int(state.up.rerollCap))]
 		"comboCap":value=ceil(1500*pow(1.65,state.up.comboCap))
 		_:value=ceil({"power":75,"arrow":100,"brick":120,"draw":50}.get(key,0)*pow({"power":1.4,"arrow":1.46,"brick":1.5,"draw":1.35}.get(key,1),state.up.get(key,0)))
-	return maxf(1,ceil(value*pow(0.6,rank("bargain"))))
+	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1)))
 
 func generate(restore: bool=false) -> void:
 	var handoff:=phase=="clearing" and not reduced
 	if not restore:state.erase("nativeBoss")
 	bricks.clear();obstacles.clear();arrows.clear();core=null
-	skills.reset();fx.reset();bosses.reset()
+	skills.reset();fx.reset();bosses.reset();variants.reset()
 	initial=0;killed=0;shots=0;level_money=0;shot_money=0;next_shot_at=0
 	latest_achievement=null;board_entrance=null;entrance_held=false;report=null;phase="ready"
 	presentation_previous_time=time;presentation_time=time;presentation_fraction=1.0
@@ -179,7 +188,8 @@ func generate(restore: bool=false) -> void:
 	if not state.skillRuntime is Dictionary or state.skillRuntime.get("level")!=state.level:
 		state.skillRuntime={"level":state.level,"shots":0,"forge":false,"decay":false}
 	var board:Variant=state.board
-	if restore and Progress.valid_board(board) and board.get("level")==state.level:
+	var restored:bool=restore and Progress.valid_board(board) and board.get("level")==state.level
+	if restored:
 		for item in board.bricks:make_brick(item)
 		for item in board.get("obstacles",[]):make_obstacle(item)
 		initial=int(board.initial);killed=int(board.killed);level_money=float(board.get("levelMoney",0))
@@ -187,6 +197,7 @@ func generate(restore: bool=false) -> void:
 	else:layout()
 	stats={"brick":0.0,"mult":0.0,"carried":level_money,"bestKills":0,"bestMoney":0.0,"skills":{},"record":false,"previousBest":state.best}
 	bosses.start(restore)
+	variants.start(board.get("variant") if restored else null,restored)
 	if state.skillChosenLevel==state.level:
 		state.draft=null;apply_passives()
 	else:
@@ -213,9 +224,16 @@ func shuffle(items: Array) -> Array:
 
 func layout() -> void:
 	var rows:=10+mini(1,int(state.level-1)/8)
+	if developer.enabled and developer.counts.has(str(int(state.level))):rows=11
 	var cells:Array=[]
 	for row in range(rows):
 		for column in range(7):cells.append({"row":row,"col":column,"x":102+column*96,"y":170+row*60})
+	if developer.enabled and developer.counts.has(str(int(state.level))):
+		for cell in shuffle(cells).slice(0,int(developer.counts[str(int(state.level))])):
+			make_brick({"x":cell.x,"y":cell.y,"hp":base_hp()})
+		initial=bricks.size()
+		for index in range(floori(bricks.size()*special_rate())):bricks[index].type=["bomb","lightning","frost","prism","gold"][index%5]
+		return
 	var blocked:Dictionary={}
 	var count:=5+rng.randi_range(0,2)+mini(1,int(state.level)/10)
 	for cell in shuffle(cells):
@@ -271,7 +289,9 @@ func _weights() -> Array:
 	for id in state.skills:pressure+={"white":0,"blue":1,"gold":2}[content.by_id[id].tier]
 	for skill in content.catalog:
 		if rank(skill.id) or state.level<skill.minLevel:continue
-		pool.append({"id":skill.id,"weight":skill.weight/(1+{"white":0.0,"blue":0.2,"gold":0.4}[skill.tier]*pressure)})
+		# Godot balance: reduce rare/legendary base draw weights by 30%/50%.
+		var tier_scale:float={"white":1.0,"blue":0.7,"gold":0.5}[skill.tier]
+		pool.append({"id":skill.id,"weight":skill.weight*tier_scale/(1+{"white":0.0,"blue":0.2,"gold":0.4}[skill.tier]*pressure)})
 	return pool
 
 func roll(exclude: Array=[]) -> Array:
@@ -348,6 +368,7 @@ func launch(position: Vector2, velocity: Vector2, amount: float=-1, pierce: int=
 	if not state.skills.is_empty():arrow.visual=state.skills.keys().back()
 	arrow.achievement={"id":arrow.id,"kills":0,"chain":0,"frozen":0,"gold":0,"types":{},"unlocked":{},"bounces":0,"base":0.0,"paid":0.0,"mult":1.0,"baseMult":1.0,"bountyMult":1.0,"capKills":cap_kills(),"bankKill":false,"trickKill":false,"airKill":false,"core":false}
 	arrows.append(arrow)
+	variants.launched(arrow)
 	return arrow
 
 func shoot(dx: float, dy: float) -> bool:
@@ -355,11 +376,28 @@ func shoot(dx: float, dy: float) -> bool:
 	if paused or intro_active or clock<locked_until or phase not in ["ready","flying"] or time<next_shot_at or arrows.size()>=64 or pull.length()<10 or dy<5:return false
 	if phase=="ready":round_uses={};latest_achievement=null;shot_money=0
 	state.skillRuntime.shots+=1;shots+=1;phase="flying"
-	next_shot_at=time+draw_interval()
+	next_shot_at=time+draw_interval()*variants.interval_scale()
 	var main:=launch(origin,-pull.normalized()*speed()*(0.56+0.44*minf(1,pull.length()/100)), -1,-1,false,true)
 	active_arrow=main;skills.on_shoot(main,pull);active_arrow=null
+	variants.on_shoot()
 	cue("shoot");revision+=1
 	return true
+
+func arrow_skills_enabled() -> bool:
+	return active_arrow==null or not active_arrow.flags.get("noSkills",false)
+
+func launch_prism(point: Vector2, direction: Vector2) -> RefCounted:
+	# Always inherit from the originating volley arrow, not another fragment.
+	var source:RefCounted=active_arrow
+	while source!=null and source.source!=null:source=source.source
+	var amount:float=(source.damage if source!=null else damage()*pow(2,rank("siegebreaker")+rank("spectral")+rank("timeslip")))*0.5
+	var velocity:float=(source.velocity.length() if source!=null else speed())*0.5
+	var pierce:int=maxi(1,floori((source.pierce if source!=null else penetration())*0.5))
+	var arrow:=launch(point,direction*velocity,0,0)
+	if arrow!=null:
+		arrow.damage=amount;arrow.base_damage=amount;arrow.pierce=pierce
+		arrow.flags.noSkills=true;arrow.visual=""
+	return arrow
 
 func near(point: Vector2, radius: float) -> Array:
 	return bricks.filter(func(b):return b.position.distance_squared_to(point)<=radius*radius)
@@ -377,15 +415,15 @@ func nearest(point: Vector2, count: int, accept: Callable=Callable()) -> Array:
 	return result
 
 func area(point: Vector2, radius: float, amount: float, id: String="", depth: int=1) -> void:
-	fx.ring(point,Color(content.by_id[id].color) if content.by_id.has(id) else Color("#df7035"),radius)
-	if id!="":fx.signature(id,point,radius)
+	if id!="frostfire":fx.ring(point,Color(content.by_id[id].color) if content.by_id.has(id) else Color("#df7035"),radius)
+	if id!="" and id!="frostfire":fx.signature(id,point,radius)
 	for brick in near(point,radius):hit(brick,amount,depth)
 	cue("boom",1,point.x)
 
 func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 	if phase=="clearing" or not brick in bricks or not is_finite(amount) or amount<=0:return
 	if not bosses.before_hit(brick,depth):return
-	var dealt:=amount*(2 if brick.frozen else 1)
+	var dealt:float=amount*(2 if brick.frozen else 1)*variants.damage_scale(brick,active_arrow)
 	skills.record_damage(brick,minf(brick.hp,dealt))
 	brick.hp-=dealt;brick.flash=0.16
 	if brick.hp>0:fx.burst(brick.position,fx.brick_color(brick.type),4,0.5);cue("brick_hit",1,brick.x);return
@@ -395,53 +433,60 @@ func hit(brick: RefCounted, amount: float, depth: int=0) -> void:
 		active_arrow.kills+=1;state.best=maxi(state.best,active_arrow.kills)
 	var money:=_award(brick,depth)
 	state.coins+=money;shot_money+=money;level_money+=money
-	fx.burst(brick.position,fx.brick_color(brick.type),16);fx.floating(brick.position,"+%d" % int(money));fx.shake=minf(8,fx.shake+1.5)
-	if brick.type=="normal":fx.normal_break(brick.position,fx.brick_color(brick.type))
-	if brick.type=="gold" and rank("alchemist"):fx.skill_event("alchemist",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.64)
+	fx.brick_income(brick.position,money);fx.shake=minf(8,fx.shake+1.5)
+	if brick.type=="normal":fx.normal_break(brick.position,fx.brick_color(brick.type),1.0,Vector2(brick.w,brick.h),active_arrow.velocity if active_arrow!=null else Vector2.UP)
+	elif brick.type!="bomb":fx.burst(brick.position,fx.brick_color(brick.type),16)
+	if brick.type=="gold" and rank("alchemist") and arrow_skills_enabled():fx.skill_event("alchemist",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.64)
 	if brick.type not in ["normal","lightning"]:fx.special_break(brick.position,brick.type,1.0 if depth==0 else 0.82,depth)
-	if brick.type!="normal":cue("bomb" if brick.type=="bomb" else brick.type,1,brick.x,true)
+	# Bomb cues carry chain depth so the sampled blast climbs through a cascade.
+	if brick.type!="normal":cue("bomb" if brick.type=="bomb" else brick.type,depth+1 if brick.type=="bomb" else 1,brick.x,true)
 	cue("brick_break" if brick.type=="normal" else "break",active_arrow.kills if active_arrow!=null else 0,brick.x)
 	if killed>=threshold and core==null and bosses.fight.is_empty():spawn_core()
 	if depth<70:
 		match brick.type:
-			"bomb":area(brick.position,132,damage()*2,"",depth+1)
+			"bomb":
+				# The blast batch owns the ring, fire and sampled boom; area()'s
+				# generic ring and synthetic boom would only double them up.
+				var blast:=damage()*2
+				for target in near(brick.position,132):hit(target,blast,depth+1)
 			"lightning":
 				var from:Vector2=brick.position
-				for target in nearest(brick.position,7 if rank("storm") else 5):
+				for target in nearest(brick.position,7 if rank("storm") and arrow_skills_enabled() else 5):
 					# Both brick variants share the Storm art, once per actual hop.
 					# Target selection, damage and source attribution stay synchronous.
 					fx.skill_event("storm",from,from.direction_to(target.position),target.position,1.0,0.5)
-					from=target.position;hit(target,damage()*(2 if rank("storm") else 1.6),depth+1)
+					from=target.position;hit(target,damage()*(2 if rank("storm") and arrow_skills_enabled() else 1.6),depth+1)
 			"frost":
-				var radius:=190 if rank("blizzard") else 140
-				if rank("blizzard"):fx.skill_event("blizzard",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.72)
+				var radius:=190 if rank("blizzard") and arrow_skills_enabled() else 140
+				if rank("blizzard") and arrow_skills_enabled():fx.skill_event("blizzard",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.72)
 				for target in near(brick.position,radius):
 					target.frozen=true
 					# Presentation follows the wave; damage remains synchronous.
 					target.frost_born=fx.visual_time+target.position.distance_to(brick.position)/(radius*2.4/0.82)
 					target.frost_direction=(target.position-brick.position).normalized()
-					hit(target,damage()*(1 if rank("blizzard") else 0.5),depth+1)
+					hit(target,damage()*(1 if rank("blizzard") and arrow_skills_enabled() else 0.5),depth+1)
 			"prism":
-				var count:=6 if rank("prism") else 3
-				if rank("prism"):fx.skill_event("prism",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.52)
+				var upgraded:bool=rank("prism")>0 and arrow_skills_enabled()
+				var count:=6 if upgraded else 3
+				if upgraded:fx.skill_event("prism",brick.position,Vector2.UP,Vector2.ZERO,1.0,0.52)
 				for i in range(count):
 					var angle:float=-0.9+i*1.8/(count-1)
-					launch(brick.position,Vector2(sin(angle),-cos(angle))*18,-1,3 if rank("prism") else 2)
-	skills.destroyed(brick,depth);bosses.destroyed(brick,depth)
+					launch_prism(brick.position,Vector2(sin(angle),-cos(angle)))
+	variants.destroyed(brick);skills.destroyed(brick,depth);bosses.destroyed(brick,depth)
 	revision+=1
 
 func _award(brick: RefCounted, depth: int) -> float:
 	if active_arrow==null:
-		var money:=reward(brick.type,1);stats.brick+=money;return money
+		var money:=reward(brick.type,1,brick.position,brick);stats.brick+=money;return money
 	var arrow:RefCounted=active_arrow
 	var tally:Dictionary=arrow.achievement
 	tally.kills=arrow.kills;tally.chain+=1 if depth>0 else 0;tally.frozen+=1 if brick.frozen else 0;tally.gold+=1 if brick.type=="gold" else 0
 	if brick.type!="normal":tally.types[brick.type]=true
 	tally.bankKill=tally.bankKill or tally.bounces>0;tally.trickKill=tally.trickKill or tally.bounces>=3;tally.airKill=tally.airKill or arrow.life>=2
-	tally.baseMult=multiplier(arrow.kills);tally.bountyMult=1+rank("bounty")*mini(8,maxi(0,arrow.kills-1))*0.25
-	if rank("bounty") and arrow.kills>=2:
+	tally.baseMult=multiplier(arrow.kills);tally.bountyMult=1+(rank("bounty")*mini(8,maxi(0,arrow.kills-1))*0.25 if arrow_skills_enabled() else 0)
+	if rank("bounty") and arrow.kills>=2 and arrow_skills_enabled():
 		fx.skill_event("bounty",brick.position,Vector2.UP,Vector2.ZERO,0.55+mini(8,arrow.kills-1)*0.65/8.0,0.62)
-	var base:=reward(brick.type,arrow.kills);tally.base+=base
+	var base:=reward(brick.type,arrow.kills,brick.position,brick);tally.base+=base
 	var value:=evaluate_achievements(arrow)
 	stats.brick+=minf(value,base);stats.mult+=value-minf(value,base)
 	stats.bestKills=maxi(stats.bestKills,arrow.kills);stats.bestMoney=maxf(stats.bestMoney,tally.paid)
@@ -471,12 +516,13 @@ func spawn_core(quiet: bool=false) -> void:
 	if not quiet:
 		if rank("resonance"):fx.skill_event("resonance",Vector2(core.x,core.y),Vector2.UP,Vector2.ZERO,1.0,0.68)
 		fx.flash=1;fx.ring(Vector2(390,80),Color("#a4d65e"),220);fx.burst(Vector2(390,80),Color("#a4d65e"),45,2);cue("core");events.append({"type":"toast","text":"核心已显现 · 命中即可清场"})
+		variants.core_spawned()
 	revision+=1
 
 func clear() -> void:
 	if phase=="clearing":return
 	var level:=int(state.level)
-	settled_bonus=bonus();state.coins+=settled_bonus;level_money+=settled_bonus
+	settled_bonus=round(bonus()*variants.bonus_scale());state.coins+=settled_bonus;level_money+=settled_bonus
 	if rank("treasury"):fx.skill_event("treasury",Vector2(core.x,core.y) if core!=null else Vector2(390,80),Vector2.DOWN,Vector2.ZERO,1.0,0.72)
 	phase="clearing";clear_shown_at=clock;clear_at=time+3.4
 	hitstop(0.13)
@@ -495,6 +541,11 @@ func clear() -> void:
 	if level%5==0 and level>state.rerollGrantLevel:
 		state.rerollGrantLevel=level
 		if state.rerolls<reroll_cap():state.rerolls+=1;report.reroll={"count":state.rerolls,"capacity":reroll_cap()}
+	if variants.id!="":report.variant=variants.summary()
+	if bosses.fight.is_empty() and variants.id!="quiver":
+		# Non-boss levels set the Limited Arrows par; quiver itself caps shots.
+		var pace:float=float(state.get("paceShots",0))
+		state.paceShots=float(shots) if pace<=0 else lerpf(pace,float(shots),0.3)
 	if not bosses.fight.is_empty():report.rift={"title":bosses.fight.name,"items":["%d 相" % bosses.fight.phases,"弱点 %d 次" % bosses.fight.hits]}
 	state.level+=1;state.board=null;state.swapOffer=null;revision+=1
 
@@ -531,6 +582,7 @@ func tick(delta: float) -> void:
 	if phase=="entering" and not entrance_held and board_entrance!=null and time>=board_entrance.end:board_entrance=null;phase="ready";revision+=1
 	if phase=="clearing" and time>=clear_at:generate();return
 	bosses.update(delta)
+	variants.update(delta)
 	if phase=="flying":
 		skills.update(delta)
 		var scaled:float=delta*(0.2 if rank("timeslip") and drag!=null and drag.dy>5 else 1)
@@ -547,6 +599,7 @@ func core_display_position() -> Vector2:
 	return presentation_core_previous.lerp(point,presentation_fraction)
 
 func guide(arrow: RefCounted, delta: float) -> void:
+	if arrow.flags.get("noSkills",false):return
 	if rank("boomerang") and arrow.life>=0.55 and not arrow.flags.get("returned",false):
 		arrow.flags.returned=true;arrow.damage*=3;arrow.pierce+=6;arrow.velocity=-arrow.velocity;arrow.hit.clear();arrow.overlap.clear();fx.signature("boomerang",arrow.position,100)
 	if core!=null and rank("corehunter") and not arrow.flags.get("coreBoost",false):arrow.flags.coreBoost=true;arrow.pierce+=4
@@ -580,8 +633,8 @@ func integrate(arrow: RefCounted, delta: float) -> void:
 	# Air friction scales linearly, including Timeslip and the release tick.
 	var drag:=1.0-0.0005*ratio
 	arrow.vx*=drag;arrow.vy*=drag
-	arrow.vx+=bosses.wind*ratio
-	arrow.vy+=0.48*pow(1000.0/60.0,2)*0.001*ratio
+	arrow.vx+=(bosses.wind+variants.wind())*ratio
+	arrow.vy+=0.48*pow(1000.0/60.0,2)*0.001*ratio*variants.gravity_scale()
 	arrow.px+=arrow.vx*ratio;arrow.py+=arrow.vy*ratio
 
 func advance_arrow(arrow: RefCounted, delta: float) -> void:
@@ -611,6 +664,9 @@ func advance_arrow(arrow: RefCounted, delta: float) -> void:
 			if reflect(arrow,item.contact):
 				item.object.flash=0.2;bounce(arrow);break
 		elif item.kind=="core":
+			if not variants.core_hit(arrow):
+				if reflect(arrow,item.contact):bounce(arrow);break
+				continue
 			arrow.achievement.core=true
 			var extra:=evaluate_achievements(arrow);state.coins+=extra;level_money+=extra;shot_money+=extra;clear();break
 		elif item.object in bricks and not arrow.overlap.has(item.object.id):
@@ -653,6 +709,7 @@ func bounce(arrow: RefCounted) -> void:
 	arrow.achievement.bounces+=1
 	fx.ring(arrow.position,Color("#8a9480"),27);fx.burst(arrow.position,Color("#ced9a4"),9,0.7);cue("ricochet",1,arrow.position.x)
 	skills.bounce(arrow)
+	variants.bounced(arrow)
 
 func predict(position: Vector2, velocity: Vector2, distance: float=720) -> PackedVector2Array:
 	var arrow:=Arrow.new();arrow.position=position;arrow.velocity=velocity
@@ -711,10 +768,17 @@ func export_progress() -> Dictionary:
 	saved.erase("nativeBoss")
 	if phase!="clearing":
 		saved.board={"layoutVersion":2,"balanceVersion":3,"level":state.level,"levelMoney":level_money,"initial":initial,"killed":killed,"bricks":bricks.map(func(b):return b.serialize()),"obstacles":obstacles.map(func(b):return {"x":b.x,"y":b.y,"w":b.w,"h":b.h}),"core":core!=null}
+		if variants.id!="":saved.board.variant=variants.serialize()
 	if not bosses.fight.is_empty() and phase!="clearing":saved.nativeBoss=bosses.serialize()
 	return {"format":"slingbreak-progress","version":1,"exportedAt":Time.get_datetime_string_from_system(true),"state":saved}
 
 func snapshot() -> Dictionary:
+	var result:=_snapshot()
+	result.developer=developer.config()
+	result.developer.values={"damage":damage(),"speed":speed(),"penetration":penetration(),"drawInterval":draw_interval(),"baseHp":base_hp(),"specialRate":special_rate(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"rewardScale":developer.value("rewardScale",1),"costScale":developer.value("costScale",1),"thresholdRate":developer.value("thresholdRate",0.6-0.15*rank("resonance"))}
+	return result
+
+func _snapshot() -> Dictionary:
 	var shop:Array=[]
 	for pair in [["power","弹弓","crosshair"],["arrow","箭矢","move-up-right"],["brick","砖块","blocks"],["comboCap","连击强化","gauge"],["slots","技能槽位","layout-grid"],["rerollCap","技能刷新","refresh-cw"],["draw","拉弦速度","timer"]]:
 		var key:String=pair[0]
@@ -722,4 +786,4 @@ func snapshot() -> Dictionary:
 		var description:String={"power":"拉力 %d%% · 更远射程" % roundi(speed()/24*100),"arrow":"伤害 %.2f · 穿透 %d 块" % [damage(),penetration()],"brick":"价值 +%d%% · 特殊率 %.1f%%" % [roundi(state.up.brick*16),special_rate()*100],"comboCap":"每连增幅 +%s，%d 连达到 ×%s 上限" % [String.num(combo_step(),3),cap_kills(),String.num(combo_cap(),3)],"slots":"当前 %d 个技能槽" % slots,"rerollCap":"","draw":"拉弦间隔 %.2f 秒" % draw_interval()}[key]
 		var label:String="%d / 10" % state.up.draw if key=="draw" else "+%d" % state.up.comboCap if key=="comboCap" else "%d / 4" % slots if key=="slots" else "%d / 5" % reroll_cap() if key=="rerollCap" else "LV. %d" % (state.up[key]+1)
 		shop.append({"key":key,"name":pair[1],"icon":pair[2],"description":description,"level":state.up[key],"cost":cost(key),"maxed":maxed,"locked":key=="comboCap" and state.up.brick<5 and state.up.comboCap==0,"affordable":state.coins>=cost(key),"levelLabel":label})
-	return {"level":state.level,"coins":state.coins,"total":state.total,"best":state.best,"phase":phase,"time":time,"origin":{"x":origin.x,"y":origin.y},"initial":initial,"killed":killed,"threshold":threshold,"shotMoney":shot_money,"levelMoney":level_money,"core":core,"skills":state.skills.keys(),"paused":paused,"draft":state.draft,"up":state.up,"rerolls":state.rerolls,"rerollCap":reroll_cap(),"drawInterval":draw_interval(),"nextShotAt":next_shot_at,"boardEntrance":board_entrance,"achievement":latest_achievement,"boss":bosses.fight if not bosses.fight.is_empty() else null,"bossStatus":bosses.status(),"notices":bosses.notices,"soundEnabled":state.sound,"volume":state.volume,"performanceMode":state.performanceMode,"reduced":reduced,"theme":theme,"themeMode":theme_mode,"slots":slots,"slotMax":4,"drag":drag,"rerollProgress":0 if state.rerolls>=reroll_cap() else (int(state.level)-1)%5/5.0,"canSwap":phase=="ready" and state.skillChosenLevel==state.level,"preview":{"damage":damage(),"speed":speed(),"penetration":penetration(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"capKills":cap_kills()},"shop":shop,"chances":draft_chances(),"swapOffer":state.swapOffer,"achievementHistory":state.achievements,"achievementCatalog":content.achievements,"transition":{"report":report,"bonus":settled_bonus,"holdDraft":wipe!=null and clock*1000-wipe.at<640,"wipe":wipe,"clock":clock*1000,"clearAge":(clock-clear_shown_at)*1000}}
+	return {"level":state.level,"coins":state.coins,"total":state.total,"best":state.best,"phase":phase,"time":time,"origin":{"x":origin.x,"y":origin.y},"initial":initial,"killed":killed,"threshold":threshold,"shotMoney":shot_money,"levelMoney":level_money,"core":core,"skills":state.skills.keys(),"paused":paused,"draft":state.draft,"up":state.up,"rerolls":state.rerolls,"rerollCap":reroll_cap(),"drawInterval":draw_interval()*variants.interval_scale(),"nextShotAt":next_shot_at,"boardEntrance":board_entrance,"achievement":latest_achievement,"boss":bosses.fight if not bosses.fight.is_empty() else null,"bossStatus":bosses.status(),"variant":variants.status(),"notices":bosses.notices,"soundEnabled":state.sound,"volume":state.volume,"performanceMode":state.performanceMode,"reduced":reduced,"theme":theme,"themeMode":theme_mode,"slots":slots,"slotMax":4,"drag":drag,"rerollProgress":0 if state.rerolls>=reroll_cap() else (int(state.level)-1)%5/5.0,"canSwap":phase=="ready" and state.skillChosenLevel==state.level,"preview":{"damage":damage(),"speed":speed(),"penetration":penetration(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"capKills":cap_kills()},"shop":shop,"chances":draft_chances(),"swapOffer":state.swapOffer,"achievementHistory":state.achievements,"achievementCatalog":content.achievements,"transition":{"report":report,"bonus":settled_bonus,"holdDraft":wipe!=null and clock*1000-wipe.at<640,"wipe":wipe,"clock":clock*1000,"clearAge":(clock-clear_shown_at)*1000}}

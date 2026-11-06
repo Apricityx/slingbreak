@@ -6,23 +6,37 @@ const Arena = preload("res://src/render/arena.gd")
 const Interface = preload("res://src/ui/interface.gd")
 const Audio = preload("res://src/audio/sound_engine.gd")
 const Intro = preload("res://src/ui/intro.gd")
+const Launcher = preload("res://src/core/launcher.gd")
+const LauncherDock = preload("res://src/ui/launcher_dock.gd")
+signal startup_ready
 
 var session := Session.new()
 var arena: Node2D
 var interface: Control
 var audio: Node
 var save_clock := 0.0
+var launcher: Node
+var launcher_dock: CanvasLayer
 
 func _ready() -> void:
+	var test_mode: bool=get_meta("test_mode",false)
+	var aspect_adapter=preload("res://src/ui/aspect_adapter.gd").new()
+	add_child(aspect_adapter)
+	launcher=Launcher.new();launcher.session=session
+	if test_mode and has_meta("launcher_bridge"):launcher.bridge=get_meta("launcher_bridge")
+	var attached:bool=launcher.discover()
+	var hosted:bool=attached and launcher.is_launcher_mode()
 	arena = Arena.new()
 	add_child(arena)
 	interface = Interface.new()
+	if hosted:interface.launcher_mode=true
 	add_child(interface)
 	audio = Audio.new()
 	add_child(audio)
 	session.failed.connect(_failed)
 	session.changed.connect(arena.present)
 	session.changed.connect(interface.present)
+	session.changed.connect(aspect_adapter.present)
 	session.changed.connect(audio.sync)
 	session.sound_requested.connect(audio.play_requests)
 	session.events_received.connect(interface.receive_events)
@@ -30,34 +44,68 @@ func _ready() -> void:
 	interface.action.connect(_action)
 	get_viewport().size_changed.connect(_resize)
 	_resize()
-	var test_mode: bool=get_meta("test_mode",false)
 	if test_mode: set_process(false)
 	if not test_mode and not preload("res://src/render/effect_warmup.gd").complete and DisplayServer.get_name()!="headless":
 		set_process(false);arena.visible=false;interface.visible=false
-		var preparing:=Label.new();preparing.text="准备特效…";preparing.position=Vector2(0,420);preparing.size=Vector2(412,60)
-		preparing.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-		preparing.add_theme_font_override("font",preload("res://src/ui/presentation.gd").load_font("cjk"))
-		preparing.add_theme_color_override("font_color",Color("#34412f"));add_child(preparing)
 		await preload("res://src/render/effect_warmup.gd").prepare(self)
-		preparing.queue_free();arena.visible=true;interface.visible=true;set_process(true)
+		arena.visible=true;interface.visible=true;set_process(true)
+	# Hold the first draft before start() emits its initial frame. Its card
+	# reels must begin on screen, rather than finish behind the opening cover.
+	interface.startup_covered=not test_mode or get_meta("startup_managed",false)
+	interface.variant_cards=not test_mode or get_meta("variant_cards",false)
 	if session.start(9128 if test_mode else int(Time.get_unix_time_from_system()), {} if test_mode else session.load_progress()):
 		arena.simulation=session.runtime
 		audio.simulation=session.runtime
 		interface.set_catalog(session.catalog)
 		interface.present(session.frame)
-		if not test_mode and not session.frame.reduced:
+		if get_meta("startup_managed",false):
 			session.runtime.intro_active=true
-			arena.visible=false
-			interface.visible=false
-			var intro=Intro.new()
-			intro.session=session;intro.visuals=interface.visuals
-			intro.finished.connect(_finish_intro)
-			add_child(intro)
+		elif not test_mode and not session.frame.reduced:
+			_start_intro()
+		else:
+			interface.startup_covered=false
+			interface.present(session.frame)
+	if attached and session.ready:
+		if hosted:
+			launcher_dock=LauncherDock.new();launcher_dock.launcher=launcher;add_child(launcher_dock)
+			launcher_dock.set_theme_mode(session.frame.theme)
+			launcher_dock.set_reduced(session.frame.reduced)
+			session.changed.connect(func(value:Dictionary):launcher_dock.set_theme_mode(value.theme);launcher_dock.set_reduced(value.reduced))
+		add_child(launcher)
+	else:
+		launcher.free();launcher=null
+	if session.ready:startup_ready.emit()
+
+func _start_intro() -> void:
+	session.runtime.intro_active=true
+	arena.visible=false;interface.visible=false
+	var intro=Intro.new()
+	intro.name="StartupIntro";intro.session=session;intro.visuals=interface.visuals
+	intro.revealing.connect(_reveal_intro)
+	intro.finished.connect(_finish_intro)
+	add_child(intro)
+
+func _reveal_intro(progress: float) -> void:
+	arena.visible=true;interface.visible=true
+	# Small, unscaled travel keeps text crisp. The board leads the HUD, then
+	# the existing draft animation takes over while the cover is fading away.
+	var board_amount:=Intro.Easing.bezier(progress,.22,1,.36,1)
+	var ui_amount:=Intro.Easing.bezier(clampf((progress-.08)/.92,0,1),.22,1,.36,1)
+	arena.position=Vector2(0,238+14*(1-board_amount))
+	arena.modulate.a=smoothstep(0.0,.8,progress)
+	interface.position=Vector2(0,10*(1-ui_amount))
+	interface.modulate.a=smoothstep(.08,.9,progress)
+	if progress>=.22 and interface.startup_covered:
+		interface.startup_covered=false
+		interface.present(session.frame)
 
 func _finish_intro() -> void:
 	session.runtime.intro_active=false
 	arena.visible=true
 	interface.visible=true
+	arena.position=Vector2(0,238);arena.modulate.a=1
+	interface.position=Vector2.ZERO;interface.modulate.a=1
+	interface.startup_covered=false
 	if session.frame.phase=="draft": interface.present(session.frame)
 
 func _process(delta: float) -> void:
@@ -85,10 +133,10 @@ func _action(method: String, input: Dictionary) -> void:
 		preload("res://src/render/bargain_feedback.gd").show_at(interface,session.runtime,input.get("key",""))
 	if not get_meta("test_mode",false):
 		if method=="configure": session.save_settings()
-		if method in ["choose", "buy", "reroll", "swap", "reset"]: session.request_save()
+		if method in ["choose", "buy", "reroll", "swap", "reset", "developer"]: session.request_save()
 
 func _resize() -> void:
-	# Stage layout remains fixed; the engine scales the whole 412 × 915 canvas.
+	# Stage layout remains fixed; AspectAdapter only adjusts whole-canvas scaling.
 	arena.position = Vector2(0, 238)
 	arena.scale = Vector2.ONE
 	interface.size = Vector2(412, 915)

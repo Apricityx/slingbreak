@@ -70,10 +70,8 @@ func _run() -> void:
 				sim.bosses.fight.phase=phase;sim.bricks.clear();sim.obstacles.clear();sim.layout();boss.setup(false)
 				await show(sim,"boss-"+id+"-"+str(phase)+"-"+theme)
 				for ability in sim.bosses.fight.abilities[phase-1]:
-					if id=="forge":
-						boss.launch_meteors();boss.slam={"x":390.0,"at":sim.time+.4,"end":sim.time+1.1,"hit":false};boss.wind={"direction":1,"start":sim.time,"end":sim.time+1.7}
-					else:boss.begin(ability)
-					for step in range(20):sim.update(1.0/60)
+					boss.begin(ability)
+					for step in range(20 if id!="forge" else 90):sim.update(1.0/60)
 					await show(sim,"ability-"+id+"-"+str(phase)+"-"+ability+"-"+theme)
 					boss.calm()
 	app.queue_free();await process_frame

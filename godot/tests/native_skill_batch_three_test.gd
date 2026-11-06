@@ -37,6 +37,41 @@ func _initialize() -> void:
 	hit(g,a,prism)
 	check(g.fx.skill_events.size()==1 and g.fx.skill_events[0].id=="prism","prism emits a faceted split event")
 	check(g.arrows.size()==7,"prism event does not replace split arrows")
+	for fragment in g.arrows.slice(1):
+		check(is_equal_approx(fragment.damage,a.damage*0.5) and is_equal_approx(fragment.base_damage,fragment.damage),"prism halves damage without multiplying launch bonuses twice")
+		check(is_equal_approx(fragment.velocity.length(),a.velocity.length()*0.5),"prism halves source speed")
+		check(fragment.pierce==maxi(1,floori(a.pierce*0.5)) and fragment.flags.get("noSkills",false),"prism halves penetration and disables skills")
+	var fragment:RefCounted=g.arrows[1]
+	g.state.skills={"blast":1,"cascade":1,"nova":1,"poison":1,"ice":1,"ambush":1,"rhythm":1,"ricochet":1,"bankshot":1,"spectral":1,"siegebreaker":1,"boomerang":1,"seeking":1,"corehunter":1,"jackpot":1,"bounty":1}
+	g.fx.reset()
+	var target:=brick(g,Vector2(440,400),10000)
+	g.active_arrow=fragment;g.skills.projectile_hit(target,fragment);g.active_arrow=null
+	check(is_equal_approx(target.hp,10000-fragment.damage) and not target.frozen,"fragment hits only for its own damage without hit skills")
+	check(g.skills.jobs.is_empty() and g.skills.fields.is_empty(),"fragment hit schedules no skill work")
+	var before_velocity:Vector2=fragment.velocity
+	var before_pierce:int=fragment.pierce
+	fragment.life=1;g.core={"x":390.0,"y":80.0,"born":g.time};g.guide(fragment,0.1)
+	g.skills.bounce(fragment)
+	var wall:RefCounted=g.make_obstacle({"x":300,"y":300})
+	check(not g.skills.wall(fragment,wall) and wall in g.obstacles,"fragment cannot phase through or destroy obstacles")
+	check(fragment.velocity==before_velocity and fragment.pierce==before_pierce,"fragment cannot guide, return, gain penetration or spawn bounce arrows")
+	var victim:=brick(g,Vector2(600,600))
+	hit(g,fragment,victim)
+	check(g.skills.jobs.is_empty() and g.arrows.size()==7 and g.fx.skill_events.is_empty(),"fragment kill triggers no skills, including jackpot and rebirth")
+	g.state.skills={"prism":1,"spectral":1,"timeslip":1}
+	var chained:=brick(g,Vector2(600,200),1,"prism")
+	hit(g,fragment,chained)
+	check(g.arrows.size()==10,"fragment can activate another prism brick but not its skill upgrade")
+	check(is_equal_approx(g.arrows.back().damage,a.damage*0.5),"chained prism inherits the original arrow rather than halving fragments again")
+	check(g.arrows.back().pierce==maxi(1,floori(a.pierce*0.5)),"chained prism does not reapply passive penetration bonuses")
+	g.dispose()
+	g=fresh("prism");g.state.skills={}
+	a=g.launch(Vector2(390,600),Vector2.UP*30,20,5)
+	prism=brick(g,Vector2(390,400),1,"prism");hit(g,a,prism)
+	check(g.arrows.size()==4 and g.arrows[1].damage==10 and g.arrows[1].pierce==2,"ordinary prism emits three half-stat arrows and rounds penetration down")
+	a.pierce=1
+	g.active_arrow=a;fragment=g.launch_prism(Vector2(390,300),Vector2.UP);g.active_arrow=null
+	check(fragment.pierce==1,"fragment penetration has a minimum of one")
 	g.dispose()
 	g=fresh("alchemist");a=g.launch(Vector2(390,600),Vector2.UP*24)
 	var gold:=brick(g,Vector2(390,400),1,"gold")

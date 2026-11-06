@@ -17,6 +17,11 @@ func calm() -> void:move.clear();stunned_until=0;refill_until=0
 func exposed() -> bool:return g.time<stunned_until
 func status() -> Dictionary:return {"text":"战斗中","state":"exposed" if exposed() else "shielded"}
 func focus() -> Vector2:return Vector2(390,470)
+func intro_seconds() -> float:return 2.6
+func shift_seconds() -> float:return 1.3
+func shift_delay() -> float:return 0.0
+## Returns true when the boss paints its own collapse instead of the shared burst.
+func explode() -> bool:return false
 func before_hit(_brick:RefCounted,_depth:int) -> bool:return true
 func destroyed(_brick:RefCounted,_depth:int) -> void:pass
 func update(_delta:float) -> void:pass
@@ -29,7 +34,7 @@ func impact(point:Vector2,ink:Color,radius:float=140) -> void:
 
 func pick() -> String:
 	var choices:Array=d.fight.abilities[d.fight.phase-1].duplicate()
-	var finale:String="doom" if d.boss_id=="eye" else "midnight" if d.boss_id=="clock" else ""
+	var finale:String={"eye":"doom","clock":"midnight","forge":"meltdown"}.get(d.boss_id,"")
 	if finale in choices and last_move!="" and last_move!=finale:return finale
 	if finale!="":choices.erase(finale)
 	var others:Array=choices.filter(func(id):return id!=last_move)

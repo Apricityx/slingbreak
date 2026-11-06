@@ -9,9 +9,13 @@ def check_resources(names, read):
             raise SystemExit("Obsolete or development resource in export: " + name)
     for name in ["assets/ui/manifest.json", "assets/skills.json", "assets/signatures.json", "assets/fonts/manifest.json",
                   "src/ui/card_glint.gdshader", "src/render/core_glow.gdshader", "src/render/signature_stroke.gdshader",
-                  "assets/strokes/manifest.json"]:
+                  "assets/strokes/manifest.json", "src/ui/launcher_ring.gdshader",
+                  "assets/boot/splash.png", "scenes/boot.tscn.remap"]:
         if name not in names:
             raise SystemExit("Missing native resource: " + name)
+    for script in ["src/core/launcher", "src/ui/launcher_dock", "src/ui/hud_action_layout", "src/ui/boot"]:
+        if not any(script + suffix in names for suffix in [".gd", ".gdc"]):
+            raise SystemExit("Missing native launcher script: " + script)
     skills = json.loads(read("assets/skills.json"))
     ids = {item["id"] for item in skills}
     if len(skills) != 81 or len(ids) != 81:

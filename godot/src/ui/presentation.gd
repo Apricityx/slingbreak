@@ -112,10 +112,6 @@ func button_states(node:Node) -> void:
 				face.bg_color=mix(color("accent-soft"),normal.bg_color,.28 if state=="hover" else .48)
 				face.border_color=mix(color("accent-line"),normal.border_color,.55)
 				node.add_theme_stylebox_override(state,face)
-			if not node.has_theme_stylebox_override("focus"):
-				var focus:StyleBoxFlat=normal.duplicate()
-				focus.bg_color=Color.TRANSPARENT;focus.border_color=color("accent-ink");focus.set_border_width_all(2)
-				focus.shadow_size=0;node.add_theme_stylebox_override("focus",focus)
 	for child in node.get_children():button_states(child)
 
 func apply(control: Control) -> void:
@@ -131,8 +127,10 @@ func apply(control: Control) -> void:
 	theme.set_stylebox("hover","Button",box(color("surface-2"),color("accent-line"),7,8))
 	theme.set_stylebox("pressed","Button",box(color("surface-3"),color("accent-line"),7,8))
 	theme.set_stylebox("disabled","Button",box(color("disabled-bg"),color("line"),6,8))
-	var focus:=box(Color.TRANSPARENT,color("accent-ink"),7);focus.set_border_width_all(2)
-	theme.set_stylebox("focus","Button",focus)
+	# Godot draws focus over the active face, including after pointer clicks.
+	# Keep keyboard focus/input without adding a second border to every button.
+	theme.set_stylebox("focus","Button",StyleBoxEmpty.new())
+	theme.set_stylebox("focus","CheckBox",StyleBoxEmpty.new())
 	# Scroll containers otherwise inherit Godot's grey desktop chrome.
 	var track:=box(Color.TRANSPARENT,Color.TRANSPARENT,3);track.set_border_width_all(0);track.content_margin_left=3;track.content_margin_right=3
 	theme.set_stylebox("scroll","VScrollBar",track)

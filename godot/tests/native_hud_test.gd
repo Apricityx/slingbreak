@@ -45,7 +45,7 @@ func _run() -> void:
 		frame.phase="ready";frame.core=null;frame.killed=0;ui.present(frame)
 		check(ui.hud_feedback.heat==0 and ui.hud_feedback.gem_fill==0,"next board clears heat and core readiness")
 		frame.levelMoney=12345678;ui.present(frame)
-		check(ui.hud_nodes.earnings.text=="+ 12.3m","long earnings use the reference compact number format")
+		check(ui.hud_nodes.earnings.text=="+ 12.35M","long earnings use the shared compact money format")
 		await capture(out+"idle-"+mode+".png")
 		ui._settings();await create_timer(.5).timeout
 		var button:Button=ui.modal_content.find_child("Theme_dark",true,false)

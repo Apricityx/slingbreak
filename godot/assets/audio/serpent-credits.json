@@ -1,0 +1,37 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "collections": [
+    "https://opengameart.org/content/cc0-cinematic-music"
+  ],
+  "changes": "48 kHz conversion, DC removal, loop editing (folded fade tail), level matching; Vorbis encoding.",
+  "samples": [
+    {
+      "file": "music/serpent-stalk.vorbis",
+      "source": "https://opengameart.org/sites/default/files/Ancient%20Power%20Of%20Serpents.mp3",
+      "page": "https://opengameart.org/content/ancient-power-of-serpents",
+      "author": "josepharaoh99",
+      "sha256": "2ba69cc4c6a7d45229f1787d463c10e353e186c3da7c7aa395ad3fdf24d37bf8",
+      "duration": 102.25,
+      "loop": true
+    },
+    {
+      "file": "music/serpent-hunt.vorbis",
+      "source": "https://opengameart.org/sites/default/files/determined_pursuit_loop.wav",
+      "page": "https://opengameart.org/content/determined-pursuit-epic-orchestra-loop",
+      "author": "Emma_MA",
+      "sha256": "e4f3be098b50213b56a60aefe60fffae79cd9f7c9008088f93c187ef1bbc856b",
+      "duration": 108.0,
+      "loop": true
+    },
+    {
+      "file": "music/serpent-frenzy.vorbis",
+      "source": "https://opengameart.org/sites/default/files/Juhani%20Junkala%20-%20Epic%20Boss%20Battle%20%5BSeamlessly%20Looping%5D.wav",
+      "page": "https://opengameart.org/content/boss-battle-music",
+      "author": "Juhani Junkala (SubspaceAudio)",
+      "sha256": "35f75b4381dfbb053992876f7dfc567d9fd959d61b73954d5b1cd519753e7df1",
+      "duration": 123.42860416666667,
+      "loop": true
+    }
+  ]
+}

@@ -32,16 +32,35 @@ func fan(angle: float, speed: float, extras: int) -> void:
 		var offset=(int(index/2)+1)*0.1*(-1 if index%2 else 1)
 		g.launch(g.origin,Vector2.from_angle(angle+offset)*speed)
 
+func trident_fan(angle:float,speed:float) -> void:
+	var first:int=g.arrows.size()
+	fan(angle,speed,5)
+	# Each snapshot belongs to an accepted extra arrow, including capped volleys.
+	for arrow in g.arrows.slice(first):
+		g.fx.skill_event("trident",arrow.position,arrow.velocity,Vector2.ZERO,1.0,0.46)
+
 func arc(point: Vector2, count: int, amount: float, id: String) -> void:
 	var previous=point
+	if id=="thunderlottery":g.fx.skill_event(id,point,Vector2.RIGHT,point,0.55,0.56)
 	for target in g.nearest(point,count):
-		g.fx.skill_bolt(previous,target.position);previous=target.position;g.hit(target,amount,1)
-	effect(id,point,115);g.cue("lightning",1,point.x)
+		if id=="thunderlottery":
+			# An earlier special-brick chain may already have removed this snapshot.
+			if target in g.bricks and g.phase!="clearing":g.fx.skill_event(id,previous,previous.direction_to(target.position),target.position,1.0,0.48)
+		else:g.fx.skill_bolt(previous,target.position)
+		previous=target.position;g.hit(target,amount,1)
+	if id!="thunderlottery":effect(id,point,115)
+	g.cue("lightning",1,point.x)
 
 func global_damage(amount: float, id: String, explosion_radius: float=0.0) -> void:
-	effect(id,Vector2(390,440),650)
-	if explosion_radius>0: g.fx.explosion(Vector2(390,440),explosion_radius)
-	g.fx.ring(Vector2(390,440),Color(g.content.by_id[id].color),650)
+	if id=="supernova":
+		var targets:=PackedVector2Array()
+		for brick in g.bricks:targets.append(brick.position)
+		g.fx.skill_batch_eight(id,Vector2(390,440),targets)
+		g.fx.explosion(Vector2(390,440),180,0.92)
+	else:
+		effect(id,Vector2(390,440),650)
+		if explosion_radius>0:g.fx.explosion(Vector2(390,440),explosion_radius)
+		g.fx.ring(Vector2(390,440),Color(g.content.by_id[id].color),650)
 	for brick in g.bricks.duplicate():g.hit(brick,amount,1)
 	g.cue("core")
 
@@ -50,6 +69,7 @@ func detonate(point: Vector2, radius: float, amount: float, id: String="", inten
 	if id=="shatter":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.56)
 	else:g.fx.explosion(point,radius,intensity)
 	if id=="aftershock":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.62)
+	if id=="frostfire":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.62)
 	g.area(point,radius,amount,id,depth)
 
 func on_shoot(main: RefCounted, pull: Vector2) -> void:
@@ -57,13 +77,22 @@ func on_shoot(main: RefCounted, pull: Vector2) -> void:
 	var speed=main.velocity.length()
 	var angle=main.velocity.angle()
 	var shots=int(g.state.skillRuntime.shots)
-	if rank("trident"):fan(angle,speed,5)
-	if rank("rapid"):g.next_shot_at=minf(g.next_shot_at,g.time+0.18)
+	if rank("trident"):trident_fan(angle,speed)
+	if rank("rapid"):
+		g.next_shot_at=minf(g.next_shot_at,g.time+0.18)
+		g.fx.skill_event("rapid",g.origin,main.velocity,Vector2.ZERO,1.0,0.36)
 	if rank("timeslip"):g.next_shot_at=minf(g.next_shot_at,g.time+0.25)
 	if rank("swarmqueen"):
-		for index in range(8):g.launch(g.origin,Vector2.from_angle(angle+(index-3.5)*0.12)*speed,g.damage()*1.5,3,true)
+		for index in range(8):
+			var bee=g.launch(g.origin,Vector2.from_angle(angle+(index-3.5)*0.12)*speed,g.damage()*1.5,3,true)
+			if bee!=null:g.fx.skill_event("swarmqueen",bee.position,bee.velocity,Vector2.ZERO,1.0,0.54)
+	if rank("railgun"):g.fx.skill_event("railgun",main.position,main.velocity,Vector2.ZERO,0.55,0.4)
 	if rank("hunters"):
-		for index in range(4):g.launch(g.origin+Vector2(36 if index%2 else -36,0),Vector2.from_angle(angle+(0.25 if index%2 else -0.25))*speed,-1,-1,true)
+		for index in range(4):
+			var hunter=g.launch(g.origin+Vector2(36 if index%2 else -36,0),Vector2.from_angle(angle+(0.25 if index%2 else -0.25))*speed,-1,-1,true)
+			if hunter!=null:
+				hunter.flags.hunterFx=true
+				g.fx.skill_event("hunters",hunter.position,hunter.velocity,Vector2.ZERO,0.55,0.5)
 	if rank("snowburst"):
 		var selected=g.shuffle(g.bricks).slice(0,5)
 		for index in range(selected.size()):
@@ -113,7 +142,7 @@ func on_shoot(main: RefCounted, pull: Vector2) -> void:
 			,true)
 	if rank("echo"):later(0.24,main,func():
 		g.launch(g.origin,Vector2.from_angle(angle)*speed)
-		if rank("trident"):fan(angle,speed,5)
+		if rank("trident"):trident_fan(angle,speed)
 		g.fx.skill_event("echo",g.origin,Vector2.from_angle(angle),Vector2.ZERO,1.0,0.58)
 		effect("echo",g.origin,110);g.cue("shoot")
 	,true)
@@ -123,7 +152,9 @@ func on_shoot(main: RefCounted, pull: Vector2) -> void:
 			var point=Vector2(selected[index].x,142)
 			later(index*0.04,main,func():
 				var arrow=g.launch(point,Vector2(g.rng.randf_range(-9,9),18),g.damage()*2,2)
-				if arrow!=null:arrow.color=Color("#d38b63")
+				if arrow!=null:
+					arrow.color=Color("#d38b63");arrow.flags.meteorFx=true
+					g.fx.skill_event("meteor",arrow.position,arrow.velocity,Vector2.ZERO,0.55,0.58)
 			,true)
 	if rank("legion") and shots%3==0:
 		var before_legion:int=g.arrows.size()
@@ -185,8 +216,14 @@ func child(source: RefCounted, point: Vector2, angle: float, amount: float, pier
 
 func projectile_hit(brick: RefCounted, arrow: RefCounted) -> void:
 	if not brick in g.bricks:return
+	if arrow.flags.get("noSkills",false):
+		g.hit(brick,arrow.damage)
+		return
 	var point=brick.position
+	if arrow.flags.get("meteorFx",false):g.fx.skill_event("meteor",point,arrow.velocity,Vector2.ZERO,1.2,0.48)
+	if arrow.flags.get("hunterFx",false):g.fx.skill_event("hunters",point,arrow.velocity,Vector2.ZERO,1.2,0.38)
 	if rank("piercer"):g.fx.skill_event("piercer",point,arrow.velocity,Vector2.ZERO,1.0,0.34)
+	if rank("railgun"):g.fx.skill_event("railgun",point,arrow.velocity,Vector2.ZERO,1.0,0.42)
 	var hp=brick.hp
 	var frozen=2 if brick.frozen else 1
 	var base=arrow.damage
@@ -200,6 +237,8 @@ func projectile_hit(brick: RefCounted, arrow: RefCounted) -> void:
 		arrow.flags.infection={"visited":{},"damage":g.damage()*3}
 		infect(brick,arrow,arrow.flags.infection)
 	for id in g.state.skills:
+		if id in ["swarmqueen","railgun","frostfire","thunderlottery"]:continue
+		if id=="nova":continue # Rebirth appears only after real child arrows launch.
 		if id in ["nailburst","fusepath"]:continue
 		if id=="poison":continue # Corrosion flashes only when a scheduled tick really lands.
 		if id=="corehunter":continue # Core attraction is emitted by live guidance, not ordinary brick hits.
@@ -225,7 +264,10 @@ func projectile_hit(brick: RefCounted, arrow: RefCounted) -> void:
 	if rank("minefield") and arrow.take("minefield"):
 		for index in range(3):later(0.12+index*0.18,arrow,func():detonate(point,135,g.damage()*2,"minefield",0.88),true)
 	if rank("frostfire"):
-		for target in g.near(point,100):target.frozen=true;target.flash=0.2
+		g.fx.skill_event("frostfire",point,arrow.velocity,Vector2.ZERO,0.55,0.56)
+		for target in g.near(point,100):
+			target.frozen=true;target.flash=0.2
+			target.frost_born=g.fx.visual_time;target.frost_direction=point.direction_to(target.position)
 		later(0.09,arrow,func():detonate(point,100,g.damage()*1.5,"frostfire",0.82),true)
 	if rank("thunderlottery") and g.rng.randf()<0.35:later(0.07,arrow,func():arc(point,6,g.damage()*3,"thunderlottery"),true)
 	if rank("poison"):
@@ -295,8 +337,14 @@ func projectile_hit(brick: RefCounted, arrow: RefCounted) -> void:
 		later(0.75,arrow,func():detonate(point,110,g.damage()*3,"undertow",0.9))
 
 func line_damage(point: Vector2, scale: float, id: String, row: bool, column: bool) -> void:
-	if row:g.fx.beam(id,Vector2(50,point.y),Vector2(730,point.y),14)
-	if column:g.fx.beam(id,Vector2(point.x,145),Vector2(point.x,850),14)
+	if id=="crossfire":
+		var targets:=PackedVector2Array()
+		for brick in g.bricks:
+			if row and absf(brick.y-point.y)<12 or column and absf(brick.x-point.x)<16:targets.append(brick.position)
+		g.fx.skill_batch_eight(id,point,targets)
+	else:
+		if row:g.fx.beam(id,Vector2(50,point.y),Vector2(730,point.y),14)
+		if column:g.fx.beam(id,Vector2(point.x,145),Vector2(point.x,850),14)
 	for brick in g.bricks.duplicate():
 		if row and absf(brick.y-point.y)<12 or column and absf(brick.x-point.x)<16:g.hit(brick,g.damage()*scale,1)
 	g.cue("lightning")
@@ -309,19 +357,25 @@ func segment_damage(start: Vector2, finish: Vector2, width: float, amount: float
 	g.cue("prism")
 
 func record_damage(brick: RefCounted, amount: float) -> void:
+	if g.active_arrow!=null and g.active_arrow.flags.get("noSkills",false):return
 	for record in records:
 		if record.source==g.active_arrow and g.time<record.until:
 			record.hits[brick]=record.hits.get(brick,0)+amount;brick.flags.markUntil=record.until
 
 func destroyed(brick: RefCounted, _depth: int) -> void:
 	var source=g.active_arrow
+	if source!=null and source.flags.get("noSkills",false):return
 	var point=brick.position
 	# Kills are attributed before this hook, including delayed chain kills.
 	if rank("rage") and source!=null and source.kills>0 and source.kills<=18 and source.kills%3==0:
 		g.fx.skill_event("rage",point,source.velocity,Vector2.ZERO,0.65+source.kills/18.0*0.55,0.48)
 	if rank("cascade") and take_round("cascade",16):later(0.09,source,func():detonate(point,145,g.damage()*2.5,"cascade",0.94),true)
 	if rank("nova") and take_round("nova",8):later(0.08,source,func():
-		for index in range(3):g.launch(point,Vector2(sin((index-1)*0.8),-cos((index-1)*0.8))*22,g.damage()*1.5,3,true)
+		var lanes:=PackedVector2Array()
+		for index in range(3):
+			var velocity:=Vector2(sin((index-1)*0.8),-cos((index-1)*0.8))*22
+			if g.launch(point,velocity,g.damage()*1.5,3,true)!=null:lanes.append(velocity.normalized())
+		if not lanes.is_empty():g.fx.skill_batch_eight("nova",point,lanes)
 	,true)
 	if brick.frozen and rank("shatter") and source!=null and source.take("shatter",6):later(0.09,source,func():detonate(point,65,g.damage()*1.5,"shatter",0.76),true)
 	if brick.type=="bomb" and rank("aftershock"):later(0.16,source,func():detonate(point,112,g.damage()*2,"aftershock",0.86),true)
@@ -383,6 +437,7 @@ func infect(brick: RefCounted, source: RefCounted, chain: Dictionary) -> void:
 	)
 
 func wall(arrow: RefCounted, obstacle: RefCounted) -> bool:
+	if arrow.flags.get("noSkills",false):return false
 	if rank("spectral"):
 		if not arrow.flags.has("phased"):arrow.flags.phased={}
 		if not arrow.flags.phased.has(obstacle.id):arrow.flags.phased[obstacle.id]=true;arrow.damage+=arrow.base_damage*0.5;effect("spectral",obstacle.position,60)
@@ -396,6 +451,7 @@ func wall(arrow: RefCounted, obstacle: RefCounted) -> bool:
 	return false
 
 func bounce(arrow: RefCounted) -> void:
+	if arrow.flags.get("noSkills",false):return
 	if rank("bankshot") and not arrow.flags.get("bankEcho",false) and arrow.take("bankshot",3):
 		with_source(arrow,func():
 			for offset in [-0.5,0.5]:

@@ -60,7 +60,7 @@ func special_sequential(g:RefCounted,board:TimedBoard) -> Dictionary:
 		g.fx.reset()
 		trigger_special(g,id,index)
 		if id=="bomb":
-			check(g.fx.explosions.size()==1,"special brick queues explosion: "+id)
+			check(g.fx.bombs.size()==1 and g.fx.explosions.is_empty(),"special brick queues bomb blast: "+id)
 		elif id=="frost":
 			check(g.fx.specials.size()==2,"special brick queues frost wave and shards")
 		elif id=="lightning":
@@ -71,7 +71,7 @@ func special_sequential(g:RefCounted,board:TimedBoard) -> Dictionary:
 		for frame in range(90):
 			g.fx.advance_visual(1.0/60.0)
 			frame_times.append(await wait_frame())
-		check(g.fx.specials.is_empty() and g.fx.explosions.is_empty() and g.fx.skill_events.is_empty(),"special brick effect expires: "+id)
+		check(g.fx.specials.is_empty() and g.fx.explosions.is_empty() and g.fx.bombs.is_empty() and g.fx.skill_events.is_empty(),"special brick effect expires: "+id)
 	return {"effects":effects_seen,"frames":stats(frame_times),"over_60fps":frame_times.filter(func(v):return v>FRAME_BUDGET_MS).size()}
 
 func sequential(g:RefCounted,board:TimedBoard) -> Dictionary:

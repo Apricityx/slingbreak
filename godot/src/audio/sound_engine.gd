@@ -5,11 +5,48 @@ const RATE:=48000
 const MAX_VOICES:=96
 const MOBILE_VOICES:=24
 const CACHE_BYTES:=32*1024*1024
-const BRICK_EXPLOSION_FILE:="res://assets/audio/brick-explosion.wav"
-const BRICK_BREAK_FILES:=["brick-break-1.vorbis","brick-break-2.vorbis","brick-break-3.vorbis"]
-const BRICK_BREAK_GAIN:=0.55
+const BRICK_BOMB_FILES:=["brick-bomb-1.vorbis","brick-bomb-2.vorbis","brick-bomb-3.vorbis","brick-bomb-4.vorbis"]
+const BRICK_BREAK_FILES:=["brick-shatter-1.vorbis","brick-shatter-2.vorbis","brick-shatter-3.vorbis","brick-shatter-4.vorbis"]
+const BRICK_BREAK_GAIN:=0.4
+# Fixed per-variant detune keeps repeats from phasing; combos climb gently.
+const BRICK_BREAK_DETUNE:=[0.0,0.035,-0.025,0.015]
 const BRICK_HIT_FILES:=["brick-hit-1.vorbis","brick-hit-2.vorbis","brick-hit-3.vorbis"]
-const BRICK_HIT_GAIN:=0.32
+const BRICK_HIT_GAIN:=0.22
+const BRICK_BOMB_GAIN:=0.3
+# Chain depth lifts each later bomb slightly, so a cascade climbs.
+const BRICK_BOMB_DETUNE:=[0.0,-0.03,0.02,-0.015]
+const SAMPLED_CUES:={
+	"eye_awaken":{"file":"eye-awaken.vorbis","gain":0.32,"interval":0.3},
+	"eye_charge":{"file":"eye-charge.vorbis","gain":0.28,"interval":0.3},
+	"eye_cast":{"file":"eye-cast.vorbis","gain":0.22,"interval":0.2},
+	"eye_beam":{"file":"eye-beam.vorbis","gain":0.24,"interval":0.3},
+	"eye_lock":{"file":"eye-lock.vorbis","gain":0.24,"interval":0.12},
+	"eye_laser":{"file":"eye-laser.vorbis","gain":0.43,"interval":0.12},
+	"eye_infect":{"file":"eye-infect.vorbis","gain":0.34,"interval":0.12},
+	"eye_break":{"file":"eye-break.vorbis","gain":0.38,"interval":0.15},
+	"eye_hit":{"file":"eye-hit.vorbis","gain":0.24,"interval":0.07},
+	"eye_pulse":{"file":"eye-pulse.vorbis","gain":0.22,"interval":0.15},
+	"eye_death":{"file":"eye-death.vorbis","gain":0.28,"interval":0.3},
+	"shoot":{"file":"arrow-shoot.vorbis","gain":0.24,"interval":0.065},
+	"frost":{"file":"frost-freeze.vorbis","gain":0.22,"interval":0.12}
+}
+# Sampled UI cues (ui-*.vorbis, see ui-credits.json). Variants rotate; "tiers"
+# pick by request.n. tap/tick/gold/chime only replace UI requests: bosses and
+# gold bricks keep their synthesized recipes. "any" also covers gameplay cues.
+const UI_CUES:={
+	"tap":{"files":["ui-tap-1.vorbis","ui-tap-2.vorbis","ui-tap-3.vorbis"],"gain":0.3},
+	"tick":{"files":["ui-tick-1.vorbis","ui-tick-2.vorbis","ui-tick-3.vorbis","ui-tick-4.vorbis"],"gain":0.3},
+	"deal":{"files":["ui-deal.vorbis"],"gain":0.22},
+	"pick":{"tiers":["ui-pick-1.vorbis","ui-pick-2.vorbis","ui-pick-3.vorbis"],"gain":0.22},
+	"whoosh":{"files":["ui-whoosh.vorbis"],"gain":0.22},
+	"slot":{"files":["ui-slot.vorbis"],"gain":0.45},
+	"chime":{"files":["ui-chime.vorbis"],"gain":0.3},
+	"gold":{"files":["ui-gold.vorbis"],"gain":0.35},
+	"reroll":{"files":["ui-reroll.vorbis"],"gain":0.25},
+	"upgrade":{"files":["ui-upgrade.vorbis"],"gain":0.2,"any":true}
+}
+# These recipes contain several loud layers; attenuate the whole event equally.
+const IMPACT_GAINS:={"boom":0.4,"win":0.5,"core":0.6,"shatter":0.6,"forge":0.5,"meteor":0.5,"clang":0.6,"abyss":0.5,"devour":0.5}
 var simulation: RefCounted
 var available:=false
 var mobile_output:=false
@@ -22,6 +59,7 @@ var cache:Dictionary={}
 var cache_bytes:=0
 var players:Array[AudioStreamPlayer]=[]
 var scheduled:Array=[]
+var infection_audio_active:=false
 var clock:=0.0
 var music_step:=0
 var music_next:=0.0
@@ -44,9 +82,16 @@ var filter_target:=18000.0
 var music_gain:=0.0
 var death_at:=-1.0
 var death_gain:=0.0
-var brick_explosion:AudioStreamWAV
+var brick_bomb_index:=0
 var brick_break_index:=0
 var brick_hit_index:=0
+var last_bomb_at:=-INF
+var last_sampled_cues:Dictionary={}
+var ui_cue_index:Dictionary={}
+var abyss_music:=preload("res://src/audio/abyss_music.gd").new()
+var serpent_music:=preload("res://src/audio/serpent_music.gd").new()
+var forge_music:=preload("res://src/audio/forge_music.gd").new()
+var clock_music:=preload("res://src/audio/clock_music.gd").new()
 
 func _ready() -> void:
 	mobile_output=OS.has_feature("android")
@@ -55,9 +100,13 @@ func _ready() -> void:
 	scores=JSON.parse_string(FileAccess.get_file_as_string("res://assets/music/scores.json"))
 	var manifest:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/music/manifest.json"))
 	for entry in manifest.samples:instruments[entry.key]=entry.file
-	brick_explosion=_load_wav(BRICK_EXPLOSION_FILE)
 	_bus("Sling","Master")
 	_bus("SlingEffects","Sling");_bus("SlingUI","Sling")
+	# Leave headroom for overlapping effects. No makeup gain: quiet hits stay quiet.
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SlingEffects"),-3.0)
+	var effects_compressor:=AudioEffectCompressor.new()
+	effects_compressor.threshold=-12;effects_compressor.ratio=6;effects_compressor.attack_us=1000;effects_compressor.release_ms=120;effects_compressor.gain=0
+	AudioServer.add_bus_effect(AudioServer.get_bus_index("SlingEffects"),effects_compressor)
 	if not mobile_output:
 		_wet_bus("SlingWet","SlingEffects",105,.18,.16)
 		_wet_bus("SlingUIWet","SlingUI",105,.18,.16)
@@ -78,19 +127,7 @@ func _ready() -> void:
 			player.bus=bus
 			var pan:=AudioEffectPanner.new();AudioServer.add_bus_effect(AudioServer.get_bus_index(bus),pan);pan_effects.append(pan)
 	available=true
-
-func _load_wav(path:String) -> AudioStreamWAV:
-	var bytes:=FileAccess.get_file_as_bytes(path)
-	if bytes.size()<44 or bytes.slice(0,4).get_string_from_ascii()!="RIFF" or bytes.slice(8,12).get_string_from_ascii()!="WAVE":return null
-	var offset:=12;var channels:=0;var rate:=0;var format:=0;var pcm:=PackedByteArray()
-	while offset+8<=bytes.size():
-		var chunk:=bytes.slice(offset,offset+4).get_string_from_ascii();var size:=bytes.decode_u32(offset+4);offset+=8
-		if chunk=="fmt " and size>=16:
-			format=bytes.decode_u16(offset);channels=bytes.decode_u16(offset+2);rate=bytes.decode_u32(offset+4)
-		elif chunk=="data":pcm=bytes.slice(offset,mini(offset+size,bytes.size()))
-		offset+=size+(size%2)
-	if format!=1 or channels<1 or channels>2 or rate<=0 or pcm.is_empty():return null
-	var stream:=AudioStreamWAV.new();stream.format=AudioStreamWAV.FORMAT_16_BITS;stream.stereo=channels==2;stream.mix_rate=rate;stream.data=pcm;return stream
+	add_child(abyss_music);add_child(serpent_music);add_child(forge_music);add_child(clock_music)
 
 func _wet_bus(name:String,send:String,delay_ms:float,feedback:float,wet:float) -> void:
 	_bus(name,send)
@@ -109,6 +146,7 @@ func sync(frame: Dictionary) -> void:
 	paused=frame.get("paused",false)
 	for player in players:player.stream_paused=paused and not player.get_meta("ui",false)
 	if not frame.get("soundEnabled",true):
+		abyss_music.stop();serpent_music.stop();forge_music.stop();clock_music.stop()
 		scheduled.clear()
 		for player in players:player.stop()
 
@@ -128,6 +166,31 @@ func _sample(directory: String,file: String) -> AudioStream:
 func play_requests(requests: Array) -> void:
 	if not available:return
 	for request in requests:
+		if request.type in ["eye_break","eye_death","eye_awaken","eye_laser_stop"]:
+			var sustained:Array=["eye_charge","eye_beam","eye_cast","eye_pulse","eye_laser","eye_lock"]
+			_stop_cues(sustained)
+			if request.type=="eye_laser_stop":continue
+		if SAMPLED_CUES.has(request.type):
+			var cue:Dictionary=SAMPLED_CUES[request.type]
+			# Frost bricks are priority events; still bound chain-reaction overlap.
+			if clock-float(last_sampled_cues.get(request.type,-INF))<float(cue.interval):continue
+			var cue_sample:=_sample("res://assets/audio/",cue.file)
+			if cue_sample!=null:
+				last_sampled_cues[request.type]=clock
+				var cue_ui:bool=request.get("ui",false)
+				_schedule(cue_sample,clock,float(cue.gain),"SlingUI" if cue_ui else "SlingEffects",request.get("priority",false),cue_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65),request.type)
+			continue
+		if UI_CUES.has(request.type) and (request.get("ui",false) or UI_CUES[request.type].get("any",false)):
+			var ui_cue:Dictionary=UI_CUES[request.type]
+			var file:String
+			if ui_cue.has("tiers"):file=ui_cue.tiers[clampi(int(request.get("n",0)),0,ui_cue.tiers.size()-1)]
+			else:
+				var turn:int=ui_cue_index.get(request.type,0);file=ui_cue.files[turn%ui_cue.files.size()];ui_cue_index[request.type]=turn+1
+			var ui_sample:=_sample("res://assets/audio/",file)
+			if ui_sample!=null:
+				var sample_ui:bool=request.get("ui",false)
+				_schedule(ui_sample,clock,float(ui_cue.gain),"SlingUI" if sample_ui else "SlingEffects",request.get("priority",false),sample_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			continue
 		var normal_break:bool=request.type=="brick_break"
 		if request.type=="brick_hit":
 			var hit_sample:=_sample("res://assets/audio/",BRICK_HIT_FILES[brick_hit_index])
@@ -137,32 +200,46 @@ func play_requests(requests: Array) -> void:
 				_schedule(hit_sample,clock,BRICK_HIT_GAIN,"SlingUI" if hit_ui else "SlingEffects",request.get("priority",false),hit_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
 			continue
 		if request.type=="bomb":
+			# Priority may steal a voice, but must not bypass explosion density control.
+			if clock-last_bomb_at<0.08:continue
+			last_bomb_at=clock
 			var bomb_ui:bool=request.get("ui",false)
 			var bomb_bus:String="SlingUI" if bomb_ui else "SlingEffects"
-			if brick_explosion!=null:_schedule(brick_explosion,clock,1.0,bomb_bus,request.get("priority",false),bomb_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			var bomb_sample:=_sample("res://assets/audio/",BRICK_BOMB_FILES[brick_bomb_index])
+			var bomb_pitch:float=1.0+BRICK_BOMB_DETUNE[brick_bomb_index]+0.025*clampi(int(request.get("n",0))-1,0,6)
+			brick_bomb_index=(brick_bomb_index+1)%BRICK_BOMB_FILES.size()
+			if bomb_sample!=null:_schedule(bomb_sample,clock,BRICK_BOMB_GAIN,bomb_bus,request.get("priority",false),bomb_ui,clampf((float(request.get("x",390))-390)/520,-.65,.65),"",bomb_pitch)
 			continue
 		var cue_type:String="break" if normal_break else request.type
 		if not cues.has(cue_type):continue
 		var voices:Array=cues[cue_type][clampi(int(request.get("n",1)),0,20)]
 		if normal_break:
 			var sample:=_sample("res://assets/audio/",BRICK_BREAK_FILES[brick_break_index])
+			var pitch:float=1.0+BRICK_BREAK_DETUNE[brick_break_index]+0.012*clampi(int(request.get("n",1))-1,0,12)
 			brick_break_index=(brick_break_index+1)%BRICK_BREAK_FILES.size()
 			if sample!=null:
 				var ui:bool=request.get("ui",false)
-				_schedule(sample,clock,BRICK_BREAK_GAIN,"SlingUI" if ui else "SlingEffects",request.get("priority",false),ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+				_schedule(sample,clock,BRICK_BREAK_GAIN,"SlingUI" if ui else "SlingEffects",request.get("priority",false),ui,clampf((float(request.get("x",390))-390)/520,-.65,.65),"",pitch)
 			# Replace only the dry impact/noise pair; retain both combo notes.
 			voices=voices.slice(2)
 		for voice in voices:
 			var stream:=_sample("res://assets/audio/",voice.file)
 			var ui:bool=request.get("ui",false)
 			var bus:String=("SlingUIWet" if ui else "SlingWet") if voice.wet and not mobile_output else ("SlingUI" if ui else "SlingEffects")
-			if stream!=null:_schedule(stream,clock+voice.delay,1.0,bus,request.get("priority",false),ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
+			if stream!=null:_schedule(stream,clock+voice.delay,float(IMPACT_GAINS.get(cue_type,1.0)),bus,request.get("priority",false),ui,clampf((float(request.get("x",390))-390)/520,-.65,.65))
 
-func _schedule(stream: AudioStream,at: float,volume: float,bus: String,priority: bool=false,ui:bool=false,pan:float=0) -> void:
+func _stop_cues(cues_to_stop:Array) -> void:
+	if "eye_laser" in cues_to_stop and "eye_lock" in cues_to_stop:infection_audio_active=false
+	scheduled=scheduled.filter(func(v):return v.get("cue","") not in cues_to_stop)
+	for player in players:
+		if player.get_meta("cue","") in cues_to_stop:player.stop()
+
+func _schedule(stream: AudioStream,at: float,volume: float,bus: String,priority: bool=false,ui:bool=false,pan:float=0,cue:String="",pitch:float=1.0) -> void:
 	if scheduled.size()>=256:
 		if not priority:return
 		scheduled.pop_front()
-	scheduled.append({"stream":stream,"at":at,"volume":volume,"bus":bus,"priority":priority,"ui":ui,"pan":pan,"music":bus.begins_with("Sling_")})
+	scheduled.append({"stream":stream,"at":at,"volume":volume,"bus":bus,"priority":priority,"ui":ui,"pan":pan,"cue":cue,"pitch":pitch,"music":bus.begins_with("Sling_")})
+	if cue in ["eye_laser","eye_lock"]:infection_audio_active=true
 
 func _music() -> void:
 	if simulation==null or simulation.paused:return
@@ -173,6 +250,37 @@ func _music() -> void:
 			for player in players:
 				if player.get_meta("music",false):player.stop()
 		music_key="";music_phase=0;music_mood="";death_at=-1;music_gain=0;return
+	if fight.boss=="eye":
+		if music_key!="eye:sampled":
+			scheduled=scheduled.filter(func(voice):return not voice.music)
+			for player in players:
+				if player.get_meta("music",false):player.stop()
+		music_key="eye:sampled";music_phase=fight.phase;music_mood=simulation.bosses.model.music_mood();death_at=-1;filter_target=18000
+		return
+	if fight.boss=="serpent":
+		# Recorded orchestral stems replace the sequencer; they own the low-pass.
+		if music_key!="serpent:sampled":
+			scheduled=scheduled.filter(func(voice):return not voice.music)
+			for player in players:
+				if player.get_meta("music",false):player.stop()
+		music_key="serpent:sampled";music_phase=fight.phase;music_mood=simulation.bosses.model.music_mood();death_at=-1;filter_target=serpent_music.cutoff
+		return
+	if fight.boss=="forge":
+		# Recorded stems over a furnace bed replace the sequencer; they own the low-pass.
+		if music_key!="forge:sampled":
+			scheduled=scheduled.filter(func(voice):return not voice.music)
+			for player in players:
+				if player.get_meta("music",false):player.stop()
+		music_key="forge:sampled";music_phase=fight.phase;music_mood=simulation.bosses.model.music_mood();death_at=-1;filter_target=forge_music.cutoff
+		return
+	if fight.boss=="clock":
+		# Sample-locked orchestral stems replace the sequencer; they own the low-pass.
+		if music_key!="clock:sampled":
+			scheduled=scheduled.filter(func(voice):return not voice.music)
+			for player in players:
+				if player.get_meta("music",false):player.stop()
+		music_key="clock:sampled";music_phase=fight.phase;music_mood=simulation.bosses.model.music_mood();death_at=-1;filter_target=clock_music.cutoff
+		return
 	var score:Dictionary=scores[fight.boss]
 	var phase:int=clampi(int(fight.phase)-1,0,score.phases.size()-1)
 	var mood:String="dying" if simulation.bosses.dying_at>=0 else "intro" if simulation.time-simulation.bosses.intro_at<2.6 else simulation.bosses.model.music_mood()
@@ -227,6 +335,12 @@ func _mix(delta:float,held:bool) -> void:
 
 func _process(delta: float) -> void:
 	if not available:return
+	if simulation!=null and infection_audio_active:
+		var d:RefCounted=simulation.bosses
+		# Session reset can discard the model without sending a final cue. Never
+		# carry a positional laser into the menu or the following encounter.
+		if d.boss_id!="eye" or d.model==null or not d.model.gaze_active():
+			_stop_cues(["eye_laser","eye_lock"])
 	clock+=delta
 	var held:bool=paused or simulation!=null and simulation.intro_active
 	if held:
@@ -235,6 +349,10 @@ func _process(delta: float) -> void:
 			if not voice.ui:voice.at+=delta
 	else:_music()
 	_mix(delta,held)
+	abyss_music.present(simulation,delta,held)
+	serpent_music.present(simulation,delta,held)
+	forge_music.present(simulation,delta,held)
+	clock_music.present(simulation,delta,held)
 	var keep:Array=[]
 	for voice in scheduled:
 		if voice.at>clock or held and not voice.ui:keep.append(voice);continue
@@ -256,11 +374,13 @@ func _process(delta: float) -> void:
 			pan_effects[index].pan=voice.pan
 			AudioServer.set_bus_send(AudioServer.get_bus_index(player.bus),voice.bus)
 		player.set_meta("ui",voice.ui);player.set_meta("music",voice.music);player.stream_paused=false
-		player.stream=voice.stream;player.volume_db=linear_to_db(maxf(0.00001,voice.volume));player.play(maxf(0,clock-voice.at))
+		player.set_meta("cue",voice.get("cue",""))
+		player.stream=voice.stream;player.pitch_scale=voice.get("pitch",1.0);player.volume_db=linear_to_db(maxf(0.00001,voice.volume));player.play(maxf(0,clock-voice.at))
 		played+=1;ui_played+=1 if voice.ui else 0;music_played+=1 if voice.music else 0
 	scheduled=keep
 
 func shutdown() -> void:
+	abyss_music.stop();serpent_music.stop();forge_music.stop();clock_music.stop()
 	available=false;set_process(false);scheduled.clear();cache.clear();cache_bytes=0
 	for player in players:player.stop();player.stream=null
 

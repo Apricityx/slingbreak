@@ -2,6 +2,8 @@
 
 无需构建的浏览器游戏，最低支持 Chrome/Chromium 89（含旧版腾讯 X5 WebView）。
 
+原生 Godot 版本位于 `godot/`；嵌入主游戏启动器时的进度、就绪按钮和保存握手见 [Godot 启动器桥接](docs/godot-launcher-bridge.md)。
+
 ## 目录
 
 ```text

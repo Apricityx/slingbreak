@@ -9,7 +9,7 @@ func check(ok:bool,label:String) -> void:
 	if not ok:failures+=1;push_error(label)
 
 func fresh(id:String) -> RefCounted:
-	var g:=Sim.new();g.start(9128);g.bricks.clear();g.obstacles.clear();g.fx.reset();g.skills.reset()
+	var g:=Sim.new();g.start(9128);g.variants.reset();g.bricks.clear();g.obstacles.clear();g.fx.reset();g.skills.reset()
 	g.state.skills={id:1};g.state.skillChosenLevel=g.state.level;g.phase="flying";g.initial=1000;g.threshold=1000
 	return g
 

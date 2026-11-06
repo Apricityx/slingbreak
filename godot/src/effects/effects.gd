@@ -8,12 +8,14 @@ var trail_remnants: Array = []
 var rings: Array = []
 var bolts: Array = []
 var texts: Array = []
+var income:=preload("res://src/effects/income_tallies.gd").new()
 var signatures: Array = []
 var beams: Array = []
 var skill_events: Array = []
 var specials: Array = []
 var explosions: Array = []
 var normal_breaks: Array = []
+var bombs: Array = []
 var shake := 0.0
 var flash := 0.0
 var cooldowns: Dictionary = {}
@@ -30,7 +32,9 @@ const SKILL_V1_EFFECTS_VISIBLE:=false
 func skill_v1_effects_visible() -> bool:return SKILL_V1_EFFECTS_VISIBLE
 
 func _init(simulation: RefCounted) -> void:owner=weakref(simulation)
-func reset() -> void:particles.clear();trail_remnants.clear();particle_cursor=0;rings.clear();bolts.clear();texts.clear();signatures.clear();beams.clear();skill_events.clear();specials.clear();explosions.clear();normal_breaks.clear();cooldowns.clear();shake=0;flash=0;visual_time=0;bolt_serial=0;special_serial=0;skill_event_serial=0
+func reset() -> void:
+	particles.clear();trail_remnants.clear();particle_cursor=0;rings.clear();bolts.clear();texts.clear();signatures.clear();beams.clear();skill_events.clear();specials.clear();explosions.clear();normal_breaks.clear();bombs.clear();cooldowns.clear();shake=0;flash=0;visual_time=0;bolt_serial=0;special_serial=0;skill_event_serial=0
+	income.items.clear()
 
 func brick_color(type: String) -> Color:
 	return Color(g.content.palette(g.theme).brick.get(type,"#dce2d0"))
@@ -101,7 +105,7 @@ func special_break(point: Vector2, type: String, intensity: float=1.0, depth: in
 	# There is no independent radial/source impact for an electric brick.
 	if type=="lightning":return
 	if type=="bomb":
-		explosion(point,132.0,intensity)
+		bomb_blast(point,132.0,intensity)
 		return
 	# One bounded event replaces a node/particle system for every special brick.
 	# The renderer chooses a distinct silhouette while this queue stays cheap.
@@ -126,14 +130,22 @@ func frozen_target(point: Vector2, radius: float=42.0) -> void:
 	if specials.size()<48:specials.append(event)
 	else:specials[special_serial%48]=event
 
-func normal_break(point: Vector2, color: Color, intensity: float=1.0) -> void:
-	# One presentation event draws four deterministic shards. This keeps chain
-	# reactions cheap while preserving a strong directional break read.
+func normal_break(point: Vector2, color: Color, intensity: float=1.0, size: Vector2=Vector2(76,36), heading: Vector2=Vector2.UP) -> void:
+	# One GPU instance per break (flash, grid fragments, sparks, shock arc).
+	# No CPU particles or rings, so dense chains stay one batched draw.
 	special_serial+=1
-	var event:Dictionary={"position":point,"born":visual_time,"life":0.46,"seed":special_serial,"color":color,"intensity":clampf(intensity,0.75,1.35)}
+	var event:Dictionary={"position":point,"born":visual_time,"life":0.5,"seed":special_serial,"color":color,"intensity":clampf(intensity,0.75,1.35),"size":size,"heading":heading.normalized() if heading.length_squared()>0.01 else Vector2.UP}
 	if normal_breaks.size()<72:normal_breaks.append(event)
 	else:normal_breaks[special_serial%72]=event
-	ring(point,color,34+12*event.intensity)
+
+func bomb_blast(point:Vector2,radius:float=132.0,intensity:float=1.0) -> void:
+	# One GPU instance per bomb: flash, fireball, shock ring drawn at the real
+	# damage radius, jets, casing chunks, embers and smoke in one batched draw.
+	special_serial+=1
+	var event:Dictionary={"position":point,"radius":radius,"born":visual_time,"seed":special_serial,"intensity":clampf(intensity,0.65,1.0)}
+	if bombs.size()<16:bombs.append(event)
+	else:bombs[special_serial%16]=event
+	shake=maxf(shake,7.0*intensity)
 
 func explosion(point:Vector2,radius:float=132.0,intensity:float=1.0) -> void:
 	special_serial+=1
@@ -150,6 +162,12 @@ func skill_event(id:String, point:Vector2, direction:Vector2=Vector2.UP, target:
 	if skill_events.size()<64:skill_events.append(event)
 	else:skill_events.pop_front();skill_events.append(event)
 
+func skill_batch_eight(id:String, point:Vector2, targets:PackedVector2Array=PackedVector2Array(), outcome:float=1.0) -> void:
+	skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,{"nova":0.62,"crossfire":0.48,"jackpot":0.72,"supernova":0.96}[id])
+	# Copy positions only: deleted bricks and source arrows never stay alive for art.
+	skill_events.back().targets=targets.slice(0,48)
+	skill_events.back().outcome=outcome
+
 func ring(point: Vector2, ink: Color, radius: float=90) -> void:
 	for item in rings:
 		if radius<260 and item.color==ink and item.life>0.48 and absf(item.radius-radius)<24 and item.position.distance_to(point)<24:item.energy=minf(2,item.energy+0.2);return
@@ -157,18 +175,13 @@ func ring(point: Vector2, ink: Color, radius: float=90) -> void:
 	if rings.size()>48:rings.pop_front()
 
 func floating(point: Vector2, text: String, ink: Color=Color("#48652c"), size: int=17) -> void:
-	# A volley keeps one growing income tally per arrow, as in juice.js.
-	var arrow:RefCounted=g.active_arrow
-	var tally:=arrow!=null and text.begins_with("+") and text.substr(1).is_valid_int()
-	var anchor:=point-Vector2(0,26) if tally else point
-	if tally:
-		for item in texts:
-			if item.get("arrow",-1)==arrow.id and item.life>0.35:
-				item.total+=int(text);item.text="+%d" % item.total;item.count+=1
-				item.target=anchor;item.rise=0.0;item.life=1.25;item.pop=maxf(item.pop,1.0)
-				return
-	texts.append({"position":anchor,"target":anchor,"text":text,"color":ink,"size":size,"life":1.25 if tally else 1.05,"arrow":arrow.id if tally else -1,"total":int(text) if tally else 0,"count":1,"pop":1.0,"display_pop":0.0,"display_count":1.0,"rise":0.0})
+	# Generic skill/bonus messages must never be parsed as brick income.
+	texts.append({"position":point,"target":point,"text":text,"color":ink,"size":size,"life":1.05,"arrow":-1,"total":0,"count":1,"pop":1.0,"display_pop":0.0,"display_count":1.0,"rise":0.0})
 	if texts.size()>48:texts.pop_front()
+
+func brick_income(point:Vector2,amount:float) -> void:
+	var arrow:RefCounted=g.active_arrow
+	income.record(point,amount,arrow.id if arrow!=null else -1,arrow.kills if arrow!=null else 1,g.cap_kills())
 
 func bolt(start: Vector2, finish: Vector2) -> void:
 	bolt_serial+=1
@@ -207,6 +220,7 @@ func update(delta: float) -> void:
 
 func advance_visual(delta: float) -> void:
 	visual_time+=delta
+	income.advance(delta)
 	var live_trails:=0
 	for remnant in trail_remnants:
 		remnant.life-=delta
@@ -216,6 +230,10 @@ func advance_visual(delta: float) -> void:
 	for event in explosions:
 		if visual_time-event.born<1.4:explosions[live_explosions]=event;live_explosions+=1
 	explosions.resize(live_explosions)
+	var live_bombs:=0
+	for event in bombs:
+		if visual_time-event.born<1.1:bombs[live_bombs]=event;live_bombs+=1
+	bombs.resize(live_bombs)
 	var live_skill_events:=0
 	for event in skill_events:
 		if visual_time-event.born<event.life:skill_events[live_skill_events]=event;live_skill_events+=1
