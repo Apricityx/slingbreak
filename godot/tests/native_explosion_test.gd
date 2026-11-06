@@ -48,7 +48,7 @@ func _initialize() -> void:
 			check(g.fx.explosions.is_empty() and g.fx.skill_events.size()==1,"shatter uses the upgraded crystal impact")
 		else:check(g.fx.explosions.size()==1,"explosive skill queues fire volume: "+explosive_ids[index])
 	g.fx.reset();g.skills.global_damage(1.0,"supernova",650)
-	check(g.fx.explosions.size()==1 and g.fx.explosions[0].radius==650,"supernova uses the full-arena explosion volume")
+	check(g.fx.explosions.size()==1 and g.fx.explosions[0].radius==180 and g.fx.skill_events.size()==1 and g.fx.skill_events[0].id=="supernova","supernova keeps a local fire core with its upgraded global target response")
 	g.dispose()
 	print("Native explosion: %d checks, %d failures" % [14+explosive_ids.size()+1,failures])
 	quit(1 if failures else 0)
