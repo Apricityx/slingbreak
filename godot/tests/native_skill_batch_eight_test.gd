@@ -62,7 +62,7 @@ func _initialize() -> void:
 	g.time+=0.181;g.skills.update(0)
 	check(b.hp==100-damage*5,"supernova retains five-times global damage")
 	check(g.fx.skill_events.size()==1 and g.fx.skill_events[0].targets[0]==b.position,"supernova records global targets")
-	check(g.fx.explosions.size()==1 and g.fx.rings.is_empty(),"supernova uses GPU fire volume without legacy large ring")
+	check(g.fx.bombs.size()==1 and g.fx.explosions.is_empty() and g.fx.rings.is_empty(),"supernova uses the upgraded blast without a legacy fire volume or large ring")
 	g.dispose()
 	for win in [false,true]:
 		g=fresh("jackpot");Fixture.seed_reward(g,win)
@@ -155,7 +155,7 @@ func overlap(dark:bool,reduced:bool,output:String) -> void:
 	g.fx.advance_visual(2);board._process(0)
 	await process_frame;await RenderingServer.frame_post_draw
 	check(peak.get_data()!=root.get_texture().get_image().get_data(),"combined production effects visibly expire")
-	check(g.fx.skill_events.is_empty() and g.fx.explosions.is_empty(),"combined event and fire tails empty")
+	check(g.fx.skill_events.is_empty() and g.fx.explosions.is_empty() and g.fx.bombs.is_empty(),"combined event and blast tails empty")
 	check(g.bricks[0].hp==hp and g.rng.state==rng_state,"combined rendering leaves physics and RNG unchanged")
 	board.queue_free();g.dispose();await process_frame
 

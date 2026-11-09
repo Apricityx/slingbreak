@@ -27,16 +27,18 @@ V2 的手感关键词：
 
 实现位置：
 
-- `godot/src/render/explosion.gdshader`
-- `godot/src/render/explosions.gd`
-- `godot/src/effects/effects.gd::explosion()`
+- `godot/src/render/bomb_blast.gdshader`
+- `godot/src/render/bomb_batch.gd`
+- `godot/src/effects/effects.gd::bomb_blast()`
+
+爆炸砖和技能共用该入口及 16 事件预算，1.1s 收尾。`explosions.gd` / `explosion()` 仅保留用于旧火团回归和性能对照，生产技能不得再调用；以 `native_explosion_test.gd` 的真实技能触发检查防止回退。
 
 关键方法：
 
-- 用 `ShaderMaterial` + `Polygon2D` 承载程序化火团。
-- 用噪声、径向距离和时间包络生成火焰形状。
+- 用 `ShaderMaterial` + 有界 `MultiMeshInstance2D` 承载程序化火团、冲击环和碎片。
+- 用分层轮廓、径向距离和时间包络生成火焰形状。
 - 用独立视觉时间 `fx.visual_time` 驱动动画。
-- 用 CanvasItem 绘制火星和碎片，保留明确的方向与重力。
+- 在共享 GPU mesh 中绘制火星和碎片，保留明确的方向与重力。
 - 爆炸事件脱离物理砖块生命周期，砖块删除后仍能完整播放。
 
 ### 2.2 冰冻砖：瞬时冰爆 + 持续冰层
@@ -184,7 +186,7 @@ V2 的手感关键词：
 
 当前范例：
 
-- `explosion.gdshader`
+- `bomb_blast.gdshader`
 - `frost.gdshader`
 
 shader 必须：
@@ -220,7 +222,7 @@ shader 必须：
 - `brick.frozen`：玩法状态，影响伤害和后续判定。
 - `brick.frost_born`、`brick.frost_direction`：仅用于表现，不写入存档。
 - `fx.specials`：短生命周期的一次性砖块事件。
-- `fx.explosions`：独立的 GPU 爆炸事件，砖块删除后仍然存在。
+- `fx.bombs`：爆炸砖和技能共用的 GPU 爆炸事件，砖块删除后仍然存在。
 - `fx.visual_time`：所有展示动画的统一时钟。
 
 新增特效推荐提供独立方法，例如：
@@ -228,7 +230,7 @@ shader 必须：
 ```gdscript
 func special_break(point: Vector2, type: String, intensity: float = 1.0, depth: int = 0) -> void
 func frozen_target(point: Vector2, radius: float = 42.0) -> void
-func explosion(point: Vector2, radius: float = 132.0, intensity: float = 1.0) -> void
+func bomb_blast(point: Vector2, radius: float = 132.0, intensity: float = 1.0) -> void
 ```
 
 不要在 renderer 中反推玩法事件，也不要让 renderer 直接修改砖块血量、类型或碰撞状态。
@@ -306,7 +308,7 @@ python3 godot/tools/preview_effects.py --list
 - 默认每批最多 4 个技能，25 fps、原速、2.2 秒循环，包含触发前停顿和消散尾段。`--fps`、`--seconds`、`--speed`、`--theme`、`--reduced` 和 `--out xxx.gif` 可调整。
 - 默认保存到 `agent-tmp/godot/effect-gifs/`，同目录保留渲染日志与参数 JSON。临时 PNG 帧自动清理。
 - 工具使用真实 Board / CanvasItem / GPU shader 和固定步长视觉时钟逐帧采集；GIF 只用于展示，不是游戏运行时贴图。
-- 新增特效时在 `godot/tools/effect_previews.json` 注册技能 ID、事件时长、完整尾段和类型。普通事件使用 `skill_event`，组合火团使用 `explosion_and_skill`；其他持续场、弹道等效果需补对应的采集场景，不能伪装为已有模板。
+- 新增特效时在 `godot/tools/effect_previews.json` 注册技能 ID、事件时长、完整尾段和类型。普通事件使用 `skill_event`，共用爆炸技能使用 `explosive_skill` 的真实玩法入口；其他持续场、弹道等效果需补对应的采集场景，不能伪装为已有模板。
 - 独立特效展示不替代真实技能触发测试。检查生成动图的峰值、尾段、循环间隔、标签与主题可读性后，向用户交付 GIF 路径或内联动图。
 
 ## 10. 验收清单
@@ -330,7 +332,7 @@ python3 godot/tools/preview_effects.py --list
 
 | 特效 | 入口 | 渲染实现 | 节奏 |
 | --- | --- | --- | ---: |
-| 爆炸砖 | `Effects.explosion()` | 固定 16 实例 GPU 火团 + 合批弹道火星 + 场景响应 | 约 1.4s |
+| 爆炸砖 / 爆炸技能 | `Effects.bomb_blast()` | 共用固定 16 实例 GPU 爆炸：冲击环、火团、火舌、碎块、火星、烟团与场景响应 | 约 1.1s |
 | 冰砖冲击 | `Effects.special_break()` | GPU 中心冰闪 + 合批冰片 | 约 0.56s |
 | 被冰冻砖块 | `Effects.frozen_target()` + brick frost state | GPU 冰层薄膜 | 持续状态 |
 | 电弧砖 | `Simulation.hit()` → `Effects.skill_event("storm")` | 复用雷神降临逐跳 GPU ribbon，无旧放射层或重复 bolt | 0.5s/跳 |

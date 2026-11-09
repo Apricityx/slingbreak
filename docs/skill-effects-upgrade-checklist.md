@@ -2,6 +2,17 @@
 
 按 `docs/godot-v2-effects-guidelines.md` 维护 Godot 原生技能特效升级进度。清单中的“已升级”表示：玩法触发点已接入独立视觉事件，主体绘制遵循 V2 分层规范，并有生命周期、预算或 reset 回归覆盖。
 
+## 技能共用爆炸统一新版（2026-11-08）
+
+- [x] `blast`、`aftershock`、`doubletap`、`minefield`、`frostfire`、`cascade`、`orbital`、`stormfront`、`undertow`、`starforge`、`siegebreaker`、`supernova` 的爆炸统一接入 `Effects.bomb_blast()` / `bomb_batch.gd`，与爆炸砖共用新版冲击环、火球团、火舌、白热核、弹壳、火星和烟团；技能不再产生旧 `explosions` 火团事件。
+- [x] 保持原命中点、伤害半径、强度、延迟、伤害和音效；新版火团尾段为 1.1s。`aftershock` 保留裂隙，`frostfire` 保留即时冰晶和持续冰层，`supernova` 保留 180px 局部核心与全局目标热印，`shatter` 保持冰晶冲击。去掉共用引爆路径叠加的旧 ring；`undertow` 的三次回卷环保留。
+- [x] 爆炸砖和技能共用最多 16 个事件、同一个固定 GPU mesh；简化模式沿用新版 shader 的火舌／碎块／火星裁减与无场景位移行为。预热改为新版爆炸。
+- [x] `native_explosion_test` 覆盖 12 技能真实 shoot / hit / wall / 延迟任务、爆炸次数与半径、完整／简化玩法一致性、混合预算、视觉时钟、过期、reset；图形模式验证浅／深主题、简化模式真实可见像素、冰层覆盖顺序和 GPU 清空。已纳入默认原生／GUI 检查。
+- [x] 新增 9 个缺失的技能 GIF 注册，并将 `aftershock` 改为真实爆炸砖 → 延迟余震夹具；相关预览使用宽画幅，覆盖冲击峰值和完整烟团尾段。复用既有 `frostfire` / `supernova` 真实玩法夹具。
+- [x] 验证：全套原生 **41/41** 通过，包含 18,000 帧模拟；图形专项 **6/6** 通过，包含通用渲染 572 帧；追加真实伤害边界覆盖后，爆炸 GUI 专项 **210 项 / 0 失败**。`git diff --check` 通过。
+- [x] 已生成并打开真实渲染 GIF，逐帧复查峰值与收尾：`agent-tmp/godot/effect-gifs/skill-blasts-v2-{light,dark,light-reduced,dark-reduced}.gif`，以及 `skill-blasts-v2-{chains,large}-{light,dark-reduced}.gif`。三组覆盖全部 12 技能；天幕裁决预览独立缩小取景以完整容纳 360px 连爆，不修改游戏内大小。图形环境为 Xvfb / Mesa llvmpipe，未据此声称移动设备性能。
+- 本轮仅统一共用爆炸材质，不将尚缺独立主体设计的技能标为完整 V2 升级；后续全量进度仍按下表维护。
+
 ## 普通砖碎裂 V2：GPU 网格碎块 / 分层碎裂音（2026-11-01）
 
 - [x] 视觉：`shatter_batch.gd` + `brick_shatter.gdshader`，每块砖一个 MultiMesh 实例（16 个四边形：冲击弧、白热轮廓闪、按 4×2 格切出的 8 块不规则碎块、6 道火星），所有普通砖碎裂合成一次绘制。碎块带击打方向偏置、阻力和重力，0.5 s 收尾；浅色主题用深色描边和琥珀火星保证对比度。
@@ -225,10 +236,10 @@
 - [x] `nova` 碎星新生（gold）— 真实成功子箭的扇形尖星新生，0.62s；[第八批设计与验证](skill-effects-batch-eight.md)
 - [x] `crossfire` 十字审判（gold）— 四向刀光与真实行列目标烙印，0.48s；[第八批设计与验证](skill-effects-batch-eight.md)
 - [x] `jackpot` 幸运暴富（gold）— 原奖励掷骰的大小 ¥ 金币与喷发，0.72s；[第八批设计与验证](skill-effects-batch-eight.md)
-- [x] `supernova` 超新星爆发（gold）— 第四次齐射的局部火团、星芒与全局目标热印，0.96s / 1.4s；[第八批设计与验证](skill-effects-batch-eight.md)
+- [x] `supernova` 超新星爆发（gold）— 第四次齐射的局部新版爆炸、星芒与全局目标热印，0.96s / 1.1s；[第八批设计与验证](skill-effects-batch-eight.md)
 - [x] `swarmqueen` 蜂群女王（gold）— 八路真实成功弹道的金黑蜂体与晶翼，0.54s；[第九批设计与验证](skill-effects-batch-nine.md)
 - [x] `railgun` 歼星轨道炮（gold）— 出膛双轨与真实穿透点白热冲击，0.40s / 0.42s；[第九批设计与验证](skill-effects-batch-nine.md)
-- [x] `frostfire` 冰火连爆（gold）— 即时晶片、独立冰层与 0.09s 延迟火团，瞬时尾段 1.49s；[第九批设计与验证](skill-effects-batch-nine.md)
+- [x] `frostfire` 冰火连爆（gold）— 即时晶片、独立冰层与 0.09s 延迟新版爆炸，瞬时尾段 1.19s；[第九批设计与验证](skill-effects-batch-nine.md)
 - [x] `thunderlottery` 雷霆骰子（gold）— 原中奖分支的六点骰面与实际端点金色跳电，0.56s / 0.48s；[第九批设计与验证](skill-effects-batch-nine.md)
 
 ### 待升级

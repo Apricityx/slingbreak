@@ -61,11 +61,11 @@ func run() -> void:
 	check(b.hp==98 and near.hp==100 and g.skills.jobs.size()==1,"frostfire starts with original direct hit and one delayed blast")
 	check(events(g,"frostfire").size()==1 and near.frost_born==g.fx.visual_time,"frostfire ice impact and persistent shell have independent lifetimes")
 	g.time+=0.089;g.skills.update(0)
-	check(near.hp==100 and g.fx.explosions.is_empty(),"frostfire never detonates early")
+	check(near.hp==100 and g.fx.explosions.is_empty() and g.fx.bombs.is_empty(),"frostfire never detonates early")
 	g.fx.advance_visual(0.09);g.time+=0.0011;g.skills.update(0)
 	check(is_equal_approx(near.hp,100-g.damage()*3) and far.hp==100,"frostfire retains 1.5x damage with frozen double damage at deadline")
-	check(events(g,"frostfire").size()==2 and g.fx.explosions.size()==1,"frostfire actual detonation emits hot shards and GPU fire volume")
-	check(g.fx.explosions[0].radius==100 and g.fx.rings.is_empty(),"frostfire fire radius exact and no legacy closed ring")
+	check(events(g,"frostfire").size()==2 and g.fx.bombs.size()==1 and g.fx.explosions.is_empty(),"frostfire actual detonation emits hot shards and the upgraded blast")
+	check(g.fx.bombs[0].radius==100 and g.fx.rings.is_empty(),"frostfire blast radius exact and no legacy closed ring")
 	check(g.rng.state==rng,"frostfire leaves gameplay RNG unchanged")
 	g.fx.advance_visual(2)
 	check(g.fx.skill_events.is_empty() and near.frozen,"frostfire transient ends while frozen state survives")
@@ -110,7 +110,7 @@ func run() -> void:
 		g=fresh(id);g.rng.seed=1;g.skills.budget=0
 		a=g.launch(Vector2(390,600),Vector2.UP*25,2);b=brick(g,Vector2(390,440));hit(g,a,b)
 		g.time+=0.2;g.skills.update(0)
-		check(g.skills.jobs.is_empty() and g.fx.explosions.is_empty(),"limited jobs keep original exhausted-budget behavior: "+id)
+		check(g.skills.jobs.is_empty() and g.fx.explosions.is_empty() and g.fx.bombs.is_empty(),"limited jobs keep original exhausted-budget behavior: "+id)
 		check(events(g,id).size()==(1 if id=="frostfire" else 0),"no invented delayed impact when budget rejects job: "+id)
 		g.dispose()
 	for id in Batch.IDS:

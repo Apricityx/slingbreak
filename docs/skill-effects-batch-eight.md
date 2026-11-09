@@ -2,6 +2,8 @@
 
 范围：`nova` 碎星新生、`crossfire` 十字审判、`jackpot` 幸运暴富、`supernova` 超新星爆发。Godot 4.7.2 stable，真实玩法入口与生产 Board / GPU renderer。
 
+2026-11-08 更新：以下为首批设计记录；超新星的旧火团已统一换为 `bomb_batch.gd` 新版爆炸，保留 180px 局部核心、0.18s 延迟、全局伤害及星芒，爆炸尾段由 1.4s 改为 1.1s。与爆炸砖和其他技能共用 16 事件预算，见[统一升级记录](skill-effects-upgrade-checklist.md#技能共用爆炸统一新版2026-11-08)。
+
 ## 四层设计与真实触发
 
 | 技能 | A 冲击核心 | B 主体形状 | C 材质细节 | D 场景响应／真实入口 | 时长 |

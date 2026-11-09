@@ -26,6 +26,7 @@ def main():
     tests = args.test or (["native_abyss_render_test", "native_render_test", "native_stroke_test", "native_retained_test", "native_brick_numbers_test", "native_income_render_test", "interface_input_test", "native_motion_test", "native_hud_test", "native_arrow_break_test", "native_effect_batch_test", "native_v_effects_test", "interface_capture", "transition_test"]
                           if args.gui else ["native_test", "native_spike_test", "native_arrow_break_test", "native_effect_batch_test", "native_prediction_test", "native_audio_test", "ui_test", "transition_test", "native_soak_test"])
     if not args.test:
+        tests += ["native_explosion_test"]
         tests += ["boot_test"]
         tests += ["aspect_adapter_test"]
         tests += ["native_abyss_test", "native_eye_test", "native_clock_test", "native_forge_test", "native_serpent_test", "developer_test", "button_focus_test", "native_skill_effect_test", "native_skill_batch_test", "native_effect_startup_test", "native_skill_batch_two_test", "native_skill_batch_three_test",

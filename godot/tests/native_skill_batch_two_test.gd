@@ -38,7 +38,7 @@ func run() -> void:
 	g.active_arrow=a;g.hit(b,10);g.active_arrow=null
 	check(neighbor.hp==96 and g.fx.skill_events.is_empty(),"bomb precedes the secondary fault")
 	g.time=0.17;g.skills.update(0.17)
-	check(neighbor.hp==92 and g.fx.skill_events.size()==1 and g.fx.explosions.size()==1 and g.fx.bombs.size()==1,"secondary explosion and fault share one damage event")
+	check(neighbor.hp==92 and g.fx.skill_events.size()==1 and g.fx.explosions.is_empty() and g.fx.bombs.size()==2 and g.fx.rings.is_empty(),"secondary V2 blast and fault share one damage event without a legacy ring")
 	g.dispose()
 	g=fresh("execute");a=g.launch(Vector2(390,600),Vector2.UP*24)
 	b=brick(g,Vector2(390,400),100);b.hp=28

@@ -26,8 +26,8 @@ static func prepare(host:Node) -> Dictionary:
 			for id in preload("res://src/render/skill_batch_nine.gd").IDS:
 				g.fx.skill_event(id,Vector2(80,80),Vector2.RIGHT,Vector2(160,100),0.55 if i%2 else 1.0,0.56)
 			g.fx.normal_break(Vector2(60+i*4,60),g.fx.brick_color("normal"),1.0,Vector2(76,36),Vector2(1,-2))
-			# Bombs own their batch; skills still use the shared fire volume.
-			if i%5==0:g.fx.special_break(Vector2(100,100),"bomb");g.fx.explosion(Vector2(100,100),60)
+			# Bricks and explosive skills share the same upgraded blast batch.
+			if i%5==0:g.fx.special_break(Vector2(100,100),"bomb");g.fx.bomb_blast(Vector2(100,100),60)
 			elif i%5==1:g.fx.special_break(Vector2(100,100),"gold")
 			elif i%5==2:g.fx.special_break(Vector2(100,100),"frost");g.fx.frozen_target(Vector2(100,100))
 			elif i%5==3:g.fx.special_break(Vector2(100,100),"prism")

@@ -36,7 +36,7 @@ func capture() -> void:
 		var id:String=config.skills[i]
 		var g:=Sim.new();g.start(9128);g.bricks.clear();g.obstacles.clear();g.skills.reset();g.fx.reset()
 		g.phase="flying";g.state.skills={};g.board_entrance=null;g.theme=config.theme;g.state.performanceMode=config.reduced
-		var hp:float=80 if fixtures[id].kind=="skill_batch_nine" else 12
+		var hp:float=100 if fixtures[id].kind=="explosive_skill" else 80 if fixtures[id].kind=="skill_batch_nine" else 12
 		for row in range(5):
 			for col in range(5):g.make_brick({"x":220+col*85,"y":340+row*50,"hp":hp,"max":hp,"w":76,"h":36})
 		for point in fixtures[id].get("bombs",[]):
@@ -62,6 +62,7 @@ func capture() -> void:
 			var page:=ColorRect.new();page.color=bg;page.size=Vector2(4000,4000);page.position=Vector2(-2000,-2000);viewport.add_child(page)
 		var board:=Board.new();board.simulation=g;viewport.add_child(board);board.set_process(false)
 		if boss:board.scale=Vector2.ONE*(1.0 if sculpture else 0.5)
+		elif fixtures[id].has("zoom"):board.scale=Vector2.ONE*fixtures[id].zoom
 		entries.append({"g":g,"board":board,"id":id,"fixture":fixtures[id],"fired":false})
 		if fixtures[id].kind=="skill_batch_seven":
 			entries[-1].crop=preload("res://tools/preview_skill_batch_seven.gd").setup(g,id)
@@ -83,6 +84,8 @@ func capture() -> void:
 				preload("res://tools/preview_skill_batch_seven.gd").step(entry,time)
 			elif entry.fixture.kind=="skill_batch_nine":
 				preload("res://tools/preview_skill_batch_nine.gd").step(entry,time)
+			elif entry.fixture.kind=="explosive_skill":
+				preload("res://tools/preview_explosive_skills.gd").step(entry,time)
 			elif entry.fixture.kind=="skill_batch_six":
 				preload("res://tools/preview_skill_batch_six.gd").step(entry,time)
 			elif entry.fixture.kind=="skill_batch_eight":
@@ -119,11 +122,11 @@ func capture() -> void:
 								brick.frost_direction=(brick.position-Vector2(390,440)).normalized()
 				else:
 					g.fx.skill_event(entry.id,Vector2(390,440),Vector2.UP,Vector2(470,385),1,entry.fixture.duration)
-					if entry.fixture.kind=="explosion_and_skill":g.fx.explosion(Vector2(390,440),112,0.86)
 				entry.fired=true
 			if entry.id not in ["eye_gaze_counter","eye_gaze_failure","eye_ward"]:g.fx.advance_visual(maxf(0,time)-g.fx.visual_time)
 			entry.board._process(0)
 			entry.board.position=Vector2(-48,25) if sculpture else Vector2.ZERO if boss else entry.get("crop",Vector2(-120,-225) if wide else Vector2(-218,-310))
+			if entry.fixture.has("zoom"):entry.board.position=entry.board.get_viewport_rect().size*0.5-Vector2(390,440)*entry.fixture.zoom
 		await process_frame
 		await RenderingServer.frame_post_draw
 		var path:String=config.out+"/frame-%04d.png" % frame

@@ -56,21 +56,22 @@ func global_damage(amount: float, id: String, explosion_radius: float=0.0) -> vo
 		var targets:=PackedVector2Array()
 		for brick in g.bricks:targets.append(brick.position)
 		g.fx.skill_batch_eight(id,Vector2(390,440),targets)
-		g.fx.explosion(Vector2(390,440),180,0.92)
+		g.fx.bomb_blast(Vector2(390,440),180,0.92)
 	else:
 		effect(id,Vector2(390,440),650)
-		if explosion_radius>0:g.fx.explosion(Vector2(390,440),explosion_radius)
-		g.fx.ring(Vector2(390,440),Color(g.content.by_id[id].color),650)
+		if explosion_radius>0:g.fx.bomb_blast(Vector2(390,440),explosion_radius)
+		else:g.fx.ring(Vector2(390,440),Color(g.content.by_id[id].color),650)
 	for brick in g.bricks.duplicate():g.hit(brick,amount,1)
 	g.cue("core")
 
 func detonate(point: Vector2, radius: float, amount: float, id: String="", intensity: float=1.0, depth: int=1) -> void:
-	# Keep the fire volume and its gameplay area in lockstep for explosive skills.
+	# Skills share the upgraded brick blast, at their original damage radius.
 	if id=="shatter":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.56)
-	else:g.fx.explosion(point,radius,intensity)
+	else:g.fx.bomb_blast(point,radius,intensity)
 	if id=="aftershock":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.62)
 	if id=="frostfire":g.fx.skill_event(id,point,Vector2.UP,Vector2.ZERO,1.0,0.62)
-	g.area(point,radius,amount,id,depth)
+	# The blast shader already owns the shock front; do not overlay a V1 ring.
+	g.area(point,radius,amount,id,depth,id=="shatter")
 
 func on_shoot(main: RefCounted, pull: Vector2) -> void:
 	budget=120
@@ -134,7 +135,7 @@ func on_shoot(main: RefCounted, pull: Vector2) -> void:
 		for index in range(selected.size()):
 			var y=selected[index]
 			later(0.1+index*0.14,main,func():
-				g.fx.explosion(Vector2(390,y),360,0.84)
+				g.fx.bomb_blast(Vector2(390,y),360,0.84)
 				g.fx.beam("stormfront",Vector2(35,y),Vector2(745,y),10)
 				for brick in g.bricks.duplicate():
 					if brick.y==y:g.hit(brick,g.damage()*3,1)

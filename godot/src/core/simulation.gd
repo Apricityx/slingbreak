@@ -414,8 +414,8 @@ func nearest(point: Vector2, count: int, accept: Callable=Callable()) -> Array:
 		if result.size()>count:result.pop_back()
 	return result
 
-func area(point: Vector2, radius: float, amount: float, id: String="", depth: int=1) -> void:
-	if id!="frostfire":fx.ring(point,Color(content.by_id[id].color) if content.by_id.has(id) else Color("#df7035"),radius)
+func area(point: Vector2, radius: float, amount: float, id: String="", depth: int=1, impact_ring: bool=true) -> void:
+	if impact_ring and id!="frostfire":fx.ring(point,Color(content.by_id[id].color) if content.by_id.has(id) else Color("#df7035"),radius)
 	if id!="" and id!="frostfire":fx.signature(id,point,radius)
 	for brick in near(point,radius):hit(brick,amount,depth)
 	cue("boom",1,point.x)

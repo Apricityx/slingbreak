@@ -1,5 +1,5 @@
 extends MultiMeshInstance2D
-## Bomb brick blasts: smoke, shock ring, fireball lobes, flame jets, core
+## Shared brick/skill blasts: smoke, shock ring, fireball lobes, flame jets, core
 ## flash, casing chunks and embers per event, from one immutable template in a
 ## single batched draw. Pieces collapse to zero area once spent, so the late
 ## tail only shades the smoke that is still visible.
