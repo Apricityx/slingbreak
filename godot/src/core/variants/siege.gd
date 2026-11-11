@@ -12,7 +12,7 @@ var shown:=""
 
 func title() -> String:return "压境"
 func color() -> String:return "#c4664a"
-func note() -> String:return "砖阵持续压近 · 击碎砖块可逼退"
+func note() -> String:return "首箭后砖阵持续压近，击碎砖块可逼退；奖金随压近从 ×2 降至 ×1。底线会挡住砖阵，不会直接判负。"
 
 func shape() -> void:
 	var lowest:=0.0

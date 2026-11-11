@@ -39,7 +39,7 @@ func _run() -> void:
 	check(not g.paused,"closing rules restores live play")
 	for theme in ["light","dark"]:
 		app.session.command("configure",{"theme":theme})
-		for id in ["rush","quiver","overheat","cadence","escrow","wager","seal","fortress"]:
+		for id in g.variants.ORDER:
 			g.state.variantOverride={"level":30,"id":id};g.generate();g.phase="ready"
 			if id=="seal":g.spawn_core(true)
 			app.session.command("snapshot")

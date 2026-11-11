@@ -12,7 +12,7 @@ const SPREAD:=200.0
 
 func title() -> String:return "悬赏令"
 func color() -> String:return "#d0573c"
-func note() -> String:return "击破悬赏砖 · 越早越值钱"
+func note() -> String:return "标记的悬赏砖血量 ×2.5；赏金从 ×10 起，每发一箭减 0.75 倍，最低 ×3。不必清完悬赏也能通关。"
 
 func shape() -> void:
 	var marked:Array=[]

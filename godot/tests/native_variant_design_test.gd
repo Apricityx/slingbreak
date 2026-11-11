@@ -58,6 +58,13 @@ func _cadence() -> void:
 	check(Progress.valid(saved),"metronome state survives save validation")
 	var back:=Sim.new();sims.append(back);back.start(1,saved)
 	check(back.variants.rule.data.claimed==rule.data.claimed and back.variants.rule.data.beat==rule.data.beat,"restore cannot reclaim a scored beat")
+	var legacy:Dictionary=saved.duplicate(true)
+	for key in ["beat","claimed","interval"]:legacy.state.board.variant.erase(key)
+	check(Progress.valid(legacy),"pre-fix metronome save remains valid")
+	var migrated:=Sim.new();sims.append(migrated);migrated.start(1,legacy)
+	check(migrated.variants.rule.data.has("interval") and not migrated.variants.rule.available(),"old metronome migrates without reclaiming its current beat")
+	var malformed:Dictionary=saved.duplicate(true);malformed.state.board.variant.interval=0.0
+	check(not Progress.valid(malformed),"metronome rejects an invalid zero period")
 
 func _economy() -> void:
 	var g:=make("escrow");var rule:RefCounted=g.variants.rule
