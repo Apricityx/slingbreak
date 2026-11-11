@@ -85,7 +85,23 @@ func shop_foreground() -> void:
 	g.state.skills={"bargain":1};g.state.draft=null;g.state.skillChosenLevel=g.state.level;g.phase="ready";g.state.coins=10000000
 	app.session.command("snapshot");app.interface._shop()
 	await create_timer(0.6).timeout
-	for i in range(10):app._action("buy",{"key":"power"})
+	# The shop is a tree now: a node stops selling at its own cap and later
+	# nodes need full prerequisites, so purchases must walk the real order.
+	var tree:Script=preload("res://src/core/upgrade_tree.gd")
+	var page:Control=app.interface.modal_content.find_child("UpgradeTree",true,false)
+	check(page!=null,"shop opens the upgrade tree page")
+	var buys:=0
+	for scan in range(8):
+		for node in tree.NODES:
+			if buys>=10:break
+			var before:int=g.state.coins
+			# Select the node first: the shared buy button is named for the
+			# current selection, as it is for a real tap.
+			page._select(node.id,false)
+			app._action("buy",{"key":node.key,"node":node.id})
+			if g.state.coins<before:buys+=1
+		if buys>=10:break
+	check(buys==10,"ten rapid tree purchases succeed through real prerequisites")
 	var overlays:Array=app.interface.motion_layer.get_children().filter(func(node):return node.has_meta("bargain_feedback"))
 	check(overlays.size()==8,"shop foreground nodes are capped at eight under rapid purchases")
 	check(overlays.back().event.id=="bargain" and overlays.back().event.born==g.fx.skill_events.back().born,"shop foreground reuses successful purchase visual timestamp")
@@ -97,7 +113,11 @@ func shop_foreground() -> void:
 	g.fx.advance_visual(0.6)
 	await process_frame;await process_frame
 	check(app.interface.motion_layer.get_children().filter(func(node):return node.has_meta("bargain_feedback")).is_empty(),"shop foreground expires on the shared visual clock")
-	app._action("buy",{"key":"power"});g.fx.reset()
+	for node in tree.NODES:
+		var before:int=g.state.coins
+		app._action("buy",{"key":node.key,"node":node.id})
+		if g.state.coins<before:break
+	g.fx.reset()
 	await process_frame;await process_frame
 	check(app.interface.motion_layer.get_children().filter(func(node):return node.has_meta("bargain_feedback")).is_empty(),"shop foreground drops stale snapshots on reset")
 	app.queue_free();await process_frame
