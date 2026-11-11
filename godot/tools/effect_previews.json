@@ -1,4 +1,10 @@
 {
+  "variant_cadence": {"kind": "variant", "label": "节拍 · 独立拍点与实时提示", "duration": 4.5, "tail": 4.5},
+  "variant_seal": {"kind": "variant", "label": "封印核心 · 目标标记与解封", "duration": 4.5, "tail": 4.5},
+  "variant_fortress": {"kind": "variant", "label": "要塞 · 击碎弱点打开路线", "duration": 4.5, "tail": 4.5},
+  "upgrade_rank": {"kind": "upgrade_tree", "label": "成长树 · 连续强化", "duration": 1.2, "tail": 1.25},
+  "upgrade_unlock": {"kind": "upgrade_tree", "label": "成长树 · 分支解锁", "duration": 0.85, "tail": 0.9},
+  "upgrade_breakthrough": {"kind": "upgrade_tree", "label": "成长树 · 传奇突破", "duration": 0.85, "tail": 1.15},
   "eye_nebula": {"kind": "abyss_boss", "label": "星云裂隙 · 撕裂 / 显瞳", "framing": "sculpture", "duration": 4.2, "tail": 4.2},
   "eye_gaze_counter": {"kind": "abyss_boss", "label": "视界审判 · 迎瞳打断 / 失神", "duration": 6.4, "tail": 6.4},
   "eye_gaze_failure": {"kind": "abyss_boss", "label": "视界审判 · 扫射石化", "duration": 5.6, "tail": 5.6},

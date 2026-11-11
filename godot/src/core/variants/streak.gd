@@ -1,15 +1,15 @@
 extends "res://src/core/variants/rule.gd"
-## 连杀赏: an arrow's first GATE-1 kills (and all passive damage) pay ×LOW;
+## 连杀赏: an arrow's first GATE-1 kills (and all passive damage) pay normally;
 ## from its GATE-th kill on, every brick pays ×HIGH on top of the usual combo.
 ## Long single-arrow runs pay far more, scattered single kills pay less.
 const Progress=preload("res://src/core/progress.gd")
 const GATE:=3
-const LOW:=0.5
+const LOW:=1.0
 const HIGH:=2.0
 
 func title() -> String:return "连杀赏"
 func color() -> String:return "#c4513f"
-func note() -> String:return "单箭三连起 · 砖块 ×2"
+func note() -> String:return "前两杀正常收益；同一支箭从第 3 杀起，砖块收益 ×2。"
 
 func shape() -> void:data={"boosted":0,"best":0}
 
@@ -32,6 +32,6 @@ func destroyed(brick:RefCounted) -> void:
 		g.fx.floating(brick.position-Vector2(0,40),"连杀赏 ×2",Color(color()),22)
 		g.fx.ring(brick.position,Color(color()),110)
 
-func status() -> String:return "已赏 %d 块" % int(data.boosted)
+func status() -> String:return "三连起 ×2 · 已赏 %d 块" % int(data.boosted)
 
 func summary() -> Array:return ["连杀砖 %d 块" % int(data.boosted),"最长 %d 连" % int(data.best)]

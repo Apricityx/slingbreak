@@ -121,19 +121,35 @@ func _action(method: String, input: Dictionary) -> void:
 		var progress = session.call_method("exportProgress",{})
 		var file := FileAccess.open(input.path,FileAccess.WRITE)
 		if file==null: interface.show_error("无法写入进度文件");return
-		file.store_string(JSON.stringify(progress,"  "));file.close()
+		file.store_string(JSON.stringify(progress,"  "));file.flush()
+		var error:=file.get_error();file.close()
+		if error!=OK:interface.show_error("无法写入进度文件");return
+		interface.show_file_result("游戏进度已导出")
 		return
 	if method=="importFile":
-		var progress = JSON.parse_string(FileAccess.get_file_as_string(input.path))
-		if not progress is Dictionary or not session.import_progress(progress): interface.show_error("无效的游戏进度文件")
-		else:arena.simulation=session.runtime;audio.simulation=session.runtime
+		# FileAccess accepts SAF content URIs directly; never convert them to paths.
+		var file:=FileAccess.open(input.path,FileAccess.READ)
+		if file==null:interface.show_error("无法读取进度文件");return
+		var text:=file.get_as_text();var error:=file.get_error();file.close()
+		if error not in [OK,ERR_FILE_EOF]:interface.show_error("无法读取进度文件");return
+		var parser:=JSON.new()
+		if parser.parse(text)!=OK or not parser.data is Dictionary or not Session.Progress.valid(parser.data):
+			interface.show_error("无效的游戏进度文件");return
+		var imported:bool=session.import_progress(parser.data)
+		# import_progress replaces the runtime before persisting it. Even if the
+		# private save fails, presentation must not retain the disposed runtime.
+		arena.simulation=session.runtime;audio.simulation=session.runtime
+		# Settings and the native picker own a pause; importing starts a new session.
+		session.command("pause",{"paused":true})
+		if not imported:interface.show_error("进度已载入，但无法保存到本机，请检查存储空间后重试");return
+		interface.show_file_result("游戏进度已导入")
 		return
 	var result:Variant=session.command(method, input)
 	if method=="buy" and result is Dictionary and result.get("accepted",false) and session.runtime.rank("bargain"):
 		preload("res://src/render/bargain_feedback.gd").show_at(interface,session.runtime,input.get("key",""))
 	if not get_meta("test_mode",false):
 		if method=="configure": session.save_settings()
-		if method in ["choose", "buy", "reroll", "swap", "reset", "developer"]: session.request_save()
+		if method in ["choose", "buy", "reroll", "swap", "reset", "developer", "seenVariant"]: session.request_save()
 
 func _resize() -> void:
 	# Stage layout remains fixed; AspectAdapter only adjusts whole-canvas scaling.

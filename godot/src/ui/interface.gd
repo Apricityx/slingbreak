@@ -29,8 +29,6 @@ var modal_content: VBoxContainer
 var modal_kind := ""
 var restore_pause := false
 var draft_key := ""
-# "level:id" of the last variant card shown, so it opens once per level.
-var variant_key := ""
 ## Scripted UI tests that drive the draft directly opt out of the rule card.
 var variant_cards := true
 var choosing := false
@@ -173,6 +171,17 @@ func _build_hud() -> void:
 	_text("earnings_label","本关收益",Vector2(30,831),10,"on-panel")
 	_text("earnings","+ 0",Vector2(30,850),44,"accent",true)
 	_text("toast","",Vector2(150,67),10,"text-2",true);hud_nodes.toast.size.x=246;hud_nodes.toast.horizontal_alignment=HORIZONTAL_ALIGNMENT_RIGHT;hud_nodes.toast.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+	hud_nodes.toast.position=Vector2(150,831)
+	hud_nodes.toast.add_theme_color_override("font_color",visuals.color("on-panel-2"))
+	var rule_button:=_button("",Vector2(146,58),Vector2(250,30),func():_variant_intro())
+	rule_button.name="VariantStatus";rule_button.visible=false;rule_button.clip_text=true
+	rule_button.add_theme_font_size_override("font_size",11)
+	rule_button.add_theme_stylebox_override("normal",visuals.box(visuals.color("surface-2"),visuals.color("line-2"),6,6))
+	hud_nodes.variant=rule_button
+	for entry in [["variant_name",0,10],["variant_status",13,11]]:
+		var text:Label=visuals.label("",entry[2],"text-2",entry[0]=="variant_name")
+		text.position=Vector2(7,entry[1]);text.size.x=236;text.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+		text.mouse_filter=Control.MOUSE_FILTER_IGNORE;rule_button.add_child(text);hud_nodes[entry[0]]=text
 	visuals.button_states(self)
 
 func _line(at: Vector2,dimensions: Vector2) -> void:
@@ -220,10 +229,14 @@ func present(value: Dictionary) -> void:
 	_count_target("earnings",float(value.levelMoney),value.reduced)
 	var core_threshold:float=float(value.threshold) if value.threshold!=null else 0.0
 	var progress_value:=100.0*float(value.killed)/maxf(1.0,core_threshold)
+	var variant:Variant=value.get("variant")
+	if value.core!=null and variant is Dictionary and float(variant.get("coreProgress",-1))>=0:
+		progress_value=100.0*float(variant.coreProgress)
 	if not hud_targets.has("progress") or hud_targets.progress!=progress_value:
 		Motion.meter(hud_nodes.progress,progress_value,.22,value.reduced or not hud_targets.has("progress"))
 		hud_targets.progress=progress_value
 	var core_state:="boss" if value.bossStatus is Dictionary else "cleared" if value.phase=="clearing" else "ready" if value.core!=null else "locked"
+	if core_state=="ready" and variant is Dictionary and variant.get("coreBlocked",false):core_state="blocked"
 	hud_nodes.core_label.text="核心击破" if core_state=="cleared" else "核心已显现" if core_state=="ready" else "核心解锁"
 	if hud_values.get("core_state","")!=core_state:
 		for token in ["core_label","core_value"]:hud_nodes[token].add_theme_color_override("font_color",visuals.color("accent-ink-strong" if core_state in ["ready","cleared"] else "text-3"))
@@ -231,6 +244,20 @@ func present(value: Dictionary) -> void:
 	hud_nodes.progress.present(core_state,value.reduced or value.paused)
 	hud_feedback.present(_combo_heat(value,achievement),core_state,value.reduced,value.paused)
 	hud_nodes.core_value.text="%d / %d" % [mini(value.killed,int(core_threshold)),int(core_threshold)]
+	hud_nodes.variant.visible=variant is Dictionary and value.phase in ["ready","flying","entering"]
+	hud_nodes.core_label.tooltip_text=""
+	if variant is Dictionary:
+		hud_nodes.variant_name.text=variant.name+" · 查看规则"
+		hud_nodes.variant_status.text=variant.status
+		hud_nodes.variant.tooltip_text=variant.note
+		if value.core!=null:
+			if variant.id=="seal":hud_nodes.core_label.text="核心封印" if variant.status.begins_with("封印") else "核心已解封"
+			elif variant.id=="banked":hud_nodes.core_label.text="核心需折射"
+			elif variant.id=="bulwark":hud_nodes.core_label.text=variant.status
+			hud_nodes.core_label.tooltip_text=variant.coreNote
+			if variant.id=="seal":hud_nodes.core_value.text=variant.status.trim_prefix("封印 ")
+			elif variant.id=="banked":hud_nodes.core_value.text="先反弹"
+			elif variant.id=="bulwark":hud_nodes.core_value.text="需命中"
 	var key := JSON.stringify([value.skills,value.slots])
 	if queue_key!=key and not catalog.is_empty():
 		queue_key=key
@@ -297,9 +324,8 @@ func present(value: Dictionary) -> void:
 	_update_boss(value)
 	if notices!=null:notices.present(value)
 	# The level's rule is announced before its draft: the draft waits behind it.
-	if variant_cards and value.phase=="draft" and value.get("variant") is Dictionary and modal_kind=="" and not startup_covered and not value.transition.holdDraft and not choosing:
-		var rule_key:="%d:%s" % [int(value.level),value.variant.id]
-		if rule_key!=variant_key:variant_key=rule_key;_variant_intro()
+	if variant_cards and value.phase=="draft" and value.get("variant") is Dictionary and not value.variant.get("seen",false) and modal_kind=="" and not startup_covered and not value.transition.holdDraft and not choosing:
+		_variant_intro()
 	if value.phase=="draft" and not startup_covered and not value.transition.holdDraft and not catalog.is_empty() and not choosing:
 		var next_key := JSON.stringify(value.draft)
 		if modal_kind in ["","draft"] and (next_key!=draft_key or modal_kind==""): draft_key=next_key;_draft()
@@ -753,7 +779,7 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	# Keep the draft sheet on the same 412px design grid as the Web dialog.
 	# Draft owns its section insets, so the sheet itself has no hidden inset.
 	modal_width=250 if kind=="reset" else 320 if kind=="variant" else 388 if kind=="shop" else 396
-	modal_padding=31 if kind in ["reset","variant"] else 25 if kind=="shop" else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
+	modal_padding=31 if kind in ["reset","variant"] else 16 if kind=="shop" else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
 	var depth:=modal_stack.size()*2
 	scrim=ColorRect.new();scrim.size=Vector2(412,915);scrim.z_index=11+depth;scrim.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(scrim)
 	if launcher_mode:scrim.position.y=content_top;scrim.size.y=content_height-content_top
@@ -1217,8 +1243,10 @@ func _present_latest() -> void:
 	if frame.get("phase")=="draft" and modal_kind=="":present(frame)
 
 func _variant_intro() -> void:
-	_open("","variant")
+	if not frame.get("variant") is Dictionary:return
+	_open("","variant",frame.get("phase") in ["ready","flying","entering"])
 	pages.setup(self);pages.variant()
+	action.emit("seenVariant",{})
 
 func _reset_confirmation() -> void:
 	_open("","reset",true)
@@ -1248,10 +1276,24 @@ func _close_all() -> void:
 	choosing=previously_choosing
 
 func _file(importing: bool) -> void:
-	file_dialog=FileDialog.new();file_dialog.access=FileDialog.ACCESS_FILESYSTEM;file_dialog.file_mode=FileDialog.FILE_MODE_OPEN_FILE if importing else FileDialog.FILE_MODE_SAVE_FILE;file_dialog.filters=PackedStringArray(["*.json ; Slingbreak progress"])
-	file_dialog.file_selected.connect(func(path):action.emit("importFile" if importing else "exportFile",{"path":path});file_dialog.queue_free();file_dialog=null)
-	file_dialog.canceled.connect(func():file_dialog.queue_free();file_dialog=null)
+	if is_instance_valid(file_dialog):return
+	file_dialog=FileDialog.new()
+	file_dialog.access=FileDialog.ACCESS_FILESYSTEM
+	# Android uses SAF (content://), not the engine's sandbox filesystem browser.
+	file_dialog.use_native_dialog=true
+	file_dialog.file_mode=FileDialog.FILE_MODE_OPEN_FILE if importing else FileDialog.FILE_MODE_SAVE_FILE
+	file_dialog.filters=PackedStringArray(["*.json;Slingbreak progress;application/json"])
+	if not importing:file_dialog.current_file="slingbreak-progress-%s.json" % Time.get_datetime_string_from_system().replace(":","-")
+	file_dialog.file_selected.connect(func(path):_close_file_dialog();action.emit("importFile" if importing else "exportFile",{"path":path}))
+	file_dialog.canceled.connect(_close_file_dialog)
 	add_child(file_dialog);file_dialog.popup_centered(Vector2i(390,650))
+
+func _close_file_dialog() -> void:
+	if is_instance_valid(file_dialog):file_dialog.hide();file_dialog.queue_free()
+	file_dialog=null
+
+func show_file_result(message: String) -> void:
+	_open("游戏进度","file_result",true);_label(message);_choice("关闭",_close)
 
 func _fullscreen() -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if DisplayServer.window_get_mode()==DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)

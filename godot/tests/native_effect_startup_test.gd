@@ -11,7 +11,9 @@ func check(ok:bool,label:String) -> void:
 	if not ok:failures+=1;push_error(label)
 func run() -> void:
 	var app:=Main.new()
-	app.session.save_path="res://../agent-tmp/godot/startup-test-progress.json"
+	# This test needs a first encounter. A shared file remembers seen rule
+	# cards across runs, incorrectly skipping the handoff it is testing.
+	app.session.save_path="res://../agent-tmp/godot/startup-test-%d-%d-progress.json" % [OS.get_process_id(),Time.get_ticks_usec()]
 	root.add_child(app)
 	if DisplayServer.get_name()!="headless":
 		check(not app.session.ready and not app.is_processing(),"live simulation waits for shader preparation")

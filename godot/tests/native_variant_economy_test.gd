@@ -118,11 +118,13 @@ func _escrow(base:float) -> void:
 	shot(g,2)
 	check(rule.data.pot>paid*2-lost and rule.data.lost==lost,"a scoring shot keeps and grows the pot")
 	g.next_shot_at=0;g.shoot(0,100);g.next_shot_at=0;g.shoot(0,100)
+	var risk:float=rule.data.pot
 	run(g,1,g.arrows[1])
-	check(g.arrows.size()==2 and rule.data.open and rule.data.kills==1,"a follow-up shot in the air joins the open shot")
+	check(g.arrows.size()==2 and rule.rounds.size()==2 and rule.rounds[g.arrows[0].id].kills==0 and rule.rounds[g.arrows[1].id].kills==1,"overlapping arrows have independent kill counts")
 	g.arrows.clear()
 	for i in range(2):g.tick(1.0/60)
-	check(rule.data.lost==lost,"follow-up kill saves the shot")
+	check(rule.data.lost==lost+round(risk*0.3),"follow-up kill cannot save another empty shot")
+	lost=float(rule.data.lost)
 	check(g.snapshot().variant.text.begins_with("奖池 · 奖池 "),"escrow HUD shows the pot")
 	var back:=round_trip(g,"escrow")
 	var pot:float=back.variants.rule.data.pot
@@ -146,10 +148,10 @@ func _escrow(base:float) -> void:
 
 func _streak(base:float,plain_run:Array) -> void:
 	var g:=make("streak")
-	check(pay(g,normals(g)[0])==round(base*0.5),"passive streak kills pay half")
+	check(pay(g,normals(g)[0])==base,"passive streak kills retain normal income")
 	var deltas:Array=run(g,3)
 	check(deltas.size()==3 and plain_run.size()==3,"three arrow kills scored")
-	check(deltas[0]==round(plain_run[0]*0.5) and deltas[1]==round(plain_run[1]*0.5),"first two arrow kills pay half")
+	check(deltas[0]==plain_run[0] and deltas[1]==plain_run[1],"first two arrow kills retain normal income")
 	check(deltas[2]==round(plain_run[2]*2),"third arrow kill pays double")
 	var data:Dictionary=g.variants.rule.data
 	check(data.boosted==1 and data.best==3 and g.snapshot().variant.text.contains("已赏 1 块"),"streak tracks boosted bricks")
@@ -178,9 +180,9 @@ func _wager() -> void:
 	shot(g,3)
 	g.next_shot_at=0;g.shoot(0,100)
 	var back:=round_trip(g,"wager")
-	check(back.variants.rule.data.open and back.variants.rule.data.armed,"wager restores an open shot")
+	check(back.variants.rule.rounds.is_empty(),"restore drops unfinished flights rather than inventing blank shots")
 	back.variants.update(1.0/60)
-	check(back.variants.rule.data.busts==2 and back.variants.rule.data.stake==1.0,"restored shot that scored nothing busts")
+	check(back.variants.rule.data.busts==1 and back.variants.rule.data.stake==1.5,"restore preserves earned stakes without an absent-flight fine")
 	g.active_arrow=g.arrows[0]
 	check(g.variants.core_hit(g.arrows[0]) and not rule.data.open,"core hit cashes out without settling")
 	g.active_arrow=null

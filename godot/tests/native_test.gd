@@ -93,7 +93,7 @@ func _run() -> void:
 	invalid=original.duplicate(true);invalid.state.draft={"level":50,"options":["spectral","spectral","unknown"]}
 	check(not Progress.valid(invalid),"unknown and duplicate draft candidates rejected")
 	sim=fresh();sim.state.coins=100000;sim.state.up.draw=9
-	check(sim.buy("draw") and is_equal_approx(sim.draw_interval(),0.1),"last draw upgrade reaches tenfold frequency")
+	check(sim.buy("draw") and is_equal_approx(sim.draw_interval(),0.4),"last draw upgrade reaches bounded 2.5x frequency")
 	check(not sim.buy("draw"),"draw cap enforced")
 	sim=fresh(["titan","blast","lightning","ice"]);sim.state.level=51;sim.generate()
 	var picked:String=sim.state.draft.options[0];check(sim.choose(picked),"draft commit")

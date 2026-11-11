@@ -28,7 +28,8 @@ func fire(sim:RefCounted) -> bool:
 	return sim.shoot(0,100)
 
 func live(sim:RefCounted,seconds:float) -> void:
-	for i in range(roundi(seconds*60)):sim.variants.update(1.0/60)
+	for i in range(roundi(seconds*60)):
+		sim.time+=1.0/60;sim.clock+=1.0/60;sim.variants.update(1.0/60)
 
 func round_trip(sim:RefCounted,label:String) -> RefCounted:
 	var saved:Dictionary=sim.export_progress()
@@ -90,8 +91,9 @@ func _hourglass() -> void:
 	check(fire(sim),"hourglass first shot")
 	check(rule.draining()==false,"flight and the draw cooldown are free")
 	live(sim,3)
-	check(rule.data.bonus==2.5,"no sand falls while arrows fly")
-	sim.phase="ready";sim.time=sim.next_shot_at
+	check(rule.data.bonus<2.5,"old flying arrows no longer stop the decision clock")
+	rule.data.bonus=2.5;rule.data.idle=0.0
+	sim.phase="ready";sim.time=sim.next_shot_at+rule.GRACE
 	check(rule.draining() and sim.snapshot().variant.text.contains("流失"),"idle ready bow drains the sand")
 	live(sim,4)
 	check(is_equal_approx(rule.bonus_scale(),2.1) and is_equal_approx(float(rule.data.idle),4.0),"sand drains 0.1 per idle second")
@@ -129,7 +131,7 @@ func _overheat() -> void:
 	round_trip(sim,"overheat")
 	live(sim,1.0)
 	check(rule.data.vented,"vent lasts until the bow cools")
-	live(sim,2.0)
+	live(sim,4.0)
 	check(not rule.data.vented and float(rule.data.heat)<rule.RESUME,"cooled bow resumes rapid fire")
 	for vent in range(6):
 		for i in range(6):fire(sim)
@@ -153,8 +155,8 @@ func _cadence() -> void:
 	check(rule.offset()<=rule.WINDOW,"metronome reaches the next beat window")
 	check(fire(sim) and int(rule.data.streak)==1 and is_equal_approx(sim.arrows.back().flags.beatScale,1.15),"on-beat shot starts a streak and hits harder")
 	check(is_equal_approx(rule.damage_scale(sim.bricks[0],sim.arrows.back()),1.15) and rule.damage_scale(sim.bricks[0],null)==1.0,"beat damage applies to that shot only")
-	check(is_equal_approx(rule.period(),1.25) and float(rule.data.phase)==0.0,"streak quickens and re-anchors the beat")
-	live(sim,1.20)
+	check(is_equal_approx(rule.period(),1.3) and float(rule.data.phase)>1.0,"early hit does not rewind the independent beat")
+	live(sim,1.25)
 	check(fire(sim) and int(rule.data.streak)==2,"streak builds on the faster beat")
 	round_trip(sim,"cadence")
 	live(sim,0.55)
@@ -163,7 +165,8 @@ func _cadence() -> void:
 	check(int(rule.data.best)==2 and is_equal_approx(rule.bonus_scale(),1.2),"best streak lifts the bonus")
 	rule.data.streak=8;rule.data.phase=rule.period()-0.05
 	check(fire(sim) and int(rule.data.streak)==8 and is_equal_approx(sim.arrows.back().flags.beatScale,1.85),"streak and damage are capped")
-	check(is_equal_approx(rule.period(),0.9) and rule.bonus_scale()<=1.8,"tempo and bonus are bounded")
+	live(sim,0.1)
+	check(is_equal_approx(rule.period(),0.9) and rule.bonus_scale()<=1.8,"tempo changes at the next boundary and stays bounded")
 	check(rule.summary().size()==2 and sim.variants.summary().items.size()==3,"cadence summary adds a bonus badge")
 	sim.paused=true;var held:float=float(rule.data.phase);live(sim,1)
 	check(float(rule.data.phase)==held,"pausing freezes the metronome")

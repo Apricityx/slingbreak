@@ -1,16 +1,16 @@
 extends "res://src/core/variants/rule.gd"
-## 沙漏: the core bonus starts at ×2.5 and its sand runs out only while the bow
-## is drawn and idle (ready to fire but not firing). Flight time and the draw
-## cooldown are free, so quick decisions keep the bonus; it never drops below ×1.
+## 沙漏: each accepted shot grants its draw cooldown plus an aiming grace.
+## Once another shot is available, old arrows cannot pause the decision clock.
 const Progress=preload("res://src/core/progress.gd")
 const START:=2.5
 const FLOOR:=1.0
 const DRAIN:=0.1        # bonus lost per idle second (15 s of hesitation total)
+const GRACE:=0.8
 var shown:=""
 
 func title() -> String:return "沙漏"
 func color() -> String:return "#c9a46a"
-func note() -> String:return "犹豫会漏掉奖金 · 果断出箭"
+func note() -> String:return "首箭后，拉弓冷却结束再给 0.8 秒瞄准；继续等待每秒减少 0.1 倍奖金（×2.5 → ×1）。场上仍有箭也会计时，暂停不扣。"
 
 func shape() -> void:data={"started":false,"bonus":START,"idle":0.0}
 
@@ -19,7 +19,7 @@ func valid(saved:Dictionary) -> bool:
 
 ## Sand only falls while the player could shoot right now and isn't.
 func draining() -> bool:
-	return data.started and not g.paused and g.phase=="ready" and g.time>=g.next_shot_at and float(data.bonus)>FLOOR
+	return data.started and not g.paused and g.phase in ["ready","flying"] and g.time>=g.next_shot_at+GRACE and float(data.bonus)>FLOOR
 
 func update(delta:float) -> void:
 	if draining():

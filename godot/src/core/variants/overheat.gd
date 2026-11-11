@@ -4,7 +4,7 @@ extends "res://src/core/variants/rule.gd"
 ## costs part of the ×1.8 core bonus (never below ×1).
 const Progress=preload("res://src/core/progress.gd")
 const HEAT_PER_SHOT:=0.2
-const COOL:=0.3          # heat shed per live second
+const COOL:=0.18         # heat shed per base draw interval, across upgrade tiers
 const RESUME:=0.3        # a vented bow resumes once heat falls below this
 const START_BONUS:=1.8
 const VENT_COST:=0.3
@@ -12,7 +12,7 @@ var shown:=""
 
 func title() -> String:return "过热"
 func color() -> String:return "#d9663d"
-func note() -> String:return "连射加速但会过热 · 过热扣奖金"
+func note() -> String:return "拉弓加速至正常的 0.4–0.8 倍间隔；热箭伤害最低 ×0.65。热满后暂时减速，每次过热扣 0.3 倍奖金（×1.8 → ×1）；停射可冷却。"
 
 func shape() -> void:data={"heat":0.0,"vented":false,"bonus":START_BONUS,"vents":0}
 
@@ -21,7 +21,7 @@ func valid(saved:Dictionary) -> bool:
 
 func update(delta:float) -> void:
 	if g.paused or not g.phase in ["ready","flying"]:return
-	data.heat=maxf(0,float(data.heat)-COOL*delta)
+	data.heat=maxf(0,float(data.heat)-COOL*delta/maxf(0.1,g.draw_interval()))
 	if data.vented and float(data.heat)<RESUME:
 		data.vented=false;g.events.append({"type":"toast","text":"弓身已冷却 · 恢复连射"})
 	_sync()
@@ -52,8 +52,8 @@ func on_shoot() -> void:
 func bonus_scale() -> float:return snappedf(float(data.bonus),0.01)
 
 func status() -> String:
-	if data.vented:return "过热冷却中"
-	return "热度 %d%%" % (roundi(float(data.heat)*10)*10)
+	if data.vented:return "冷却中 · 奖金 ×%s" % String.num(bonus_scale(),1)
+	return "热度 %d%% · 伤害 ×%s" % [roundi(float(data.heat)*100),String.num(lerpf(1,0.65,float(data.heat)),2)]
 
 func summary() -> Array:return ["过热 %d 次" % int(data.vents)]
 

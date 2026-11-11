@@ -114,6 +114,8 @@ func _domino(plain:RefCounted) -> void:
 	check(pushed,"neighbours take PUSH × damage")
 	check(far.reduce(func(total,b):return total+b.hp,0.0)==far_hp,"pushes stay on the same row")
 	# Weakened bricks topple in turn: the ripple travels along the row.
+	# Isolate the domino ripple from random bomb/lightning chain reactions.
+	for brick in sim.bricks:brick.type="normal"
 	var first:RefCounted=null
 	var second:RefCounted=null
 	for brick in sim.bricks:

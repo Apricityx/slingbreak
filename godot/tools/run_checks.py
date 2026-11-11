@@ -26,6 +26,10 @@ def main():
     tests = args.test or (["native_abyss_render_test", "native_render_test", "native_stroke_test", "native_retained_test", "native_brick_numbers_test", "native_income_render_test", "interface_input_test", "native_motion_test", "native_hud_test", "native_arrow_break_test", "native_effect_batch_test", "native_v_effects_test", "interface_capture", "transition_test"]
                           if args.gui else ["native_test", "native_spike_test", "native_arrow_break_test", "native_effect_batch_test", "native_prediction_test", "native_audio_test", "ui_test", "transition_test", "native_soak_test"])
     if not args.test:
+        tests += ["native_variant_design_test", "native_variant_ui_test"]
+        tests += ["native_upgrade_tree_test"]
+        if args.gui:
+            tests += ["upgrade_tree_input_test"]
         tests += ["native_explosion_test"]
         tests += ["boot_test"]
         tests += ["aspect_adapter_test"]
@@ -34,6 +38,8 @@ def main():
                   "native_skill_batch_seven_test", "native_skill_batch_eight_test", "native_skill_batch_nine_test",
                     "native_skill_gold_integration_test", "native_income_test", "native_variant_test", "native_variant_core_test", "native_variant_board_test",
                      "native_variant_physics_test", "native_variant_tempo_test", "native_variant_economy_test", "boss_notice_test", "launcher_test", "wallet_test"]
+        if not args.gui:
+            tests += ["file_transfer_test"]
     out = ROOT.parent / "agent-tmp/godot/checks"
     out.mkdir(parents=True, exist_ok=True)
     failures = []

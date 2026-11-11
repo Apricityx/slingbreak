@@ -17,14 +17,14 @@ func present(tier:int,state:String,still:bool,held:bool) -> void:
 	if heat==tier and core_state==state and reduced==still and paused==held:return
 	heat=tier;core_state=state;reduced=still;paused=held
 	if reduced:
-		warmth=float(heat);gem_fill=0.0 if state=="locked" else 1.0
+		warmth=float(heat);gem_fill=0.0 if state in ["locked","blocked"] else 1.0
 	set_process(not reduced)
 	queue_redraw()
 
 func _process(delta:float) -> void:
 	if not paused:age=fmod(age+delta,8.0)
 	var next_warmth:=lerpf(warmth,float(heat),1-exp(-delta/.12))
-	var next_fill:=lerpf(gem_fill,0.0 if core_state=="locked" else 1.0,1-exp(-delta/.1))
+	var next_fill:=lerpf(gem_fill,0.0 if core_state in ["locked","blocked"] else 1.0,1-exp(-delta/.1))
 	var moving:=absf(next_warmth-warmth)>.001 or absf(next_fill-gem_fill)>.001
 	warmth=next_warmth;gem_fill=next_fill
 	if moving or core_state=="ready" and not paused:queue_redraw()

@@ -30,6 +30,9 @@ func core_hit(_arrow:RefCounted) -> bool:
 
 func bonus_scale() -> float:return 1.8
 func status() -> String:return "护甲 %d" % int(data.hp)
+func core_note() -> String:return "还需命中 %d 次" % int(data.hp)
+func core_blocked() -> bool:return int(data.hp)>1
+func core_progress() -> float:return 1.0-float(int(data.hp)-1)/float(ARMOR-1)
 func summary() -> Array:return ["%d 层护甲击穿" % ARMOR]
 
 ## Remaining plates as arcs around the core; the guard window dims them.

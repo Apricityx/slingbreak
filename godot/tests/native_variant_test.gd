@@ -30,6 +30,7 @@ func _run() -> void:
 	var info:Dictionary=dealt.snapshot().variant
 	check(info.note!="" and Color.html_is_valid(info.color),"status carries the note and colour for the pre-draft card")
 	dealt.state.variantDeck=[]
+	dealt.state.level=30
 	var drawn:Array=[]
 	for i in range(Variants.ORDER.size()*6):drawn.append(dealt.variants.draw_next())
 	var first:Dictionary={}
@@ -51,7 +52,12 @@ func _run() -> void:
 	check(fort.obstacles.size()>plain.obstacles.size() and fort.obstacles.size()<=12,"fortress adds bounded walls")
 	for wall in fort.obstacles:check(absf(wall.x-390)>=192,"fortress keeps the central route open")
 	check(fort.bricks.size()<plain.bricks.size() and fort.initial==fort.bricks.size(),"fortress thins the board and recounts it")
-	check(fort.bricks[0].hp>=fort.base_hp()*2.5,"fortress bricks are armoured")
+	check(fort.bricks.filter(func(b):return not b.flags.get("fortressWeak",false)).all(func(b):return b.hp>=ceil(fort.base_hp()*1.6)),"fortress non-weak bricks are moderately armoured")
+	var weak:Array=fort.bricks.filter(func(b):return b.flags.get("fortressWeak",false))
+	check(weak.size()==3 and weak.all(func(b):return b.hp<ceil(fort.base_hp()*1.6)),"fortress offers three easier breach targets")
+	var walls:int=fort.obstacles.size()
+	fort.hit(weak[0],1e9)
+	check(fort.obstacles.size()<walls,"breaking a fortress weak point opens a wall route")
 	check(fort.variants.bonus_scale()==2.0,"fortress doubles the core bonus")
 
 	var rush:=at(10,"rush")
@@ -75,16 +81,31 @@ func _run() -> void:
 	check(drift.report.get("variant") is Dictionary and drift.report.variant.title.contains("游移核心"),"report names the variant")
 
 	var quiver:=at(20,"quiver")
-	check(quiver.variants.id=="quiver" and quiver.variants.rule.data.par==8,"quiver defaults to par 8 without pace history")
-	quiver.state.skillRuntime.shots=5
-	check(is_equal_approx(quiver.variants.bonus_scale(),2.75),"spare arrows raise the quiver bonus")
-	quiver.state.skillRuntime.shots=9
-	check(is_equal_approx(quiver.variants.bonus_scale(),0.6) and quiver.snapshot().variant.text.contains("超出 1 箭"),"overshooting par softens the bonus")
+	var par:int=quiver.variants.rule.data.par
+	check(quiver.variants.id=="quiver" and par>8,"quiver estimates the actual unupgraded board workload")
+	quiver.state.skillRuntime.shots=par-3
+	check(is_equal_approx(quiver.variants.bonus_scale(),2.3),"spare arrows add a bounded bonus")
+	quiver.state.skillRuntime.shots=par+1
+	check(is_equal_approx(quiver.variants.bonus_scale(),1.85),"one excess arrow tapers instead of confiscating the bonus")
+	quiver.state.skillRuntime.shots=par+100
+	check(quiver.variants.bonus_scale()==1.0,"quiver always preserves the ordinary core bonus")
 
 	plain.shots=15;plain.clear()
 	check(plain.state.paceShots==15.0,"ordinary clear records shot pace")
 	plain.state.level=20;plain.state.skillChosenLevel=20;plain.state.board=null;plain.state.variantOverride={"level":20,"id":"quiver"};plain.generate()
-	check(plain.variants.rule.data.par==12,"later quiver par follows recorded pace")
+	var weak_par:int=plain.variants.rule.data.par
+	plain.state.up.arrow=12;plain.variants.update(1.0/60)
+	check(plain.variants.rule.data.par<weak_par,"quiver adapts to current damage and penetration before first shot")
+	plain.clock=plain.locked_until;plain.shoot(0,100);var locked:int=plain.variants.rule.data.par
+	plain.state.up.arrow=24;plain.variants.update(1.0/60)
+	check(plain.variants.rule.data.par==locked,"quiver target locks after first shot")
+	var early:=at(1,null)
+	check(early.variants.id=="rush","first level teaches the forgiving gold rule")
+	for level in range(1,29):
+		early.state.level=level
+		for i in range(8):
+			var picked:String=early.variants.draw_next()
+			check(Variants.UNLOCK[picked]<=level,"level %d excludes locked rules" % level)
 
 	# Restore keeps the rule and its counters; old boards without a variant still load.
 	rush=at(10,"rush");rush.shoot(0,100);rush.variants.rule.data.clock=4.0

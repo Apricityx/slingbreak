@@ -16,6 +16,7 @@ const BRICK_BOMB_GAIN:=0.3
 # Chain depth lifts each later bomb slightly, so a cascade climbs.
 const BRICK_BOMB_DETUNE:=[0.0,-0.03,0.02,-0.015]
 const SAMPLED_CUES:={
+	"cadence_tick":{"file":"ui-tick-1.vorbis","gain":0.24,"interval":0.08},
 	"eye_awaken":{"file":"eye-awaken.vorbis","gain":0.32,"interval":0.3},
 	"eye_charge":{"file":"eye-charge.vorbis","gain":0.28,"interval":0.3},
 	"eye_cast":{"file":"eye-cast.vorbis","gain":0.22,"interval":0.2},
@@ -43,7 +44,10 @@ const UI_CUES:={
 	"chime":{"files":["ui-chime.vorbis"],"gain":0.3},
 	"gold":{"files":["ui-gold.vorbis"],"gain":0.35},
 	"reroll":{"files":["ui-reroll.vorbis"],"gain":0.25},
-	"upgrade":{"files":["ui-upgrade.vorbis"],"gain":0.2,"any":true}
+	"upgrade":{"files":["ui-upgrade.vorbis"],"gain":0.2,"any":true},
+	"tree_rank":{"files":["tree-rank-1.vorbis","tree-rank-2.vorbis","tree-rank-3.vorbis"],"gain":0.32},
+	"tree_unlock":{"files":["tree-unlock.vorbis"],"gain":0.35},
+	"tree_breakthrough":{"files":["tree-breakthrough.vorbis"],"gain":0.38}
 }
 # These recipes contain several loud layers; attenuate the whole event equally.
 const IMPACT_GAINS:={"boom":0.4,"win":0.5,"core":0.6,"shatter":0.6,"forge":0.5,"meteor":0.5,"clang":0.6,"abyss":0.5,"devour":0.5}

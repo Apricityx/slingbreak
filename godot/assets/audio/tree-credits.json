@@ -1,0 +1,98 @@
+{
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "credits": [
+    "Kenney / Casino Audio",
+    "Sam Gossner / Versilian Studios / VSCO-2-CE"
+  ],
+  "changes": "Transient-aligned acoustic samples; high-pass, <=4 semitone resampling, offline layering; 48kHz mono Vorbis q8.",
+  "sources": [
+    {
+      "file": "ca_chipsStack1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipsStack1.ogg",
+      "sha256": "12bf175b9afcea112175b241ad3336c6244ac5fdcdff8b5942ecc03f2225e0c4"
+    },
+    {
+      "file": "ca_chipLay1.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/chipLay1.ogg",
+      "sha256": "4b2111252ccb64eed67f171e061053849cfbb29873536c03948646f244a3905c"
+    },
+    {
+      "file": "ca_cardSlide7.ogg",
+      "url": "https://cc0-sounds.netlify.app/sounds/kenney_casinoaudio/Audio/cardSlide7.ogg",
+      "sha256": "bda2040194f43484d03ee3c65ed6fff57251882ea7227abce4214bfa30bf2705"
+    },
+    {
+      "file": "vs_Xylo_Medium_G5_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_G5_ff_01_far.wav",
+      "sha256": "d5b45edd0c164356c0425b663b9307bbb77a647ba7554423c6a8aa455ac8b2b3"
+    },
+    {
+      "file": "vs_Xylo_Medium_C6_ff_01_far.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Xylo/Xylo_Medium_C6_ff_01_far.wav",
+      "sha256": "183d04381c44705f65c3750383f28695f4b2576311ace8fdbe567134f416ff27"
+    },
+    {
+      "file": "vs_glock_medium_C6.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_C6.wav",
+      "sha256": "e942cbf502cf6731df2925945fe3234c876cb63f047d91007b6929887f9e4904"
+    },
+    {
+      "file": "vs_glock_medium_G6.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_G6.wav",
+      "sha256": "a2ba94e59119cd5272c1161fc8b8fbfb94c7b44de45a9a6cc5973b1c332103af"
+    },
+    {
+      "file": "vs_glock_medium_C7.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Glock/glock_medium_C7.wav",
+      "sha256": "b2ecbe0e60c983bbfaa49a1f45f8a11559f7dba27b8c8a032eb2cb7366a36910"
+    },
+    {
+      "file": "vs_Triangle3-HitM_v1_rr1_Sum.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/Percussion/Triangle3-HitM_v1_rr1_Sum.wav",
+      "sha256": "95070247743dac4064497f7c2e04a97a4c7b0a2cc98894156c8eaebd076133cf"
+    },
+    {
+      "file": "vs_bell_tree_scrape1.wav",
+      "url": "https://raw.githubusercontent.com/sgossner/VSCO-2-CE/440300901dfe9275fd84e0b7763af1f8443ae62e/VSCO 1 Percussion/varMetal/various/bell_tree_scrape1.wav",
+      "sha256": "508c7c896f454e638fabdac7163cbd29b129ec1b63e6646aca9e94660c63d4a4"
+    }
+  ],
+  "outputs": [
+    {
+      "file": "tree-rank-1.vorbis",
+      "seconds": 0.38,
+      "peak": 0.80771,
+      "rms": 0.10435,
+      "sha256": "bab7aada1aac39a99bc7e633e1b5f1430cee425523bceb7150bda5d4278dd470"
+    },
+    {
+      "file": "tree-rank-2.vorbis",
+      "seconds": 0.38,
+      "peak": 0.80673,
+      "rms": 0.10633,
+      "sha256": "1556f88b87f291cd444a0eb8c4e4e927e904f28c7e09fcc2adf8db781a9b629b"
+    },
+    {
+      "file": "tree-rank-3.vorbis",
+      "seconds": 0.38,
+      "peak": 0.81246,
+      "rms": 0.09626,
+      "sha256": "46adff480c945c06c361f734e47d68f218710970843ee2751af4544aacdf2c82"
+    },
+    {
+      "file": "tree-unlock.vorbis",
+      "seconds": 0.72,
+      "peak": 0.80268,
+      "rms": 0.09984,
+      "sha256": "83dd1e8050015c28c0cf29a32a02a92d47f033d18893cec3927159f7cf105466"
+    },
+    {
+      "file": "tree-breakthrough.vorbis",
+      "seconds": 1.12,
+      "peak": 0.80499,
+      "rms": 0.08327,
+      "sha256": "ac0546d2c0df6fa5bf71f8e1164817c6a4771ef91f4a48f6fd3ebf10b47c2140"
+    }
+  ]
+}

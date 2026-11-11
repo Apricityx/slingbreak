@@ -34,19 +34,21 @@ func destroyed(brick:RefCounted) -> void:
 		g.events.append({"type":"toast","text":"封印解除 · 核心可被击破"})
 	else:g.fx.floating(brick.position,"封印 %d/%d" % [int(data.total)-left,int(data.total)],Color(TINT),15)
 
-func core_hit(arrow:RefCounted) -> bool:
+func core_hit(_arrow:RefCounted) -> bool:
 	if seals().is_empty():return true
 	data.denied=int(data.denied)+1
 	var point:=Vector2(g.core.x,g.core.y)
 	g.fx.ring(point,Color(TINT),60);g.cue("clang",1,point.x)
-	if not arrow.flags.get("sealHinted",false):
-		arrow.flags.sealHinted=true;g.fx.floating(point+Vector2(0,48),"封印 剩 %d" % seals().size(),Color(TINT),15)
+	g.fx.floating(point+Vector2(0,48),"封印砖未击破",Color(TINT),15)
 	return false
 
 func bonus_scale() -> float:return 1.3
 func status() -> String:
 	var left:int=seals().size()
 	return "封印 剩 %d" % left if left>0 else "已解封"
+func core_note() -> String:return "先击碎 %d 块封印砖" % seals().size() if not seals().is_empty() else "封印已解 · 命中即可清场"
+func core_blocked() -> bool:return not seals().is_empty()
+func core_progress() -> float:return 1.0-float(seals().size())/maxf(1,float(data.total))
 func summary() -> Array:return ["%d 道封印" % int(data.total)]
 
 ## Seal bricks wear a halo; while sealed the core is ringed and tethered to them.
@@ -54,7 +56,10 @@ func draw(canvas:CanvasItem) -> void:
 	var tint:=Color(TINT)
 	var left:=seals()
 	for brick in left:
-		tint.a=0.7;canvas.draw_rect(brick.bounds.grow(4),tint,false,2)
+		tint.a=0.95;canvas.draw_rect(brick.bounds.grow(4),tint,false,3)
+		# A filled diamond sits outside the number and survives both palettes.
+		var mark:Vector2=brick.position+Vector2(0,-brick.h*0.5-12)
+		canvas.draw_colored_polygon(PackedVector2Array([mark+Vector2(0,-7),mark+Vector2(7,0),mark+Vector2(0,7),mark+Vector2(-7,0)]),tint)
 	if g.core==null or left.is_empty():return
 	var point:Vector2=g.core_display_position()
 	tint.a=0.6;canvas.draw_arc(point,46,0,TAU,48,tint,2.5,true)

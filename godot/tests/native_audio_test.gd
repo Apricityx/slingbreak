@@ -59,12 +59,15 @@ func _run() -> void:
 	var ui_credits:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/audio/ui-credits.json"))
 	check(ui_credits.license=="CC0-1.0" and ui_credits.sources.size()==22 and ui_credits.sources.all(func(s):return s.sha256.length()==64),"sampled UI cues pin CC0 sources")
 	var shipped:Array=ui_credits.outputs.map(func(o):return o.file)
+	var tree_credits:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/audio/tree-credits.json"))
+	check(tree_credits.license=="CC0-1.0" and tree_credits.sources.all(func(s):return s.sha256.length()==64),"tree cues pin licensed acoustic recordings")
+	shipped.append_array(tree_credits.outputs.map(func(o):return o.file))
 	var ui_streams:Array=[]
 	for type in audio.UI_CUES:
 		var entry:Dictionary=audio.UI_CUES[type]
 		for file in entry.get("files",entry.get("tiers",[])):
 			var stream:=audio._sample("res://assets/audio/",file);ui_streams.append(stream)
-			check(shipped.has(file) and stream is AudioStreamOggVorbis and stream.get_length()>0.02 and stream.get_length()<0.9,"UI sample decodes short and is credited: "+file)
+			check(shipped.has(file) and stream is AudioStreamOggVorbis and stream.get_length()>0.02 and stream.get_length()<(1.2 if type=="tree_breakthrough" else 0.9),"UI sample decodes short and is credited: "+file)
 		audio.scheduled.clear()
 		audio.play_requests([{"type":type,"ui":true}])
 		check(audio.scheduled.size()==1 and audio.scheduled[0].ui and audio.scheduled[0].bus=="SlingUI" and audio.scheduled[0].volume<=0.45,"UI cue plays one dry sampled voice: "+type)
@@ -83,6 +86,9 @@ func _run() -> void:
 	audio.scheduled.clear()
 	audio.play_requests([{"type":"upgrade"}])
 	check(audio.scheduled.size()==1 and not audio.scheduled[0].ui and audio.scheduled[0].bus=="SlingEffects","gameplay reward uses the sampled upgrade cue")
+	audio.scheduled.clear()
+	audio.play_requests([{"type":"cadence_tick","priority":true}])
+	check(audio.scheduled.size()==1 and audio.scheduled[0].stream==audio._sample("res://assets/audio/","ui-tick-1.vorbis") and audio.scheduled[0].bus=="SlingEffects","metronome uses a single real sampled tick on the gameplay bus")
 	audio.scheduled.clear()
 	var variants:Array=[]
 	var pitches:Array=[]

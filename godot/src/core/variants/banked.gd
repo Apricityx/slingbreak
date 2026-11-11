@@ -18,8 +18,7 @@ func core_hit(arrow:RefCounted) -> bool:
 	arrow.flags.bankedDeny=g.time
 	var point:=Vector2(g.core.x,g.core.y)
 	g.fx.ring(point,Color(TINT),58);g.fx.burst(arrow.position,Color(TINT),8,0.6);g.cue("clang",1,point.x)
-	if not arrow.flags.get("bankedHinted",false):
-		arrow.flags.bankedHinted=true;g.fx.floating(point+Vector2(0,48),"需先反弹",Color(TINT),15)
+	g.fx.floating(point+Vector2(0,48),"需弹射击破",Color(TINT),15)
 	return false
 
 func bounced(arrow:RefCounted) -> void:
@@ -33,6 +32,7 @@ func bounced(arrow:RefCounted) -> void:
 
 func bonus_scale() -> float:return 1.5
 func status() -> String:return "需先反弹"
+func core_note() -> String:return "需先反弹，再命中核心"
 func summary() -> Array:return ["挡回直击 %d 次" % int(data.denied)] if int(data.denied)>0 else ["一击折射"]
 
 func draw(canvas:CanvasItem) -> void:

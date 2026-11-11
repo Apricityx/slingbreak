@@ -19,6 +19,8 @@ func note() -> String:return ""
 
 ## Fresh level: reshape g.bricks/g.obstacles and seed `data`. Not called on restore.
 func shape() -> void:pass
+## Reconcile transient state when an old or current board is restored.
+func restored() -> void:pass
 ## Reject malformed saved `data` (the host has already checked the id).
 func valid(_saved:Dictionary) -> bool:return true
 
@@ -37,6 +39,10 @@ func core_spawned() -> void:pass
 ## The arrow touched the core. Return false to deny the clear; the host then
 ## reflects the arrow away from the core as if it were a wall.
 func core_hit(_arrow:RefCounted) -> bool:return true
+func core_note() -> String:return "命中即可清场"
+func core_blocked() -> bool:return false
+## Optional unlock/armour progress after appearance; -1 keeps brick progress.
+func core_progress() -> float:return -1.0
 
 ## Multiplies brick damage. `arrow` is null for passive/area damage.
 func damage_scale(_brick:RefCounted,_arrow:Variant) -> float:return 1.0

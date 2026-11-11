@@ -10,23 +10,32 @@ const ORDER:=["drift","rush","fortress","quiver",
 	"wanted","escrow","streak","wager",
 	"siege","hourglass","overheat","cadence"]
 const ID:="^[a-z]+$"
+## Teach visible, forgiving rules before timing, economy and restrictive cores.
+const UNLOCK:={"rush":1,"fusion":2,"mimic":3,"collapse":4,"wanted":5,
+	"gale":6,"drift":7,"domino":8,"hover":9,"ballast":10,"streak":11,
+	"seal":12,"fortress":13,"carom":14,"bulwark":15,"banked":16,"blink":17,
+	"siege":18,"hourglass":19,"quiver":20,"overheat":22,"escrow":24,"cadence":26,"wager":28}
 var owner:WeakRef
 var g:RefCounted:
 	get:return owner.get_ref()
 var id:=""
 var rule:RefCounted=null
 var announced:=false
+var shown:=""
 
 func _init(simulation:RefCounted) -> void:owner=weakref(simulation)
-func reset() -> void:id="";rule=null;announced=false
+func reset() -> void:id="";rule=null;announced=false;shown=""
 
 ## Next rule from the deck; a fresh shuffle never opens with the last rule.
 func draw_next() -> String:
 	var deck:Array=g.state.get("variantDeck",[]).filter(func(item):return item in ORDER)
 	if deck.is_empty():
 		deck=g.shuffle(ORDER.duplicate())
-		if deck.size()>1 and deck[0]==g.state.get("variantLast"):deck.push_back(deck.pop_front())
-	var next:String=deck.pop_front()
+	var available:Array=deck.filter(func(item):return int(g.state.level)>=UNLOCK[item])
+	if available.is_empty():available=g.shuffle(ORDER.filter(func(item):return int(g.state.level)>=UNLOCK[item]))
+	if available.size()>1 and available[0]==g.state.get("variantLast"):available.push_back(available.pop_front())
+	var next:String=available[0]
+	deck.erase(next)
 	g.state.variantDeck=deck;g.state.variantLast=next
 	return next
 
@@ -48,7 +57,7 @@ func start(saved:Variant,restored:bool) -> void:
 	if not g.bosses.fight.is_empty():return
 	if restored:
 		# Boards saved before variants existed simply play as ordinary levels.
-		if valid_saved(saved):_make(saved.id);rule.data=saved.duplicate(true);rule.data.erase("id")
+		if valid_saved(saved):_make(saved.id);rule.data=saved.duplicate(true);rule.data.erase("id");rule.restored()
 		return
 	# An override with id "" deliberately plays the level without a rule.
 	var override:Variant=g.state.get("variantOverride")
@@ -65,9 +74,13 @@ func update(delta:float) -> void:
 	if rule==null:return
 	if not announced and g.phase in ["ready","flying"]:
 		announced=true
-		g.events.append({"type":"toast","text":"变体关 · %s · %s" % [rule.title(),rule.note()]})
+		g.events.append({"type":"toast","text":"本关 · %s · 顶部查看规则" % rule.title()})
 		g.fx.ring(Vector2(390,500),Color(rule.color()),380);g.cue("core")
 	rule.update(delta)
+	# Timers and physics states change even when no brick is hit. Publish only
+	# when the human-readable state changes, not every physics frame.
+	var text:String=rule.status()
+	if text!=shown:shown=text;g.revision+=1
 
 func on_shoot() -> void:if rule!=null:rule.on_shoot()
 func launched(arrow:RefCounted) -> void:if rule!=null:rule.launched(arrow)
@@ -75,6 +88,7 @@ func destroyed(brick:RefCounted) -> void:if rule!=null:rule.destroyed(brick)
 func bounced(arrow:RefCounted) -> void:if rule!=null:rule.bounced(arrow)
 func core_spawned() -> void:if rule!=null:rule.core_spawned()
 func core_hit(arrow:RefCounted) -> bool:return rule==null or rule.core_hit(arrow)
+func core_note() -> String:return "命中即可清场" if rule==null else rule.core_note()
 func damage_scale(brick:RefCounted,arrow:Variant) -> float:return 1.0 if rule==null else rule.damage_scale(brick,arrow)
 func reward_scale(brick:RefCounted) -> float:return 1.0 if rule==null else rule.reward_scale(brick)
 func bonus_scale() -> float:return 1.0 if rule==null else rule.bonus_scale()
@@ -87,7 +101,7 @@ func draw(canvas:CanvasItem) -> void:if rule!=null:rule.draw(canvas)
 func status() -> Variant:
 	if rule==null:return null
 	var suffix:String=rule.status()
-	return {"id":id,"name":rule.title(),"note":rule.note(),"color":rule.color(),"text":rule.title()+(" · "+suffix if suffix!="" else "")}
+	return {"id":id,"name":rule.title(),"note":rule.note(),"color":rule.color(),"status":suffix,"seen":id in g.state.get("variantSeen",[]),"coreNote":rule.core_note(),"coreBlocked":rule.core_blocked(),"coreProgress":rule.core_progress(),"text":rule.title()+(" · "+suffix if suffix!="" else "")}
 
 func summary() -> Dictionary:
 	var items:Array=rule.summary().duplicate()

@@ -70,6 +70,10 @@ static func valid(payload: Dictionary) -> bool:
 		for id in candidate.variantDeck:
 			if not id is String or id.length()>24:return false
 	if candidate.has("variantLast") and not (candidate.variantLast is String and candidate.variantLast.length()<=24):return false
+	if candidate.has("variantSeen"):
+		if not candidate.variantSeen is Array or candidate.variantSeen.size()>64:return false
+		for id in candidate.variantSeen:
+			if not id is String or id.length()>24:return false
 	var variant_override:Variant=candidate.get("variantOverride")
 	if variant_override!=null and (not variant_override is Dictionary or not finite_number(variant_override.get("level"),1,100000,true) or not variant_override.get("id") is String):return false
 	if candidate.has("paceShots") and not finite_number(candidate.paceShots,0,1e6):return false

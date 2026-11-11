@@ -90,12 +90,17 @@ func call_method(method: String,input: Dictionary={}) -> Variant:
 			if accepted:save_settings()
 			return {"accepted":accepted}
 		"shoot":return {"accepted":runtime.shoot(float(input.get("dx",0)),float(input.get("dy",0)))}
+		"seenVariant":
+			var id:String=runtime.variants.id
+			if id!="":
+				if not runtime.state.has("variantSeen"):runtime.state.variantSeen=[]
+				if not id in runtime.state.variantSeen:runtime.state.variantSeen.append(id)
 		"choose":return {"accepted":runtime.choose(input.get("id",""))}
 		"holdEntrance":
 			if runtime.phase=="entering":runtime.entrance_held=true;runtime.board_entrance={"start":runtime.time+3600,"end":runtime.time+3600.85}
 		"landEntrance":
 			if runtime.phase=="entering":runtime.entrance_held=false;runtime.board_entrance={"start":runtime.time,"end":runtime.time+0.85}
-		"buy":return {"accepted":runtime.buy(input.get("key",""))}
+		"buy":return {"accepted":runtime.buy(input.get("key",""),input.get("node",""))}
 		"pause":runtime.paused=input.get("paused",false);runtime.drag=null
 		"drag":runtime.drag={"dx":float(input.get("dx",0)),"dy":float(input.get("dy",0))} if input.get("active",false) else null
 		"pointer":runtime.pointer=Vector2(input.get("x",0),input.get("y",0)) if input.get("active",false) and not input.get("touch",false) else null

@@ -10,6 +10,7 @@ const Skills = preload("res://src/skills/mechanics.gd")
 const Bosses = preload("res://src/bosses/director.gd")
 const FX = preload("res://src/effects/effects.gd")
 const Variants = preload("res://src/core/variants.gd")
+const UpgradeTree = preload("res://src/core/upgrade_tree.gd")
 var content := Content.new()
 var developer := preload("res://src/core/developer.gd").new()
 var state := Progress.defaults()
@@ -134,7 +135,7 @@ func penetration() -> int:
 	return int(developer.value("penetration",mini(6,2+int(state.up.arrow)/4)+4*rank("piercer")+2*rank("heavy")+12*rank("railgun")+2*rank("opportunist")))
 
 func draw_interval() -> float:
-	return developer.value("drawInterval",(100-9*mini(10,int(state.up.draw)))/100.0)
+	return developer.value("drawInterval",(100-6*mini(10,int(state.up.draw)))/100.0)
 
 func special_rate() -> float:
 	return developer.value("specialRate",minf(0.22,0.10+0.12*(1-exp(-float(state.up.brick)/12))))
@@ -167,13 +168,9 @@ func reward(type: String, kills: int, point:Variant=null, brick:RefCounted=null)
 	if brick!=null:value*=variants.reward_scale(brick)
 	return round(value*developer.value("rewardScale",1))
 
-func cost(key: String) -> float:
-	var value:=0.0
-	match key:
-		"slots":value=[1e5,1e7,1e9][mini(2,int(state.up.slots))]
-		"rerollCap":value=[2e4,4e5,8e6,1.6e8][mini(3,int(state.up.rerollCap))]
-		"comboCap":value=ceil(1500*pow(1.65,state.up.comboCap))
-		_:value=ceil({"power":75,"arrow":100,"brick":120,"draw":50}.get(key,0)*pow({"power":1.4,"arrow":1.46,"brick":1.5,"draw":1.35}.get(key,1),state.up.get(key,0)))
+func cost(key: String,at_rank:int=-1) -> float:
+	var value:=UpgradeTree.base_cost(key,int(state.up.get(key,0)) if at_rank<0 else at_rank)
+	if value<=0:return 0
 	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1)))
 
 func generate(restore: bool=false) -> void:
@@ -343,18 +340,42 @@ func choose(id: String) -> bool:
 	fx.signature(id,origin,190)
 	return true
 
-func buy(key: String) -> bool:
+func buy(key: String,node_id:String="") -> bool:
 	if phase!="ready" or paused or not state.up.has(key):return false
-	if key=="comboCap" and state.up.brick<5 and state.up.comboCap==0:return false
-	if key=="draw" and state.up.draw>=10 or key=="slots" and state.up.slots>=3 or key=="rerollCap" and state.up.rerollCap>=4:return false
+	var node:Dictionary=UpgradeTree.current(state.up,key) if node_id=="" else UpgradeTree.find(node_id)
+	if node.is_empty() or node.key!=key or not UpgradeTree.available(state.up,node):return false
 	var price:=cost(key)
-	if state.coins<price:return false
+	if price<=0 or state.coins<price:return false
+	var before:int=state.up[key]
 	state.coins-=price;state.up[key]+=1
 	if rank("bargain"):fx.skill_event("bargain",origin-Vector2(0,72),Vector2.UP,Vector2.ZERO,1.0,0.60)
 	if rank("forge") and key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false):
-		state.skillRuntime.forge=true;state.up[key]+=mini(2,10-int(state.up.draw)) if key=="draw" else 2
-	cue("upgrade");events.append({"type":"toast","text":"升级成功"});revision+=1
+		state.skillRuntime.forge=true;state.up[key]+=mini(2,int(node.end)-int(state.up[key]))
+	var complete:bool=state.up[key]>=node.end
+	cue("tree_breakthrough" if complete and node.tier==3 else "tree_unlock" if complete else "tree_rank",0,390,true,true)
+	events.append({"type":"upgrade","node":node.id,"key":key,"before":before,"after":state.up[key],"complete":complete});revision+=1
 	return true
+
+func upgrade_nodes() -> Array:
+	var nodes:Array=[]
+	for definition in UpgradeTree.NODES:
+		var node:Dictionary=definition.duplicate(true)
+		var level:int=state.up[node.key]
+		node.rank=clampi(level-node.start,0,node.end-node.start)
+		node.maxRank=node.end-node.start;node.complete=level>=node.end
+		node.available=UpgradeTree.available(state.up,node)
+		node.cost=cost(node.key,maxi(level,int(node.start)));node.affordable=state.coins>=node.cost
+		node.before=UpgradeTree.metrics(node.key,maxi(level,int(node.start)))
+		var gain:int=mini(3,int(node.end)-level) if rank("forge") and node.key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false) else 1
+		node.after=UpgradeTree.metrics(node.key,mini(int(node.end),maxi(level,int(node.start))+gain))
+		node.forge=gain>1 and not node.complete
+		node.description=UpgradeTree.descriptions(node.key)
+		node.requirements=[]
+		for id in node.parents:
+			var parent:Dictionary=UpgradeTree.find(id)
+			if state.up[parent.key]<parent.end:node.requirements.append(parent.name+"点满")
+		nodes.append(node)
+	return nodes
 
 func launch(position: Vector2, velocity: Vector2, amount: float=-1, pierce: int=-1, homing: bool=false, main: bool=false) -> RefCounted:
 	if arrows.size()>=64:return null
@@ -515,7 +536,7 @@ func spawn_core(quiet: bool=false) -> void:
 	presentation_core_previous=Vector2(core.x,core.y)
 	if not quiet:
 		if rank("resonance"):fx.skill_event("resonance",Vector2(core.x,core.y),Vector2.UP,Vector2.ZERO,1.0,0.68)
-		fx.flash=1;fx.ring(Vector2(390,80),Color("#a4d65e"),220);fx.burst(Vector2(390,80),Color("#a4d65e"),45,2);cue("core");events.append({"type":"toast","text":"核心已显现 · 命中即可清场"})
+		fx.flash=1;fx.ring(Vector2(390,80),Color("#a4d65e"),220);fx.burst(Vector2(390,80),Color("#a4d65e"),45,2);cue("core");events.append({"type":"toast","text":"核心已显现 · "+variants.core_note()})
 		variants.core_spawned()
 	revision+=1
 
@@ -774,6 +795,7 @@ func export_progress() -> Dictionary:
 
 func snapshot() -> Dictionary:
 	var result:=_snapshot()
+	result.upgradeTree=upgrade_nodes()
 	result.developer=developer.config()
 	result.developer.values={"damage":damage(),"speed":speed(),"penetration":penetration(),"drawInterval":draw_interval(),"baseHp":base_hp(),"specialRate":special_rate(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"rewardScale":developer.value("rewardScale",1),"costScale":developer.value("costScale",1),"thresholdRate":developer.value("thresholdRate",0.6-0.15*rank("resonance"))}
 	return result
@@ -782,8 +804,8 @@ func _snapshot() -> Dictionary:
 	var shop:Array=[]
 	for pair in [["power","弹弓","crosshair"],["arrow","箭矢","move-up-right"],["brick","砖块","blocks"],["comboCap","连击强化","gauge"],["slots","技能槽位","layout-grid"],["rerollCap","技能刷新","refresh-cw"],["draw","拉弦速度","timer"]]:
 		var key:String=pair[0]
-		var maxed:bool=key=="slots" and state.up.slots>=3 or key=="rerollCap" and state.up.rerollCap>=4 or key=="draw" and state.up.draw>=10
+		var maxed:bool=state.up[key]>=UpgradeTree.CAPS[key]
 		var description:String={"power":"拉力 %d%% · 更远射程" % roundi(speed()/24*100),"arrow":"伤害 %.2f · 穿透 %d 块" % [damage(),penetration()],"brick":"价值 +%d%% · 特殊率 %.1f%%" % [roundi(state.up.brick*16),special_rate()*100],"comboCap":"每连增幅 +%s，%d 连达到 ×%s 上限" % [String.num(combo_step(),3),cap_kills(),String.num(combo_cap(),3)],"slots":"当前 %d 个技能槽" % slots,"rerollCap":"","draw":"拉弦间隔 %.2f 秒" % draw_interval()}[key]
 		var label:String="%d / 10" % state.up.draw if key=="draw" else "+%d" % state.up.comboCap if key=="comboCap" else "%d / 4" % slots if key=="slots" else "%d / 5" % reroll_cap() if key=="rerollCap" else "LV. %d" % (state.up[key]+1)
-		shop.append({"key":key,"name":pair[1],"icon":pair[2],"description":description,"level":state.up[key],"cost":cost(key),"maxed":maxed,"locked":key=="comboCap" and state.up.brick<5 and state.up.comboCap==0,"affordable":state.coins>=cost(key),"levelLabel":label})
+		shop.append({"key":key,"name":pair[1],"icon":pair[2],"description":description,"level":state.up[key],"cost":cost(key),"maxed":maxed,"locked":not maxed and not UpgradeTree.available(state.up,UpgradeTree.current(state.up,key)),"affordable":state.coins>=cost(key),"levelLabel":label})
 	return {"level":state.level,"coins":state.coins,"total":state.total,"best":state.best,"phase":phase,"time":time,"origin":{"x":origin.x,"y":origin.y},"initial":initial,"killed":killed,"threshold":threshold,"shotMoney":shot_money,"levelMoney":level_money,"core":core,"skills":state.skills.keys(),"paused":paused,"draft":state.draft,"up":state.up,"rerolls":state.rerolls,"rerollCap":reroll_cap(),"drawInterval":draw_interval()*variants.interval_scale(),"nextShotAt":next_shot_at,"boardEntrance":board_entrance,"achievement":latest_achievement,"boss":bosses.fight if not bosses.fight.is_empty() else null,"bossStatus":bosses.status(),"variant":variants.status(),"notices":bosses.notices,"soundEnabled":state.sound,"volume":state.volume,"performanceMode":state.performanceMode,"reduced":reduced,"theme":theme,"themeMode":theme_mode,"slots":slots,"slotMax":4,"drag":drag,"rerollProgress":0 if state.rerolls>=reroll_cap() else (int(state.level)-1)%5/5.0,"canSwap":phase=="ready" and state.skillChosenLevel==state.level,"preview":{"damage":damage(),"speed":speed(),"penetration":penetration(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"capKills":cap_kills()},"shop":shop,"chances":draft_chances(),"swapOffer":state.swapOffer,"achievementHistory":state.achievements,"achievementCatalog":content.achievements,"transition":{"report":report,"bonus":settled_bonus,"holdDraft":wipe!=null and clock*1000-wipe.at<640,"wipe":wipe,"clock":clock*1000,"clearAge":(clock-clear_shown_at)*1000}}

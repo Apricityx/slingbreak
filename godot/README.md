@@ -176,6 +176,16 @@ the live session; native saves are separate from browser/X5 storage. Reload keep
 board progress and Boss health/phase, while active attacks currently restart from
 their safe phase setup. Full active-ability restoration remains pending.
 
+Progress import/export requests the OS-native file picker. On Android this opens
+the system document UI (SAF), with a timestamped `.json` name for exports and
+`application/json` filtering. Godot reads/writes the returned `content://` URI
+directly, without broad storage permissions. Cancellation keeps the settings
+screen and current progress; successful operations show a result message.
+Embedded Android hosts must forward `Activity.onActivityResult` to
+`Godot.onActivityResult`, including canceled/null results. SlayTheAmethyst's
+updated host uses the existing engine API, so only the launcher and PCK need
+updating. Platforms without native dialog support retain Godot's fallback picker.
+
 ## Verify
 
 ```sh

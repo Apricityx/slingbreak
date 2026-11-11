@@ -2,6 +2,23 @@
 
 按 `docs/godot-v2-effects-guidelines.md` 维护 Godot 原生技能特效升级进度。清单中的“已升级”表示：玩法触发点已接入独立视觉事件，主体绘制遵循 V2 分层规范，并有生命周期、预算或 reset 回归覆盖。
 
+## 本关特效：实时规则 / 节拍 / 弱点（2026-11-11）
+
+- [x] 顶部常驻实时规则、可暂停查看说明、首次介绍持久化、选技能页规则入口；封印／折射／护甲核心使用真实条件。机制与兼容说明见 `docs/godot-level-variants.md`。
+- [x] 节拍独立推进且每拍仅计一次，弓周围拍点／圆弧更清晰，接入已有 CC0 真实采样 `cadence_tick`；封印砖外置菱形与描边；要塞增加原血量弱点，击碎后真实移除邻近障碍并伤及邻砖。
+- [x] 注册 `variant_cadence` / `variant_seal` / `variant_fortress`，`preview_variants.gd` 从生产主场景录制真实 GPU 帧、状态变化、命中峰值与完整尾段。已生成并打开浅色完整、深色简化循环 GIF，逐帧检查激活／解封／突破与收尾；输出在 `agent-tmp/godot/effect-gifs/variant_*-{light,dark-reduced}.gif`。
+- [x] 新增原生设计集成和真实 UI 测试，覆盖快射刷拍、跨箭误结算、分裂／延迟归属、阅读暂停、状态刷新、存档及浅深主题；已纳入默认检查。
+- [ ] 目标手机触摸、节拍音画延迟与奖励曲线的主观体验需真人试玩。
+
+## 金币成长树：强化 / 解锁 / 传奇突破（2026-11-11）
+
+- [x] 金币商店改为三路线、三阶段、21 节点的真实 Godot 升级树，每关三选一技能保持独立；包含节点前置、基础数值对照、选择与购买分离、滚动阶段导航、旧等级承接。设计与经济模型见 `docs/godot-upgrade-tree.md`。
+- [x] `upgrade_tree_fx.gd` 提供局部闪击、图标回弹、晶面碎片和解锁能量，普通／完成／传奇三档；最多 8 次爆发与 12 条路径，0.85s／0.7s 完整收尾。简化模式保留主体确认且每次 4 碎片；不消耗玩法 RNG。
+- [x] 原创材质化矢量徽章由 `upgrade_icons.gd` 以 3× 缓存；浅深主题含锁定、完成勾与焦点提示。五段新增 48kHz Vorbis q8 音效来自固定哈希 CC0 实录采样，制作脚本与来源文件齐全。
+- [x] 注册 `upgrade_rank`、`upgrade_unlock`、`upgrade_breakthrough`；`preview_upgrade_tree.gd` 通过生产页面与购买命令采集，而非静态图标假演出。已生成并打开浅色连续强化／分支解锁、深色传奇突破及深色简化解锁 GIF；复查峰值、完整尾段和循环间隔。
+- [x] `native_upgrade_tree_test` 299 项规则／存档／预算测试通过，`native_audio_test` 137 项采样路由检查通过；`upgrade_tree_input_test` 真实输入覆盖浅深／简化模式与地图位置保留。树专项已加入默认原生／GUI 检查。
+- [ ] 目标手机扬声器、触摸拖动和主观升级手感仍需真人试玩，不以 Xvfb / Mesa 结果替代设备验收。
+
 ## 技能共用爆炸统一新版（2026-11-08）
 
 - [x] `blast`、`aftershock`、`doubletap`、`minefield`、`frostfire`、`cascade`、`orbital`、`stormfront`、`undertow`、`starforge`、`siegebreaker`、`supernova` 的爆炸统一接入 `Effects.bomb_blast()` / `bomb_batch.gd`，与爆炸砖共用新版冲击环、火球团、火舌、白热核、弹壳、火星和烟团；技能不再产生旧 `explosions` 火团事件。

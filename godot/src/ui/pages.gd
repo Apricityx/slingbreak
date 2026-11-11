@@ -119,6 +119,10 @@ func draft() -> void:
 	v.text(words,"第 %d 关 · 三选一" % f.level,11,"accent-ink",true)
 	v.text(words,"加入下一块拼图",22,"ink",true)
 	var count:Control=v.badge(header,"%d / %d 已装备" % [f.skills.size(),f.slots],v.color("surface-2"),v.color("line-2"),v.color("text-2"),11,20);count.size_flags_vertical=Control.SIZE_SHRINK_END
+	if f.get("variant") is Dictionary:
+		var rule_inset:MarginContainer=v.margin(root,16,12,16,0)
+		var rule_button:Button=v.button(rule_inset,"本关 · "+f.variant.name+"  ·  查看规则",ui._variant_intro,"",32)
+		rule_button.name="DraftVariant";rule_button.tooltip_text=f.variant.note
 	var loadout_inset:MarginContainer=v.margin(root,16,14,16,0)
 	var loadout:=PanelContainer.new();loadout.name="Loadout";loadout.add_theme_stylebox_override("panel",v.box(v.color("surface-2"),Color.TRANSPARENT,10,8));loadout_inset.add_child(loadout)
 	var row:HBoxContainer=v.row(loadout,5)
@@ -203,30 +207,9 @@ func update_reroll(button:Button,draft:bool=false) -> void:
 			circle.set_meta("waiting",button.disabled);Motion.fade(circle,.5 if button.disabled else 1.0,.2)
 
 func shop() -> void:
-	heading("整装，再出发","UPGRADE SHOP",23)
-	v.space(root,12);v.text(root,"花费本轮金币，强化下一支箭的能力。",12,"text-2");v.space(root,20);v.rule(root)
-	var balance:MarginContainer=v.margin(root,0,14,0,14);var wallet:HBoxContainer=v.row(balance)
-	var label:Label=v.text(wallet,"可用金币",12,"text-2");label.size_flags_horizontal=Control.SIZE_EXPAND_FILL;label.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-	var balance_value:Label=v.text(wallet,"¥ "+fmt(f.coins),23,"ink-2",true);balance_value.name="ShopBalance";v.rule(root);v.space(root,6)
-	for i in range(f.shop.size()):
-		var item:Dictionary=f.shop[i]
-		var pad:MarginContainer=v.margin(root,0,18,0,0 if i==f.shop.size()-1 else 18)
-		var slot:=Slot.new();slot.size_flags_horizontal=Control.SIZE_EXPAND_FILL;pad.add_child(slot)
-		var row:=HBoxContainer.new();row.add_theme_constant_override("separation",12);slot.adopt(row);row.name="Upgrade_"+item.key
-		var icon_center:=CenterContainer.new();icon_center.custom_minimum_size=Vector2(36,44);row.add_child(icon_center);v.image(icon_center,item.icon,v.color("text-2"),Vector2(24,24))
-		var words:VBoxContainer=v.column(row,5);words.size_flags_horizontal=Control.SIZE_EXPAND_FILL;words.custom_minimum_size.x=168
-		var title:HBoxContainer=v.row(words,8);v.text(title,item.name,14,"ink",true)
-		var level_label:Label=v.text(title,item.get("levelLabel","LV. %d" % (item.level+1)),10,"text-3");level_label.size_flags_vertical=Control.SIZE_SHRINK_CENTER;level_label.name="UpgradeLevel"
-		var details:VBoxContainer=v.column(words,5);details.name="UpgradeDetails"
-		_shop_details(details,item)
-		row.set_meta("detail_key",JSON.stringify([item.level,item.locked,item.maxed,item.description,f.rerollCap,f.slots]))
-		var buy:Button=v.button(row,"",func():ui.action.emit("buy",{"key":item.key}),"plus",44)
-		buy.name="Buy_"+item.key;buy.custom_minimum_size.x=100;buy.size_flags_vertical=Control.SIZE_SHRINK_CENTER
-		buy.add_theme_stylebox_override("normal",v.box(v.color("buy"),v.color("buy-line"),6,8));buy.add_theme_stylebox_override("hover",v.box(v.color("buy-hover"),v.color("buy-line"),6,8));buy.add_theme_color_override("font_color",v.color("on-buy"))
-		buy.add_theme_stylebox_override("pressed",v.box(v.color("buy-hover"),v.color("buy-line"),6,8))
-		for state in ["font_hover_color","font_pressed_color","font_hover_pressed_color"]:buy.add_theme_color_override(state,v.color("on-buy"))
-		buy.icon=null;_shop_button(buy,item)
-		if i<f.shop.size()-1:v.rule(root)
+	heading("铸造你的力量","THE ASCENT · 成长之树",23)
+	v.space(root,12)
+	var tree:=preload("res://src/ui/upgrade_tree.gd").new();root.add_child(tree);tree.setup(ui)
 
 func _shop_details(words:Control,item:Dictionary) -> void:
 	match item.key:
@@ -246,37 +229,8 @@ func _shop_button(buy:Button,item:Dictionary) -> void:
 	buy.disabled=item.maxed or item.locked or not item.affordable or f.phase!="ready" or f.paused
 
 func update_shop() -> void:
-	# Coins and affordability change during a volley. Update the existing
-	# controls so their scroll, focus and in-progress motion remain intact.
-	var balance:Label=root.find_child("ShopBalance",true,false)
-	if balance!=null:balance.text="¥ "+fmt(f.coins)
-	var poses:Dictionary={}
-	var changed:=false
-	for item in f.shop:
-		var row:Control=root.find_child("Upgrade_"+item.key,true,false)
-		if row!=null:poses[row]=Motion.pose_in(ui.motion_layer,row)
-	for item in f.shop:
-		var row:Control=root.find_child("Upgrade_"+item.key,true,false)
-		if row==null:continue
-		var key:=JSON.stringify([item.level,item.locked,item.maxed,item.description,f.rerollCap,f.slots])
-		if row.get_meta("detail_key","")!=key:
-			changed=true
-			row.set_meta("detail_key",key)
-			var level_label:Label=row.find_child("UpgradeLevel",true,false)
-			level_label.text=item.levelLabel
-			var details:Control=row.find_child("UpgradeDetails",true,false)
-			if not f.reduced:ui._retire_copy(details,.2)
-			for child in details.get_children():details.remove_child(child);child.queue_free()
-			_shop_details(details,item)
-			if not f.reduced:
-				details.modulate.a=0;Motion.fade(details,1.0,.24);Motion.pulse(level_label,1.12)
-		var buy:Button=row.find_child("Buy_"+item.key,true,false)
-		_shop_button(buy,item)
-		if item.key=="rerollCap":
-			var details:Control=row.find_child("UpgradeDetails",true,false)
-			for gauge in details.get_children():
-				if gauge.get_script()==Charges:gauge.set_amount(int(f.rerolls),float(f.rerollProgress),f.reduced)
-	if changed and not f.reduced:ui._restore_layout.call_deferred(poses)
+	var tree:Control=root.find_child("UpgradeTree",true,false)
+	if tree!=null:tree.refresh(f)
 
 func metric(parent: Control,title: String,before: String,after: String) -> void:
 	var row:HBoxContainer=v.row(parent,4);v.text(row,title,9,"text-3").custom_minimum_size.x=26
@@ -554,7 +508,7 @@ func variant() -> void:
 	var note:=PanelContainer.new();note.name="VariantNote";note.add_theme_stylebox_override("panel",v.box(v.mix(Color(info.color),v.color("surface-2"),.14),v.mix(Color(info.color),v.color("line-2"),.45),10,14));root.add_child(note)
 	var words:Label=v.text(note,info.note,13,"text-2",false,true);words.add_theme_constant_override("line_spacing",5)
 	v.space(root,22)
-	var go:Button=v.button(root,"选择技能",ui._close,"",44);go.name="VariantContinue"
+	var go:Button=v.button(root,"选择技能" if f.phase=="draft" else "返回战斗",ui._close,"",44);go.name="VariantContinue"
 	go.add_theme_stylebox_override("normal",v.box(v.color("accent"),Color.TRANSPARENT,5,8))
 	go.call_deferred("grab_focus")
 

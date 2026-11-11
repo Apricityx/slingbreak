@@ -37,6 +37,12 @@ def main():
         return
     if not 1 <= len(args.skills) <= 4 or any(key not in fixtures for key in args.skills):
         parser.error("Select 1–4 registered skills; use --list")
+    tree = any(fixtures[key]["kind"] == "upgrade_tree" for key in args.skills)
+    variant = any(fixtures[key]["kind"] == "variant" for key in args.skills)
+    if variant and len(args.skills) != 1:
+        parser.error("Variant previews show the complete game HUD; select one per GIF")
+    if tree and len(args.skills) != 1:
+        parser.error("Upgrade-tree captures show the full interactive page; select one per GIF")
     if not math.isfinite(args.speed) or not 0.1 <= args.speed <= 2:
         parser.error("--speed must be between 0.1 and 2")
     tail = max(fixtures[key]["tail"] for key in args.skills)
@@ -63,7 +69,7 @@ def main():
         config_path = Path(temp) / "config.json"
         config_path.write_text(json.dumps(config))
         command = [engine, "--path", str(ROOT), "--audio-driver", "Dummy", "--disable-vsync",
-                   "--script", "res://tools/preview_effects.gd", "--", str(config_path)]
+                    "--script", "res://tools/preview_variants.gd" if variant else "res://tools/preview_upgrade_tree.gd" if tree else "res://tools/preview_effects.gd", "--", str(config_path)]
         if shutil.which("xvfb-run"):
             command = ["xvfb-run", "-a", *command]
         elif not os.environ.get("DISPLAY"):
