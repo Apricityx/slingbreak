@@ -158,7 +158,7 @@ func _details() -> void:
 	elif not item.available:buy.text="点满基础树，开启无尽星环" if item.infinite else "需 "+"、".join(item.requirements) if not item.requirements.is_empty() else "需完成前一阶段"
 	elif frame.phase!="ready" or frame.paused:buy.text="等待本箭结束或继续游戏后升级"
 	elif not item.affordable:buy.text="还差 ¥ "+ui.pages.fmt(item.cost-frame.coins)
-	else:buy.text=("无尽进阶 +%d" % (3 if item.forge else 1) if item.infinite else "锻造 +%d" % mini(3,item.maxRank-item.rank) if item.forge else "铸造 +1")+"   ·   ¥ "+ui.pages.fmt(item.cost)
+	else:buy.text=("无尽进阶 +%d" % item.gain if item.infinite else "锻造 +%d" % item.gain if item.forge else "铸造 +1")+"   ·   ¥ "+ui.pages.fmt(item.cost)
 	buy.tooltip_text="本次价格 ¥ "+ui.pages.fmt(item.cost)
 	graph.queue_redraw()
 

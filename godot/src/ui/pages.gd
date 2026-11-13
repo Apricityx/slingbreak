@@ -432,7 +432,7 @@ func achievement_list(parent: Control) -> void:
 	v.space(parent,12)
 	v.text(parent,"第 1 块连击倍率 ×1，此后每块增加 %s，第 %d 块达到 ×%s 上限。砖块 LV.6 解锁连击强化，每级让每连增幅 +0.025、倍率上限 +0.5。" % [ui._compact(f.preview.comboStep),f.preview.capKills,ui._compact(f.preview.comboCap)],11,"text-3",false,true).add_theme_constant_override("line_spacing",7)
 	v.space(parent,12)
-	v.text(parent,"砖块收入 = 各块价值 × 各自连击倍率 × 财富技能，再按本箭成就倍率结算。连击与赏金不追补；成就从 ×1 开始，各项加成相加，每箭每项一次，新成就会补发本箭此前收入的差额。4 / 8 / 12 / 20 连分别奖励 +0.25 / +0.5 / +1 / +1.5 成就倍率。",11,"text-3",false,true).add_theme_constant_override("line_spacing",7)
+	v.text(parent,"砖块收入 = 各块价值 × 各自连击倍率 × 财富技能，再按本箭成就倍率结算。连击与赏金不追补；成就从 ×1 开始，各项加成相加，每箭每项一次，新成就会补发本箭此前收入的差额。4 / 8 / 12 / 20 连分别奖励 +0.15 / +0.2 / +0.3 / +0.45 成就倍率。",11,"text-3",false,true).add_theme_constant_override("line_spacing",7)
 	v.space(parent,12)
 	v.text(parent,"面板标注最近得分箭：连击倍率用于该箭刚击碎的砖，成就倍率作用于整箭；箭号切换不代表断连。本轮累计合计所有箭与独立奖金，核心清场不增加连击。",11,"text-3",false,true).add_theme_constant_override("line_spacing",7)
 	v.space(parent,12)
@@ -472,6 +472,8 @@ func settings() -> void:
 	var progress:HBoxContainer=v.row(root,8);v.text(progress,"游戏进度",13,"ink",true).size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	v.button(progress,"导出进度",func():ui._file(false));v.button(progress,"导入进度",func():ui._file(true));v.space(root,8)
 	v.text(root,"将当前存档保存为文件，或从其他设备恢复存档。",11,"text-3",false,true)
+	v.space(root,12)
+	var reset_data:Button=v.danger_button(root,"重置游戏数据",ui._reset_confirmation,"rotate-ccw");reset_data.name="ResetGameData"
 	v.space(root,18);v.rule(root);v.space(root,12)
 	var credits:Dictionary=JSON.parse_string(FileAccess.get_file_as_string("res://assets/audio/credits.json"))
 	var credits_title:Label=v.text(root,"音效鸣谢",12,"text-2",true)
@@ -511,8 +513,11 @@ func variant() -> void:
 	go.call_deferred("grab_focus")
 
 func reset() -> void:
-	v.text(root,"从第一箭重新开始？",20,"ink",true);v.space(root,18);v.text(root,"当前关卡、金币与升级将被清空。",12,"text-3");v.space(root,28)
+	v.text(root,"重置游戏数据？",20,"ink",true);v.space(root,16)
+	v.text(root,"关卡、金币、升级、技能、刷新次数与成就记录都将清空，并从第 1 关重新开始。",12,"text-2",false,true).add_theme_constant_override("line_spacing",5)
+	v.space(root,10);v.text(root,"此操作无法撤销。",12,"danger",true);v.space(root,24)
 	var actions:HBoxContainer=v.row(root,10);actions.alignment=BoxContainer.ALIGNMENT_END
-	var cancel:Button=v.button(actions,"取消",ui._close,"",44);cancel.custom_minimum_size.x=76;cancel.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),Color.TRANSPARENT,5,8))
-	var confirm:Button=v.button(actions,"重新开始",ui._reset_run,"",44)
-	confirm.custom_minimum_size.x=102;confirm.add_theme_stylebox_override("normal",v.box(v.color("accent"),Color.TRANSPARENT,5,8))
+	var cancel:Button=v.button(actions,"取消",ui._close,"",44);cancel.name="CancelReset";cancel.custom_minimum_size.x=76;cancel.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),Color.TRANSPARENT,5,8))
+	cancel.add_theme_color_override("font_focus_color",v.color("ink"))
+	var confirm:Button=v.danger_button(actions,"确认重置",ui._reset_run);confirm.name="ConfirmReset";confirm.custom_minimum_size.x=102
+	cancel.call_deferred("grab_focus")

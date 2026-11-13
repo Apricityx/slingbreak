@@ -59,5 +59,29 @@ func run() -> void:
 	for id in tree.buttons:
 		var node:Button=tree.buttons[id]
 		if node.visible:check(node.get_rect().position.x>=0 and node.get_rect().end.x<=tree.graph.size.x and node.get_rect().end.y<=tree.graph.size.y,"orbit touch target fits its map")
+	g.state.mastery={"arrow":10000,"brick":10000,"comboCap":10000};g.state.skills={"forge":1,"bargain":1};g.state.skillRuntime.forge=false;g.state.coins=1e14
+	app.session.command("snapshot");await process_frame
+	for id in ["mastery_brick","mastery_combo","mastery_arrow"]:
+		await click(tree.buttons[id])
+		check(tree.buy.text.contains("+2"),"button displays the real two-rank forge purchase")
+		var item:Dictionary=tree.items[id]
+		for index in range(item.before.size()):
+			var text:String=item.before[index][1]
+			if text!=item.after[index][1]:text+="  →  "+item.after[index][1]
+			check(tree.v.fonts[1].get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x<=(tree.graph.size.x-48)/2,"late-game precision fits the real metric column")
+	var before:int=g.state.mastery.arrow;var coins:float=g.state.coins;var price:float=g.mastery_cost("arrow")
+	await click(tree.buy)
+	check(g.state.mastery.arrow==before+2 and g.state.coins==coins-price,"real late-game click matches forge preview and discounted price")
+	if DisplayServer.get_name()!="headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://../agent-tmp/godot/checks/tree-balance-endless.png")
+	g.state.mastery={"arrow":0,"brick":0,"comboCap":0};g.state.up.rerollCap=2;g.state.rerolls=0
+	app.session.command("snapshot");await click(tree.stages[2]);await click(tree.buttons.reroll_3);await click(tree.buy)
+	check(g.state.rerolls==1 and tree.items.reroll_3.before[1][1]=="每 4 关","capacity purchase gives a charge and displays the refill interval")
+	await click(tree.buy)
+	check(g.state.rerolls==2 and tree.items.reroll_3.before[1][1]=="每 3 关","final capacity rank improves the actual refill interval")
+	if DisplayServer.get_name()!="headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://../agent-tmp/godot/checks/tree-balance-refresh.png")
 	app.audio.shutdown();app.queue_free();await process_frame
 	print("Upgrade tree GUI checks: %d failures" % failures);quit(1 if failures else 0)

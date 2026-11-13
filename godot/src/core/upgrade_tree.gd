@@ -31,6 +31,34 @@ const MASTERY := [
 	{"id":"mastery_combo","key":"comboCap","name":"永恒连锁","tier":4,"col":0,"parents":[],"infinite":true}
 ]
 const MASTERY_KEYS := ["arrow","brick","comboCap"]
+const BARGAIN_PRICE := 0.8
+const FORGE_BONUS := 1
+const MASTERY_PRICES := {"arrow":240000.0,"brick":180000.0,"comboCap":50000.0}
+
+## Both combat and the tree preview consume these curves. Logarithmic economy
+## gains avoid multiplying two linear infinite ranks into quadratic income.
+static func mastery_growth(rank:int) -> float:
+	return 12.0*log(1.0+float(maxi(0,rank))/12.0)
+
+static func arrow_damage(rank:int,mastery:int=0) -> float:
+	var n:=log(1.0+float(maxi(0,mastery))/12.0)/log(2.0)
+	return 2+.65*log(float(rank)+1)/log(2.0)+.08*clampi(rank-12,0,12)+.65*n+.13*n*n
+
+static func brick_value(rank:int,mastery:int=0) -> float:
+	return 1+.16*rank+.12*mastery_growth(mastery)
+
+static func combo_step(rank:int,mastery:int=0) -> float:
+	return .25+.025*rank+.01*mastery_growth(mastery)
+
+static func combo_cap(rank:int,mastery:int=0) -> float:
+	return 3+.5*rank+.25*mastery_growth(mastery)
+
+static func reroll_interval(rank:int) -> int:
+	return [5,5,4,4,3][clampi(rank,0,4)]
+
+static func metric_number(value:float,mastery:int) -> String:
+	# Small late-game gains must remain visible in the before/after comparison.
+	return String.num(value,2 if mastery==0 else 4 if mastery<10000 else 6)
 
 static func complete(up:Dictionary) -> bool:
 	for key in CAPS:
@@ -39,12 +67,12 @@ static func complete(up:Dictionary) -> bool:
 
 static func mastery_cost(key:String,rank:int) -> float:
 	if key not in MASTERY_KEYS or rank<0:return 0
-	# Polynomial growth gives every purchase a useful gain without exponential
-	# overflow. The currency ceiling keeps prices payable in the save's domain.
-	return ceil(minf(1e15,{"arrow":320000.0,"brick":220000.0,"comboCap":180000.0}[key]*pow(1+float(rank)/12,1.65)))
+	# Near-linear prices track level income (L^1.1 / L^1.15). With diminishing
+	# gains, purchases per cleared chapter stay close instead of accelerating.
+	return ceil(minf(1e15,MASTERY_PRICES[key]*pow(1+float(rank)/12,1.15)))
 
 static func mastery_description(key:String) -> String:
-	return {"arrow":"每阶基础伤害 +0.08；永久叠加，并受战斗技能加成。","brick":"每阶碎砖收益系数 +0.12；永久叠加，所有砖块均生效。","comboCap":"每阶连击增幅 +0.01、倍率上限 +0.25；永久叠加，连续击碎即可获得更高收益。"}.get(key,"")
+	return {"arrow":"永久提升基础伤害，享受战斗技能加成；阶位越高，单阶增益越小。","brick":"永久提高所有碎砖收益；单阶增益递减，持续积累财富。","comboCap":"永久提高连击增幅与倍率上限；单阶增益递减，长连锁收益更高。"}.get(key,"")
 
 static func find(id:String) -> Dictionary:
 	for node in NODES+MASTERY:
@@ -73,20 +101,21 @@ static func base_cost(key:String,rank:int) -> float:
 	if not CAPS.has(key) or rank>=CAPS[key]:return 0
 	match key:
 		"slots":return [2500.0,30000.0,220000.0][rank]
-		"rerollCap":return [800.0,6000.0,28000.0,110000.0][rank]
+		"rerollCap":return [800.0,4000.0,12000.0,32000.0][rank]
 		"comboCap":return ceil(750*pow(1.55,rank))
-		_:return ceil({"power":75,"arrow":100,"brick":120,"draw":90}[key]*pow({"power":1.4,"arrow":1.40,"brick":1.45,"draw":1.6}[key],rank))
+		"arrow":return ceil(100*pow(1.4,mini(rank,12))*pow(1.32,maxi(0,rank-12)))
+		_:return ceil({"power":75,"brick":120,"draw":90}[key]*pow({"power":1.4,"brick":1.45,"draw":1.6}[key],rank))
 
 static func metrics(key:String,rank:int,mastery:int=0) -> Array:
 	match key:
 		"power":return [["弹速","%.2f" % (24+11*(1-exp(-float(rank)/9)))]]
-		"arrow":return [["基础伤害","%.2f" % (2+.65*log(float(rank)+1)/log(2.0)+.08*mastery)],["基础穿透",str(mini(6,2+rank/4))]]
-		"brick":return [["碎砖收益","×%.2f" % (1+.16*rank+.12*mastery)],["特殊砖率","%.1f%%" % (100*minf(.22,.1+.12*(1-exp(-float(rank)/12))))]]
+		"arrow":return [["基础伤害",metric_number(arrow_damage(rank,mastery),mastery)],["基础穿透",str(mini(6,2+rank/4))]]
+		"brick":return [["碎砖收益","×"+metric_number(brick_value(rank,mastery),mastery)],["特殊砖率","%.1f%%" % (100*minf(.22,.1+.12*(1-exp(-float(rank)/12))))]]
 		"draw":return [["发射间隔","%.2f 秒" % (1.0-.06*mini(10,rank))]]
-		"comboCap":return [["连击增幅","+%.3f" % (.25+.025*rank+.01*mastery)],["倍率上限","×%.2f" % (3+.5*rank+.25*mastery)]]
+		"comboCap":return [["连击增幅","+"+String.num(combo_step(rank,mastery),3 if mastery==0 else 6)],["倍率上限","×"+metric_number(combo_cap(rank,mastery),mastery)]]
 		"slots":return [["技能槽",str(1+mini(3,rank))]]
-		"rerollCap":return [["刷新容量",str(1+mini(4,rank))]]
+		"rerollCap":return [["刷新容量",str(1+mini(4,rank))],["补充周期","每 %d 关" % reroll_interval(rank)]]
 	return []
 
 static func descriptions(key:String) -> String:
-	return {"power":"更快的箭速，让反弹与贯穿更加利落。","arrow":"提升基础伤害，每 4 级增加 1 次基础穿透，上限 6。","brick":"增加碎砖收益与特殊砖数量；特殊砖率在下关生成时生效。","draw":"缩短两次发射的等待时间，满级为 0.40 秒。","comboCap":"每次连续击碎带来更高收益，并提升单箭倍率上限。","slots":"增加一个跨关技能槽，让更多战斗技能同时生效。","rerollCap":"增加刷新次数的储存上限；每 5 关补充 1 次，不立即补满。"}.get(key,"")
+	return {"power":"更快的箭速，让反弹与贯穿更加利落。","arrow":"提升基础伤害，13～24 级每级额外 +0.08；每 4 级穿透 +1，上限 6。","brick":"增加碎砖收益与特殊砖数量；特殊砖率在下关生成时生效。","draw":"缩短两次发射的等待时间，满级为 0.40 秒。","comboCap":"每次连续击碎带来更高收益，并提升单箭倍率上限。","slots":"增加一个跨关技能槽，让更多战斗技能同时生效。","rerollCap":"容量 +1 并立即获得 1 次刷新；第 2、4 级将补充周期缩短至 4、3 关。"}.get(key,"")

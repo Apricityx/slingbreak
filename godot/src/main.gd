@@ -149,7 +149,11 @@ func _action(method: String, input: Dictionary) -> void:
 		preload("res://src/render/bargain_feedback.gd").show_at(interface,session.runtime,input.get("key",""))
 	if not get_meta("test_mode",false):
 		if method=="configure": session.save_settings()
-		if method in ["choose", "buy", "reroll", "swap", "reset", "developer", "seenVariant"]: session.request_save()
+		if method=="reset":
+			# Join any old autosave before replacing it with the new run. Reset
+			# must survive closing immediately, not wait for the next save tick.
+			if not session.save():interface.show_error("游戏已重置，但无法保存到本机，请检查存储空间后重试")
+		elif method in ["choose", "buy", "reroll", "swap", "developer", "seenVariant"]: session.request_save()
 
 func _resize() -> void:
 	# Stage layout remains fixed; AspectAdapter only adjusts whole-canvas scaling.

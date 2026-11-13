@@ -32,7 +32,7 @@ func _initialize() -> void:
 		check(not g.buy("power") and g.fx.skill_events.is_empty(),"unaffordable bargain emits nothing")
 		g.state.coins=1000
 		check(g.buy("power") and count(g,"bargain")==1,"successful bargain emits forging seam")
-		check(g.state.coins==955 and g.state.up.power==1,"bargain keeps 60 percent price and one upgrade")
+		check(g.state.coins==940 and g.state.up.power==1,"bargain keeps 80 percent price and one upgrade")
 		g.paused=true;check(not g.buy("power") and count(g,"bargain")==1,"paused purchase emits nothing")
 		g.dispose()
 		g=fresh("resonance",reduced);g.initial=20;g.killed=8

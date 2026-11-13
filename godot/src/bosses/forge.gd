@@ -52,7 +52,7 @@ func on_body(point:Vector2,size:Vector2=Vector2.ZERO) -> bool:
 
 func fuel_target() -> int:return mini(FUEL.size(),1+int(d.fight.phase))
 func fuel_count() -> int:return g.bricks.filter(func(b):return b.type=="magma").size()
-func plate_hp() -> float:return maxf(g.base_hp()*2,ceil(g.damage()*(2+d.fight.phase)))
+func plate_hp() -> float:return maxf(g.base_hp()*2,ceil(g.boss_reference_damage()*(2+d.fight.phase)))
 
 ## Places (or converts) one fuel brick at the indexed fuel slot.
 func stoke(index:int,initial:bool=false) -> void:

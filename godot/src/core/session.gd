@@ -145,9 +145,7 @@ func call_method(method: String,input: Dictionary={}) -> Variant:
 			if input.has("volume") and Progress.finite_number(input.volume,0,100,true):runtime.state.volume=int(input.volume);runtime.state.sound=input.volume>0
 			if input.get("performanceMode") is bool:runtime.state.performanceMode=input.performanceMode
 		"reset":
-			var volume:int=runtime.state.volume
-			var reduced:bool=runtime.state.performanceMode
-			runtime.state=Progress.defaults();runtime.state.volume=volume;runtime.state.sound=volume>0;runtime.state.performanceMode=reduced;runtime.paused=false;runtime.generate()
+			runtime.reset_progress()
 		"boot","snapshot":return runtime.snapshot()
 		_:return null
 	runtime.revision+=1

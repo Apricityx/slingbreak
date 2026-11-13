@@ -778,7 +778,7 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	modal_enter_pending=not morph_from.has_area()
 	# Keep the draft sheet on the same 412px design grid as the Web dialog.
 	# Draft owns its section insets, so the sheet itself has no hidden inset.
-	modal_width=250 if kind=="reset" else 320 if kind=="variant" else 412 if kind=="shop" else 396
+	modal_width=320 if kind in ["reset","variant"] else 412 if kind=="shop" else 396
 	modal_padding=31 if kind in ["reset","variant"] else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
 	var depth:=modal_stack.size()*2
 	scrim=ColorRect.new();scrim.size=Vector2(412,915);scrim.z_index=11+depth;scrim.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(scrim)

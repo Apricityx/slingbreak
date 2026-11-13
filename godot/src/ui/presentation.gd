@@ -69,6 +69,19 @@ func button(parent: Control,value: String,callback: Callable,id: String="",heigh
 		if value=="":result.icon_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	parent.add_child(result);return result
 
+func danger_button(parent:Control,value:String,callback:Callable,id:String="") -> Button:
+	var result:=button(parent,value,callback,id,44)
+	var danger:=color("danger")
+	var ink:=mix(danger,color("ink"),.78) if mode=="light" else danger
+	if id!="":result.icon=icon(id,ink)
+	for state in ["font_color","font_hover_color","font_pressed_color","font_focus_color"]:result.add_theme_color_override(state,ink)
+	for state in ["normal","hover","pressed"]:
+		var weight:float={"normal":.07,"hover":.14,"pressed":.22}[state]
+		result.add_theme_stylebox_override(state,box(mix(danger,color("surface"),weight),mix(danger,color("line-2"),.55),7,8))
+	var focus:=box(Color.TRANSPARENT,danger,7);focus.set_border_width_all(2)
+	result.add_theme_stylebox_override("focus",focus)
+	return result
+
 func badge(parent: Control,value: String,face: Color,edge: Color,ink: Color,size: int=10,radius: int=4) -> PanelContainer:
 	var result:=PanelContainer.new();result.add_theme_stylebox_override("panel",box(face,edge,radius,4));parent.add_child(result)
 	var title:=text(result,value,size);title.add_theme_color_override("font_color",ink);return result

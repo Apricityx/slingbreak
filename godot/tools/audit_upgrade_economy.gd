@@ -1,49 +1,17 @@
 extends SceneTree
-## Reproducible pacing MODEL, not an autoplay win-rate claim. Uses production
-## rewards/prices/purchases and a conservative 40 ordinary-brick clear at 3 kills
-## per arrow. No skills, gold bricks, achievement payouts or variant bonuses.
-const Sim=preload("res://src/core/simulation.gd")
-const Upgrades=preload("res://src/core/upgrade_tree.gd")
+## Run production rewards/purchases across ten thousand levels, including
+## low/high combo, damage saving, and a deliberately rich late-game envelope.
+const Model=preload("res://tools/upgrade_economy_model.gd")
 
 func _initialize() -> void:
 	var results:Array=[]
 	for strategy in ["balanced","arsenal","wealth"]:
-		var g:=Sim.new();g.start(431);g.state.skills={};g.state.draft=null;g.phase="ready";g.state.coins=0
-		var milestones:Dictionary={};var rows:Array=[];var total:=0.0
-		for level in range(1,201):
-			g.state.level=level
-			var income:float=g.bonus()
-			for kill in range(40):income+=g.reward("normal",1+kill%3)
-			g.state.coins+=income;total+=income
-			while true:
-				var options:Array=g.upgrade_nodes().filter(func(n):return not n.infinite and n.available and n.affordable)
-				if options.is_empty():break
-				options.sort_custom(func(a,b):
-					var wa:float=1.0;var wb:float=1.0
-					if strategy=="arsenal":wa=.35 if a.col==1 else 1;wb=.35 if b.col==1 else 1
-					if strategy=="wealth":wa=.35 if a.col==2 else 1;wb=.35 if b.col==2 else 1
-					return a.cost*wa<b.cost*wb)
-				g.buy(options[0].key,options[0].id)
-				for target in ["slots_1","slots_2","slots_3","draw_3"]:
-					var node:Dictionary=Upgrades.find(target)
-					if g.state.up[node.key]>=node.end and not milestones.has(target):milestones[target]=level
-			if level in [1,5,10,20,40,60,100,200]:rows.append({"level":level,"income":income,"coins":g.state.coins,"ranks":g.state.up.duplicate()})
-			if Upgrades.complete(g.state.up):milestones["complete"]=level;break
-		var endless:Array=[]
-		if milestones.has("complete"):
-			for level in range(int(milestones.complete)+1,201):
-				g.state.level=level
-				var income:float=g.bonus()
-				for kill in range(40):income+=g.reward("normal",1+kill%3)
-				g.state.coins+=income
-				while true:
-					var options:Array=g.upgrade_nodes().filter(func(n):return n.infinite and n.available and n.affordable)
-					if options.is_empty():break
-					options.sort_custom(func(a,b):return a.cost<b.cost)
-					g.buy(options[0].key,options[0].id)
-					if not milestones.has("endless"):milestones.endless=level
-				if level in [75,100,150,200]:endless.append({"level":level,"income":income,"coins":g.state.coins,"ranks":g.state.mastery.duplicate()})
-		results.append({"strategy":strategy,"milestones":milestones,"income":total,"checkpoints":rows,"endless":endless});g.dispose()
+		results.append(Model.run({"strategy":strategy}))
+	for config in [{"kills":1},{"kills":12,"achievements":true},{"strategy":"damage_only"},{"strategy":"damage_only","core_only":true},{"kills":12,"achievements":true,"economic_envelope":true}]:
+		results.append(Model.run(config))
+	for seed_value in range(10):results.append(Model.run({"seed":431+seed_value,"draft":true,"levels":1000}))
 	var path:="res://../agent-tmp/godot/upgrade-economy.json"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../agent-tmp/godot"))
 	var file:=FileAccess.open(path,FileAccess.WRITE);file.store_string(JSON.stringify(results,"  "));file.close()
-	print(JSON.stringify(results));quit()
+	for result in results:print(JSON.stringify({"config":result.config,"milestones":result.milestones,"final":result.checkpoints.back()}))
+	print("Economy model saved: "+path);quit()

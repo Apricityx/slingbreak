@@ -154,7 +154,7 @@ func hide_until(snake:Dictionary,exit:float,delay:float,kind:String) -> void:
 
 func pour(kind:String) -> float:return 4.6 if kind in ["intro","shift"] else 1.0
 func base_speed() -> float:return 150.0 if d.rage else 120.0
-func scale_hp() -> float:return maxf(g.base_hp(),ceil(g.damage()*(1.6+0.4*d.fight.phase)))
+func scale_hp() -> float:return maxf(g.base_hp(),ceil(g.boss_reference_damage()*(1.6+0.4*d.fight.phase)))
 
 func make_scale(segment:int,hp:float) -> RefCounted:
 	var brick:RefCounted=g.make_brick({"x":-500,"y":-500,"w":30,"h":30,"hp":hp,"max":maxf(hp,scale_hp()),"type":"scale"})

@@ -70,7 +70,7 @@ func regrow_hour(index:int,initial:bool=false) -> void:
 	if initial:
 		for brick in g.bricks.duplicate():
 			if absf(brick.x-point.x)<70 and absf(brick.y-point.y)<40:g.bricks.erase(brick)
-	var hp:=maxf(g.base_hp()*2,ceil(g.damage()*(2+d.fight.phase)))
+	var hp:=maxf(g.base_hp()*2,ceil(g.boss_reference_damage()*(2+d.fight.phase)))
 	var brick:RefCounted=g.make_brick({"x":point.x,"y":point.y,"w":56,"h":36,"hp":hp,"max":hp,"type":"hour"})
 	brick.flags.hourIndex=index;brick.flash=0.25
 	if not initial:g.initial+=1;g.cue("chime",1,point.x);g.fx.burst(point,Color(d.palette().brass),10)

@@ -64,7 +64,7 @@ func lash() -> void:
 	for brick in g.shuffle(g.bricks.filter(func(b):return b.type=="normal" and absf(b.x-390)>=150)):
 		if anchors.size()>=(2 if d.fight.phase==1 else 3):break
 		if anchors.any(func(a):return a.position.distance_to(brick.position)<260):continue
-		brick.type="anchor";brick.hp=minf(round(g.base_hp()*3.2*(1+0.25*(d.fight.phase-1))),ceil(g.damage()*(3+d.fight.phase)));brick.max_hp=brick.hp;anchors.append(brick)
+		brick.type="anchor";brick.hp=minf(round(g.base_hp()*3.2*(1+0.25*(d.fight.phase-1))),ceil(g.boss_reference_damage()*(3+d.fight.phase)));brick.max_hp=brick.hp;anchors.append(brick)
 
 ## A crystal lights only once fully regrown, matching the shader ring.
 func crystals() -> int:return floori(d.fight.data.ward/Pattern.CHIP+0.001)
@@ -140,7 +140,7 @@ func begin(id:String) -> void:
 		for index in range(count):
 			var angle:float=index*TAU/count
 			var point:=center+Vector2(cos(angle)*132,sin(angle)*38+14)
-			var hp:float=ceil(g.damage()*1.5) if index==heart else maxf(2,round(g.base_hp()*1.2))
+			var hp:float=ceil(g.boss_reference_damage()*1.5) if index==heart else maxf(2,round(g.base_hp()*1.2))
 			var brick:RefCounted=g.make_brick({"x":point.x,"y":point.y,"w":40,"h":26,"hp":hp,"max":hp,"type":"shard"})
 			brick.flags={"orbit":true,"slot":index,"count":count,"heart":index==heart}
 	if id=="summon":

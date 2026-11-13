@@ -117,6 +117,17 @@ func _normalize_skills(value: Dictionary) -> Dictionary:
 	while result.size()>slots:result.erase(result.keys()[0])
 	return result
 
+func reset_progress() -> void:
+	var volume:int=state.volume
+	var performance:bool=state.performanceMode
+	state=Progress.defaults();state.volume=volume;state.sound=volume>0;state.performanceMode=performance
+	# A reset can arrive during a clear or a Boss attack. Do not carry its
+	# transition, input lock or delayed payout into the first level.
+	phase="ready";paused=false;intro_active=false;active_arrow=null;pointer=null
+	wipe=null;locked_until=0;freeze_until=0;clear_at=0;clear_shown_at=0;settled_bonus=0
+	sounds.clear();events.clear();last_sounds.clear()
+	generate()
+
 func resolve_theme() -> void:
 	theme="dark" if theme_mode=="dark" or theme_mode=="system" and DisplayServer.is_dark_mode_supported() and DisplayServer.is_dark_mode() else "light"
 
@@ -124,7 +135,7 @@ func rank(id: String) -> int:
 	return 1 if state.skills.has(id) else 0
 
 func base_damage() -> float:
-	return 2+0.65*log(float(state.up.arrow)+1)/log(2.0)+.08*int(state.mastery.arrow)
+	return UpgradeTree.arrow_damage(int(state.up.arrow),int(state.mastery.arrow))
 
 func damage() -> float:
 	return developer.value("damage",base_damage()*(1+rank("titan")+0.35*rank("rapid")+0.8*rank("heavy")+0.5*rank("supernova")+0.6*rank("reaper")+3*rank("railgun")+mini(10,int(state.skillRuntime.shots))*0.2*rank("growing")))
@@ -145,19 +156,27 @@ func base_hp() -> float:
 	var n:=log(float(state.level))/log(2.0)
 	return developer.value("baseHp",floor(3+0.8*n+0.2*n*n))
 
+func boss_reference_damage() -> float:
+	# A content-level budget, independent of the player's permanent damage and
+	# transient draft. Upgrading must not make the next boss phase tougher.
+	return maxf(2.0,base_hp()/3.0)
+
 func bonus(level: int=-1) -> float:
 	# The reference rounds the base payout, then rounds again after Treasury.
 	var scaled: int = int(state.level) if level<0 else level
 	return developer.value("bonus",round(round(240*pow(scaled,1.15))*(1+2*rank("treasury"))))
 
-func combo_step() -> float:return developer.value("comboStep",0.25+0.025*state.up.comboCap+.01*int(state.mastery.comboCap))
-func combo_cap() -> float:return developer.value("comboCap",3+0.5*state.up.comboCap+.25*int(state.mastery.comboCap))
+func combo_step() -> float:return developer.value("comboStep",UpgradeTree.combo_step(int(state.up.comboCap),int(state.mastery.comboCap)))
+func combo_cap() -> float:return developer.value("comboCap",UpgradeTree.combo_cap(int(state.up.comboCap),int(state.mastery.comboCap)))
 func cap_kills() -> int:return 1+ceili((combo_cap()-1)/combo_step()-0.000000001)
 func multiplier(kills: int) -> float:return minf(combo_cap(),1+maxi(0,kills-1)*combo_step())
 func reroll_cap() -> int:return 1+mini(4,int(state.up.rerollCap))
+func reroll_interval() -> int:return UpgradeTree.reroll_interval(int(state.up.rerollCap))
+func reroll_progress() -> float:
+	return 0.0 if state.rerolls>=reroll_cap() else clampf(float(int(state.level)-1-int(state.rerollGrantLevel))/reroll_interval(),0,1)
 
 func reward(type: String, kills: int, point:Variant=null, brick:RefCounted=null) -> float:
-	var value:=maxf(1,round(3*pow(state.level,1.1)*(1+0.16*state.up.brick+.12*int(state.mastery.brick))*multiplier(kills)*(3 if type=="gold" else 1)))
+	var value:=maxf(1,round(3*pow(state.level,1.1)*UpgradeTree.brick_value(int(state.up.brick),int(state.mastery.brick))*multiplier(kills)*(3 if type=="gold" else 1)))
 	value*=1+rank("mint")
 	if type=="gold":value*=(3+5*rank("alchemist"))/3.0
 	if rank("jackpot") and arrow_skills_enabled():
@@ -172,11 +191,11 @@ func reward(type: String, kills: int, point:Variant=null, brick:RefCounted=null)
 func cost(key: String,at_rank:int=-1) -> float:
 	var value:=UpgradeTree.base_cost(key,int(state.up.get(key,0)) if at_rank<0 else at_rank)
 	if value<=0:return 0
-	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1)))
+	return maxf(1,ceil(value*pow(UpgradeTree.BARGAIN_PRICE,rank("bargain"))*developer.value("costScale",1)))
 
 func mastery_cost(key:String) -> float:
 	var value:=UpgradeTree.mastery_cost(key,int(state.mastery.get(key,0)))
-	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1))) if value>0 else 0.0
+	return maxf(1,ceil(value*pow(UpgradeTree.BARGAIN_PRICE,rank("bargain"))*developer.value("costScale",1))) if value>0 else 0.0
 
 func generate(restore: bool=false) -> void:
 	var handoff:=phase=="clearing" and not reduced
@@ -356,7 +375,8 @@ func buy(key: String,node_id:String="") -> bool:
 	state.coins-=price;state.up[key]+=1
 	if rank("bargain"):fx.skill_event("bargain",origin-Vector2(0,72),Vector2.UP,Vector2.ZERO,1.0,0.60)
 	if rank("forge") and key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false):
-		state.skillRuntime.forge=true;state.up[key]+=mini(2,int(node.end)-int(state.up[key]))
+		state.skillRuntime.forge=true;state.up[key]+=mini(UpgradeTree.FORGE_BONUS,int(node.end)-int(state.up[key]))
+	if key=="rerollCap":state.rerolls=mini(reroll_cap(),int(state.rerolls)+1)
 	var complete:bool=state.up[key]>=node.end
 	cue("tree_breakthrough" if complete and node.tier==3 else "tree_unlock" if complete else "tree_rank",0,390,true,true)
 	events.append({"type":"upgrade","node":node.id,"key":key,"before":before,"after":state.up[key],"complete":complete});revision+=1
@@ -370,7 +390,7 @@ func _buy_mastery(node:Dictionary) -> bool:
 	if rank("bargain"):fx.skill_event("bargain",origin-Vector2(0,72),Vector2.UP,Vector2.ZERO,1.0,.6)
 	# Forge remains a once-per-level benefit, including the endless ranks.
 	if rank("forge") and not state.skillRuntime.get("forge",false):
-		state.skillRuntime.forge=true;state.mastery[node.key]+=2
+		state.skillRuntime.forge=true;state.mastery[node.key]+=UpgradeTree.FORGE_BONUS
 	var milestone:bool=int(state.mastery[node.key])/10>before/10
 	cue("tree_breakthrough" if milestone else "tree_rank",0,390,true,true)
 	events.append({"type":"upgrade","node":node.id,"key":node.key,"before":before,"after":state.mastery[node.key],"complete":false});revision+=1
@@ -387,9 +407,9 @@ func upgrade_nodes() -> Array:
 		node.available=UpgradeTree.available(state.up,node)
 		node.cost=cost(node.key,maxi(level,int(node.start)));node.affordable=state.coins>=node.cost
 		node.before=UpgradeTree.metrics(node.key,maxi(level,int(node.start)))
-		var gain:int=mini(3,int(node.end)-level) if rank("forge") and node.key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false) else 1
+		var gain:int=mini(1+UpgradeTree.FORGE_BONUS,int(node.end)-level) if rank("forge") and node.key not in ["slots","rerollCap"] and not state.skillRuntime.get("forge",false) else 1
 		node.after=UpgradeTree.metrics(node.key,mini(int(node.end),maxi(level,int(node.start))+gain))
-		node.forge=gain>1 and not node.complete
+		node.forge=gain>1 and not node.complete;node.gain=gain
 		node.description=UpgradeTree.descriptions(node.key)
 		node.requirements=[]
 		for id in node.parents:
@@ -403,8 +423,9 @@ func upgrade_nodes() -> Array:
 		node.available=UpgradeTree.complete(state.up)
 		node.cost=mastery_cost(node.key);node.affordable=state.coins>=node.cost
 		node.forge=rank("forge")>0 and not state.skillRuntime.get("forge",false)
+		node.gain=1+UpgradeTree.FORGE_BONUS if node.forge else 1
 		node.before=UpgradeTree.metrics(node.key,state.up[node.key],level)
-		node.after=UpgradeTree.metrics(node.key,state.up[node.key],level+(3 if node.forge else 1))
+		node.after=UpgradeTree.metrics(node.key,state.up[node.key],level+node.gain)
 		node.description=UpgradeTree.mastery_description(node.key)
 		node.requirements=[] if node.available else ["21 个基础节点全部点满"]
 		nodes.append(node)
@@ -592,7 +613,7 @@ func clear() -> void:
 	var top:Array=[]
 	for id in highlights.slice(0,3):top.append({"name":content.by_id[id].name,"icon":content.by_id[id].icon,"count":stats.skills[id]})
 	report={"level":level,"total":level_money,"parts":parts,"bestKills":stats.bestKills,"bestMoney":stats.bestMoney,"shots":shots,"bricks":killed,"skills":top,"record":stats.record}
-	if level%5==0 and level>state.rerollGrantLevel:
+	if level-int(state.rerollGrantLevel)>=reroll_interval():
 		state.rerollGrantLevel=level
 		if state.rerolls<reroll_cap():state.rerolls+=1;report.reroll={"count":state.rerolls,"capacity":reroll_cap()}
 	if variants.id!="":report.variant=variants.summary()
@@ -839,7 +860,7 @@ func _snapshot() -> Dictionary:
 	for pair in [["power","弹弓","crosshair"],["arrow","箭矢","move-up-right"],["brick","砖块","blocks"],["comboCap","连击强化","gauge"],["slots","技能槽位","layout-grid"],["rerollCap","技能刷新","refresh-cw"],["draw","拉弦速度","timer"]]:
 		var key:String=pair[0]
 		var maxed:bool=state.up[key]>=UpgradeTree.CAPS[key]
-		var description:String={"power":"拉力 %d%% · 更远射程" % roundi(speed()/24*100),"arrow":"伤害 %.2f · 穿透 %d 块" % [damage(),penetration()],"brick":"价值 +%d%% · 特殊率 %.1f%%" % [roundi(state.up.brick*16),special_rate()*100],"comboCap":"每连增幅 +%s，%d 连达到 ×%s 上限" % [String.num(combo_step(),3),cap_kills(),String.num(combo_cap(),3)],"slots":"当前 %d 个技能槽" % slots,"rerollCap":"","draw":"拉弦间隔 %.2f 秒" % draw_interval()}[key]
+		var description:String={"power":"拉力 %d%% · 更远射程" % roundi(speed()/24*100),"arrow":"伤害 %.2f · 穿透 %d 块" % [damage(),penetration()],"brick":"价值 +%d%% · 特殊率 %.1f%%" % [roundi((UpgradeTree.brick_value(int(state.up.brick),int(state.mastery.brick))-1)*100),special_rate()*100],"comboCap":"每连增幅 +%s，%d 连达到 ×%s 上限" % [String.num(combo_step(),3),cap_kills(),String.num(combo_cap(),3)],"slots":"当前 %d 个技能槽" % slots,"rerollCap":"每 %d 关补充 1 次" % reroll_interval(),"draw":"拉弦间隔 %.2f 秒" % draw_interval()}[key]
 		var label:String="%d / 10" % state.up.draw if key=="draw" else "+%d" % state.up.comboCap if key=="comboCap" else "%d / 4" % slots if key=="slots" else "%d / 5" % reroll_cap() if key=="rerollCap" else "LV. %d" % (state.up[key]+1)
 		shop.append({"key":key,"name":pair[1],"icon":pair[2],"description":description,"level":state.up[key],"cost":cost(key),"maxed":maxed,"locked":not maxed and not UpgradeTree.available(state.up,UpgradeTree.current(state.up,key)),"affordable":state.coins>=cost(key),"levelLabel":label})
-	return {"level":state.level,"coins":state.coins,"total":state.total,"best":state.best,"phase":phase,"time":time,"origin":{"x":origin.x,"y":origin.y},"initial":initial,"killed":killed,"threshold":threshold,"shotMoney":shot_money,"levelMoney":level_money,"core":core,"skills":state.skills.keys(),"paused":paused,"draft":state.draft,"up":state.up,"rerolls":state.rerolls,"rerollCap":reroll_cap(),"drawInterval":draw_interval()*variants.interval_scale(),"nextShotAt":next_shot_at,"boardEntrance":board_entrance,"achievement":latest_achievement,"boss":bosses.fight if not bosses.fight.is_empty() else null,"bossStatus":bosses.status(),"variant":variants.status(),"notices":bosses.notices,"soundEnabled":state.sound,"volume":state.volume,"performanceMode":state.performanceMode,"reduced":reduced,"theme":theme,"themeMode":theme_mode,"slots":slots,"slotMax":4,"drag":drag,"rerollProgress":0 if state.rerolls>=reroll_cap() else (int(state.level)-1)%5/5.0,"canSwap":phase=="ready" and state.skillChosenLevel==state.level,"preview":{"damage":damage(),"speed":speed(),"penetration":penetration(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"capKills":cap_kills()},"shop":shop,"chances":draft_chances(),"swapOffer":state.swapOffer,"achievementHistory":state.achievements,"achievementCatalog":content.achievements,"transition":{"report":report,"bonus":settled_bonus,"holdDraft":wipe!=null and clock*1000-wipe.at<640,"wipe":wipe,"clock":clock*1000,"clearAge":(clock-clear_shown_at)*1000}}
+	return {"level":state.level,"coins":state.coins,"total":state.total,"best":state.best,"phase":phase,"time":time,"origin":{"x":origin.x,"y":origin.y},"initial":initial,"killed":killed,"threshold":threshold,"shotMoney":shot_money,"levelMoney":level_money,"core":core,"skills":state.skills.keys(),"paused":paused,"draft":state.draft,"up":state.up,"rerolls":state.rerolls,"rerollCap":reroll_cap(),"drawInterval":draw_interval()*variants.interval_scale(),"nextShotAt":next_shot_at,"boardEntrance":board_entrance,"achievement":latest_achievement,"boss":bosses.fight if not bosses.fight.is_empty() else null,"bossStatus":bosses.status(),"variant":variants.status(),"notices":bosses.notices,"soundEnabled":state.sound,"volume":state.volume,"performanceMode":state.performanceMode,"reduced":reduced,"theme":theme,"themeMode":theme_mode,"slots":slots,"slotMax":4,"drag":drag,"rerollProgress":reroll_progress(),"canSwap":phase=="ready" and state.skillChosenLevel==state.level,"preview":{"damage":damage(),"speed":speed(),"penetration":penetration(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"capKills":cap_kills()},"shop":shop,"chances":draft_chances(),"swapOffer":state.swapOffer,"achievementHistory":state.achievements,"achievementCatalog":content.achievements,"transition":{"report":report,"bonus":settled_bonus,"holdDraft":wipe!=null and clock*1000-wipe.at<640,"wipe":wipe,"clock":clock*1000,"clearAge":(clock-clear_shown_at)*1000}}

@@ -49,7 +49,7 @@ func run() -> void:
 	check(g.snapshot().masteryUnlocked,"completing all foundations unlocks the endless orbit")
 	check(spent>1e6 and spent<2e6,"whole-tree cost stays within model budget")
 	check(is_equal_approx(g.draw_interval(),.4) and g.penetration()==6,"bounded fire rate and penetration")
-	check(g.damage()>4.9 and g.damage()<5.1 and g.speed()<34,"bounded damage and arrow speed")
+	check(g.damage()>5.9 and g.damage()<6.1 and g.speed()<34,"legendary arrow ranks retain meaningful damage and bounded speed")
 	var exported:Dictionary=g.export_progress();check(Progress.valid(exported),"completed tree exports valid progress")
 	var restored:=Sim.new();restored.start(9,JSON.parse_string(JSON.stringify(exported)))
 	check(restored.state.up==g.state.up,"ranks survive JSON reload")
@@ -65,12 +65,12 @@ func run() -> void:
 			check(g.buy(node.key,node.id),"endless ranks remain purchasable beyond 100")
 			check(g.state.mastery[node.key]==rank_index+1 and is_equal_approx(coins-g.state.coins,price),"endless transaction charges exactly once")
 			last_price=price
-	check(is_equal_approx(g.base_damage(),base+10),"endless damage reaches the real combat stat")
+	check(g.base_damage()>base+3.8 and g.base_damage()<base+4.0,"125 endless damage ranks grow without linear runaway")
 	var arrow:RefCounted=g.launch(g.origin,Vector2.UP*30)
 	check(is_equal_approx(arrow.damage,g.damage()),"new arrows use the ascended damage")
-	check(g.reward("normal",1)>income*4,"endless income reaches real brick rewards")
-	check(is_equal_approx(g.combo_cap(),cap+31.25) and g.multiplier(10000)==g.combo_cap(),"endless cap reaches the real combo multiplier")
-	check(is_equal_approx(g.combo_step(),1.8) and g.cap_kills()<=26,"endless combo growth remains reachable on actual boards")
+	check(g.reward("normal",1)>income*1.7 and g.reward("normal",1)<income*2,"endless income grows with diminishing returns in real brick rewards")
+	check(g.combo_cap()>cap+7 and g.combo_cap()<cap+8 and g.multiplier(10000)==g.combo_cap(),"diminishing endless cap reaches the real combo multiplier")
+	check(g.combo_step()>.84 and g.combo_step()<.85 and g.cap_kills()<=26,"endless combo growth remains reachable on actual boards")
 	check(g.state.up==original and g.rng.state==rng_state,"endless ranks neither rewrite legacy ranks nor consume RNG")
 	check(g.penetration()==6 and is_equal_approx(g.draw_interval(),.4) and g.slots==4 and g.reroll_cap()==5,"mechanical limits remain stable after ascension")
 	var saved:Dictionary=g.export_progress();check(Progress.valid(saved),"endless progress validates")
@@ -101,12 +101,12 @@ func run() -> void:
 	check(g.state.skillRuntime.forge and is_equal_approx(coins-g.state.coins,price),"forge is one transaction and consumed once")
 	check(not g.buy("power"),"forge cannot bypass next stage requirements")
 	g.state.skills={"bargain":1};g.state.up.arrow=0
-	check(g.cost("arrow")==60 and g.buy("arrow"),"bargain applies 40 percent discount")
+	check(g.cost("arrow")==80 and g.buy("arrow"),"bargain applies 20 percent discount")
 	g.state.up=Upgrades.CAPS.duplicate();g.state.skills={"bargain":1,"forge":1};g.state.skillRuntime.forge=false
 	check(g.mastery_cost("arrow")==192000,"bargain discounts endless price")
 	coins=g.state.coins
-	check(g.buy("arrow","mastery_arrow") and g.state.mastery.arrow==3 and g.state.coins==coins-192000,"forge grants three endless ranks in one paid transaction")
-	check(g.buy("arrow","mastery_arrow") and g.state.mastery.arrow==4,"endless forge consumes only one charge per level")
+	check(g.buy("arrow","mastery_arrow") and g.state.mastery.arrow==2 and g.state.coins==coins-192000,"forge grants two endless ranks in one paid transaction")
+	check(g.buy("arrow","mastery_arrow") and g.state.mastery.arrow==3,"endless forge consumes only one charge per level")
 	g.dispose()
 	g=fresh();g.state.up={"power":10000,"arrow":10000,"brick":10000,"draw":9,"comboCap":10000,"slots":3,"rerollCap":4}
 	var legacy:Dictionary=g.export_progress();check(Progress.valid(legacy),"legacy over-cap ranks remain importable")

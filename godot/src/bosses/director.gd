@@ -48,7 +48,7 @@ func start(restore:bool) -> void:
 		if deck.is_empty():deck=g.shuffle(["eye","serpent","clock"])
 		boss_id=deck.pop_front();g.state.bossDeck=deck
 	var phases:=4 if boss_id=="serpent" else 3
-	var max_hp:float=ceil(g.damage()*(24+6))
+	var max_hp:float=ceil(g.boss_reference_damage()*(24+6))
 	fight={"level":g.state.level,"boss":boss_id,"name":NAMES[boss_id],"phase":1,"phases":phases,"max":max_hp,"hp":max_hp,"hits":0,"paid":0.0,"intro":false,"clock":0.0,"abilities":roll_abilities(),"data":{}}
 	if restored:fight=saved.duplicate(true)
 	model={"eye":Eye,"clock":Clock,"serpent":Serpent,"forge":Forge}[boss_id].new(self)
@@ -195,7 +195,7 @@ func update(delta:float) -> void:
 		for arrow in g.arrows:g.fx.linger_trail(arrow)
 		g.arrows.clear();tasks.clear();recent.clear()
 		if fight.phase<fight.phases:
-			fight.phase+=1;fight.max=ceil(g.damage()*(24+6*fight.phase));fight.hp=fight.max;fight.clock=0
+			fight.phase+=1;fight.max=ceil(g.boss_reference_damage()*(24+6*fight.phase));fight.hp=fight.max;fight.clock=0
 			var masonry_echo:Array=[]
 			if boss_id=="eye":
 				for brick in g.bricks.slice(0,96):masonry_echo.append({"position":brick.position,"size":Vector2(brick.w,brick.h),"type":brick.type})

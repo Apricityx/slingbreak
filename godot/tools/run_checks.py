@@ -28,8 +28,10 @@ def main():
     if not args.test:
         tests += ["native_variant_design_test", "native_variant_ui_test"]
         tests += ["native_upgrade_tree_test"]
+        if not args.gui:
+            tests += ["native_balance_test"]
         if args.gui:
-            tests += ["upgrade_tree_input_test"]
+            tests += ["upgrade_tree_input_test", "settings_reset_test"]
         tests += ["native_explosion_test"]
         tests += ["boot_test"]
         tests += ["aspect_adapter_test"]
