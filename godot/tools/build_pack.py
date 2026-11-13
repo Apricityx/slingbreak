@@ -34,7 +34,7 @@ def main(argv=None):
     output = (options.output or OUTPUT / "export/slingbreak-godot-native-preview.pck").resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     # The staging checkout contains no game/, generated/, native/, or addons/.
-    run_engine([engine, "--headless", "--path", str(stage), "--editor", "--import"])
+    run_engine([engine, "--headless", "--path", str(stage), "--editor", "--import", "--quit"])
     preset = "Android Preview" if options.platform == "android" else "Linux Preview"
     run_engine([engine, "--headless", "--path", str(stage), "--export-pack", preset, str(output)])
     subprocess.run(["python3", str(ROOT / "tools/check-pck.py"), str(output)], check=True)

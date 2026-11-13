@@ -110,7 +110,7 @@ def main(argv=None):
     output = output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     # The staging checkout contains no game/, generated/, native/, or addons/.
-    run_engine([engine, "--headless", "--path", str(stage), "--editor", "--import"])
+    run_engine([engine, "--headless", "--path", str(stage), "--editor", "--import", "--quit"])
     mode = "--export-debug" if options.platform == "android" else "--export-release"
     preset = {"android": "Android Preview", "linux": "Linux Preview", "web": "Web Preview"}[options.platform]
     run_engine([engine, "--headless", "--path", str(stage), mode, preset, str(output)])
