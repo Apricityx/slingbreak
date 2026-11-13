@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 config/name="弓引力 · SLING / BREAK"
-config/version="0.0.8"
+config/version="0.0.9"
 run/main_scene="res://scenes/boot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/image="res://assets/boot/splash.png"
