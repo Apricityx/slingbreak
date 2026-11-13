@@ -520,4 +520,4 @@ func reset() -> void:
 	var cancel:Button=v.button(actions,"取消",ui._close,"",44);cancel.name="CancelReset";cancel.custom_minimum_size.x=76;cancel.add_theme_stylebox_override("normal",v.box(v.color("surface-2"),Color.TRANSPARENT,5,8))
 	cancel.add_theme_color_override("font_focus_color",v.color("ink"))
 	var confirm:Button=v.danger_button(actions,"确认重置",ui._reset_run);confirm.name="ConfirmReset";confirm.custom_minimum_size.x=102
-	cancel.call_deferred("grab_focus")
+	cancel.grab_focus()

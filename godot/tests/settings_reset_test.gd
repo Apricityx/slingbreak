@@ -113,6 +113,11 @@ func run() -> void:
 			var back:=Session.new();back.save_path=app.session.save_path
 			check(back.start(45,back.load_progress()) and back.frame.level==1 and back.frame.coins==0 and back.frame.skills.is_empty(),"relaunch cannot restore the erased progress")
 			back.runtime.dispose()
+	# A fast keyboard/touch confirm may close the sheet before deferred calls.
+	ui._settings();ui._reset_confirmation()
+	ui.modal_content.find_child("ConfirmReset",true,false).pressed.emit()
+	await settle()
+	check(ui.modal_kind=="draft" and app.session.frame.level==1,"same-frame confirmation leaves no deferred focus on a removed sheet")
 	await finish()
 
 func finish() -> void:
