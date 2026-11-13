@@ -207,8 +207,6 @@ func update_reroll(button:Button,draft:bool=false) -> void:
 			circle.set_meta("waiting",button.disabled);Motion.fade(circle,.5 if button.disabled else 1.0,.2)
 
 func shop() -> void:
-	heading("铸造你的力量","THE ASCENT · 成长之树",23)
-	v.space(root,12)
 	var tree:=preload("res://src/ui/upgrade_tree.gd").new();root.add_child(tree);tree.setup(ui)
 
 func _shop_details(words:Control,item:Dictionary) -> void:

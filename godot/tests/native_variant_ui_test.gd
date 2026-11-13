@@ -41,7 +41,7 @@ func _run() -> void:
 		app.session.command("configure",{"theme":theme})
 		for id in g.variants.ORDER:
 			g.state.variantOverride={"level":30,"id":id};g.generate();g.phase="ready"
-			if id=="seal":g.spawn_core(true)
+			if id in ["seal","bulwark","banked"]:g.spawn_core(true)
 			app.session.command("snapshot")
 			await process_frame
 			check(ui.hud_nodes.variant_status.text==g.variants.rule.status(),"HUD follows "+id+" in "+theme)
@@ -50,12 +50,35 @@ func _run() -> void:
 			if id=="seal":
 				check(ui.hud_nodes.core_label.text=="核心封印","sealed core label never looks unlocked")
 				check(ui.hud_nodes.progress.state=="blocked" and ui.hud_nodes.core_value.text=="剩 3","sealed core shows remaining seals, not a full ready bar")
+			elif id=="bulwark":
+				check(ui.hud_nodes.progress.state=="blocked" and ui.hud_targets.progress==0,"armoured core begins with an empty armour-removal track")
+			elif id=="banked":
+				check(ui.hud_nodes.core_label.text=="核心需折射" and ui.hud_nodes.core_value.text=="先反弹","banked core keeps its actual hit condition")
 			if DisplayServer.get_name()!="headless":
 				var out:="res://../agent-tmp/godot/variant-ui/"
 				DirAccess.make_dir_recursive_absolute(out)
 				await create_timer(0.12).timeout
 				await RenderingServer.frame_post_draw
 				root.get_texture().get_image().save_png(out+id+"-"+theme+".png")
+			ui.hud_nodes.variant.pressed.emit()
+			if DisplayServer.get_name()!="headless":await create_timer(.55).timeout
+			else:
+				for i in range(3):await process_frame
+			var note:PanelContainer=ui.modal_content.find_child("VariantNote",true,false)
+			var words:Label=note.get_child(0)
+			var go:Button=ui.modal_content.find_child("VariantContinue",true,false)
+			check(words.text==g.variants.rule.note() and words.size.y>=words.get_minimum_size().y,"full rule text is laid out without truncation: "+id+" in "+theme)
+			check(words.position.x+words.size.x<=note.size.x and ui.modal_content.size.x<=ui.modal_scroll.size.x+.1,"rule explanation fits the sheet width: "+id)
+			check(go.position.y+go.size.y<=ui.modal_scroll.size.y+.1,"rule return action is visible without scrolling: "+id)
+			if DisplayServer.get_name()!="headless":
+				await RenderingServer.frame_post_draw
+				root.get_texture().get_image().save_png("res://../agent-tmp/godot/variant-ui/"+id+"-"+theme+"-rules.png")
+			ui._close()
+			if id=="bulwark":
+				g.variants.core_hit(null);app.session.command("snapshot")
+				check(ui.hud_nodes.progress.state=="blocked" and ui.hud_targets.progress==50,"first armour hit shows actual halfway progress")
+				g.variants.rule.data.guard=0;g.variants.core_hit(null);app.session.command("snapshot")
+				check(ui.hud_nodes.progress.state=="ready" and ui.hud_targets.progress==100,"last armour plate exposes a ready core")
 	ui._close_all();g.state.variantOverride={"level":30,"id":"rush"};g.state.skillChosenLevel=29;g.state.draft=null;g.generate()
 	app.session.command("snapshot");await process_frame
 	check(ui.modal_kind=="draft","remembered rule skips the blocking intro")

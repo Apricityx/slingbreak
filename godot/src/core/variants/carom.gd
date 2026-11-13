@@ -9,7 +9,7 @@ const CHARGES:=4
 
 func title() -> String:return "弹射蓄能"
 func color() -> String:return "#d9a640"
-func note() -> String:return "直射伤害 ×0.6，每次撞墙或障碍反弹 +0.6 倍，最多 ×3。范围与被动伤害不变 · 奖金 ×1.4"
+func note() -> String:return "直射伤害 ×0.6，每次撞墙或障碍反弹 +0.6 倍，最多 ×3。不影响无箭矢来源的伤害 · 奖金 ×1.4"
 func shape() -> void:data={"charged":0,"best":0}
 func valid(saved:Dictionary) -> bool:
 	return Progress.finite_number(saved.get("charged"),0,1e9,true) and Progress.finite_number(saved.get("best"),0,CHARGES,true)

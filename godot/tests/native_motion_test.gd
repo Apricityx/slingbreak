@@ -44,14 +44,24 @@ func _run() -> void:
 	check(ui.motion_layer.get_child_count()==0,"interrupting glint does not leave motion nodes")
 	# Match the reference landing beat: no sheen until a tier reel has locked.
 	app.session.runtime.state.draft.options=["titan","rapid","piercer"]
-	app.session.command("snapshot");ui._draft();await wait_ui(.25)
+	app.session.command("snapshot");ui._draft()
 	var tier_card:Button=ui.modal_content.find_child("Skill_titan",true,false)
+	var landing:={"locked":false}
+	var tier_emblem:Control=tier_card.find_child("Emblem",true,false)
+	# Observe the lock itself: a wall-clock sleep plus several software-rendered
+	# frames can outlive the entire glint on a busy graphics runner.
+	tier_emblem.child_entered_tree.connect(func(child):
+		if child.get_script()!=preload("res://src/ui/reel.gd"):return
+		child.locked.connect(func():
+			landing.locked=true
+			check(tier_card.has_node("DealGlint"),"tier reel lock triggers landing sheen")
+			capture("reel-landing-glint")
+		)
+	)
 	check(not tier_card.has_node("DealGlint"),"deal sheen waits for final reel icon")
 	await capture("reel-before-lock")
-	await wait_ui(.5)
-	check(tier_card.has_node("DealGlint"),"tier reel lock triggers landing sheen")
-	await capture("reel-landing-glint")
 	await wait_ui()
+	check(landing.locked,"tier reel emits its lock event")
 	await capture("reel-settled")
 	check(not ui.rolling,"initial reel releases draft input")
 	app.session.runtime.state.rerolls=2;app.session.command("snapshot")

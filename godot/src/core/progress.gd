@@ -2,6 +2,7 @@ extends RefCounted
 ## Validate external progress before changing a live session or either save file.
 const UPGRADES := ["power","arrow","brick","draw","comboCap","slots","rerollCap"]
 const BOSSES := ["eye","clock","serpent","forge"]
+const UpgradeTree=preload("res://src/core/upgrade_tree.gd")
 static var known_skills:Dictionary={}
 
 static func skill_ids() -> Dictionary:
@@ -10,7 +11,7 @@ static func skill_ids() -> Dictionary:
 	return known_skills
 
 static func defaults() -> Dictionary:
-	return {"level":1,"coins":0.0,"total":0,"best":0,"comboRulesVersion":2,"legacyBest":0,"up":{"power":0,"arrow":0,"brick":0,"draw":0,"comboCap":0,"slots":0,"rerollCap":0},"rerolls":0,"rerollGrantLevel":0,"sound":true,"volume":100,"performanceMode":false,"board":null,"skills":{},"skillScopeVersion":3,"skillGateVersion":1,"skillChosenLevel":0,"draft":null,"swapOffer":null,"skillRuntime":null,"milestone":null,"bossOverride":null,"achievements":{}}
+	return {"level":1,"coins":0.0,"total":0,"best":0,"comboRulesVersion":2,"legacyBest":0,"up":{"power":0,"arrow":0,"brick":0,"draw":0,"comboCap":0,"slots":0,"rerollCap":0},"mastery":{"arrow":0,"brick":0,"comboCap":0},"rerolls":0,"rerollGrantLevel":0,"sound":true,"volume":100,"performanceMode":false,"board":null,"skills":{},"skillScopeVersion":3,"skillGateVersion":1,"skillChosenLevel":0,"draft":null,"swapOffer":null,"skillRuntime":null,"milestone":null,"bossOverride":null,"achievements":{}}
 
 static func finite_number(value: Variant, low: float, high: float, integer: bool=false) -> bool:
 	if not (value is int or value is float):return false
@@ -25,6 +26,12 @@ static func valid(payload: Dictionary) -> bool:
 	if not candidate.get("up") is Dictionary:return false
 	for key in UPGRADES:
 		if not finite_number(candidate.up.get(key,0),0,{"draw":10,"slots":3,"rerollCap":4}.get(key,10000),true):return false
+	if candidate.has("mastery"):
+		if not candidate.mastery is Dictionary or candidate.mastery.size()>3:return false
+		for key in candidate.mastery:
+			if key not in UpgradeTree.MASTERY_KEYS or not finite_number(candidate.mastery[key],0,1e12,true):return false
+		if candidate.mastery.values().any(func(value):return value>0):
+			if not UpgradeTree.complete(candidate.up):return false
 	if candidate.has("skills") and not candidate.skills is Dictionary:return false
 	if candidate.get("skills",{}).size()>81:return false
 	var ids:=skill_ids()

@@ -18,12 +18,15 @@ func capture() -> void:
 	if id=="upgrade_unlock":g.state.up.power=3
 	if id=="upgrade_breakthrough":
 		g.state.up={"power":16,"arrow":23,"brick":20,"draw":10,"comboCap":12,"slots":2,"rerollCap":2};selected="arrow_3"
+	if id=="upgrade_ascension":
+		g.state.up={"power":16,"arrow":24,"brick":20,"draw":10,"comboCap":12,"slots":3,"rerollCap":3};selected="reroll_3"
+	if id=="upgrade_endless":
+		g.state.up=preload("res://src/core/upgrade_tree.gd").CAPS.duplicate();g.state.mastery.arrow=9;g.state.coins=2000000;selected="mastery_arrow"
 	app.interface._close_all();app.session.command("snapshot")
 	app.interface._shop()
 	await create_timer(.7).timeout
 	var page:Control=app.interface.modal_content.find_child("UpgradeTree",true,false)
 	page._select(selected,false)
-	if id=="upgrade_breakthrough":page.scroll.scroll_vertical=606
 	await process_frame
 	await create_timer(.4).timeout
 	page.set_process(false);page.effects.set_process(false);page.effects.reset()
@@ -33,7 +36,7 @@ func capture() -> void:
 		var target:int=mini(3,1+floori(time/.18)) if id=="upgrade_rank" else 1
 		page.effects.advance(maxf(0,time)-page.effects.clock)
 		while time>=0 and count<target:
-			app.session.command("buy",{"key":"arrow" if id=="upgrade_breakthrough" else "power","node":selected});count+=1
+			app.session.command("buy",{"key":page.items[selected].key,"node":selected});count+=1
 			if page.effects.bursts.is_empty():push_error("Purchase did not reach UI feedback");quit(1);return
 		for button in page.buttons.values():button.queue_redraw()
 		await process_frame

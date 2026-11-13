@@ -333,7 +333,7 @@ func present(value: Dictionary) -> void:
 	_update_report(value)
 	_update_wipe(value)
 	_update_pause(value)
-	if modal_kind=="shop" and shop_state!=JSON.stringify([value.shop,value.coins,value.phase,value.paused,value.theme]):_shop()
+	if modal_kind=="shop" and shop_state!=JSON.stringify([value.shop,value.mastery,value.coins,value.phase,value.paused,value.theme]):_shop()
 	if modal_kind=="detail" and detail_state!=JSON.stringify([value.swapOffer,value.rerolls,value.canSwap,value.theme]):_detail(detail_id)
 	if modal_kind=="library":pages.setup(self);pages.update_library()
 	if modal_kind in ["equipment","achievements"]:pages.setup(self);pages.update_equipment()
@@ -778,8 +778,8 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	modal_enter_pending=not morph_from.has_area()
 	# Keep the draft sheet on the same 412px design grid as the Web dialog.
 	# Draft owns its section insets, so the sheet itself has no hidden inset.
-	modal_width=250 if kind=="reset" else 320 if kind=="variant" else 388 if kind=="shop" else 396
-	modal_padding=31 if kind in ["reset","variant"] else 16 if kind=="shop" else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
+	modal_width=250 if kind=="reset" else 320 if kind=="variant" else 412 if kind=="shop" else 396
+	modal_padding=31 if kind in ["reset","variant"] else 23 if kind in ["settings","developer"] else 21 if kind in ["equipment","achievements"] else 19 if kind=="detail" else 0
 	var depth:=modal_stack.size()*2
 	scrim=ColorRect.new();scrim.size=Vector2(412,915);scrim.z_index=11+depth;scrim.mouse_filter=Control.MOUSE_FILTER_STOP;add_child(scrim)
 	if launcher_mode:scrim.position.y=content_top;scrim.size.y=content_height-content_top
@@ -797,7 +797,7 @@ func _open(title: String,kind: String,pause_game: bool=false) -> void:
 	scrim.gui_input.connect(func(event):if kind!="draft" and event is InputEventMouseButton and event.pressed:_close())
 	panel=Sheet.new();panel.z_index=12+depth;panel.position=Vector2((412-modal_width)/2,100);add_child(panel)
 	panel.setup(visuals.box(visuals.color("surface"),visuals.color("line-2" if kind in ["draft","library","detail"] else "line"),12 if kind=="draft" else 8,0),modal_width,modal_padding)
-	panel.max_height=content_height-content_top-32.0
+	panel.max_height=content_height-content_top-(0.0 if kind=="shop" else 32.0)
 	modal_scroll=panel.scroll;modal_content=panel.content
 	var source:Control=opening_control if is_instance_valid(opening_control) else visuals.last_trigger if is_instance_valid(visuals.last_trigger) else get_viewport().gui_get_focus_owner()
 	if retained_opener.has_area():
@@ -816,7 +816,7 @@ func _center() -> void:
 	if is_instance_valid(panel):visuals.button_states(panel)
 	if panel==null: return
 	var dimensions:Vector2=panel.desired_size()
-	var destination:=Vector2((412-modal_width)/2,content_top+maxf(8,(content_height-content_top-dimensions.y)/2))
+	var destination:=Vector2((412-modal_width)/2,content_top+maxf(0 if modal_kind=="shop" else 8,(content_height-content_top-dimensions.y)/2))
 	var previous:Vector2=panel.get_meta("layout_size",Vector2.ZERO)
 	panel.set_meta("layout_position",destination);panel.set_meta("layout_size",dimensions)
 	if frame.get("reduced",false):
@@ -1204,7 +1204,7 @@ func _reset_run() -> void:
 	choosing=false;present(frame)
 
 func _shop() -> void:
-	shop_state=JSON.stringify([frame.shop,frame.coins,frame.phase,frame.paused,frame.theme])
+	shop_state=JSON.stringify([frame.shop,frame.mastery,frame.coins,frame.phase,frame.paused,frame.theme])
 	if modal_kind=="shop" and panel!=null and shop_theme==frame.theme:
 		pages.setup(self);pages.update_shop();return
 	shop_theme=frame.theme

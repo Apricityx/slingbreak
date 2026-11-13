@@ -105,6 +105,7 @@ func start(seed_value: int, progress: Dictionary={}, preferences: Dictionary={})
 	if not state.achievements is Dictionary:state.achievements={}
 	for key in ["level","total","best","skillChosenLevel","rerollGrantLevel"]:state[key]=int(state[key])
 	for key in Progress.UPGRADES:state.up[key]=int(state.up[key])
+	for key in UpgradeTree.MASTERY_KEYS:state.mastery[key]=int(state.mastery.get(key,0))
 	theme_mode=preferences.get("theme","system")
 	resolve_theme()
 	generate(true)
@@ -123,7 +124,7 @@ func rank(id: String) -> int:
 	return 1 if state.skills.has(id) else 0
 
 func base_damage() -> float:
-	return 2+0.65*log(float(state.up.arrow)+1)/log(2.0)
+	return 2+0.65*log(float(state.up.arrow)+1)/log(2.0)+.08*int(state.mastery.arrow)
 
 func damage() -> float:
 	return developer.value("damage",base_damage()*(1+rank("titan")+0.35*rank("rapid")+0.8*rank("heavy")+0.5*rank("supernova")+0.6*rank("reaper")+3*rank("railgun")+mini(10,int(state.skillRuntime.shots))*0.2*rank("growing")))
@@ -149,14 +150,14 @@ func bonus(level: int=-1) -> float:
 	var scaled: int = int(state.level) if level<0 else level
 	return developer.value("bonus",round(round(240*pow(scaled,1.15))*(1+2*rank("treasury"))))
 
-func combo_step() -> float:return developer.value("comboStep",0.25+0.025*state.up.comboCap)
-func combo_cap() -> float:return developer.value("comboCap",3+0.5*state.up.comboCap)
+func combo_step() -> float:return developer.value("comboStep",0.25+0.025*state.up.comboCap+.01*int(state.mastery.comboCap))
+func combo_cap() -> float:return developer.value("comboCap",3+0.5*state.up.comboCap+.25*int(state.mastery.comboCap))
 func cap_kills() -> int:return 1+ceili((combo_cap()-1)/combo_step()-0.000000001)
 func multiplier(kills: int) -> float:return minf(combo_cap(),1+maxi(0,kills-1)*combo_step())
 func reroll_cap() -> int:return 1+mini(4,int(state.up.rerollCap))
 
 func reward(type: String, kills: int, point:Variant=null, brick:RefCounted=null) -> float:
-	var value:=maxf(1,round(3*pow(state.level,1.1)*(1+0.16*state.up.brick)*multiplier(kills)*(3 if type=="gold" else 1)))
+	var value:=maxf(1,round(3*pow(state.level,1.1)*(1+0.16*state.up.brick+.12*int(state.mastery.brick))*multiplier(kills)*(3 if type=="gold" else 1)))
 	value*=1+rank("mint")
 	if type=="gold":value*=(3+5*rank("alchemist"))/3.0
 	if rank("jackpot") and arrow_skills_enabled():
@@ -172,6 +173,10 @@ func cost(key: String,at_rank:int=-1) -> float:
 	var value:=UpgradeTree.base_cost(key,int(state.up.get(key,0)) if at_rank<0 else at_rank)
 	if value<=0:return 0
 	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1)))
+
+func mastery_cost(key:String) -> float:
+	var value:=UpgradeTree.mastery_cost(key,int(state.mastery.get(key,0)))
+	return maxf(1,ceil(value*pow(0.6,rank("bargain"))*developer.value("costScale",1))) if value>0 else 0.0
 
 func generate(restore: bool=false) -> void:
 	var handoff:=phase=="clearing" and not reduced
@@ -344,6 +349,7 @@ func buy(key: String,node_id:String="") -> bool:
 	if phase!="ready" or paused or not state.up.has(key):return false
 	var node:Dictionary=UpgradeTree.current(state.up,key) if node_id=="" else UpgradeTree.find(node_id)
 	if node.is_empty() or node.key!=key or not UpgradeTree.available(state.up,node):return false
+	if node.get("infinite",false):return _buy_mastery(node)
 	var price:=cost(key)
 	if price<=0 or state.coins<price:return false
 	var before:int=state.up[key]
@@ -356,10 +362,25 @@ func buy(key: String,node_id:String="") -> bool:
 	events.append({"type":"upgrade","node":node.id,"key":key,"before":before,"after":state.up[key],"complete":complete});revision+=1
 	return true
 
+func _buy_mastery(node:Dictionary) -> bool:
+	var price:=mastery_cost(node.key)
+	if not is_finite(price) or price<=0 or state.coins<price:return false
+	var before:int=state.mastery[node.key]
+	state.coins-=price;state.mastery[node.key]+=1
+	if rank("bargain"):fx.skill_event("bargain",origin-Vector2(0,72),Vector2.UP,Vector2.ZERO,1.0,.6)
+	# Forge remains a once-per-level benefit, including the endless ranks.
+	if rank("forge") and not state.skillRuntime.get("forge",false):
+		state.skillRuntime.forge=true;state.mastery[node.key]+=2
+	var milestone:bool=int(state.mastery[node.key])/10>before/10
+	cue("tree_breakthrough" if milestone else "tree_rank",0,390,true,true)
+	events.append({"type":"upgrade","node":node.id,"key":node.key,"before":before,"after":state.mastery[node.key],"complete":false});revision+=1
+	return true
+
 func upgrade_nodes() -> Array:
 	var nodes:Array=[]
 	for definition in UpgradeTree.NODES:
 		var node:Dictionary=definition.duplicate(true)
+		node.infinite=false
 		var level:int=state.up[node.key]
 		node.rank=clampi(level-node.start,0,node.end-node.start)
 		node.maxRank=node.end-node.start;node.complete=level>=node.end
@@ -374,6 +395,18 @@ func upgrade_nodes() -> Array:
 		for id in node.parents:
 			var parent:Dictionary=UpgradeTree.find(id)
 			if state.up[parent.key]<parent.end:node.requirements.append(parent.name+"点满")
+		nodes.append(node)
+	for definition in UpgradeTree.MASTERY:
+		var node:Dictionary=definition.duplicate(true)
+		var level:int=state.mastery[node.key]
+		node.rank=level;node.maxRank=0;node.complete=false
+		node.available=UpgradeTree.complete(state.up)
+		node.cost=mastery_cost(node.key);node.affordable=state.coins>=node.cost
+		node.forge=rank("forge")>0 and not state.skillRuntime.get("forge",false)
+		node.before=UpgradeTree.metrics(node.key,state.up[node.key],level)
+		node.after=UpgradeTree.metrics(node.key,state.up[node.key],level+(3 if node.forge else 1))
+		node.description=UpgradeTree.mastery_description(node.key)
+		node.requirements=[] if node.available else ["21 个基础节点全部点满"]
 		nodes.append(node)
 	return nodes
 
@@ -796,6 +829,7 @@ func export_progress() -> Dictionary:
 func snapshot() -> Dictionary:
 	var result:=_snapshot()
 	result.upgradeTree=upgrade_nodes()
+	result.mastery=state.mastery.duplicate();result.masteryUnlocked=UpgradeTree.complete(state.up)
 	result.developer=developer.config()
 	result.developer.values={"damage":damage(),"speed":speed(),"penetration":penetration(),"drawInterval":draw_interval(),"baseHp":base_hp(),"specialRate":special_rate(),"bonus":bonus(),"comboStep":combo_step(),"comboCap":combo_cap(),"rewardScale":developer.value("rewardScale",1),"costScale":developer.value("costScale",1),"thresholdRate":developer.value("thresholdRate",0.6-0.15*rank("resonance"))}
 	return result

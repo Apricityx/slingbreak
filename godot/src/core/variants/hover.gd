@@ -10,7 +10,7 @@ const PEAK:=2.2
 
 func title() -> String:return "低重力"
 func color() -> String:return "#8f8fd6"
-func note() -> String:return "重力 ×0.55；箭矢刚发射伤害 ×0.6，每滞空 1 秒 +0.8 倍，2 秒达到 ×2.2。范围与被动伤害不变 · 奖金 ×1.3"
+func note() -> String:return "重力 ×0.55；箭矢刚发射伤害 ×0.6，每滞空 1 秒 +0.8 倍，2 秒达到 ×2.2。不影响无箭矢来源的伤害 · 奖金 ×1.3"
 func shape() -> void:data={"best":0.0}
 func valid(saved:Dictionary) -> bool:return Progress.finite_number(saved.get("best"),0,PEAK)
 

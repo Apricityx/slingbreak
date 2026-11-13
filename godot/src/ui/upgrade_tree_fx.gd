@@ -15,9 +15,9 @@ func fire(point:Vector2,ink:Color,tier:int) -> void:
 	bursts.append({"point":point,"ink":ink,"tier":tier,"born":clock})
 	queue_redraw()
 
-func connect_path(a:Vector2,b:Vector2,ink:Color) -> void:
+func connect_path(a:Vector2,b:Vector2,ink:Color,route:PackedVector2Array=PackedVector2Array()) -> void:
 	if paths.size()>=12:paths.pop_front()
-	paths.append({"a":a,"b":b,"ink":ink,"born":clock})
+	paths.append({"a":a,"b":b,"ink":ink,"born":clock,"route":route})
 
 func _process(delta:float) -> void:
 	advance(delta)
@@ -37,6 +37,8 @@ func _draw() -> void:
 		var t:=clampf(age/.45,0,1)
 		var head:Vector2=event.a.lerp(event.b,t)
 		var tail:Vector2=event.a.lerp(event.b,maxf(0,t-.16))
+		if event.route.size()>1:
+			head=event.route[mini(event.route.size()-1,int(t*(event.route.size()-1)))];tail=event.route[maxi(0,int(maxf(0,t-.16)*(event.route.size()-1)))]
 		var ink:Color=event.ink;ink.a=clampf((.7-age)/.25,0,1)
 		if not reduced:
 			draw_line(tail,head,Color(ink,ink.a*.16),9,true);draw_line(tail,head,ink,3,true)
@@ -47,6 +49,16 @@ func _draw() -> void:
 		var point:Vector2=event.point
 		var ink:Color=event.ink
 		if event.tier==2:ink=ink.lerp(Color("#f9d589"),.65)
+		# A brief constellation crown makes milestone and endless decade ranks
+		# materially distinct; it contracts and fades, never parks as a halo.
+		if event.tier==2 and age<.55:
+			var alpha:=pow(1-age/.55,2)
+			for i in range(8 if not reduced else 4):
+				var direction:=Vector2.from_angle(i*TAU/(8 if not reduced else 4)-PI/2)
+				var tip:Vector2=point+direction*(37+22*(1-exp(-age*12)))
+				draw_line(point+direction*31,tip,Color(ink,alpha*.6),2,true)
+				var side:=direction.orthogonal()*3*alpha
+				if alpha>.04:draw_colored_polygon(PackedVector2Array([tip+direction*5*alpha,tip+side,tip-direction*5*alpha,tip-side]),Color(1,.95,.76,alpha))
 		var flash:=exp(-age*19)*.7
 		for i in range(5):
 			draw_circle(point,20+i*5,Color(ink,flash*(.14 if reduced else .28)))

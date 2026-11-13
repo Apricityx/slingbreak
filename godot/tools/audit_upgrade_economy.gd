@@ -16,7 +16,7 @@ func _initialize() -> void:
 			for kill in range(40):income+=g.reward("normal",1+kill%3)
 			g.state.coins+=income;total+=income
 			while true:
-				var options:Array=g.upgrade_nodes().filter(func(n):return n.available and n.affordable)
+				var options:Array=g.upgrade_nodes().filter(func(n):return not n.infinite and n.available and n.affordable)
 				if options.is_empty():break
 				options.sort_custom(func(a,b):
 					var wa:float=1.0;var wb:float=1.0
@@ -28,8 +28,22 @@ func _initialize() -> void:
 					var node:Dictionary=Upgrades.find(target)
 					if g.state.up[node.key]>=node.end and not milestones.has(target):milestones[target]=level
 			if level in [1,5,10,20,40,60,100,200]:rows.append({"level":level,"income":income,"coins":g.state.coins,"ranks":g.state.up.duplicate()})
-			if g.upgrade_nodes().all(func(n):return n.complete):milestones["complete"]=level;break
-		results.append({"strategy":strategy,"milestones":milestones,"income":total,"checkpoints":rows});g.dispose()
+			if Upgrades.complete(g.state.up):milestones["complete"]=level;break
+		var endless:Array=[]
+		if milestones.has("complete"):
+			for level in range(int(milestones.complete)+1,201):
+				g.state.level=level
+				var income:float=g.bonus()
+				for kill in range(40):income+=g.reward("normal",1+kill%3)
+				g.state.coins+=income
+				while true:
+					var options:Array=g.upgrade_nodes().filter(func(n):return n.infinite and n.available and n.affordable)
+					if options.is_empty():break
+					options.sort_custom(func(a,b):return a.cost<b.cost)
+					g.buy(options[0].key,options[0].id)
+					if not milestones.has("endless"):milestones.endless=level
+				if level in [75,100,150,200]:endless.append({"level":level,"income":income,"coins":g.state.coins,"ranks":g.state.mastery.duplicate()})
+		results.append({"strategy":strategy,"milestones":milestones,"income":total,"checkpoints":rows,"endless":endless});g.dispose()
 	var path:="res://../agent-tmp/godot/upgrade-economy.json"
 	var file:=FileAccess.open(path,FileAccess.WRITE);file.store_string(JSON.stringify(results,"  "));file.close()
 	print(JSON.stringify(results));quit()
